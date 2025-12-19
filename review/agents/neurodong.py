@@ -2,7 +2,8 @@
 Modified from: https://github.com/NeuroDong/Ai-Review
 """
 import json
-from typing import AsyncGenerator
+from typing import Any, AsyncGenerator, Optional
+
 from .base_agent import BaseAgent
 from .logger import get_logger
 
@@ -10,6 +11,27 @@ logger = get_logger(__name__)
 
 class NeuroDongAgent(BaseAgent):
     """Agent for testing the /paper_review endpoint"""
+
+    def __init__(
+        self,
+        *,
+        model: str,
+        reasoning_model: Optional[str] = None,
+        embedding_model: Optional[str] = None,
+        base_url: Optional[str] = None,
+        api_key: Optional[str] = None,
+        embedding_base_url: Optional[str] = None,
+        embedding_api_key: Optional[str] = None,
+    ):
+        super().__init__(
+            model=model,
+            reasoning_model=reasoning_model,
+            embedding_model=embedding_model,
+            base_url=base_url,
+            api_key=api_key,
+            embedding_base_url=embedding_base_url,
+            embedding_api_key=embedding_api_key,
+        )
     
     SYSTEM_PROMPT = """
 [System Role] You are an experienced reviewer for top-tier ML/AI venues (AAAI/NeurIPS/ICLR style).
@@ -90,12 +112,18 @@ Paper:
 
 Instruction: {query}"""
 
-    async def run(self, pdf_content: str, query: str) -> AsyncGenerator[str, None]:
+    async def run(
+        self,
+        paper_json: Any,
+        query: str,
+        *,
+        enable_mm: bool = False,
+    ) -> AsyncGenerator[str, None]:
         """
         Execute paper review task with streaming response
 
         Args:
-            pdf_content: Base64-encoded PDF content
+            paper_json: Pre-parsed paper content JSON (dict/string/path)
             query: The review instruction
 
         Yields:
@@ -104,8 +132,8 @@ Instruction: {query}"""
         logger.info(f"Starting paper review...")
         logger.info(f"Query: {query[:100] if query else '(empty)'}...")
         
-        text = self.extract_pdf_text_from_base64(pdf_content)
-        logger.info(f"Extracted PDF text length: {len(text)} characters")
+        text = self.blocks_to_text(self.prepare_paper_blocks(paper_json), enable_mm=enable_mm)
+        logger.info(f"Extracted paper text length: {len(text)} characters")
         
         if not text:
             logger.warning("WARNING: No text extracted from PDF!")

@@ -3,6 +3,9 @@ from ..base_agent import BaseAgent
 
 
 class PaperStructurer(BaseAgent):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
     """
     用 LLM 对原始 PDF 文本做“结构化规整”：
     - 识别出若干个大的章节块（Part 1, Part 2, ...）

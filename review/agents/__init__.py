@@ -7,10 +7,10 @@ from .neurodong import NeuroDongAgent
 from .s1 import S1Agent
 
 __all__ = [
-    'BaseAgent',
-    'BaseLineAgent',
-    'NeuroDongAgent',
-    'S1Agent'
+    "BaseAgent",
+    "BaseLineAgent",
+    "NeuroDongAgent",
+    "S1Agent",
 ]
 
 PaperReviewAgent = S1Agent

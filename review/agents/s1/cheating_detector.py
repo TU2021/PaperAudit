@@ -8,6 +8,9 @@ logger = get_logger(__name__)
 
 class CheatingDetector(BaseAgent):
     """Agent for detecting cheating / critical issues in research papers"""
+
+    def __init__(self, **kwargs: Any):
+        super().__init__(**kwargs)
     
     # 原来的全局审稿 prompt（整篇论文级别）
     SYSTEM_PROMPT = """[System Role] You are an expert research paper reviewer specializing in detecting potential cheating or unethical practices in academic papers.

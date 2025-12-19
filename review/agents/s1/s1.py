@@ -1,9 +1,7 @@
 # agents/s1/s1_agent.py
 import json
 import asyncio
-import base64
-from typing import AsyncGenerator, List, Dict, Any
-from pathlib import Path
+from typing import Any, AsyncGenerator, Dict, List, Optional
 
 from ..base_agent import BaseAgent
 from .cheating_detector import CheatingDetector
@@ -18,13 +16,40 @@ artifact_logger = get_artifact_logger("s1_artifacts")
 
 
 class S1Agent(BaseAgent):
-    def __init__(self):
-        super().__init__()
-        self.cheating_detector = CheatingDetector()
-        self.motivation_evaluator = MotivationEvaluator()
-        self.summarizer = Summarizer()
-        self.paper_memory_summarizer = PaperMemorySummarizer()
-        self.paper_structurer = PaperStructurer()
+    def __init__(
+        self,
+        *,
+        model: str,
+        reasoning_model: Optional[str] = None,
+        embedding_model: Optional[str] = None,
+        base_url: Optional[str] = None,
+        api_key: Optional[str] = None,
+        embedding_base_url: Optional[str] = None,
+        embedding_api_key: Optional[str] = None,
+    ):
+        super().__init__(
+            model=model,
+            reasoning_model=reasoning_model,
+            embedding_model=embedding_model,
+            base_url=base_url,
+            api_key=api_key,
+            embedding_base_url=embedding_base_url,
+            embedding_api_key=embedding_api_key,
+        )
+        shared_kwargs = dict(
+            model=model,
+            reasoning_model=reasoning_model,
+            embedding_model=embedding_model,
+            base_url=base_url,
+            api_key=api_key,
+            embedding_base_url=embedding_base_url,
+            embedding_api_key=embedding_api_key,
+        )
+        self.cheating_detector = CheatingDetector(**shared_kwargs)
+        self.motivation_evaluator = MotivationEvaluator(**shared_kwargs)
+        self.summarizer = Summarizer(**shared_kwargs)
+        self.paper_memory_summarizer = PaperMemorySummarizer(**shared_kwargs)
+        self.paper_structurer = PaperStructurer(**shared_kwargs)
 
     def _parse_sse_chunk(self, sse_string: str) -> str:
         """
@@ -82,10 +107,14 @@ class S1Agent(BaseAgent):
         yield self._create_chunk("\n")
         result_container.append(task.result())
 
-    async def run(self, pdf_content: str, query: str) -> AsyncGenerator[str, None]:
-        """
-        Execute paper review task with streaming response
-        """
+    async def run(
+        self,
+        paper_json: Any,
+        query: str,
+        *,
+        enable_mm: bool = False,
+    ) -> AsyncGenerator[str, None]:
+        """Execute paper review task with structured JSON input."""
         # ✅ NEW: 简单的落盘工具函数 (改为只记录到 artifact log)
         def _save_text(name: str, text: str):
             # Log the content to artifact logger
@@ -94,12 +123,13 @@ class S1Agent(BaseAgent):
         def _save_json(name: str, obj: Any):
             # Log the content to artifact logger
             artifact_logger.info(f"\n=== {name} ===\n{json.dumps(obj, ensure_ascii=False, indent=2)}")
-        # 0) base64 → 原始全文文本
-        raw_pdf_text = self.extract_pdf_text_from_base64(pdf_content)
-        logger.info(f"Extracted raw PDF text length: {len(raw_pdf_text)} characters")
+        blocks = self.prepare_paper_blocks(paper_json)
+        raw_pdf_text = self.blocks_to_text(blocks, enable_mm=enable_mm)
+        logger.info(f"Normalized paper blocks: {len(blocks)} items; text length={len(raw_pdf_text)}")
 
         # ✅ NEW: 原始抽取文本也可以落盘，方便 debug
         _save_text("raw_pdf_text", raw_pdf_text)
+        _save_json("paper_blocks", blocks)
 
         # =========================
         # Step 0: 先用 LLM 规整章节结构
@@ -266,7 +296,13 @@ class S1Agent(BaseAgent):
         _save_text("final_summary", final_summary)
         logger.info(f"Final summary saved.")
 
-    async def _run_sync_internal(self, pdf_content: str, query: str) -> Dict[str, Any]:
+    async def _run_sync_internal(
+        self,
+        paper_json: Any,
+        query: str,
+        *,
+        enable_mm: bool = False,
+    ) -> Dict[str, Any]:
         """
         Internal async method to run the full review pipeline and return structured results.
         
@@ -296,10 +332,12 @@ class S1Agent(BaseAgent):
             # Store in artifacts dict
             artifacts[name] = obj
 
-        # 0) Extract PDF text from base64
-        raw_pdf_text = self.extract_pdf_text_from_base64(pdf_content)
-        logger.info(f"Extracted raw PDF text length: {len(raw_pdf_text)} characters")
+        # 0) Normalize paper JSON
+        blocks = self.prepare_paper_blocks(paper_json)
+        raw_pdf_text = self.blocks_to_text(blocks, enable_mm=enable_mm)
+        logger.info(f"Normalized paper blocks: {len(blocks)} items; text length={len(raw_pdf_text)}")
         _save_text("raw_pdf_text", raw_pdf_text)
+        _save_json("paper_blocks", blocks)
 
         # Step 0: Structure paper sections using LLM
         logger.info("Starting PaperStructurer.build_structure...")
@@ -416,44 +454,13 @@ class S1Agent(BaseAgent):
             "artifacts": artifacts,
         }
 
-    def review_paper(self, pdf_path: str, query: str) -> Dict[str, Any]:
-        """
-        Synchronous method to review a paper from a file path.
-        
-        Args:
-            pdf_path: Path to the PDF file
-            query: Review query/question for the paper
-            
-        Returns:
-            Dictionary containing:
-            - final_summary: str - Complete evaluation in full text
-            - sections: List[Dict] - Paper sections with structure
-            - normalized_paper: str - Restructured full paper
-            - paper_memory: str - Key points summary
-            - cheating_detection: dict/str - Cheating analysis by section
-            - motivation_evaluation: str - Motivation analysis
-            - raw_pdf_text: str - Original extracted text
-            - artifacts: Dict - Additional processing artifacts
-        """
-        logger.info(f"Starting paper review from file: {pdf_path}")
-        
-        # Read PDF file and convert to base64
-        pdf_path_obj = Path(pdf_path)
-        if not pdf_path_obj.exists():
-            raise FileNotFoundError(f"PDF file not found: {pdf_path}")
-        
-        try:
-            with open(pdf_path, 'rb') as f:
-                pdf_bytes = f.read()
-            pdf_content = base64.b64encode(pdf_bytes).decode('utf-8')
-            logger.info(f"Successfully loaded PDF file: {pdf_path} ({len(pdf_bytes)} bytes)")
-        except Exception as e:
-            logger.error(f"Failed to read PDF file: {e}")
-            raise
-        
-        # Run the async pipeline synchronously
+    def review_paper(self, paper_json: Any, query: str, enable_mm: bool = False) -> Dict[str, Any]:
+        """Synchronous wrapper that accepts structured paper JSON input."""
+
         loop = asyncio.get_event_loop()
-        result = loop.run_until_complete(self._run_sync_internal(pdf_content, query))
-        
+        result = loop.run_until_complete(
+            self._run_sync_internal(paper_json, query, enable_mm=enable_mm)
+        )
+
         logger.info("Paper review completed successfully.")
         return result

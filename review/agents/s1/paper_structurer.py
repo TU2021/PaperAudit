@@ -6,6 +6,9 @@ from ..logger import get_logger
 logger = get_logger(__name__)
 
 class PaperStructurer(BaseAgent):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
     """
     用 LLM 对原始 PDF 文本做“结构化切片”，但不让 LLM 重写正文：
     - 只让 LLM 找出若干个大的章节块（Part 1, Part 2, ...）的“起点位置”

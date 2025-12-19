@@ -31,18 +31,36 @@ async def paper_review(request: Request):
     try:
         body = await request.json()
         query = body.get("query", "")
-        pdf_content = body.get("pdf_content", "")
+        paper_json = body.get("paper_json")
+        model = body.get("model")
+        reasoning_model = body.get("reasoning_model")
+        embedding_model = body.get("embedding_model")
+        enable_mm = bool(body.get("enable_mm", False))
 
-        if not pdf_content:
+        if paper_json is None:
             return JSONResponse(
                 status_code=400,
-                content={"error": "Bad Request", "message": "pdf_content is required"}
+                content={"error": "Bad Request", "message": "paper_json is required"}
             )
-            
-        agent = PaperReviewAgent()
+
+        if not model:
+            return JSONResponse(
+                status_code=400,
+                content={"error": "Bad Request", "message": "model is required"}
+            )
+
+        agent = PaperReviewAgent(
+            model=model,
+            reasoning_model=reasoning_model,
+            embedding_model=embedding_model,
+        )
 
         async def generate():
-            async for chunk in agent.run(pdf_content=pdf_content, query=query):
+            async for chunk in agent.run(
+                paper_json=paper_json,
+                query=query,
+                enable_mm=enable_mm,
+            ):
                 yield chunk
 
         return StreamingResponse(generate(), media_type="text/event-stream")

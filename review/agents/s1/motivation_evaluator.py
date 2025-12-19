@@ -30,7 +30,10 @@ def extract_tag(text: str, tag: str) -> str:
 
 class MotivationEvaluator(BaseAgent):
     """Agent for evaluating the motivation in research papers"""
-    
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
     REPORT_PROMPT = """[System Role]
 You are a Senior Area Chair focusing on "Novelty and Significance" evaluation.
 Your goal is to generate a comprehensive **Innovation Assessment Report**.

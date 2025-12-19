@@ -2,24 +2,44 @@
 Paper Review Agent
 """
 import json
-from typing import AsyncGenerator
+from typing import Any, AsyncGenerator, Optional
+
 from .base_agent import BaseAgent
 
 class BaseLineAgent(BaseAgent):
     """Agent for testing the /paper_review endpoint"""
 
-    async def run(self, pdf_content: str, query: str) -> AsyncGenerator[str, None]:
-        """
-        Execute paper review task with streaming response
+    def __init__(
+        self,
+        *,
+        model: str,
+        reasoning_model: Optional[str] = None,
+        embedding_model: Optional[str] = None,
+        base_url: Optional[str] = None,
+        api_key: Optional[str] = None,
+        embedding_base_url: Optional[str] = None,
+        embedding_api_key: Optional[str] = None,
+    ):
+        super().__init__(
+            model=model,
+            reasoning_model=reasoning_model,
+            embedding_model=embedding_model,
+            base_url=base_url,
+            api_key=api_key,
+            embedding_base_url=embedding_base_url,
+            embedding_api_key=embedding_api_key,
+        )
 
-        Args:
-            pdf_content: Base64-encoded PDF content
-            query: The review instruction
+    async def run(
+        self,
+        paper_json: Any,
+        query: str,
+        *,
+        enable_mm: bool = False,
+    ) -> AsyncGenerator[str, None]:
+        """Execute paper review task with streaming response."""
 
-        Yields:
-            Content chunks from the API response
-        """
-        text = self.extract_pdf_text_from_base64(pdf_content)
+        text = self.blocks_to_text(self.prepare_paper_blocks(paper_json), enable_mm=enable_mm)
 
         # Build prompt with PDF content
         prompt = f"""Review the following paper:

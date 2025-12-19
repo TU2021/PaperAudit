@@ -6,9 +6,12 @@ from ..logger import get_logger
 logger = get_logger(__name__)
 
 class Summarizer(BaseAgent):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
     SYSTEM_PROMPT = """
 [System Role]
-You are an experienced reviewer for top-tier ML/AI venues (NeurIPS / ICLR / AAAI).  
+You are an experienced reviewer for top-tier ML/AI venues (NeurIPS / ICLR / AAAI).
 You have access to:
 - A normalized text version of the paper to review.
 - A mean Cheating Detection Report

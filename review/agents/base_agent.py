@@ -2,18 +2,55 @@
 Base Agent class for all API testing agents
 """
 from abc import ABC, abstractmethod
-from openai import AsyncOpenAI
-from openai import APIConnectionError, APITimeoutError, RateLimitError, APIError
-from typing import AsyncGenerator
-import os
+from io import BytesIO
+from typing import Any, AsyncGenerator, Dict, List, Optional
+
+import PyPDF2
 import asyncio
 import base64
-import PyPDF2
-import ssl
 import httpx
-from io import BytesIO
-from typing import Optional, Any
+import json
+import os
+import ssl
+
+from openai import APIConnectionError, APIError, APITimeoutError, AsyncOpenAI, RateLimitError
+
 from .logger import get_logger
+
+# ---- JSON helpers reused from detect/utils.py style ---- #
+def _normalize_blocks(paper: Dict[str, Any]) -> List[Dict[str, Any]]:
+    raw = paper.get("content", []) or []
+    blocks: List[Dict[str, Any]] = []
+    for i, item in enumerate(raw):
+        content_index = item.get("index", i)
+        section_label = item.get("section", None)
+        block: Dict[str, Any] = {
+            "content_index": int(content_index) if isinstance(content_index, int) else i,
+            "type": item.get("type"),
+            "section": section_label if isinstance(section_label, str) and section_label.strip() else None,
+        }
+        if item.get("type") == "text":
+            block["text"] = item.get("text", "")
+        elif item.get("type") == "image_url":
+            block["image_url"] = item.get("image_url")
+        else:
+            for k, v in item.items():
+                if k not in block:
+                    block[k] = v
+        blocks.append(block)
+    blocks.sort(key=lambda x: x.get("content_index", 0))
+    return blocks
+
+
+def _blocks_to_text(blocks: List[Dict[str, Any]], enable_mm: bool = False) -> str:
+    lines: List[str] = []
+    for b in blocks:
+        if b.get("type") == "text":
+            lines.append(b.get("text", ""))
+        elif enable_mm and b.get("type") == "image_url":
+            url = b.get("image_url")
+            lines.append(f"[IMAGE]{f' {url}' if url else ''}")
+    return "\n".join(lines)
 
 logger = get_logger(__name__)
 
@@ -27,54 +64,41 @@ class BaseAgent(ABC):
     MAX_RETRY_DELAY = config.get("llm.max_retry_delay", 60.0)  # seconds
     BACKOFF_MULTIPLIER = config.get("llm.backoff_multiplier", 2.0)
 
-    def __init__(self):
-        """
-        Initialize the agent
-        """
-        model = os.getenv("SCI_LLM_MODEL")
-        if model is None:
-            raise ValueError("SCI_LLM_MODEL environment variable is not set")
-        self.model = model
-        
-        reasoning_model = os.getenv("SCI_LLM_REASONING_MODEL")
-        if reasoning_model is None:
-            raise ValueError("SCI_LLM_REASONING_MODEL environment variable is not set")
-        self.reasoning_model = reasoning_model
-        
-        emb_model = os.getenv("SCI_EMBEDDING_MODEL")
-        if emb_model is None:
-            raise ValueError("SCI_EMBEDDING_MODEL environment variable is not set")
-        self.emb_model = emb_model
+    def __init__(
+        self,
+        *,
+        model: str,
+        reasoning_model: Optional[str] = None,
+        embedding_model: Optional[str] = None,
+        base_url: Optional[str] = None,
+        api_key: Optional[str] = None,
+        embedding_base_url: Optional[str] = None,
+        embedding_api_key: Optional[str] = None,
+    ):
+        """Initialize the agent with user-specified models and env-based endpoints."""
 
-        # Initialize AsyncOpenAI client for chat model
-        base_url = os.getenv("SCI_MODEL_BASE_URL")
-        if base_url is None:
-            raise ValueError("SCI_MODEL_BASE_URL environment variable is not set")
-        api_key = os.getenv("SCI_MODEL_API_KEY")
-        if api_key is None:
-            raise ValueError("SCI_MODEL_API_KEY environment variable is not set")
-        self.client = AsyncOpenAI(
-            base_url=base_url,
-            api_key=api_key
-        )
-        
-        # Initialize AsyncOpenAI client for embedding model
-        emb_base_url = os.getenv("SCI_EMBEDDING_BASE_URL")
-        if emb_base_url is None:
-            raise ValueError("SCI_EMBEDDING_BASE_URL environment variable is not set")
-        emb_api_key = os.getenv("SCI_EMBEDDING_API_KEY")
-        if emb_api_key is None:
-            raise ValueError("SCI_EMBEDDING_API_KEY environment variable is not set")
-        self.emb_client = AsyncOpenAI(
-            base_url=emb_base_url,
-            api_key=emb_api_key
-        )
-        
+        if not model:
+            raise ValueError("model must be provided by the caller")
+
+        self.model = model
+        self.reasoning_model = reasoning_model or model
+        self.emb_model = embedding_model or model
+
+        resolved_base_url = base_url or os.getenv("OPENAI_BASE_URL")
+        resolved_api_key = api_key or os.getenv("OPENAI_API_KEY")
+        if not resolved_base_url:
+            raise ValueError("OPENAI_BASE_URL is not set")
+        if not resolved_api_key:
+            raise ValueError("OPENAI_API_KEY is not set")
+
+        self.client = AsyncOpenAI(base_url=resolved_base_url, api_key=resolved_api_key)
+
+        resolved_emb_base_url = embedding_base_url or resolved_base_url
+        resolved_emb_api_key = embedding_api_key or resolved_api_key
+        self.emb_client = AsyncOpenAI(base_url=resolved_emb_base_url, api_key=resolved_emb_api_key)
+
     def extract_pdf_text_from_base64(self, pdf_b64: str) -> str:
-        """
-        Extract text from base64-encoded PDF using PyPDF2,
-        and print page index and extracted text for debugging.
-        """
+        """Extract text from base64-encoded PDF (legacy support)."""
         try:
             pdf_bytes = base64.b64decode(pdf_b64)
             reader = PyPDF2.PdfReader(BytesIO(pdf_bytes))
@@ -87,18 +111,44 @@ class BaseAgent(ABC):
                 except Exception as e:
                     logger.warning(f"Page {i} extract_text() failed: {e}")
                     text = ""
-                # 打印页号和文字前几百个字符避免控制台爆掉
-                # logger.debug(f"\n=== Page {i} ({len(text)} chars) ===")
-                # logger.debug(text)
                 pages.append(text)
 
             joined = "\n".join(pages)
-            logger.info(f"\nPDF Parsing Completed. Total pages: {len(pages)}, total length: {len(joined)} characters\n")
+            logger.info(
+                f"\nPDF Parsing Completed. Total pages: {len(pages)}, total length: {len(joined)} characters\n"
+            )
             return joined
 
         except Exception as e:
             logger.error(f"PDF parsing error: {str(e)}")
             return ""
+
+    def prepare_paper_blocks(self, paper_json: Any) -> List[Dict[str, Any]]:
+        """Normalize user-provided paper JSON (dict/string/path) into ordered blocks."""
+        data: Dict[str, Any] = {}
+        if isinstance(paper_json, str):
+            # try parsing JSON string first, then fallback to filesystem path
+            try:
+                data = json.loads(paper_json)
+            except Exception:
+                from pathlib import Path
+
+                path = Path(paper_json).expanduser()
+                if not path.exists():
+                    raise ValueError(f"Paper JSON not found: {path}")
+                with path.open("r", encoding="utf-8") as f:
+                    data = json.load(f)
+        elif isinstance(paper_json, dict):
+            data = paper_json
+        else:
+            raise TypeError("paper_json must be dict or JSON/string path")
+
+        paper = data.get("paper", data) if isinstance(data, dict) else {}
+        return _normalize_blocks(paper)
+
+    def blocks_to_text(self, blocks: List[Dict[str, Any]], enable_mm: bool = False) -> str:
+        """Convert normalized blocks to plain text, optionally including multimodal markers."""
+        return _blocks_to_text(blocks, enable_mm=enable_mm)
         
     async def get_embedding(self, text: str) -> list[float]:
         """

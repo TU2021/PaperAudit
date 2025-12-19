@@ -12,6 +12,9 @@ class PaperMemorySummarizer(BaseAgent):
     输出：纯文本，高信息密度，用于下游 reviewer 快速 recall 论文内容。
     """
 
+    def __init__(self, **kwargs: Any):
+        super().__init__(**kwargs)
+
     SYSTEM_PROMPT = (
         "You are a meticulous scientific summarizer. Read the entire manuscript "
         "(all sections, tables, figures) and produce a NATURAL-LANGUAGE MEMORY document "
