@@ -6,9 +6,8 @@ import argparse, json, os, re, sys, time, traceback
 from dataclasses import dataclass, asdict
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import Callable, Union
 from mas_reference_helper import enrich_section_blocks_with_local_references
 
 try:
@@ -16,14 +15,13 @@ try:
 except Exception:
     tqdm = None
 
-# ---- OpenAI SDK ----
-from openai import OpenAI
-from openai import (
-    APIError, RateLimitError, APITimeoutError, APIConnectionError,
-    AuthenticationError, BadRequestError, PermissionDeniedError,
-    UnprocessableEntityError
+from utils import (
+    call_llm_chat_with_empty_retries,
+    call_web_search_via_tool,
+    extract_json_from_text,
+    load_json,
+    save_json,
 )
-from utils import extract_json_from_text, get_openai_client, load_json, save_json
 
 # =========================
 # 全局配置
@@ -59,7 +57,6 @@ MEMORY_MAX_CHARS_PER_TASK     = int(os.getenv("MEMORY_MAX_CHARS_PER_TASK", "2000
 # 统一上下文预算（仅限 *输入*）
 MAX_CTX_CHARS = int(os.getenv("MAX_CTX_CHARS", "120000"))
 
-LLM_MAX_RETRIES   = 3   # SDK 层网络/速率重试
 EMPTY_RETRY_TIMES = 2   # 逻辑层空输出/解析失败重试（本文件所有阶段统一使用）
 
 DEFAULT_GLOBAL_MAX_FINDINGS = int(os.getenv("GLOBAL_MAX_FINDINGS", "200"))
@@ -87,174 +84,6 @@ def output_has_zero_findings(out_json: Path) -> bool:
     except Exception:
         return False
 
-def call_llm_chat(messages: List[Dict[str, Any]], model: str, max_tokens: int, temperature: float) -> Optional[str]:
-    """底层 chat.completions 调用，已含异常与速率重试。"""
-    client = get_openai_client(OPENAI_API_KEY)
-    last_exc = None
-    for attempt in range(1, LLM_MAX_RETRIES + 1):
-        try:
-            resp = client.chat.completions.create(
-                model=model, messages=messages,
-                temperature=temperature, max_tokens=max_tokens, n=1
-            )
-            return resp.choices[0].message.content
-        except RateLimitError as e:
-            last_exc = e; wait = 2 ** attempt
-            print(f"[RATE LIMIT] attempt {attempt}, waiting {wait}s...", file=sys.stderr)
-            time.sleep(wait)
-        except (APITimeoutError, APIConnectionError) as e:
-            last_exc = e
-            print(f"[TEMP ERROR] attempt {attempt}: {e}", file=sys.stderr)
-            time.sleep(1.5 * attempt)
-        except (BadRequestError, AuthenticationError, PermissionDeniedError, UnprocessableEntityError, APIError) as e:
-            last_exc = e
-            print(f"[FATAL] {e}", file=sys.stderr); break
-        except Exception as e:
-            last_exc = e
-            print(f"[ERROR] attempt {attempt}: {e}", file=sys.stderr)
-            time.sleep(1.0 * attempt)
-    print(f"[LLM FAILURE] {last_exc}", file=sys.stderr)
-    return None
-
-def call_llm_chat_with_empty_retries(
-    msg_builder: Union[Callable[[float], Any], List[Dict[str, Any]], Dict[str, Any]],
-    model: str,
-    max_tokens: int,
-    tag: str,
-    dbgdir: Path,
-    temperature: float = 0.0,
-    expect_key: Optional[str] = None,
-    retries: int = EMPTY_RETRY_TIMES
-) -> Optional[str]:
-    """
-    空输出/解析失败重试统一入口：
-      - msg_builder: callable(temperature)->messages 或 直接 messages(list/dict)
-      - expect_key: 若不为空，则强制解析 JSON 并检查该 key 非空
-    """
-    last_raw = None
-
-    def _coerce_messages():
-        if callable(msg_builder):
-            return msg_builder(temperature)
-        if isinstance(msg_builder, (list, dict)):
-            return msg_builder
-        raise TypeError(f"msg_builder must be a callable or list/dict, got: {type(msg_builder)}")
-
-    for k in range(retries + 1):
-        try:
-            messages = _coerce_messages()
-        except Exception as e:
-            print(f"[FATAL][{tag}] building messages failed: {e}", file=sys.stderr)
-            break
-
-        raw = call_llm_chat(messages, model=model, max_tokens=max_tokens, temperature=temperature)
-        last_raw = raw
-
-        if raw is None or not raw.strip():
-            print(f"[WARN][{tag}] empty raw (try {k+1}/{retries+1})", file=sys.stderr)
-            continue
-
-        if expect_key:
-            try:
-                obj = extract_json_from_text(raw)
-                # expect_key 存在且非空即视为成功
-                if obj.get(expect_key) is not None:
-                    return raw
-                print(f"[WARN][{tag}] parsed but '{expect_key}' missing/empty (try {k+1}/{retries+1})", file=sys.stderr)
-                continue
-            except Exception as e:
-                print(f"[WARN][{tag}] parse failed: {e} (try {k+1}/{retries+1})", file=sys.stderr)
-                continue
-        else:
-            return raw
-
-    if last_raw is not None:
-        try:
-            save_json({"raw": last_raw}, dbgdir / f"{tag}.last_raw.json")
-        except Exception:
-            pass
-    return last_raw
-
-# --- Responses API + tools（专供 Web Search：Step-B） ---
-def call_web_search_via_tool(queries: List[str], model: str, temperature: float) -> List[Dict[str, str]]:
-    """
-    使用 Responses API + tools=[{"type":"web_search"}]。
-    输入 queries（短问句），让模型执行联网检索并直接返回答案。
-    返回 [{'query': '...', 'answer': '...'}...]
-    """
-    if not queries:
-        return []
-
-    client = get_openai_client(OPENAI_API_KEY)
-    sys_prompt = (
-        "You are a web-search assistant. Given a list of short self-contained factual questions, "
-        "use the web_search tool to find relevant information on the internet, "
-        "and then return concise, direct answers for each question.\n"
-        "Return ONLY valid JSON in the form:\n"
-        "{'answers':[{'query':'...','answer':'...'}]}\n"
-        "Each answer should be brief, factual, and self-contained."
-    )
-    user_payload = {"queries": queries}
-    messages = [
-        {"role": "system", "content": sys_prompt},
-        {"role": "user", "content": "INPUT(JSON):\n" + json.dumps(user_payload, ensure_ascii=False)}
-    ]
-
-    last_exc = None
-    for attempt in range(1, LLM_MAX_RETRIES + 1):
-        try:
-            resp = client.responses.create(
-                model=model,
-                input=messages,
-                tools=[{"type": "web_search"}],
-                temperature=temperature,
-                max_output_tokens=4000
-            )
-            # 抓取输出文本
-            text_fragments = []
-            if hasattr(resp, "output") and resp.output:
-                for block in getattr(resp, "output"):
-                    t = getattr(block, "type", None)
-                    if t == "message":
-                        for part in getattr(block, "content", []) or []:
-                            if getattr(part, "type", None) in ("output_text", "text"):
-                                txt = getattr(part, "text", "")
-                                if txt: text_fragments.append(txt)
-                    elif t in ("output_text", "text"):
-                        txt = getattr(block, "text", "")
-                        if txt: text_fragments.append(txt)
-            if not text_fragments and hasattr(resp, "output_text"):
-                text_fragments.append(resp.output_text)
-
-            raw = "\n".join(text_fragments).strip() if text_fragments else ""
-            obj = extract_json_from_text(raw or "{}")
-
-            items = []
-            for it in obj.get("answers", []) or []:
-                if not isinstance(it, dict):
-                    continue
-                q = (it.get("query") or "").strip()
-                ans = (it.get("answer") or "").strip()
-                if q and ans:
-                    items.append({"query": q, "answer": ans})
-            return items
-        except RateLimitError as e:
-            last_exc = e; wait = 2 ** attempt
-            print(f"[RATE LIMIT] web-search attempt {attempt}, waiting {wait}s...", file=sys.stderr)
-            time.sleep(wait)
-        except (APITimeoutError, APIConnectionError) as e:
-            last_exc = e
-            print(f"[TEMP ERROR] web-search attempt {attempt}: {e}", file=sys.stderr)
-            time.sleep(1.5 * attempt)
-        except (BadRequestError, AuthenticationError, PermissionDeniedError, UnprocessableEntityError, APIError) as e:
-            last_exc = e
-            print(f"[FATAL] web-search {e}", file=sys.stderr); break
-        except Exception as e:
-            last_exc = e
-            print(f"[ERROR] web-search attempt {attempt}: {e}", file=sys.stderr)
-            time.sleep(1.0 * attempt)
-    print(f"[WEB SEARCH FAILURE] {last_exc}", file=sys.stderr)
-    return []
 
 # =========================
 # 数据结构
@@ -856,8 +685,14 @@ def build_paper_memory(blocks: List[Dict[str, Any]], dbgdir: Path, model: str, e
     def _messages(_):
         return build_memory_messages(blocks, enable_mm=enable_mm)
     raw = call_llm_chat_with_empty_retries(
-        _messages, model=model, max_tokens=32768, tag="memory_build", dbgdir=dbgdir,
-        expect_key=None, temperature=TEMP_MEMORY
+        _messages,
+        model=model,
+        max_tokens=32768,
+        tag="memory_build",
+        dbgdir=dbgdir,
+        expect_key=None,
+        temperature=TEMP_MEMORY,
+        api_key=OPENAI_API_KEY,
     )
     meta = {"memory_parse_ok": False, "error": None, "mode": "natural_language"}
     if not raw or not raw.strip():
@@ -946,8 +781,14 @@ def planner_build_tasks_mm(blocks: List[Dict[str, Any]], outline_obj: Dict[str, 
     def _messages(_):
         return build_planner_messages_multimodal(blocks, outline_obj, enable_mm=enable_mm)
     raw = call_llm_chat_with_empty_retries(
-        _messages, model=model, max_tokens=32768, tag="planner", dbgdir=dbgdir, expect_key="tasks",
-        temperature=TEMP_PLANNER
+        _messages,
+        model=model,
+        max_tokens=32768,
+        tag="planner",
+        dbgdir=dbgdir,
+        expect_key="tasks",
+        temperature=TEMP_PLANNER,
+        api_key=OPENAI_API_KEY,
     )
     tasks: List[Task] = []
     meta = {"planner_parse_ok": False, "error": None, "used": "llm_mm"}
@@ -1042,9 +883,14 @@ def retriever_extract_and_questions(
         )
 
     raw = call_llm_chat_with_empty_retries(
-        _messages, model=model, max_tokens=32768,
-        tag=f"task_{task.task_id}.retriever", dbgdir=dbgdir,
-        expect_key="paper_evidence", temperature=TEMP_RETRIEVER
+        _messages,
+        model=model,
+        max_tokens=32768,
+        tag=f"task_{task.task_id}.retriever",
+        dbgdir=dbgdir,
+        expect_key="paper_evidence",
+        temperature=TEMP_RETRIEVER,
+        api_key=OPENAI_API_KEY,
     )
 
     paper_e: List[Evidence] = []
@@ -1129,7 +975,12 @@ def perform_web_search_for_queries(
         return []
 
     # 2) 调用联网搜索工具
-    answers = call_web_search_via_tool(queries=qlist, model=detect_model, temperature=temperature)
+    answers = call_web_search_via_tool(
+        queries=qlist,
+        model=detect_model,
+        temperature=temperature,
+        api_key=OPENAI_API_KEY,
+    )
     save_json({"answers": answers}, dbgdir / "web_queries.answers.json")
 
     # 3) 转为 Evidence（block_type='web'，不依赖 URL 字段）
@@ -1221,10 +1072,14 @@ def specialist_review(
         enable_mm=enable_mm
     )
     raw = call_llm_chat_with_empty_retries(
-        messages, model=model, max_tokens=32768,
+        messages,
+        model=model,
+        max_tokens=32768,
         tag=f"task_{task.task_id}.specialist_{task.risk_dimension}",
-        dbgdir=dbgdir, expect_key="findings",
-        temperature=TEMP_SPECIALIST
+        dbgdir=dbgdir,
+        expect_key="findings",
+        temperature=TEMP_SPECIALIST,
+        api_key=OPENAI_API_KEY,
     )
 
     findings: List[Finding] = []
@@ -1289,8 +1144,14 @@ def global_cross_section_review(blocks: List[Dict[str, Any]], dbgdir: Path, mode
         ]
 
     raw = call_llm_chat_with_empty_retries(
-        _messages, model=model, max_tokens=32768, tag="global_review", dbgdir=dbgdir, expect_key="findings",
-        temperature=TEMP_GLOBAL_REVIEW
+        _messages,
+        model=model,
+        max_tokens=32768,
+        tag="global_review",
+        dbgdir=dbgdir,
+        expect_key="findings",
+        temperature=TEMP_GLOBAL_REVIEW,
+        api_key=OPENAI_API_KEY,
     )
     findings: List[Finding] = []
     meta = {"global_parse_ok": False, "error": None, "used": "llm_mm_global"}
@@ -1358,10 +1219,14 @@ def section_level_review(
             {"role": "user", "content": build_section_user_parts(section_blocks, section_title, memory_slice, build_section_user_parts)},
         ]
     raw = call_llm_chat_with_empty_retries(
-        _messages, model=model, max_tokens=32768,
+        _messages,
+        model=model,
+        max_tokens=32768,
         tag=f"section_review.{re.sub(r'[^A-Za-z0-9._-]+','_', section_title or 'Unknown')}",
-        dbgdir=dbgdir, expect_key="findings",
-        temperature=TEMP_SECTION_REVIEW
+        dbgdir=dbgdir,
+        expect_key="findings",
+        temperature=TEMP_SECTION_REVIEW,
+        api_key=OPENAI_API_KEY,
     )
 
     findings: List[Finding] = []
@@ -1430,7 +1295,8 @@ def merge_and_adjudicate(all_findings: List[Finding], dbgdir: Path, model: str) 
         dbgdir=dbgdir,
         temperature=TEMP_MERGER,
         expect_key="findings",
-        retries=EMPTY_RETRY_TIMES
+        retries=EMPTY_RETRY_TIMES,
+        api_key=OPENAI_API_KEY,
     )
 
     merged: List[Finding] = []
