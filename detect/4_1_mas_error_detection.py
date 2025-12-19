@@ -7,7 +7,6 @@ from dataclasses import dataclass, asdict
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
-from threading import Lock
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Callable, Union
 from mas_reference_helper import enrich_section_blocks_with_local_references
@@ -24,6 +23,7 @@ from openai import (
     AuthenticationError, BadRequestError, PermissionDeniedError,
     UnprocessableEntityError
 )
+from utils import extract_json_from_text, get_openai_client, load_json, save_json
 
 # =========================
 # 全局配置
@@ -74,46 +74,6 @@ TEMP_SECTION_REVIEW  = float(os.getenv("TEMP_SECTION_REVIEW",  "0.2"))
 TEMP_MERGER          = float(os.getenv("TEMP_MERGER",          "0.2"))
 # Web Search 使用 DEFAULT_SEARCH_TEMPERATURE
 
-# =========================
-# I/O & util
-# =========================
-def load_json(path: Path) -> dict:
-    with path.open("r", encoding="utf-8") as f:
-        return json.load(f)
-
-def save_json(obj, path: Path):
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("w", encoding="utf-8") as f:
-        json.dump(obj, f, indent=2, ensure_ascii=False)
-
-def extract_json_from_text(text: str):
-    """尽力从 LLM 自由文本中抽取 JSON 对象（容错）。"""
-    text = (text or "").strip()
-    if not text:
-        raise ValueError("Empty text.")
-    # 1) 直接解析
-    try:
-        return json.loads(text)
-    except Exception:
-        pass
-    # 2) 最外层大括号范围
-    start = text.find("{"); end = text.rfind("}")
-    if start != -1 and end != -1 and end > start:
-        candidate = text[start:end+1]
-        for _ in range(5):
-            try:
-                return json.loads(candidate)
-            except Exception:
-                end = text.rfind("}", 0, end-1)
-                if end <= start:
-                    break
-                candidate = text[start:end+1]
-    # 3) 第一个 JSON-like
-    m = re.search(r"\{(?:.|\n)*?\}", text)
-    if m:
-        return json.loads(m.group(0))
-    raise ValueError("Failed to extract JSON from LLM output.")
-
 def output_has_zero_findings(out_json: Path) -> bool:
     """
     Return True iff out_json exists and parses, and contains findings == [].
@@ -126,21 +86,6 @@ def output_has_zero_findings(out_json: Path) -> bool:
         return isinstance(findings, list) and len(findings) == 0
     except Exception:
         return False
-
-# =========================
-# OpenAI client & LLM 调用
-# =========================
-_client_singleton: Optional[OpenAI] = None
-_client_lock = Lock()
-
-def get_openai_client(api_key: Optional[str]) -> OpenAI:
-    global _client_singleton
-    with _client_lock:
-        if _client_singleton is None:
-            if not api_key:
-                raise RuntimeError("OPENAI_API_KEY not set.")
-            _client_singleton = OpenAI(api_key=api_key)
-        return _client_singleton
 
 def call_llm_chat(messages: List[Dict[str, Any]], model: str, max_tokens: int, temperature: float) -> Optional[str]:
     """底层 chat.completions 调用，已含异常与速率重试。"""

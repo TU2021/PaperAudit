@@ -31,6 +31,7 @@ from dataclasses import dataclass
 
 from tqdm import tqdm
 from openai import OpenAI
+from utils import extract_json_from_text, load_json, save_json
 
 # ================= 全局配置 =================
 MODEL = "gpt-5-2025-08-07"
@@ -77,28 +78,6 @@ LABEL_SYS_PROMPT = (
 )
 
 # ================= 工具函数 =================
-def load_json(path: Path):
-    with open(path, "r", encoding="utf-8") as f:
-        return json.load(f)
-
-def save_json(obj, path: Path):
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with open(path, "w", encoding="utf-8") as f:
-        json.dump(obj, f, indent=2, ensure_ascii=False)
-
-def extract_json_from_text(text: str):
-    text = (text or "").strip()
-    try:
-        return json.loads(text)
-    except Exception:
-        start, end = text.find("{"), text.rfind("}")
-        if start != -1 and end != -1:
-            try:
-                return json.loads(text[start:end+1])
-            except Exception:
-                pass
-    raise ValueError("Failed to extract JSON from LLM output")
-
 def normalize_to_1_based_indices(blocks: List[Dict[str, Any]]) -> List[int]:
     return list(range(1, len(blocks) + 1))
 

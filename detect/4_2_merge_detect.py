@@ -8,6 +8,7 @@ import sys
 import re
 from pathlib import Path
 from typing import Any, Dict, List, Tuple, Optional
+from utils import load_json, save_json
 
 
 # =========================
@@ -18,18 +19,6 @@ DEFAULT_SYNTH_MODEL = "gpt-5-2025-08-07"
 DEFAULT_ROOT_DIR = "data/ICML_30"
 DEFAULT_MODES = ["deep", "standard"]
 
-
-# =========================
-# IO
-# =========================
-def load_json(p: Path) -> Dict[str, Any]:
-    with p.open("r", encoding="utf-8") as f:
-        return json.load(f)
-
-def save_json(obj: Any, p: Path) -> None:
-    p.parent.mkdir(parents=True, exist_ok=True)
-    with p.open("w", encoding="utf-8") as f:
-        json.dump(obj, f, ensure_ascii=False, indent=2)
 
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)

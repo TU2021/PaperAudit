@@ -22,7 +22,6 @@ import asyncio
 import json, os, re, time, sys
 from typing import List, Dict, Any, Tuple, Optional
 from pathlib import Path
-from threading import Lock
 from datetime import datetime
 
 try:
@@ -36,6 +35,7 @@ from openai import (
     AuthenticationError, BadRequestError, PermissionDeniedError,
     UnprocessableEntityError
 )
+from utils import extract_json_from_text, get_openai_client, load_json, save_json
 
 # ================= 默认配置 =================
 DEFAULT_DETECT_MODEL= "o4-mini"      # 真正调用评估的模型
@@ -53,51 +53,6 @@ FINDING_TYPES = [
 ]
 
 # ================= 工具函数 =================
-def load_json(path: str) -> dict:
-    with open(path, "r", encoding="utf-8") as f:
-        return json.load(f)
-
-def save_json(obj, path: str):
-    Path(path).parent.mkdir(parents=True, exist_ok=True)
-    with open(path, "w", encoding="utf-8") as f:
-        json.dump(obj, f, indent=2, ensure_ascii=False)
-
-def extract_json_from_text(text: str):
-    """
-    尽最大可能从模型输出中解析出 JSON 对象
-    """
-    text = (text or "").strip()
-    try:
-        return json.loads(text)
-    except Exception:
-        pass
-    start = text.find("{"); end = text.rfind("}")
-    if start != -1 and end != -1 and end > start:
-        candidate = text[start:end+1]
-        for _ in range(5):
-            try:
-                return json.loads(candidate)
-            except Exception:
-                end = text.rfind("}", 0, end-1)
-                if end <= start: break
-                candidate = text[start:end+1]
-    m = re.search(r"\{(?:.|\n)*?\}", text)
-    if m:
-        return json.loads(m.group(0))
-    raise ValueError("Failed to extract JSON from LLM output.")
-
-# ================= OpenAI 客户端（线程安全懒加载） =================
-_client_singleton: Optional[OpenAI] = None
-_client_lock = Lock()
-
-def get_openai_client(api_key: Optional[str]) -> OpenAI:
-    global _client_singleton
-    with _client_lock:
-        if _client_singleton is None:
-            if not api_key:
-                raise RuntimeError("OPENAI_API_KEY is not set.")
-            _client_singleton = OpenAI(api_key=api_key)
-        return _client_singleton
 
 # ============== 多模态（逐块）输入构建 ==============
 def build_eval_rules_prompt(title: str) -> str:

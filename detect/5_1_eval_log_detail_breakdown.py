@@ -8,6 +8,7 @@ import sys
 from pathlib import Path
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple
+from utils import load_json, save_json
 
 
 # ======================
@@ -19,18 +20,6 @@ DEFAULT_SYNTH_MODEL  = "gpt-5-2025-08-07"
 DEFAULT_EVAL_MODEL   = "gpt-5-2025-08-07"
 DEFAULT_EVAL_MODE    = "standard_wo_memory"  # folder: <eval_mode>_eval
 
-
-# ======================
-# IO utils
-# ======================
-def load_json(p: Path) -> Dict[str, Any]:
-    with p.open("r", encoding="utf-8") as f:
-        return json.load(f)
-
-def save_json(obj: Any, p: Path) -> None:
-    p.parent.mkdir(parents=True, exist_ok=True)
-    with p.open("w", encoding="utf-8") as f:
-        json.dump(obj, f, ensure_ascii=False, indent=2)
 
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)

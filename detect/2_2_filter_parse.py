@@ -24,6 +24,7 @@ import re
 from typing import List, Dict, Any
 from collections import Counter
 from tqdm import tqdm
+from utils import load_json, save_json
 
 # ===========================================================
 # 全局变量 —— 在这里改开关
@@ -35,16 +36,6 @@ OUTPUT_NAME = "paper_final.json"
 ROOT_DIR = "/mnt/parallel_ssd/home/zdhs0006/mlrbench/download/data/ICLR_30"
 # ===========================================================
 
-
-# ======= 基础工具 ======= #
-def load_json(p: Path) -> Dict[str, Any]:
-    with p.open("r", encoding="utf-8") as f:
-        return json.load(f)
-
-def save_json(obj, p: Path):
-    p.parent.mkdir(parents=True, exist_ok=True)
-    with p.open("w", encoding="utf-8") as f:
-        json.dump(obj, f, indent=2, ensure_ascii=False)
 
 def find_jsons(root: Path, name: str) -> List[Path]:
     return sorted([p for p in root.rglob(name) if p.is_file()])
