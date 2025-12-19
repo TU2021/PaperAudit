@@ -1,0 +1,8 @@
+# 忽略整个数据集目录
+data/
+
+# （可选）常见忽略项
+__pycache__/
+*.pyc
+.vscode/
+.DS_Store

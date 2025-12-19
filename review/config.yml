@@ -1,0 +1,39 @@
+# Global configuration for s1-review
+llm:
+  max_retries: 10
+  initial_retry_delay: 1.0
+  max_retry_delay: 10.0
+  backoff_multiplier: 2.0
+  default_temperature: 0.2
+  default_max_tokens: 65536
+
+retrieval:
+  retry_delay_base: 2
+  semantic_scholar_max_retries: 5
+  arxiv_max_retries: 5
+  max_results: 15
+
+concurrency:
+  cheating_detector: 6
+  motivation_evaluator: 5
+
+agents:
+  motivation_evaluator:
+    temperature: 0.3
+  paper_memory_summarizer:
+    temperature: 0.4
+  paper_structurer_old:
+    temperature: 0.2
+  cheating_detector:
+    temperature: 1.0
+  baseline:
+    temperature: 0.2
+  paper_structurer:
+    temperature: 0.0
+  neurodong:
+    temperature: 0.2
+  summarizer:
+    temperature: 1.0
+
+paper_structure:
+  max_sections: 5

@@ -1,0 +1,220 @@
+paper_id,primary_area,total_tokens_est,synth_errors_applied_count
+Tv2JDGw920,general_machine_learning,43562,13
+WGXb7UdvTX,deep_learning->large_language_models,42372,15
+2uheUFcFsM,deep_learning->generative_models_and_autoencoders,42556,15
+4tFSKOY2mT,applications->computer_vision,41061,16
+vQubr1uBUw,deep_learning->large_language_models,42030,13
+DmH4HHVb3y,social_aspects->alignment,44860,15
+M6L7Eaw9BW,deep_learning,20664,15
+2aKHuXdr7Q,social_aspects->privacy,41139,12
+aOIJ2gVRWW,deep_learning->large_language_models,48492,15
+EVwMw2lVlw,applications->everything_else,44287,15
+esBoQFmD7v,deep_learning->attention_mechanisms,43313,14
+7Tp9zjP9At,applications->everything_else,34378,14
+wUEp13rqXP,deep_learning->large_language_models,17327,14
+5zwF1GizFa,deep_learning->large_language_models,40926,18
+PqDvTWdQwm,theory->optimization,32964,16
+R0PBjxIbgm,applications->chemistry_physics_and_earth_sciences,46838,14
+nq5bt0mRTC,reinforcement_learning,54831,14
+feIaF6vYFl,deep_learning->large_language_models,32081,14
+xmbdACI0xu,applications,46114,16
+pOAEfqa26i,applications->neuroscience_cognitive_science,32877,15
+LCbHsdtvOR,theory->optimization,34344,15
+OZSXYeqpI1,social_aspects->privacy,37772,16
+4EYwwVuhtG,theory->probabilistic_methods,37092,16
+DjJmre5IkP,deep_learning->generative_models_and_autoencoders,29917,16
+Rc7y9HFC34,deep_learning->generative_models_and_autoencoders,46472,16
+3go0lhfxd0,theory->deep_learning,67771,16
+ZAlII9wL5i,deep_learning->graph_neural_networks,27072,16
+mIomqOskaa,reinforcement_learning->deep_rl,48103,16
+rc65N9xIrY,deep_learning->large_language_models,34819,15
+mr0xOQTJkL,general_machine_learning->causality,31959,13
+d2aGLPSpFz,general_machine_learning->representation_learning,45875,16
+v77ZMzbsBA,deep_learning->everything_else,34818,13
+NIe74CY9lk,deep_learning->generative_models_and_autoencoders,33125,14
+z19u9B2fCZ,general_machine_learning->representation_learning,32875,13
+ZdqTePSV1K,general_machine_learning,38007,16
+26JsumCG0z,social_aspects->fairness,48201,13
+up21Rwj5Fo,general_machine_learning->everything_else,35650,15
+OWIPDWhUcO,deep_learning->attention_mechanisms,29900,16
+EZV4edMGM1,theory->learning_theory,30285,14
+uRAgIVnAO6,theory->online_learning_and_bandits,29267,13
+36hVB7DEB0,general_machine_learning->representation_learning,42662,16
+X9vBykZVYg,deep_learning->large_language_models,38583,14
+tO7OVZkCo1,applications->computer_vision,43410,18
+70voOlSPos,probabilistic_methods->graphical_models,44842,13
+4AmFA0qNQ2,applications->language_speech_and_dialog,26883,14
+etxseIT47b,theory->optimization,28924,13
+QmIzUuspWo,optimization->stochastic,35595,15
+o9zDYV4Ism,theory->deep_learning,40920,15
+aHzPGyUhZa,social_aspects->safety,41052,16
+PNmkjIzHB7,probabilistic_methods->bayesian_models_and_methods,22110,13
+LbJQYNSH41,probabilistic_methods->bayesian_models_and_methods,29100,16
+imcyVlzpXh,deep_learning->large_language_models,41002,15
+zBBYsVGKuB,reinforcement_learning->multiagent,62673,16
+Fvq9ogLnLN,deep_learning,62032,16
+GFpjO8S8Po,applications->computer_vision,42271,13
+zf9zwCRKyP,social_aspects->security,28354,17
+V0w8Kj3K6L,social_aspects->everything_else,36339,15
+uitj69FqD5,general_machine_learning->transfer_multitask_and_metalearning,43089,16
+qMt4KikFJg,deep_learning->generative_models_and_autoencoders,50705,15
+LO7ciRpjI5,deep_learning->foundation_models,66833,16
+46yLEXtav4,social_aspects->robustness,39614,14
+x4qvBVuzzu,deep_learning->algorithms,21890,14
+FJKnru1xUF,social_aspects->security,26656,15
+kV8oUyjdIg,optimization,40867,12
+reuShgiHdg,applications->computer_vision,23359,17
+F08lzoBgad,deep_learning->attention_mechanisms,36030,15
+Gq4Gay8rDB,deep_learning,55853,14
+1b7whO4SfY,deep_learning,35549,15
+7AwFJzgIUW,deep_learning,36697,16
+sYK4yPDuT1,social_and_economic_aspects_of_machine_learning,57560,13
+s0JVsx3bx1,general_machine_learning,54034,14
+fohuurA03P,applications,28339,14
+qYkhCah8OZ,deep_learning,31303,14
+oJ84bedrtM,deep_learning,32338,16
+F0JzotXYgC,theory,45212,14
+8P3QNSckMp,reinforcement_learning,44477,16
+Q3qAsZAEZw,deep_learning,46530,15
+IfD2MKTmWv,deep_learning,47758,17
+efOq8wHH9o,deep_learning,28673,17
+BSZqpqgqM0,deep_learning,29931,14
+kVz9uvqUna,deep_learning,30808,13
+rtG7n93Ru8,reinforcement_learning,40733,15
+zIzZxDsNNP,deep_learning,44468,15
+XQ87Vo9GIz,machine_learning_for_sciences,46572,17
+CaSQgef484,deep_learning,49936,17
+NM8Apk61NA,applications,25965,18
+JFygzwx8SJ,deep_learning,58673,16
+s6YHno8Ke3,general_machine_learning,38150,14
+NM4emKloy6,deep_learning,42890,13
+uWj4s7rMnR,deep_learning,26088,15
+0biUwyjKkm,applications,31834,11
+Zd6VyjmN1S,infrastructure,30313,15
+m7MD0sa8Re,neuroscience_and_cognitive_science,37194,15
+aUAG1WS7J2,general_machine_learning,39535,13
+oGmROC4e4W,reinforcement_learning,24585,14
+XO9fhSZkBh,theory,28625,14
+XoN10bZtR9,general_machine_learning,40101,15
+eIDa6pd9iQ,deep_learning,28687,14
+zJdutIT6vT,social_and_economic_aspects_of_machine_learning,39186,15
+B6bE2GC71a,evaluation,40663,15
+aLhA7AYLLR,applications,38331,16
+UVDihUz0iT,theory,38554,13
+JcEqp4aPmb,deep_learning,34896,16
+tirl2l9oKg,deep_learning,26937,14
+jzPQRbGkAq,deep_learning,30590,15
+KurYdcCbjv,deep_learning,32394,16
+Q6IyUpBmrG,deep_learning,33208,16
+jRXgRC6fu7,applications,22267,13
+s6k9l5yX8e,applications,27736,14
+koEALFNBj1,deep_learning,54740,12
+i5WnXNjwbR,evaluation,34391,12
+WJujF9An5L,machine_learning_for_sciences,29872,16
+ZCOwwRAaEl,"probabilistic methods (Bayesian methods, variational inference, sampling, UQ, etc.)",45169,15
+n2NidsYDop,learning theory,39573,17
+V4K9h1qNxE,interpretability and explainable AI,44817,13
+CLE09ESvul,interpretability and explainable AI,32334,15
+JDm7oIcx4Y,optimization,28350,14
+FSjIrOm1vz,"other topics in machine learning (i.e., none of the above)",46922,18
+or8mMhmyRV,reinforcement learning,40122,15
+wM2sfVgMDH,"applications to robotics, autonomy, planning",44420,16
+xByvdb3DCm,causal reasoning,55883,12
+dhAL5fy8wS,"foundation or frontier models, including LLMs",44753,14
+j7cyANIAxV,datasets and benchmarks,47789,14
+Bo62NeU6VF,"alignment, fairness, safety, privacy, and societal considerations",22799,16
+4OaO3GjP7k,reinforcement learning,36612,16
+Cjz9Xhm7sI,"applications to computer vision, audio, language, and other modalities",32637,15
+bVTM2QKYuA,interpretability and explainable AI,55183,16
+OlzB6LnXcS,generative models,26560,16
+stUKwWBuBm,learning theory,18930,14
+TwJrTz9cRS,"other topics in machine learning (i.e., none of the above)",40332,15
+EO8xpnW7aX,generative models,33198,14
+tTPHgb0EtV,"alignment, fairness, safety, privacy, and societal considerations",35934,16
+SBCMNc3Mq3,datasets and benchmarks,25777,17
+meRCKuUpmc,"applications to robotics, autonomy, planning",38828,17
+8enWnd6Gp3,"applications to computer vision, audio, language, and other modalities",58127,17
+cmfyMV45XO,learning on time series and dynamical systems,44352,16
+OfjIlbelrT,generative models,48959,13
+3IFRygQKGL,reinforcement learning,51413,17
+kX8h23UG6v,"probabilistic methods (Bayesian methods, variational inference, sampling, UQ, etc.)",35531,14
+fMTPkDEhLQ,optimization,35765,13
+BPgK5XW1Nb,generative models,25902,14
+eHehzSDUFp,"foundation or frontier models, including LLMs",43644,16
+X1OfiRYCLn,datasets and benchmarks,52644,15
+eFGQ97z5Cd,"foundation or frontier models, including LLMs",24743,15
+1aF2D2CPHi,"applications to computer vision, audio, language, and other modalities",54126,15
+OvoCm1gGhN,"foundation or frontier models, including LLMs",38369,15
+EytBpUGB1Z,"foundation or frontier models, including LLMs",27900,15
+cNmu0hZ4CL,applications to neuroscience & cognitive science,45158,13
+gHLWTzKiZV,"applications to physical sciences (physics, chemistry, biology, etc.)",36025,15
+ijbA5swmoK,optimization,18773,14
+weM4YBicIP,"applications to computer vision, audio, language, and other modalities",29043,15
+FpiCLJrSW8,"alignment, fairness, safety, privacy, and societal considerations",31366,15
+trKNi4IUiP,"alignment, fairness, safety, privacy, and societal considerations",51409,16
+Y6aHdDNQYD,"transfer learning, meta learning, and lifelong learning",38897,14
+OIvg3MqWX2,learning on graphs and other geometries & topologies,40049,15
+eIJfOIMN9z,"other topics in machine learning (i.e., none of the above)",45620,14
+UV5p3JZMjC,"other topics in machine learning (i.e., none of the above)",38048,14
+1HCN4pjTb4,optimization,41308,18
+pQqeQpMkE7,"infrastructure, software libraries, hardware, systems, etc.",36798,15
+GGlpykXDCa,datasets and benchmarks,29472,15
+9VGTk2NYjF,optimization,17900,13
+1pXzC30ry5,"applications to computer vision, audio, language, and other modalities",47314,14
+o2Igqm95SJ,"infrastructure, software libraries, hardware, systems, etc.",26003,15
+je3GZissZc,"applications to robotics, autonomy, planning",35399,15
+Mfnh1Sqdwf,"applications to physical sciences (physics, chemistry, biology, etc.)",16926,14
+E4Fk3YuG56,"foundation or frontier models, including LLMs",38888,16
+N8Oj1XhtYZ,generative models,59649,16
+Fur0DtynPX,"applications to physical sciences (physics, chemistry, biology, etc.)",33894,16
+SnDmPkOJ0T,"foundation or frontier models, including LLMs",41580,14
+vzItLaEoDa,reinforcement learning,46133,14
+9pW2J49flQ,reinforcement learning,47268,17
+vaEPihQsAA,"applications to computer vision, audio, language, and other modalities",47225,16
+zl0HLZOJC9,"other topics in machine learning (i.e., none of the above)",33601,14
+o5TsWTUSeF,"applications to computer vision, audio, language, and other modalities",69125,15
+Wr3UuEx72f,generative models,38777,14
+f4gF6AIHRy,"other topics in machine learning (i.e., none of the above)",39347,18
+6s5uXNWGIh,datasets and benchmarks,32878,14
+KIgaAqEFHW,datasets and benchmarks,28981,16
+QQBPWtvtcn,"applications to computer vision, audio, language, and other modalities",31339,15
+aWXnKanInf,applications to neuroscience & cognitive science,48624,16
+84pDoCD4lH,"foundation or frontier models, including LLMs",67724,12
+UHPnqSTBPO,"alignment, fairness, safety, privacy, and societal considerations",29042,16
+5IkDAfabuo,reinforcement learning,30448,15
+SctfBCLmWo,datasets and benchmarks,23324,17
+FIj9IEPCKr,"transfer learning, meta learning, and lifelong learning",44931,16
+mtSSFiqW6y,"foundation or frontier models, including LLMs",40500,17
+gc8QAQfXv6,"transfer learning, meta learning, and lifelong learning",49207,15
+sbG8qhMjkZ,learning theory,26687,11
+51WraMid8K,"alignment, fairness, safety, privacy, and societal considerations",27841,11
+fAAaT826Vv,"applications to computer vision, audio, language, and other modalities",29349,15
+k3tbMMW8rH,generative models,60194,14
+kbjJ9ZOakb,applications to neuroscience & cognitive science,22497,15
+ja4rpheN2n,learning on graphs and other geometries & topologies,34985,16
+kGvXIlIVLM,generative models,48819,14
+JWtrk7mprJ,"probabilistic methods (Bayesian methods, variational inference, sampling, UQ, etc.)",62072,15
+GRMfXcAAFh,learning on time series and dynamical systems,26366,11
+NO6Tv6QcDs,learning theory,44587,13
+Pujt3ADZgI,reinforcement learning,18218,15
+tyEyYT267x,generative models,30289,15
+v593OaNePQ,reinforcement learning,37570,16
+xoIeVdFO7U,reinforcement learning,46493,16
+odjMSBSWRt,"alignment, fairness, safety, privacy, and societal considerations",34034,18
+WOzffPgVjF,"applications to computer vision, audio, language, and other modalities",46984,14
+P4o9akekdf,"applications to computer vision, audio, language, and other modalities",45299,14
+CjwERcAU7w,"foundation or frontier models, including LLMs",39600,12
+QFO1asgas2,reinforcement learning,34333,14
+3i13Gev2hV,"unsupervised, self-supervised, semi-supervised, and supervised representation learning",60173,15
+t7P5BUKcYv,"foundation or frontier models, including LLMs",50061,13
+k38Th3x4d9,interpretability and explainable AI,25633,14
+CRmiX0v16e,"applications to computer vision, audio, language, and other modalities",21693,11
+ZuazHmXTns,optimization,38692,16
+FVuqJt3c4L,applications to neuroscience & cognitive science,49468,15
+Xo0Q1N7CGk,"unsupervised, self-supervised, semi-supervised, and supervised representation learning",46304,14
+5U1rlpX68A,"transfer learning, meta learning, and lifelong learning",30153,16
+LbEWwJOufy,"applications to computer vision, audio, language, and other modalities",29934,16
+xyfb9HHvMe,"applications to computer vision, audio, language, and other modalities",37111,16
+VpWki1v2P8,optimization,28155,13
+QKBu1BOAwd,"other topics in machine learning (i.e., none of the above)",36773,13
+VVixJ9QavY,causal reasoning,65594,14

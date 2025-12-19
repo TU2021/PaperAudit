@@ -1,0 +1,64 @@
+primary_area,n,tokens_mean,tokens_median,errors_mean,errors_median
+"alignment, fairness, safety, privacy, and societal considerations",7,33203.57,31366,15.43,16
+applications,7,31512.29,28339,14.57,14
+"applications to computer vision, audio, language, and other modalities",14,41379,41205.0,14.86,15.0
+applications to neuroscience & cognitive science,4,41436.75,46891.0,14.75,15.0
+"applications to physical sciences (physics, chemistry, biology, etc.)",3,28948.33,33894,15,15
+"applications to robotics, autonomy, planning",3,39549,38828,16,16
+applications->chemistry_physics_and_earth_sciences,1,46838,46838,14,14
+applications->computer_vision,4,37525.25,41666.0,16,16.5
+applications->everything_else,2,39332.5,39332.5,14.5,14.5
+applications->language_speech_and_dialog,1,26883,26883,14,14
+applications->neuroscience_cognitive_science,1,32877,32877,15,15
+causal reasoning,2,60738.5,60738.5,13,13.0
+datasets and benchmarks,7,34409.29,29472,15.43,15
+deep_learning,24,38401.79,34052.0,15.04,15.0
+deep_learning->algorithms,1,21890,21890,14,14
+deep_learning->attention_mechanisms,3,36414.33,36030,15,15
+deep_learning->everything_else,1,34818,34818,13,13
+deep_learning->foundation_models,1,66833,66833,16,16
+deep_learning->generative_models_and_autoencoders,5,40555,42556,15.2,15
+deep_learning->graph_neural_networks,1,27072,27072,16,16
+deep_learning->large_language_models,9,37514.67,40926,14.78,15
+evaluation,2,37527,37527.0,13.5,13.5
+"foundation or frontier models, including LLMs",11,41614.73,40500,14.45,15
+general_machine_learning,6,42231.5,39818.0,14.17,14.0
+general_machine_learning->causality,1,31959,31959,13,13
+general_machine_learning->everything_else,1,35650,35650,15,15
+general_machine_learning->representation_learning,3,40470.67,42662,15,16
+general_machine_learning->transfer_multitask_and_metalearning,1,43089,43089,16,16
+generative models,9,41371.89,38777,14.44,14
+infrastructure,1,30313,30313,15,15
+"infrastructure, software libraries, hardware, systems, etc.",2,31400.5,31400.5,15,15.0
+interpretability and explainable AI,4,39491.75,38575.5,14.5,14.5
+learning on graphs and other geometries & topologies,2,37517,37517.0,15.5,15.5
+learning on time series and dynamical systems,2,35359,35359.0,13.5,13.5
+learning theory,4,32444.25,33130.0,13.75,13.5
+machine_learning_for_sciences,2,38222,38222.0,16.5,16.5
+neuroscience_and_cognitive_science,1,37194,37194,15,15
+optimization,8,31226.25,32057.5,14.12,13.5
+optimization->stochastic,1,35595,35595,15,15
+"other topics in machine learning (i.e., none of the above)",7,40091.86,39347,15.14,14
+"probabilistic methods (Bayesian methods, variational inference, sampling, UQ, etc.)",3,47590.67,45169,14.67,15
+probabilistic_methods->bayesian_models_and_methods,2,25605,25605.0,14.5,14.5
+probabilistic_methods->graphical_models,1,44842,44842,13,13
+reinforcement learning,10,38861,38846.0,15.5,15.5
+reinforcement_learning,4,41156.5,42605.0,14.75,14.5
+reinforcement_learning->deep_rl,1,48103,48103,16,16
+reinforcement_learning->multiagent,1,62673,62673,16,16
+social_and_economic_aspects_of_machine_learning,2,48373,48373.0,14,14.0
+social_aspects->alignment,1,44860,44860,15,15
+social_aspects->everything_else,1,36339,36339,15,15
+social_aspects->fairness,1,48201,48201,13,13
+social_aspects->privacy,2,39455.5,39455.5,14,14.0
+social_aspects->robustness,1,39614,39614,14,14
+social_aspects->safety,1,41052,41052,16,16
+social_aspects->security,2,27505,27505.0,16,16.0
+theory,3,37463.67,38554,13.67,14
+theory->deep_learning,2,54345.5,54345.5,15.5,15.5
+theory->learning_theory,1,30285,30285,14,14
+theory->online_learning_and_bandits,1,29267,29267,13,13
+theory->optimization,3,32077.33,32964,14.67,15
+theory->probabilistic_methods,1,37092,37092,16,16
+"transfer learning, meta learning, and lifelong learning",4,40797,41914.0,15.25,15.5
+"unsupervised, self-supervised, semi-supervised, and supervised representation learning",2,53238.5,53238.5,14.5,14.5

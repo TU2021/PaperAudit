@@ -1,0 +1,64 @@
+primary_area,count
+"alignment, fairness, safety, privacy, and societal considerations",7
+applications,7
+"applications to computer vision, audio, language, and other modalities",14
+applications to neuroscience & cognitive science,4
+"applications to physical sciences (physics, chemistry, biology, etc.)",3
+"applications to robotics, autonomy, planning",3
+applications->chemistry_physics_and_earth_sciences,1
+applications->computer_vision,4
+applications->everything_else,2
+applications->language_speech_and_dialog,1
+applications->neuroscience_cognitive_science,1
+causal reasoning,2
+datasets and benchmarks,7
+deep_learning,24
+deep_learning->algorithms,1
+deep_learning->attention_mechanisms,3
+deep_learning->everything_else,1
+deep_learning->foundation_models,1
+deep_learning->generative_models_and_autoencoders,5
+deep_learning->graph_neural_networks,1
+deep_learning->large_language_models,9
+evaluation,2
+"foundation or frontier models, including LLMs",11
+general_machine_learning,6
+general_machine_learning->causality,1
+general_machine_learning->everything_else,1
+general_machine_learning->representation_learning,3
+general_machine_learning->transfer_multitask_and_metalearning,1
+generative models,9
+infrastructure,1
+"infrastructure, software libraries, hardware, systems, etc.",2
+interpretability and explainable AI,4
+learning on graphs and other geometries & topologies,2
+learning on time series and dynamical systems,2
+learning theory,4
+machine_learning_for_sciences,2
+neuroscience_and_cognitive_science,1
+optimization,8
+optimization->stochastic,1
+"other topics in machine learning (i.e., none of the above)",7
+"probabilistic methods (Bayesian methods, variational inference, sampling, UQ, etc.)",3
+probabilistic_methods->bayesian_models_and_methods,2
+probabilistic_methods->graphical_models,1
+reinforcement learning,10
+reinforcement_learning,4
+reinforcement_learning->deep_rl,1
+reinforcement_learning->multiagent,1
+social_and_economic_aspects_of_machine_learning,2
+social_aspects->alignment,1
+social_aspects->everything_else,1
+social_aspects->fairness,1
+social_aspects->privacy,2
+social_aspects->robustness,1
+social_aspects->safety,1
+social_aspects->security,2
+theory,3
+theory->deep_learning,2
+theory->learning_theory,1
+theory->online_learning_and_bandits,1
+theory->optimization,3
+theory->probabilistic_methods,1
+"transfer learning, meta learning, and lifelong learning",4
+"unsupervised, self-supervised, semi-supervised, and supervised representation learning",2
