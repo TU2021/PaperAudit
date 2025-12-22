@@ -146,55 +146,17 @@ Instruction: {query}"""
             {"role": "user", "content": self.USER_PROMPT_TEMPLATE.format(text=text, query=query)}
         ]
 
-        logger.info(f"Calling LLM with retry mechanism...")
+        logger.info(f"Calling LLM with retry mechanism (non-stream)...")
         logger.info(f"Model: {self.reasoning_model}")
         logger.info(f"Base URL: {self.client.base_url}")
-        
+
         try:
-            # Call LLM model with streaming and retry mechanism
-            stream = await self._call_llm_with_retry(
+            response = await self._call_llm_with_retry(
                 model=self.reasoning_model,
                 messages=messages,
-                stream=True,
                 temperature=self.config.get("agents.neurodong.temperature", None)
             )
-            
-            logger.info(f"LLM stream object type: {type(stream)}")
-            logger.info("LLM call successful, streaming response...")
-            chunk_count = 0
-            content_count = 0
-            
-            # Stream back results
-            async for chunk in stream:
-                chunk_count += 1
-                if chunk_count <= 3:  # 只打印前3个chunk的详细信息
-                    logger.debug(f"Chunk #{chunk_count}: {chunk}")
-                
-                if chunk.choices and len(chunk.choices) > 0:
-                    delta_content = chunk.choices[0].delta.content
-                    if delta_content:
-                        content_count += 1
-                        if content_count <= 3:
-                            logger.debug(f"Content #{content_count}: {delta_content[:100]}...")
-                        response_data = {
-                            "object": "chat.completion.chunk",
-                            "choices": [{
-                                "delta": {
-                                    "content": delta_content
-                                }
-                            }]
-                        }
-                        yield f"data: {json.dumps(response_data)}\n\n"
-                    else:
-                        if chunk_count <= 3:
-                            logger.debug(f"Chunk #{chunk_count} has no content in delta")
-                else:
-                    if chunk_count <= 3:
-                        logger.debug(f"Chunk #{chunk_count} has no choices")
-            
-            logger.info(f"Streaming completed. Total chunks: {chunk_count}, Content chunks: {content_count}")
-            yield "data: [DONE]\n\n"
-            
+            full_text = self._get_text_from_response(response)
         except Exception as e:
             logger.error(f"Error during LLM call: {type(e).__name__}: {str(e)}")
             import traceback
@@ -202,3 +164,15 @@ Instruction: {query}"""
             error_message = f"Error: {type(e).__name__}: {str(e)}"
             yield f"data: {json.dumps({'object': 'chat.completion.chunk', 'choices': [{'delta': {'content': error_message}}]})}\n\n"
             yield "data: [DONE]\n\n"
+            return
+
+        response_data = {
+            "object": "chat.completion.chunk",
+            "choices": [{
+                "delta": {
+                    "content": full_text
+                }
+            }]
+        }
+        yield f"data: {json.dumps(response_data)}\n\n"
+        yield "data: [DONE]\n\n"

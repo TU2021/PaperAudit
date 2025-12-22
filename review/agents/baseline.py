@@ -49,29 +49,37 @@ Paper:
 
 Instruction: {query}"""
 
-        # Call LLM model with streaming
         temp = self.config.get("agents.baseline.temperature", None)
-        stream = await self.client.chat.completions.create(
-            model=self.model,
-            messages=[{"role": "user", "content": prompt}],
-            max_tokens=2048,
-            temperature=temp,
-            stream=True
-        )
-
-        # Stream back results
-        async for chunk in stream:
-            if chunk.choices and len(chunk.choices) > 0:
-                delta_content = chunk.choices[0].delta.content
-                if delta_content:
-                    response_data = {
-                        "object": "chat.completion.chunk",
-                        "choices": [{
-                            "delta": {
-                                "content": delta_content
-                            }
-                        }]
+        try:
+            response = await self._call_llm_with_retry(
+                model=self.model,
+                messages=[{"role": "user", "content": prompt}],
+                max_tokens=2048,
+                temperature=temp,
+            )
+            full_text = self._get_text_from_response(response)
+        except Exception as e:
+            error_message = f"Error: {type(e).__name__}: {e}"
+            response_data = {
+                "object": "chat.completion.chunk",
+                "choices": [{
+                    "delta": {
+                        "content": error_message
                     }
-                    yield f"data: {json.dumps(response_data)}\n\n"
+                }]
+            }
+            yield f"data: {json.dumps(response_data)}\n\n"
+            yield "data: [DONE]\n\n"
+            return
 
+        # Stream back results as single completion chunk
+        response_data = {
+            "object": "chat.completion.chunk",
+            "choices": [{
+                "delta": {
+                    "content": full_text
+                }
+            }]
+        }
+        yield f"data: {json.dumps(response_data)}\n\n"
         yield "data: [DONE]\n\n"

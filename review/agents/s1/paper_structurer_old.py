@@ -174,51 +174,25 @@ class PaperStructurer(BaseAgent):
             {"role": "user", "content": user_prompt},
         ]
 
-        print("[PaperStructurer] Calling LLM to produce cleaned, headed text (stream=True)...")
+        print("[PaperStructurer] Calling LLM to produce cleaned, headed text (non-stream)...")
 
         try:
-            stream = await self._call_llm_with_retry(
+            response = await self._call_llm_with_retry(
                 model=self.model,
                 messages=messages,
-                stream=True,       # ⭐ 改回 True
                 temperature=self.config.get("agents.paper_structurer_old.temperature", None),
             )
         except Exception as e:
             print(f"[PaperStructurer] Failed to get response from LLM: {e}")
             return [{"title": "Full Paper (fallback)", "content": pdf_text}]
 
-        # -------- 累积流式内容成一个 structured_text --------
-        content_chunks: List[str] = []
-
         try:
-            async for chunk in stream:
-                if not getattr(chunk, "choices", None):
-                    continue
-                delta = chunk.choices[0].delta
-                delta_content = getattr(delta, "content", None)
-                if not delta_content:
-                    continue
-
-                if isinstance(delta_content, str):
-                    content_chunks.append(delta_content)
-                elif isinstance(delta_content, list):
-                    parts: List[str] = []
-                    for part in delta_content:
-                        if isinstance(part, dict):
-                            t = part.get("text") or part.get("content")
-                            if t:
-                                parts.append(str(t))
-                        else:
-                            t = getattr(part, "text", None) or getattr(part, "content", None)
-                            if t:
-                                parts.append(str(t))
-                    if parts:
-                        content_chunks.append("".join(parts))
+            structured_text = self._get_text_from_response(response)
         except Exception as e:
-            print(f"[PaperStructurer] Error while streaming LLM response: {e}")
+            print(f"[PaperStructurer] Error while parsing LLM response: {e}")
             return [{"title": "Full Paper (fallback)", "content": pdf_text}]
 
-        structured_text = "".join(content_chunks).strip()
+        structured_text = structured_text.strip()
         print(f"[PaperStructurer] Received structured text length: {len(structured_text)} characters")
 
         if not structured_text:

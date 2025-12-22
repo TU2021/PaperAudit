@@ -55,31 +55,6 @@ Full Manuscript:
 {text}
 """
 
-    @staticmethod
-    def _extract_text_from_message_content(raw_content: Any) -> str:
-        """
-        兼容 OpenAI 风格的 message.content：
-        - 可能是 str
-        - 也可能是 list[TextPart] 或 list[dict(text=...)]
-        """
-        if isinstance(raw_content, str):
-            return raw_content
-
-        if isinstance(raw_content, list):
-            parts = []
-            for part in raw_content:
-                if isinstance(part, dict):
-                    t = part.get("text") or part.get("content")
-                    if t:
-                        parts.append(str(t))
-                else:
-                    t = getattr(part, "text", None) or getattr(part, "content", None)
-                    if t:
-                        parts.append(str(t))
-            return "".join(parts)
-
-        return str(raw_content)
-
     async def run(self, pdf_text: str, *, section_titles: list[str] | None = None) -> str:
         """
         Build a natural-language memory from the full paper text.
@@ -98,14 +73,13 @@ Full Manuscript:
             {"role": "user", "content": prompt},
         ]
 
-        logger.info("Calling LLM to build memory (stream=False)...")
+        logger.info("Calling LLM to build memory (non-stream)...")
 
         try:
             temp = self.config.get("agents.paper_memory_summarizer.temperature", None)
             resp = await self._call_llm_with_retry(
                 model=self.model,
                 messages=messages,
-                stream=False,
                 temperature=temp,
             )
         except Exception as e:
@@ -113,23 +87,7 @@ Full Manuscript:
             return f"[MEMORY_ERROR] {e}"
 
         try:
-            choices = getattr(resp, "choices", None)
-            if not choices:
-                logger.error("No choices in response.")
-                return "[MEMORY_ERROR] Empty response"
-
-            first = choices[0]
-            message = getattr(first, "message", None)
-            if message is None:
-                logger.error("No message in first choice.")
-                return "[MEMORY_ERROR] No message in response"
-
-            raw_content = getattr(message, "content", "")
-            full_text = self._extract_text_from_message_content(raw_content).strip()
-
-            if not full_text:
-                logger.error("Empty content from LLM.")
-                return "[MEMORY_ERROR] Empty content"
+            full_text = self._get_text_from_response(resp)
         except Exception as e:
             logger.error(f"Error while parsing non-stream response: {e}")
             return f"[MEMORY_ERROR] {e}"
