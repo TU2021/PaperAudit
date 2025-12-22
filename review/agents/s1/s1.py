@@ -1,7 +1,7 @@
 # agents/s1/s1_agent.py
 import json
 import asyncio
-from typing import Any, AsyncGenerator, Dict, List, Optional
+from typing import Any, AsyncGenerator, Dict, List, Optional, Coroutine
 
 from ..base_agent import BaseAgent
 from .cheating_detector import CheatingDetector
@@ -113,6 +113,8 @@ class S1Agent(BaseAgent):
         query: str,
         *,
         enable_mm: bool = False,
+        enable_cheating_detection: bool = True,
+        enable_motivation: bool = True,
     ) -> AsyncGenerator[str, None]:
         """Execute paper review task with structured JSON input."""
         # ✅ NEW: 简单的落盘工具函数 (改为只记录到 artifact log)
@@ -207,7 +209,7 @@ class S1Agent(BaseAgent):
         _save_text("paper_memory", paper_memory)
 
         # =========================
-        # Step 2: 并行跑 cheating + motivation
+        # Step 2: 并行跑 cheating + motivation（可开关）
         # =========================
 
         async def collect_cheating():
@@ -243,20 +245,41 @@ class S1Agent(BaseAgent):
                 logger.error(f"Motivation evaluation failed: {e}")
                 return f"[MOTIVATION_ERROR] {e}"
 
-        async def run_parallel_tasks():
-            return await asyncio.gather(
-                collect_cheating(),
-                collect_motivation(),
-            )
+        parallel_tasks: List[tuple[str, asyncio.Future | asyncio.Task | Coroutine[Any, Any, Any]]] = []
+        if enable_cheating_detection:
+            parallel_tasks.append(("cheating detection", collect_cheating()))
+        if enable_motivation:
+            parallel_tasks.append(("motivation evaluation", collect_motivation()))
 
-        parallel_res = []
-        async for chunk in self._run_with_progress(
-            run_parallel_tasks(),
-            "(3/4) Running cheating detection and motivation evaluation",
-            parallel_res
-        ):
-            yield chunk
-        cheating_detection, motivation_evaluation = parallel_res[0]
+        cheating_detection: Any = "[Cheating detection disabled]"
+        motivation_evaluation: Any = "[Motivation evaluation disabled]"
+
+        if parallel_tasks:
+            async def run_parallel_tasks():
+                coros = [task for _, task in parallel_tasks]
+                return await asyncio.gather(*coros)
+
+            stage_desc = " & ".join([name for name, _ in parallel_tasks])
+            parallel_res: list[list[Any]] = []
+            async for chunk in self._run_with_progress(
+                run_parallel_tasks(),
+                f"(3/4) Running {stage_desc}",
+                parallel_res,
+            ):
+                yield chunk
+
+            results = parallel_res[0]
+            idx = 0
+            if enable_cheating_detection:
+                cheating_detection = results[idx]
+                idx += 1
+            if enable_motivation:
+                motivation_evaluation = results[idx] if idx < len(results) else motivation_evaluation
+        else:
+            # 当两者都关闭时，直接进入总结阶段
+            yield self._create_chunk(
+                "(3/4) Skipping cheating detection and motivation (both disabled).\n"
+            )
 
         # ✅ NEW: 保存 cheating_detection
         if isinstance(cheating_detection, (dict, list)):
@@ -302,6 +325,8 @@ class S1Agent(BaseAgent):
         query: str,
         *,
         enable_mm: bool = False,
+        enable_cheating_detection: bool = True,
+        enable_motivation: bool = True,
     ) -> Dict[str, Any]:
         """
         Internal async method to run the full review pipeline and return structured results.
@@ -383,33 +408,37 @@ class S1Agent(BaseAgent):
 
         _save_text("paper_memory", paper_memory)
 
-        # Step 2: Run cheating detection and motivation evaluation in parallel
-        logger.info("Starting section-level critical review via CheatingDetector...")
-        try:
-            cheating_detection = await self.cheating_detector.run_sectionwise(sections, paper_memory)
-            logger.info("CheatingDetector.run_sectionwise completed.")
-        except Exception as e:
-            logger.error(f"CheatingDetector.run_sectionwise failed: {e}")
-            cheating_detection = f"[CheatingDetector ERROR] {e}"
+        cheating_detection: Any = "[Cheating detection disabled]"
+        motivation_evaluation: Any = "[Motivation evaluation disabled]"
 
-        logger.info("Starting motivation evaluation...")
-        try:
-            motivation_chunks: List[str] = []
-            async for chunk in self.motivation_evaluator.run(paper_memory):
-                motivation_chunks.append(chunk)
-            motivation_evaluation = "".join(motivation_chunks)
-            logger.info(f"Motivation evaluation completed, length={len(motivation_evaluation)}")
-        except TypeError:
-            # If motivation_evaluator.run returns str directly (not async generator)
+        if enable_cheating_detection:
+            logger.info("Starting section-level critical review via CheatingDetector...")
             try:
-                motivation_evaluation = await self.motivation_evaluator.run(paper_memory)
+                cheating_detection = await self.cheating_detector.run_sectionwise(sections, paper_memory)
+                logger.info("CheatingDetector.run_sectionwise completed.")
+            except Exception as e:
+                logger.error(f"CheatingDetector.run_sectionwise failed: {e}")
+                cheating_detection = f"[CheatingDetector ERROR] {e}"
+
+        if enable_motivation:
+            logger.info("Starting motivation evaluation...")
+            try:
+                motivation_chunks: List[str] = []
+                async for chunk in self.motivation_evaluator.run(paper_memory):
+                    motivation_chunks.append(chunk)
+                motivation_evaluation = "".join(motivation_chunks)
                 logger.info(f"Motivation evaluation completed, length={len(motivation_evaluation)}")
+            except TypeError:
+                # If motivation_evaluator.run returns str directly (not async generator)
+                try:
+                    motivation_evaluation = await self.motivation_evaluator.run(paper_memory)
+                    logger.info(f"Motivation evaluation completed, length={len(motivation_evaluation)}")
+                except Exception as e:
+                    logger.error(f"Motivation evaluation failed: {e}")
+                    motivation_evaluation = f"[MOTIVATION_ERROR] {e}"
             except Exception as e:
                 logger.error(f"Motivation evaluation failed: {e}")
                 motivation_evaluation = f"[MOTIVATION_ERROR] {e}"
-        except Exception as e:
-            logger.error(f"Motivation evaluation failed: {e}")
-            motivation_evaluation = f"[MOTIVATION_ERROR] {e}"
 
         # Save cheating detection results
         if isinstance(cheating_detection, (dict, list)):
@@ -454,12 +483,26 @@ class S1Agent(BaseAgent):
             "artifacts": artifacts,
         }
 
-    def review_paper(self, paper_json: Any, query: str, enable_mm: bool = False) -> Dict[str, Any]:
+    def review_paper(
+        self,
+        paper_json: Any,
+        query: str,
+        *,
+        enable_mm: bool = False,
+        enable_cheating_detection: bool = True,
+        enable_motivation: bool = True,
+    ) -> Dict[str, Any]:
         """Synchronous wrapper that accepts structured paper JSON input."""
 
         loop = asyncio.get_event_loop()
         result = loop.run_until_complete(
-            self._run_sync_internal(paper_json, query, enable_mm=enable_mm)
+            self._run_sync_internal(
+                paper_json,
+                query,
+                enable_mm=enable_mm,
+                enable_cheating_detection=enable_cheating_detection,
+                enable_motivation=enable_motivation,
+            )
         )
 
         logger.info("Paper review completed successfully.")
