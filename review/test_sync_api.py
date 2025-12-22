@@ -32,7 +32,7 @@ def test_sync_api(agent: S1Agent, pdf_file: str):
 if __name__ == "__main__":
     agent = S1Agent()
 
-    pdf_files = sorted(glob.glob("data/*.pdf"))
+    pdf_files = sorted(glob.glob("/mnt/parallel_ssd/home/zdhs0006/ACL/data_test/*.pdf"))
     if not pdf_files:
         print("No PDF files found in data/ directory.")
 

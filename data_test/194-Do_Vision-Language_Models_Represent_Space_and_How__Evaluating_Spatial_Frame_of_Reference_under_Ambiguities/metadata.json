@@ -1,0 +1,68 @@
+{
+  "id": "84pDoCD4lH",
+  "forum": "84pDoCD4lH",
+  "replyto": null,
+  "invitation": "Submission",
+  "cdate": 1726201467687,
+  "mdate": 1739312703860,
+  "content": {
+    "title": "Do Vision-Language Models Represent Space and How? Evaluating Spatial Frame of Reference under Ambiguities",
+    "authors": [
+      "Zheyuan Zhang",
+      "Fengyuan Hu",
+      "Jayjun Lee",
+      "Freda Shi",
+      "Parisa Kordjamshidi",
+      "Joyce Chai",
+      "Ziqiao Ma"
+    ],
+    "authorids": [
+      "~Zheyuan_Zhang4",
+      "~Fengyuan_Hu2",
+      "~Jayjun_Lee1",
+      "~Freda_Shi1",
+      "~Parisa_Kordjamshidi1",
+      "~Joyce_Chai2",
+      "~Ziqiao_Ma1"
+    ],
+    "keywords": [
+      "vision-language models",
+      "spatial reasoning",
+      "multimodal reasoning"
+    ],
+    "abstract": "Spatial expressions in situated communication can be ambiguous, as their meanings vary depending on the frames of reference (FoR) adopted by speakers and listeners. While spatial language understanding and reasoning by vision-language models (VLMs) have gained increasing attention, potential ambiguities in these models are still under-explored. To address this issue, we present the COnsistent Multilingual Frame Of Reference Test (COMFORT), an evaluation protocol to systematically assess the spatial reasoning capabilities of VLMs. We evaluate nine state-of-the-art VLMs using COMFORT. Despite showing some alignment with English conventions in resolving ambiguities, our experiments reveal significant shortcomings of VLMs: notably, the models (1) exhibit poor robustness and consistency, (2) lack the flexibility to accommodate multiple FoRs, and (3) fail to adhere to language-specific or culture-specific conventions in cross-lingual tests, as English tends to dominate other languages. With a growing effort to align vision-language models with human cognitive intuitions, we call for more attention to the ambiguous nature and cross-cultural diversity of spatial reasoning.",
+    "primary_area": "foundation or frontier models, including LLMs",
+    "code_of_ethics": "I acknowledge that I and all co-authors of this work have read and commit to adhering to the ICLR Code of Ethics.",
+    "submission_guidelines": "I certify that this submission complies with the submission instructions as described on https://iclr.cc/Conferences/2025/AuthorGuide.",
+    "anonymous_url": "I certify that there is no URL (e.g., github page) that could be used to find authors’ identity.",
+    "no_acknowledgement_section": "I certify that there is no acknowledgement section in this submission for double blind review.",
+    "venue": "ICLR 2025 Oral",
+    "venueid": "ICLR.cc/2025/Conference",
+    "TLDR": "We present an evaluation protocol to systematically assess the spatial reasoning capabilities of vision language models, and shed light on the ambiguity and cross-cultural diversity of frame of reference in spatial reasoning.",
+    "pdf": "/pdf/69c00b80bb72c2ad2ceaf71286a3fb74f103aa58.pdf",
+    "supplementary_material": "/attachment/3786b10b3e8a96bd8871c3b3234515a4fe08fe73.zip",
+    "_bibtex": "@inproceedings{\nzhang2025do,\ntitle={Do Vision-Language Models Represent Space and How? Evaluating Spatial Frame of Reference under Ambiguities},\nauthor={Zheyuan Zhang and Fengyuan Hu and Jayjun Lee and Freda Shi and Parisa Kordjamshidi and Joyce Chai and Ziqiao Ma},\nbooktitle={The Thirteenth International Conference on Learning Representations},\nyear={2025},\nurl={https://openreview.net/forum?id=84pDoCD4lH}\n}",
+    "paperhash": "zhang|do_visionlanguage_models_represent_space_and_how_evaluating_spatial_frame_of_reference_under_ambiguities"
+  },
+  "kind": "other",
+  "gpt5_input_tokens_est": {
+    "model": "gpt-5",
+    "detail": "high",
+    "total_tokens_est": 67724,
+    "text_tokens_est": 41544,
+    "image_tokens_est": 26180,
+    "num_text_nodes": 27,
+    "num_image_nodes": 30,
+    "num_image_resolved": 30,
+    "num_image_unresolved": 0,
+    "parse_file": "paper_parse_origin.json"
+  },
+  "synth_stats_gpt_5_2025_08_07": {
+    "synth_model": "gpt-5-2025-08-07",
+    "synth_file": "paper_synth_gpt-5-2025-08-07.json",
+    "synth_errors_applied_count": 12,
+    "synth_apply_results_total": 14,
+    "synth_special_token_count": 0,
+    "special_token_pattern": "<\\|[^|>]+?\\|>"
+  }
+}

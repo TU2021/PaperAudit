@@ -28,8 +28,8 @@ load_dotenv()
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Batch review runner")
-    parser.add_argument("--input-dir", required=True, help="Root folder containing paper subfolders")
-    parser.add_argument("--model", required=True, help="LLM model name (required)")
+    parser.add_argument("--input-dir", default="/mnt/parallel_ssd/home/zdhs0006/ACL/data_test" , help="Root folder containing paper subfolders")
+    parser.add_argument("--model", default="o4-mini", help="LLM model name (required)")
     parser.add_argument("--reasoning-model", help="Optional reasoning model override")
     parser.add_argument("--embedding-model", help="Optional embedding model override")
     parser.add_argument(
