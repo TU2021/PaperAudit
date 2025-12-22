@@ -1,0 +1,169 @@
+
+
+[SECTION 1] Abstract
+[CheatingDetector ERROR in section 'Abstract']: 'NoneType' object has no attribute 'content'
+
+
+[SECTION 2] Introduction
+The Introduction frames an important and under-explored problem—how modern vision–language models (VLMs) handle the deep ambiguities of spatial language across frames of reference (FoRs) and cultures—but it leaves key questions unanswered and risks overselling the novelty and scope of the contributions. Below are several points that I think the authors should address to make the pitch and methodology more convincing.
+
+1. Clarify the Gap Relative to Existing Benchmarks  
+   • You mention several prior spatial reasoning datasets (Kamath et al., 2023; Liu et al., 2023a; Mirzaee et al., 2021; et al.) but do not say in detail why none of these adequately capture FoR ambiguity or cross-lingual variation. What concrete limitations do they have? For instance, is it that they only ask “Is A to the left of B?” in English, without testing consistency when you rephrase or explicitly specify different FoRs? A brief tabular or bullet-point comparison—even at a high level—would help readers see exactly what COMFORT adds.  
+
+2. Synthetic 3D Images vs. Natural Scenes  
+   • The use of synthetic 3D renders may allow fine control over object placement and camera/viewer pose, but risks making the task far simpler than real-world spatial reasoning. 
+     – How are you ensuring that models do not simply rely on spurious low-level cues (e.g., background shading or canonical object orientations in your renderer)?  
+     – Will performance on COMFORT generalize to photographs or embedded scenes in real multimodal tasks?  
+   • If synthetic scenes are a design choice, it would be good to argue why they are still a meaningful proxy for “in-the-wild” image–language grounding.
+
+3. Construction of Ambiguous vs. Disambiguated Prompts  
+   • The core of your benchmark seems to be (a) tasks where the FoR is left unspecified (ambiguous prompt) and (b) tasks where you explicitly annotate the FoR (disambiguated).  
+     – How exactly do you phrase the explicit FoR in natural language? Do you say “From the camera’s viewpoint, the ball is behind the car,” or do you provide some symbolic annotation?  
+     – If you give the FoR explicitly, are you simply testing surface pattern matching (i.e., model copies back your wording), or can you show that VLMs truly re-interpret the scene under different coordinate transforms?  
+     – Conversely, when it is ambiguous, how do you decide which answer is “correct”? You note that English prefers the camera-relative FoR, but have you conducted human annotations on your synthetic images to establish a gold standard for each ambiguous question?  
+
+4. Metrics for “Robustness” and “Consistency”  
+   • You claim to introduce “metrics to evaluate the robustness and consistency of model responses,” but neither term is defined here. For example:
+     – Robustness to what? Paraphrases of the spatial description? Small perturbations to object positions?  
+     – Consistency across what? Different languages? Re-specifications of the FoR?  
+   • Please preview your formal definitions (even in a sentence or two) so readers know what “80% consistency” or “robustness gap” would actually mean.
+
+5. Multilingual Evaluation: Feasibility and Fairness  
+   • Evaluating “109 languages across 170 regions” is an impressive scale, but it raises immediate questions:
+     – How do you handle translation of spatial terms that do not cleanly map to English “left/right/front/back”? Some languages use cardinal directions or intrinsic FoRs almost exclusively.  
+     – Do you have native speakers verify that the translated prompts preserve ambiguity or explicit FoR? Automatic machine translation seems risky here.  
+     – Many off-the-shelf VLMs have very limited non-English training data. If you find that “English dominates,” how do you disentangle (a) model pretraining bias, (b) translation artifacts, and (c) true cognitive deficits in cross-lingual spatial reasoning?  
+
+6. Baselines and Human Upper Bounds  
+   • Prior work on spatial language grounding often reports human agreement on ambiguous spatial judgments (e.g., do people agree 70% on whether A is to the left of B?).  
+     – Do you have any human performance benchmarks on your synthetic scenes? Without human upper bounds, it’s hard to interpret whether a model’s 60% consistency is “close” to human variability or far below it.  
+   • What simple algorithmic baselines could you compare to? For example, a rule-based 3D geometric solver that computes FoR-specific relations given object coordinates—does it achieve perfect consistency on your synthetic data? If so, then model errors are attributable to vision-language alignment rather than conceptual failures.
+
+7. Scope of Spatial Complexity  
+   • All of your examples involve pairwise relations (“ball behind car,” “red ball to right of blue ball”). Real spatial language often involves multiple objects (“the cup between the lamp and the book”).  
+     – Do you intend COMFORT only for dyadic relations? If so, that limitation should be explicit. If not, please mention how you handle more complex scenes.
+
+8. Positioning the Novelty  
+   • The Introduction repeatedly says “the main research question is not new” yet presents COMFORT as the first to handle FoR ambiguity systematically. This tension could be softened by more clearly stating what is novel:
+     – Is it the joint combination of (a) explicit disambiguation, (b) consistency metrics, and (c) large-scale multilinguality?  
+     – Or is there a unique way you generate or perturb 3D scenes that prior work has not done?
+
+In sum, I find the motivation compelling—spatial language is indeed one of the more cognitively nuanced aspects of vision–language alignment—but the Introduction would benefit from substantially more precision on how COMFORT is constructed, where exactly it fills the methodological gaps left by earlier datasets, and how you plan to measure model performance in a way that truly tests spatial reasoning rather than surface pattern matching. Without those details, the claims about “systematic evaluation” and “170 regions” risk sounding more like marketing than science.
+
+[SECTION 3] Preliminaries
+While I appreciate the high-level overview of spatial language and frames of reference (FoR), I found several aspects of this Background section that—at least as currently presented—leave the reader wanting more concrete detail or stronger connection to the paper’s stated goals. Below are my main concerns and questions:
+
+1.  Lack of Connection to the Paper’s Objectives  
+    – You summarize classical distinctions (absolute, intrinsic, relative FoRs) and then drill into “translated,” “rotated,” and “reflected” projections (Levinson, 2003). But it remains unclear how this taxonomy feeds into your own proposed modeling or evaluation.  
+    – Can you preview or at least foreshadow which of these ambiguities your work will tackle, and how your method or experiments will operationalize them? Right now, the section reads more like a standalone linguistic primer than an integrated roadmap toward your technical contributions.
+
+2.  Missing Computational / Empirical Context  
+    – Almost all citations are from psycholinguistics or cognitive modeling (Logan & Sadler 1996; Carlson‐Radvansky & Logan 1997; Levinson 1996/2003). Yet if your ultimate aim is a computational model or an evaluation suite (as suggested in your abstract), you should also survey existing computational approaches. For example, how do modern vision‐and‐language systems (or spatial relation classifiers) handle FoR?  
+    – Are there publicly available spatial‐language datasets (e.g., object‐placement corpora, robot navigation benchmarks) that align with these three projection strategies? A brief review of such resources would help situate your upcoming experiments.
+
+3.  Insufficient Detail on the “Spatial Templates” Approach  
+    – You write, “existing theories suggest that people fit spatial templates… to parse out regions of acceptability” (Logan & Sadler, 1996; Franklin et al., 1995; Carlson‐Radvansky & Logan, 1997). However, it is unclear how spatial templates are formally defined, or what parameters govern their shape and size. Will your work adopt these cognitive templates directly, or propose new parameterizations?  
+    – If the templates play a role in your method, please state explicitly what mathematical or algorithmic form they take, and how they map onto the rotated/translated/reflected FoRs.
+
+4.  Ambiguities in Classification of Languages  
+    – The three projection conventions (translated, rotated, reflected) are presented as if each language neatly falls into exactly one of these. In practice, languages sometimes use mixed strategies depending on dialect, context, or domain (e.g., gesture vs. speech; spatial vs. temporal metaphors). Can you clarify or justify this clear‐cut assignment?  
+    – Have you considered cross‐linguistic variation within a language (e.g., English speakers sometimes say “my left” vs. “your right”)? If this intralinguistic variability exists, how will your experiments control for it?
+
+5.  Frame‐of‐Reference Disambiguation Cues  
+    – You note that intrinsic and relative FoRs “are not easily distinguishable based solely on their linguistic expressions” (Tenbrink, 2004). In real conversations, however, speakers often disambiguate via gesture, prosody, or explicit qualifiers (“to my left,” “on the building’s east side”). Will your work consider such multimodal or qualifier‐based cues? If not, is that a limitation?  
+    – If you do plan to incorporate such signals, please preview how they will be represented or annotated in your dataset.
+
+6.  Minor Structural / Presentation Points  
+    – There are a couple of sentence fragments (e.g., “Along a specific axis/direction (Levinson, 1996; Frank, 1998).”); a careful polish will help readability.  
+    – References to “Figure 1b” and “Figure 2” are made, but the text would benefit from at least a one‐sentence verbal description of what those figures depict—especially since the paper seems to rest heavily on those visual examples.
+
+Overall, I recommend strengthening this section by (a) tightening its connection to the proposed technical or empirical contributions, (b) adding brief coverage of relevant computational/vision‐and‐language work, and (c) clarifying any internal assumptions (e.g., one‐to‐one language‐to‐strategy mapping, the formalization of spatial templates). This will give readers a much clearer sense of how your background review underpins the novel aspects of your research.
+
+[SECTION 4] Related Work
+While this section correctly situates your work amid recent interest in spatial reasoning for vision–language models (VLMs), I found it rather high‐level and missing several important threads. Below are some specific concerns and questions:
+
+1. Scope and Categorization  
+  • The opening lumping together of “LLM adaptability,” “grounded VLMs,” and “spatial understanding” (paragraph 1) makes it hard to see where spatial reasoning research begins and ends. It would help to more sharply distinguish  
+    – 2D tasks (e.g., SpatialVLM (Chen et al., 2024a), SpatialRGPT (Cheng et al., 2024)),  
+    – 3D or embodied benchmarks (e.g., ALFRED, AI2-THOR),  
+    – synthetic relational datasets (e.g., CLEVR), and  
+    – real‐world VQA/captioning datasets (e.g., GQA).  
+  Without this breakdown, readers cannot appreciate the precise gaps your work addresses.
+
+2. Missing Benchmarks and Baselines  
+  • You state that “several benchmarks… have also been developed to evaluate spatial reasoning” (Liu et al., 2023a; Cheng et al., 2024; Kamath et al., 2023), but this list omits widely‐used synthetic suites such as CLEVR (Johnson et al.) and block‐world tasks. Even if synthetic, these datasets explicitly test relational spatial queries—why are they out of scope?  
+  • The claim that “these benchmarks overlook ambiguities related to the FoR, lack spatial continuity, and have not proposed metrics to evaluate robustness and consistency” is never substantiated with concrete examples. For instance:  
+    – Which specific benchmark fails to handle multiple frames of reference?  
+    – What do you mean by “spatial continuity,” and can you point to any prior work that partly addresses it?  
+    – Aren’t there existing robustness metrics in VQA benchmarks (e.g., adversarial rephrasing or consistency splits in GQA)?  
+  Without explicit contrasts, it’s difficult to judge how your proposed benchmark/metrics truly differ.
+
+3. Limited Discussion of Prior Spatial Modules and Methods  
+  • You briefly mention “explicit spatial language understanding modules” (Rajabi & Kosecka, 2024) but provide no detail on what these modules do and how they fall short. A few sentences summarizing their approach—and why it doesn’t handle FoR ambiguity or continuity—would strengthen the critique.  
+  • Recent works on scene‐graph‐driven fine‐tuning (e.g., SpatialVLM, SpatialRGPT) are cited, but the description lacks specificity: are they using triplets like “cup-on-table,” 3D point clouds, or synthetic pairings? A deeper dive into what data and losses they employ would clarify the advance your method provides.
+
+4. Concrete Questions  
+  • Can you clarify what you consider a “frame of reference” ambiguity in the context of existing benchmarks? Do prior datasets even annotate multiple valid reference frames for the same image?  
+  • When you say “lack spatial continuity,” do you mean continuity across image regions (e.g., segmentations), across time (videos), or across reasoning steps? Please define this term and contrast with existing benchmarks.  
+  • Which robustness and consistency metrics are missing? For example, some VQA benchmarks already test whether model answers change under minor image transformations or paraphrased questions—how is your proposed metric fundamentally different?
+
+Overall, to make the “Related Work” section more compelling, I urge you to (1) expand the taxonomy of spatial reasoning tasks and datasets; (2) concretely detail prior spatial‐reasoning methods and their exact shortcomings; and (3) support your high-level critiques with explicit citations or short examples. This will help reviewers and readers clearly see the gap your contribution fills.
+
+[SECTION 5] Method
+[CheatingDetector ERROR in section 'Method']: 'NoneType' object has no attribute 'content'
+
+
+[SECTION 6] Experiments
+[CheatingDetector ERROR in section 'Experiments']: 'NoneType' object has no attribute 'content'
+
+
+[SECTION 7] Discussion
+Below are several points and questions on your Discussion that I believe should be addressed to strengthen the paper.
+
+1.  Claims about “reasonable spatial representations” vs. “lack of robustness and consistency.”  
+    •  You write “many VLMs are equipped with reasonable spatial representations… however, these representations lack robustness and consistency in a continuous space” (Sec. 5). Yet it remains unclear whether the instability you observe is intrinsic to the VLMs’ spatial encoding or an artifact of the evaluation. For example:  
+       –  How sensitive are your results to the exact prompt templates or synonyms? Could the axis-wise variability (e.g. GPT-4’s strong lateral but weak sagittal preference in Table 3) simply reflect prompt wording rather than a true model bias?  
+       –  Did you conduct any ablation on the granularity of discretization in continuous space (e.g. number of bins or sampling density)? Sometimes coarse binning can artificially inflate apparent inconsistencies.  
+    I recommend adding prompt-sensitivity analyses and a brief study on discretization procedures to rule out these alternative explanations.
+
+2.  Perspective taking and dataset bias hypothesis  
+    •  You observe that “VLMs still struggle to adopt alternative FoRs flexibly, even when provided with explicit perspective-taking instructions” (Sec. 5). It is plausible this stems from a “reporting bias in the image-text datasets,” but this remains a hypothesis.  
+    Questions:  
+       –  Have you tried a small-scale fine-tuning experiment with synthetic or curated examples that explicitly target non-egocentric FoRs? If performance improves, that would directly support the reporting-bias explanation.  
+       –  How were the “explicit perspective-taking instructions” formulated? A brief example or appendix reference would help readers assess whether the failure is due to insufficient instruction or deeper model limitations.  
+
+3.  Cross-lingual FoR conventions—untested conjecture  
+    •  The discussion of English conventions “overshadowing” other languages in multilingual VLMs is interesting but presently unsubstantiated by experiments in your paper. You note that “Hausa prefers… an interpretation where the ‘front’ aligns with the English concept of ‘back’” (Hill, 1982), but do not test any non-English inputs.  
+    Suggestions:  
+       –  At minimum, run a small evaluation of a multilingual VLM on prompts in a second language (e.g. French or Chinese) to see if it still defaults to English-style FoRs.  
+       –  If resource constraints prevent this, please clearly frame the argument as speculative and outline a concrete plan for future empirical validation.  
+
+4.  Future work: 3D extension vs. simpler remedies  
+    •  You suggest extending to 3D with multiview data (Yang et al., 2024; Hao et al., 2024). While this is certainly valuable, there may be more immediate ways to improve 2D models’ FoR consistency—for example, injecting geometric supervision, contrastive pretraining on synthetic scenes, or incorporating small spatial-reasoning modules. Please either cite and contrast these nearer-term approaches or acknowledge why they would be insufficient compared to a full 3D extension.
+
+5.  Broader implications and linkage to downstream tasks  
+    •  You motivate FoR flexibility as a prerequisite for Theory of Mind and situated communication (Ma et al., 2023b), yet the paper does not measure any downstream task performance (e.g. perspective-taking QA or embodied navigation).  
+    Questions:  
+       –  Do mistakes in your FoR tests predict failures on established multimodal benchmarks that require perspective or spatial reasoning?  
+       –  Would integrating an FoR-aware head improve performance on VQA datasets like VQAv2 or GQA?  
+    Even a small correlation analysis would make the claim of “human-like spatial reasoning” more concrete.
+
+Overall, the Discussion raises insightful issues, but several key claims—especially around dataset bias, cross-lingual effects, and future remediation strategies—are presently speculative. Addressing the points above will help ground these ideas in empirical evidence or at least clearly delineate them as hypotheses for future work.
+
+[SECTION 8] Appendix
+While it is perfectly normal to see an “Acknowledgments” block in the back matter of a submission, I was surprised to find that the section titled “# Appendix” contains nothing but funding acknowledgments and proofreading thanks. In particular:
+
+  • Missing appendix content.  The heading “# Appendix” strongly suggests there should be supplementary technical material (proofs, detailed derivations, pseudocode, hyperparameter tables, additional experiments, etc.), but none of that appears here.  As a reviewer, I cannot verify or reproduce the claims without those details.  Please make sure that any promised deferred content (proofs, extended experiments, ablations, dataset/statistics, model-architecture diagrams, training or optimization details, etc.) is actually included in the appendix.  
+  
+  • Reproducibility gap.  Throughout the main text the authors refer to various design choices (e.g., “we use the AdamW optimizer with these specific settings,” “we fine-tune for so many epochs on these datasets,” “see Figure X in the Appendix for additional qualitative examples,” etc.).  Without an actual appendix, those pointers lead to a dead end.  Please supply a complete set of implementation details, hyperparameters, and—if any—proof sketches or formal statements that are essential to validate your method.  
+  
+  • Acknowledgments are fine.  The funding sources (NSF, NSERC, ONR, Microsoft AFMR, etc.) and the disclaimer are all standard.  I have no objection to the content here, aside from the fact that it is mis-titled as an appendix rather than a standalone “Acknowledgments” section.  
+
+In sum, please ensure that the final submission includes all of the missing supplementary material under the Appendix heading (or remove the heading and clearly demarcate the acknowledgments). This is critical for reproducibility and for a fair assessment of your contribution.
+
+[SECTION 9] References
+[CheatingDetector ERROR in section 'References']: 'NoneType' object has no attribute 'content'
+
+
+[SECTION 10] Appendix
+[CheatingDetector ERROR in section 'Appendix']: 'NoneType' object has no attribute 'content'
