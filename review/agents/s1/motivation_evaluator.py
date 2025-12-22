@@ -168,7 +168,7 @@ Then, output the final structured comparison inside <resemblance> tags.
             Extracted keywords as a list of strings
         """
         logger.info(f"Extracting keywords from paper summary...")
-        
+
         temp = self.config.get("agents.motivation_evaluator.temperature", None)
         response = await self._call_llm_with_retry(
             model=self.model,
@@ -176,11 +176,14 @@ Then, output the final structured comparison inside <resemblance> tags.
                 {"role": "system", "content": self.EXTRACT_KEYWORDS_PROMPT},
                 {"role": "user", "content": paper_summary}
             ],
-            stream=False,
             temperature=temp
         )
-        
-        response_text = response.choices[0].message.content
+
+        try:
+            response_text = self._get_text_from_response(response)
+        except Exception as e:
+            logger.error(f"Failed to parse keyword extraction response: {e}")
+            raise
         keywords_text = extract_tag(response_text, "keywords")
         assert keywords_text, f"Failed to extract keywords from LLM response: {response}"
         keywords = [kw.strip() for kw in keywords_text.split(",") if kw.strip()]
@@ -212,11 +215,14 @@ Then, output the final structured comparison inside <resemblance> tags.
                         {"role": "system", "content": self.FILTER_RESEMBLANCE_PROMPT},
                         {"role": "user", "content": f"Target Paper:\n{paper_summary}\n\nSimilar Work:\nTitle: {result.title}\nAuthors: {', '.join([author.name for author in result.authors])}\nAbstract: {result.summary}"}
                     ],
-                    stream=False,
                     temperature=temp
                 )
-                response_text = response.choices[0].message.content
-                
+                try:
+                    response_text = self._get_text_from_response(response)
+                except Exception as e:
+                    logger.error(f"Failed to parse resemblance response for '{result.title}': {e}")
+                    return None
+
                 resemblance = extract_tag(response_text, "resemblance")
                 if resemblance:
                     resembling_paper = ResemblePaper(
@@ -276,12 +282,15 @@ Then, output the final structured comparison inside <resemblance> tags.
                 {"role": "system", "content": self.REPORT_PROMPT},
                 {"role": "user", "content": prompt}
             ],
-            stream=False,
             temperature=self.config.get("agents.motivation_evaluator.temperature", None)
         )
-        
+
         logger.info("Finished generating motivation evaluation report.")
-        return report.choices[0].message.content
+        try:
+            return self._get_text_from_response(report)
+        except Exception as e:
+            logger.error(f"Failed to parse motivation report: {e}")
+            return f"[MOTIVATION_ERROR] {e}"
             
         
         

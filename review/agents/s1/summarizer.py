@@ -1,5 +1,5 @@
 import json
-from typing import AsyncGenerator
+from typing import Any, AsyncGenerator
 from ..base_agent import BaseAgent
 from ..logger import get_logger
 
@@ -173,7 +173,7 @@ Detecting Cheating Report: {cheating_report}
 Motivation Evaluation Report: {motivation_report}
 """
 
-    async def run(self, pdf_content: str, query: str, cheating_report: str, motivation_report: str) -> AsyncGenerator[str, None]:
+    async def run(self, pdf_content: Any, query: str, cheating_report: str, motivation_report: str) -> AsyncGenerator[str, None]:
         """
         Execute paper review task with a single non-streaming LLM call and emit SSE-style chunks.
 
@@ -187,17 +187,30 @@ Motivation Evaluation Report: {motivation_report}
         logger.info("Starting paper review...")
         logger.info(f"Query: {query[:100] if query else '(empty)'}...")
 
-        messages = [
-            {"role": "system", "content": self.SYSTEM_PROMPT},
-            {"role": "user", "content": self.USER_PROMPT_TEMPLATE.format(
+        if isinstance(pdf_content, list):
+            user_content: Any = [
+                {"type": "text", "text": self.USER_PROMPT_TEMPLATE.format(
+                    text="",
+                    query=query,
+                    cheating_report=cheating_report,
+                    motivation_report=motivation_report,
+                )}
+            ]
+            user_content.extend(pdf_content)
+        else:
+            user_content = self.USER_PROMPT_TEMPLATE.format(
                 text=pdf_content,
                 query=query,
                 cheating_report=cheating_report,
                 motivation_report=motivation_report
-            )}
+            )
+
+        messages = [
+            {"role": "system", "content": self.SYSTEM_PROMPT},
+            {"role": "user", "content": user_content}
         ]
 
-        logger.info("Calling LLM (stream=False) with retry mechanism...")
+        logger.info("Calling LLM (non-stream) with retry mechanism...")
         logger.info(f"Model: {self.reasoning_model}")
         logger.info(f"Base URL: {self.client.base_url}")
 
@@ -205,7 +218,6 @@ Motivation Evaluation Report: {motivation_report}
             resp = await self._call_llm_with_retry(
                 model=self.reasoning_model,
                 messages=messages,
-                stream=False,
                 temperature=self.config.get("agents.summarizer.temperature", None)
             )
         except Exception as e:
@@ -218,14 +230,7 @@ Motivation Evaluation Report: {motivation_report}
             return
 
         try:
-            choices = getattr(resp, "choices", None)
-            if not choices:
-                raise ValueError("Empty choices from completion response")
-            message = getattr(choices[0], "message", None)
-            content = getattr(message, "content", None) if message is not None else None
-            if not content:
-                raise ValueError("Empty content from completion response")
-            full_text = content if isinstance(content, str) else str(content)
+            full_text = self._get_text_from_response(resp)
         except Exception as parse_err:
             logger.error(f"Error while parsing completion response: {parse_err}")
             error_message = f"Error: {type(parse_err).__name__}: {parse_err}"

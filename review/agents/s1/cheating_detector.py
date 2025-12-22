@@ -101,7 +101,7 @@ Write an academic dishonesty report.
         return str(raw_content)
 
     # ===== 整篇论文级别接口：对外仍然是 SSE，但内部改为非流式 =====
-    async def run(self, pdf_content: str) -> AsyncGenerator[str, None]:
+    async def run(self, pdf_content: Any) -> AsyncGenerator[str, None]:
         """
         Detect cheating in the provided research paper content (full-manuscript level).
 
@@ -111,21 +111,26 @@ Write an academic dishonesty report.
             SSE-style content chunks from the API response:
             'data: {...}\\n\\n'
         """
-        prompt = self.USER_PROMPT_TEMPLATE.format(text=pdf_content)
+        if isinstance(pdf_content, list):
+            user_content: Any = [
+                {"type": "text", "text": self.USER_PROMPT_TEMPLATE.format(text="")}
+            ]
+            user_content.extend(pdf_content)
+        else:
+            user_content = self.USER_PROMPT_TEMPLATE.format(text=pdf_content)
 
         messages = [
             {"role": "system", "content": self.SYSTEM_PROMPT},
-            {"role": "user", "content": prompt}
+            {"role": "user", "content": user_content}
         ]
 
-        logger.info(f"Calling LLM with retry mechanism (full-paper, stream=False)...")
+        logger.info(f"Calling LLM with retry mechanism (full-paper, non-stream)...")
 
         try:
             # ✅ 非流式：一次性拿完整结果
             resp = await self._call_llm_with_retry(
                 model=self.reasoning_model,
                 messages=messages,
-                stream=False,
                 temperature=self.config.get("agents.cheating_detector.temperature", None)
             )
         except Exception as e:
@@ -135,21 +140,7 @@ Write an academic dishonesty report.
 
         # 解析非流式返回
         try:
-            choices = getattr(resp, "choices", None)
-            if not choices:
-                logger.error("No choices in response.")
-                yield "data: [ERROR]\n\n"
-                return
-
-            first = choices[0]
-            message = getattr(first, "message", None)
-            if message is None:
-                logger.error("No message in first choice.")
-                yield "data: [ERROR]\n\n"
-                return
-
-            raw_content = getattr(message, "content", "")
-            full_text = self._extract_text_from_message_content(raw_content).strip()
+            full_text = self._get_text_from_response(resp)
 
         except Exception as e:
             logger.error(f"Error while parsing non-stream response: {e}")
@@ -211,10 +202,18 @@ Write an academic dishonesty report.
             sections = structured_paper
 
         # 做个轻量清洗，防止坏数据
-        clean_sections: List[Dict[str, str]] = []
+        clean_sections: List[Dict[str, Any]] = []
         for sec in sections:
             title = str(sec.get("title", "")).strip() or "Untitled"
-            content = str(sec.get("content", "")).strip()
+            raw_content = sec.get("content")
+
+            if isinstance(raw_content, list):
+                content = raw_content if raw_content else None
+            elif isinstance(raw_content, str):
+                content = raw_content.strip()
+            else:
+                content = str(raw_content or "").strip()
+
             if not content:
                 continue
             clean_sections.append({"title": title, "content": content})
@@ -241,17 +240,22 @@ Write an academic dishonesty report.
             section_header = f"\n\n[SECTION {idx+1}] {sec_title}\n"
 
             # 构造单节的输入：带上 GLOBAL MEMORY + FOCUSED SECTION
-            user_prompt = (
+            base_prompt = (
                 "# GLOBAL MEMORY (for context)\n"
                 f"{paper_memory}\n\n"
                 "# FOCUSED SECTION (to review)\n"
                 f"# {sec_title}\n"
-                f"{sec_content}\n"
             )
+
+            if isinstance(sec_content, list):
+                section_user_content: Any = [{"type": "text", "text": base_prompt}]
+                section_user_content.extend(sec_content)
+            else:
+                section_user_content = base_prompt + f"{sec_content}\n"
 
             messages = [
                 {"role": "system", "content": self.SECTION_SYSTEM_PROMPT},
-                {"role": "user", "content": user_prompt},
+                {"role": "user", "content": section_user_content},
             ]
 
             async with sem:  # ✅ NEW: 并发控制
@@ -260,7 +264,6 @@ Write an academic dishonesty report.
                     resp = await self._call_llm_with_retry(
                         model=self.reasoning_model,
                         messages=messages,
-                        stream=False,      # 非流式
                         temperature=self.config.get("agents.cheating_detector.temperature", None),
                     )
                 except Exception as e:
@@ -270,19 +273,7 @@ Write an academic dishonesty report.
 
             # 解析非流式结果
             try:
-                choices = getattr(resp, "choices", None)
-                if not choices:
-                    msg = "[CheatingDetector] Empty response for this section.\n"
-                    return section_header + msg
-
-                first = choices[0]
-                message = getattr(first, "message", None)
-                if message is None:
-                    msg = "[CheatingDetector] No message in response for this section.\n"
-                    return section_header + msg
-
-                raw_content = getattr(message, "content", "")
-                section_text = self._extract_text_from_message_content(raw_content).strip()
+                section_text = self._get_text_from_response(resp)
             except Exception as e:
                 err_msg = f"[CheatingDetector] Error parsing section '{sec_title}' response: {e}\n"
                 logger.error(err_msg)
