@@ -55,7 +55,7 @@ Full Manuscript:
 {text}
 """
 
-    async def run(self, pdf_text: str, *, section_titles: list[str] | None = None) -> str:
+    async def run(self, pdf_text: Any, *, section_titles: list[str] | None = None) -> str:
         """
         Build a natural-language memory from the full paper text.
 
@@ -66,11 +66,20 @@ Full Manuscript:
             纯文本 memory（单个字符串，不再是 SSE / AsyncGenerator）
         """
         titles_block = "\n".join([f"- {t}" for t in section_titles]) if section_titles else "- (no sections detected)"
-        prompt = self.USER_PROMPT_TEMPLATE.format(text=pdf_text, section_titles=titles_block)
+        prompt_prefix = self.USER_PROMPT_TEMPLATE.format(text="", section_titles=titles_block)
+
+        # When pdf_text is multimodal (list parts), build a mixed content message similar to
+        # detect/4_1_mas_error_detection.py; otherwise keep plain-text behavior.
+        user_content: Any
+        if isinstance(pdf_text, list):
+            user_content = [{"type": "text", "text": prompt_prefix}]
+            user_content.extend(pdf_text)
+        else:
+            user_content = self.USER_PROMPT_TEMPLATE.format(text=str(pdf_text), section_titles=titles_block)
 
         messages = [
             {"role": "system", "content": self.SYSTEM_PROMPT},
-            {"role": "user", "content": prompt},
+            {"role": "user", "content": user_content},
         ]
 
         logger.info("Calling LLM to build memory (non-stream)...")

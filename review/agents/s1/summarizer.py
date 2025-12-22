@@ -1,5 +1,5 @@
 import json
-from typing import AsyncGenerator
+from typing import Any, AsyncGenerator
 from ..base_agent import BaseAgent
 from ..logger import get_logger
 
@@ -173,7 +173,7 @@ Detecting Cheating Report: {cheating_report}
 Motivation Evaluation Report: {motivation_report}
 """
 
-    async def run(self, pdf_content: str, query: str, cheating_report: str, motivation_report: str) -> AsyncGenerator[str, None]:
+    async def run(self, pdf_content: Any, query: str, cheating_report: str, motivation_report: str) -> AsyncGenerator[str, None]:
         """
         Execute paper review task with a single non-streaming LLM call and emit SSE-style chunks.
 
@@ -187,14 +187,27 @@ Motivation Evaluation Report: {motivation_report}
         logger.info("Starting paper review...")
         logger.info(f"Query: {query[:100] if query else '(empty)'}...")
 
-        messages = [
-            {"role": "system", "content": self.SYSTEM_PROMPT},
-            {"role": "user", "content": self.USER_PROMPT_TEMPLATE.format(
+        if isinstance(pdf_content, list):
+            user_content: Any = [
+                {"type": "text", "text": self.USER_PROMPT_TEMPLATE.format(
+                    text="",
+                    query=query,
+                    cheating_report=cheating_report,
+                    motivation_report=motivation_report,
+                )}
+            ]
+            user_content.extend(pdf_content)
+        else:
+            user_content = self.USER_PROMPT_TEMPLATE.format(
                 text=pdf_content,
                 query=query,
                 cheating_report=cheating_report,
                 motivation_report=motivation_report
-            )}
+            )
+
+        messages = [
+            {"role": "system", "content": self.SYSTEM_PROMPT},
+            {"role": "user", "content": user_content}
         ]
 
         logger.info("Calling LLM (non-stream) with retry mechanism...")

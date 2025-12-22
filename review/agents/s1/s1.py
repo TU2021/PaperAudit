@@ -94,10 +94,16 @@ class S1Agent(BaseAgent):
         }
         return f"data: {json.dumps(response_data)}\n\n"
 
-    def _build_sections_from_blocks(self, blocks: List[Dict[str, Any]], enable_mm: bool) -> List[Dict[str, str]]:
-        """Group normalized blocks by their `section` field to avoid LLM-based structuring."""
+    def _build_sections_from_blocks(self, blocks: List[Dict[str, Any]], enable_mm: bool) -> List[Dict[str, Any]]:
+        """Group normalized blocks by their `section` field to avoid LLM-based structuring.
 
-        sections: List[Dict[str, str]] = []
+        When ``enable_mm`` is True, ``content`` will be a multimodal ``list`` of parts
+        (text + ``image_url``) built directly from the blocks, mirroring
+        ``detect/4_1_mas_error_detection.py``. Otherwise ``content`` is a plain text
+        string.
+        """
+
+        sections: List[Dict[str, Any]] = []
         current_title: Optional[str] = None
         buffer: List[Dict[str, Any]] = []
 
@@ -105,11 +111,13 @@ class S1Agent(BaseAgent):
             nonlocal buffer, current_title
             if not buffer:
                 return
-            content = self.blocks_to_text(buffer, enable_mm=enable_mm)
-            if content.strip():
+            content = self.blocks_to_prompt_content(buffer, enable_mm=enable_mm)
+            content_text = self.blocks_to_text(buffer, enable_mm=False)
+            if (content_text if isinstance(content, list) else content).strip():
                 sections.append({
                     "title": current_title or "Unknown Section",
                     "content": content,
+                    "content_text": content_text,
                 })
             buffer = []
 
@@ -127,10 +135,36 @@ class S1Agent(BaseAgent):
         if not sections:
             sections.append({
                 "title": "Full Paper",
-                "content": self.blocks_to_text(blocks, enable_mm=enable_mm),
+                "content": self.blocks_to_prompt_content(blocks, enable_mm=enable_mm),
+                "content_text": self.blocks_to_text(blocks, enable_mm=False),
             })
 
         return sections
+
+    @staticmethod
+    def _combine_sections_content(sections: List[Dict[str, Any]], enable_mm: bool) -> Any:
+        """Merge section contents into a single prompt-ready payload.
+
+        - When multimodal, returns a list of parts with section headings as text entries
+          plus the original multimodal parts for each section.
+        - When not multimodal, returns a plain text string joined with headings.
+        """
+
+        if not enable_mm:
+            return "\n\n".join(
+                f"# {sec['title']}\n{sec.get('content_text') or sec.get('content', '')}"
+                for sec in sections
+            )
+
+        parts: List[Dict[str, Any]] = []
+        for sec in sections:
+            parts.append({"type": "text", "text": f"# {sec['title']}"})
+            content = sec.get("content")
+            if isinstance(content, list):
+                parts.extend(content)
+            elif isinstance(content, str):
+                parts.append({"type": "text", "text": content})
+        return parts
 
     async def _run_with_progress(self, task_coro, description: str, result_container: List[Any]):
         task = asyncio.create_task(task_coro)
@@ -163,11 +197,11 @@ class S1Agent(BaseAgent):
             # Log the content to artifact logger
             artifact_logger.info(f"\n=== {name} ===\n{json.dumps(obj, ensure_ascii=False, indent=2)}")
         blocks = self.prepare_paper_blocks(paper_json)
-        raw_pdf_text = self.blocks_to_text(blocks, enable_mm=enable_mm)
-        logger.info(f"Normalized paper blocks: {len(blocks)} items; text length={len(raw_pdf_text)}")
+        logger.info(f"Normalized paper blocks: {len(blocks)} items")
 
-        # ✅ NEW: 原始抽取文本也可以落盘，方便 debug
-        _save_text("raw_pdf_text", raw_pdf_text)
+        # ✅ NEW: 保存块信息及纯文本视图（仅供日志，不作为输入）
+        plain_blocks_text = self.blocks_to_text(blocks, enable_mm=False)
+        _save_text("plain_blocks_text", plain_blocks_text)
         _save_json("paper_blocks", blocks)
 
         # =========================
@@ -176,20 +210,23 @@ class S1Agent(BaseAgent):
         yield self._create_chunk("> (1/4) Aggregating sections from paper JSON...\n")
         sections: List[Dict[str, str]] = self._build_sections_from_blocks(blocks, enable_mm=enable_mm)
         for i, sec in enumerate(sections, start=1):
-            logger.info(f"  - Section {i}: {sec.get('title', '')} (len={len(sec.get('content',''))} chars)")
+            content_view = sec.get("content")
+            content_len = len(sec.get("content_text", "")) if isinstance(content_view, list) else len(str(content_view))
+            logger.info(f"  - Section {i}: {sec.get('title', '')} (len={content_len} chars)")
         yield self._create_chunk("\n")
 
         # ✅ NEW: 保存章节结构
         _save_json("sections", sections)
 
         # 用规整后的内容拼一个“结构化全文”，供 memory summarizer 使用
-        normalized_paper_text = "\n\n".join(
-            f"# {sec['title']}\n{sec['content']}" for sec in sections
-        )
-        logger.info(f"Normalized paper text length: {len(normalized_paper_text)} characters")
+        normalized_paper_content = self._combine_sections_content(sections, enable_mm=enable_mm)
+        if enable_mm:
+            logger.info("Normalized paper content assembled as multimodal parts")
+        else:
+            logger.info(f"Normalized paper text length: {len(normalized_paper_content)} characters")
 
-        # ✅ NEW: 保存规整后的全文
-        _save_text("normalized_paper", normalized_paper_text)
+        # ✅ NEW: 保存规整后的全文（文本视图便于查看）
+        _save_text("normalized_paper", self.blocks_to_text(blocks, enable_mm=False))
 
         # =========================
         # Step 1: 构建论文 memory（基于规整后的全文）
@@ -201,7 +238,7 @@ class S1Agent(BaseAgent):
                 # Try to consume as async generator first, then fall back to str
                 memory_chunks: List[str] = []
                 async for chunk in self.paper_memory_summarizer.run(
-                    normalized_paper_text, section_titles=[s.get("title", "") for s in sections]
+                    normalized_paper_content, section_titles=[s.get("title", "") for s in sections]
                 ):
                     memory_chunks.append(chunk)
                 memory = "".join(memory_chunks)
@@ -211,7 +248,7 @@ class S1Agent(BaseAgent):
                 # If it returns str directly (not async generator)
                 try:
                     memory = await self.paper_memory_summarizer.run(
-                        normalized_paper_text, section_titles=[s.get("title", "") for s in sections]
+                        normalized_paper_content, section_titles=[s.get("title", "") for s in sections]
                     )
                     logger.info(f"Paper memory summarization completed, length={len(memory)}")
                     return memory
@@ -328,7 +365,7 @@ class S1Agent(BaseAgent):
         summary_chunks: List[str] = []
 
         async for chunk in self.summarizer.run(
-            normalized_paper_text,  # 也可以改成 paper_memory，看 Summarizer 的设计
+            normalized_paper_content,  # 也可以改成 paper_memory，看 Summarizer 的设计
             query,
             str(cheating_detection), # Ensure string
             str(motivation_evaluation), # Ensure string
@@ -358,11 +395,10 @@ class S1Agent(BaseAgent):
             Dict containing:
             - final_assessment: str - The complete final assessment (full text, not chunks)
             - sections: List[Dict] - Structured paper sections with titles and content
-            - normalized_paper: str - Restructured full paper text
+            - normalized_paper: str | list[dict] - Restructured full paper (multimodal when enable_mm)
             - paper_memory: str - Summary of paper key points
             - cheating_detection: dict/str - Cheating detection results by section
             - motivation_evaluation: str - Motivation evaluation results
-            - raw_pdf_text: str - Original extracted PDF text
         """
         # Artifact collection functions
         artifacts = {}
@@ -381,34 +417,35 @@ class S1Agent(BaseAgent):
 
         # 0) Normalize paper JSON
         blocks = self.prepare_paper_blocks(paper_json)
-        raw_pdf_text = self.blocks_to_text(blocks, enable_mm=enable_mm)
-        logger.info(f"Normalized paper blocks: {len(blocks)} items; text length={len(raw_pdf_text)}")
-        _save_text("raw_pdf_text", raw_pdf_text)
+        logger.info(f"Normalized paper blocks: {len(blocks)} items")
+        plain_blocks_text = self.blocks_to_text(blocks, enable_mm=False)
+        _save_text("plain_blocks_text", plain_blocks_text)
         _save_json("paper_blocks", blocks)
 
         # Step 0: Structure paper sections directly from normalized blocks
         logger.info("Aggregating sections from paper JSON (no LLM structuring)...")
-        sections: List[Dict[str, str]] = self._build_sections_from_blocks(blocks, enable_mm=enable_mm)
+        sections: List[Dict[str, Any]] = self._build_sections_from_blocks(blocks, enable_mm=enable_mm)
         for i, sec in enumerate(sections, start=1):
             title = sec.get("title", "")
-            content_len = len(sec.get("content", ""))
+            content_len = len(sec.get("content_text", "")) if isinstance(sec.get("content"), list) else len(str(sec.get("content", "")))
             logger.info(f"  - Section {i}: {title} (len={content_len} chars)")
 
         _save_json("sections", sections)
 
         # Create normalized paper text
-        normalized_paper_text = "\n\n".join(
-            f"# {sec['title']}\n{sec['content']}" for sec in sections
-        )
-        logger.info(f"Normalized paper text length: {len(normalized_paper_text)} characters")
-        _save_text("normalized_paper", normalized_paper_text)
+        normalized_paper_content = self._combine_sections_content(sections, enable_mm=enable_mm)
+        if enable_mm:
+            logger.info("Normalized paper content assembled as multimodal parts")
+        else:
+            logger.info(f"Normalized paper text length: {len(normalized_paper_content)} characters")
+        _save_text("normalized_paper", self.blocks_to_text(blocks, enable_mm=False))
 
         # Step 1: Build paper memory summary
         logger.info("Starting paper memory summarization...")
         try:
             paper_memory_chunks: List[str] = []
             async for chunk in self.paper_memory_summarizer.run(
-                normalized_paper_text, section_titles=[s.get("title", "") for s in sections]
+                normalized_paper_content, section_titles=[s.get("title", "") for s in sections]
             ):
                 paper_memory_chunks.append(chunk)
             paper_memory = "".join(paper_memory_chunks)
@@ -417,7 +454,7 @@ class S1Agent(BaseAgent):
             # If paper_memory_summarizer.run returns str directly (not async generator)
             try:
                 paper_memory = await self.paper_memory_summarizer.run(
-                    normalized_paper_text, section_titles=[s.get("title", "") for s in sections]
+                    normalized_paper_content, section_titles=[s.get("title", "") for s in sections]
                 )
                 logger.info(f"Paper memory summarization completed, length={len(paper_memory)}")
             except Exception as e:
@@ -476,7 +513,7 @@ class S1Agent(BaseAgent):
 
         try:
             async for chunk in self.summarizer.run(
-                normalized_paper_text,
+                normalized_paper_content,
                 query,
                 str(cheating_detection),
                 str(motivation_evaluation),
@@ -496,11 +533,10 @@ class S1Agent(BaseAgent):
         return {
             "final_assessment": final_summary,
             "sections": sections,
-            "normalized_paper": normalized_paper_text,
+            "normalized_paper": normalized_paper_content,
             "paper_memory": paper_memory,
             "cheating_detection": cheating_detection,
             "motivation_evaluation": motivation_evaluation,
-            "raw_pdf_text": raw_pdf_text,
             "artifacts": artifacts,
         }
 
