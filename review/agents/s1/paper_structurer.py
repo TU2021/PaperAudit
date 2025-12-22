@@ -122,13 +122,12 @@ class PaperStructurer(BaseAgent):
             {"role": "user", "content": user_prompt},
         ]
 
-        logger.info("Calling LLM to propose segment anchors (stream=False)...")
+        logger.info("Calling LLM to propose segment anchors (non-stream)...")
 
         try:
             resp = await self._call_llm_with_retry(
                 model=self.model,
                 messages=messages,
-                stream=False,
                 temperature=self.config.get("agents.paper_structurer.temperature", None),
             )
         except Exception as e:

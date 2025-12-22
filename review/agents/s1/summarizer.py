@@ -197,7 +197,7 @@ Motivation Evaluation Report: {motivation_report}
             )}
         ]
 
-        logger.info("Calling LLM (stream=False) with retry mechanism...")
+        logger.info("Calling LLM (non-stream) with retry mechanism...")
         logger.info(f"Model: {self.reasoning_model}")
         logger.info(f"Base URL: {self.client.base_url}")
 
@@ -205,7 +205,6 @@ Motivation Evaluation Report: {motivation_report}
             resp = await self._call_llm_with_retry(
                 model=self.reasoning_model,
                 messages=messages,
-                stream=False,
                 temperature=self.config.get("agents.summarizer.temperature", None)
             )
         except Exception as e:
@@ -218,14 +217,7 @@ Motivation Evaluation Report: {motivation_report}
             return
 
         try:
-            choices = getattr(resp, "choices", None)
-            if not choices:
-                raise ValueError("Empty choices from completion response")
-            message = getattr(choices[0], "message", None)
-            content = getattr(message, "content", None) if message is not None else None
-            if not content:
-                raise ValueError("Empty content from completion response")
-            full_text = content if isinstance(content, str) else str(content)
+            full_text = self._get_text_from_response(resp)
         except Exception as parse_err:
             logger.error(f"Error while parsing completion response: {parse_err}")
             error_message = f"Error: {type(parse_err).__name__}: {parse_err}"

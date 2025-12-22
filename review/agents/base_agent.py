@@ -52,7 +52,120 @@ def _blocks_to_text(blocks: List[Dict[str, Any]], enable_mm: bool = False) -> st
             lines.append(f"[IMAGE]{f' {url}' if url else ''}")
     return "\n".join(lines)
 
+
+def _guess_mime_from_b64(data_b64: str) -> str:
+    head = (data_b64 or "")[:20]
+    if head.startswith("iVBOR"):  # PNG
+        return "image/png"
+    if head.startswith("/9j/"):  # JPEG
+        return "image/jpeg"
+    if head.startswith("R0lGOD"):  # GIF
+        return "image/gif"
+    return "image/png"
+
+
+def _block_to_multimodal_parts(
+    b: Dict[str, Any],
+    *,
+    max_text_chars_per_block: int = 10_000,
+    enable_mm: bool = True,
+) -> List[Dict[str, Any]]:
+    parts: List[Dict[str, Any]] = []
+    ci = b.get("content_index", b.get("index"))
+    if isinstance(ci, str):
+        try:
+            ci = int(ci)
+        except Exception:
+            ci = None
+
+    sec = (b.get("section") or "").strip()
+    typ = b.get("type")
+    header = f"[Block #{ci if ci is not None else '?'} | {typ or 'unknown'}{(' |Section: ' + sec) if sec else 'None'}]"
+    parts.append({"type": "text", "text": header})
+
+    if typ == "text":
+        t = (b.get("text") or "")
+        if max_text_chars_per_block and len(t) > max_text_chars_per_block:
+            t = t[:max_text_chars_per_block]
+        if t.strip():
+            parts.append({"type": "text", "text": t})
+    elif typ == "image_url":
+        if not enable_mm:
+            parts.append({"type": "text", "text": "[Image omitted: multimodal disabled]"})
+            return parts
+
+        img = b.get("image_url")
+        url = None
+        if isinstance(img, str):
+            url = img
+        elif isinstance(img, dict):
+            if isinstance(img.get("url"), str):
+                url = img["url"]
+            elif isinstance(img.get("data_b64"), str):
+                mime = img.get("mime") or _guess_mime_from_b64(img["data_b64"])
+                url = f"data:{mime};base64,{img['data_b64']}"
+        if isinstance(url, str) and (url.startswith("data:") or url.startswith("http")):
+            parts.append({"type": "image_url", "image_url": {"url": url}})
+
+    return parts
+
+
+def _blocks_to_multimodal_document(
+    blocks: List[Dict[str, Any]],
+    *,
+    max_blocks: int = 1_000,
+    max_images: int = 48,
+    max_text_chars_per_block: int = 10_000,
+    enable_mm: bool = True,
+) -> List[Dict[str, Any]]:
+    parts: List[Dict[str, Any]] = []
+    img_count = 0
+
+    for b in blocks[:max_blocks]:
+        for p in _block_to_multimodal_parts(
+            b,
+            max_text_chars_per_block=max_text_chars_per_block,
+            enable_mm=enable_mm,
+        ):
+            if p.get("type") == "image_url":
+                if not enable_mm:
+                    continue
+                if img_count >= max_images:
+                    continue
+                img_count += 1
+            parts.append(p)
+
+    return parts
+
 logger = get_logger(__name__)
+
+
+def _extract_text_from_message_content(raw_content: Any) -> str:
+    """
+    Normalize OpenAI-style message content into a string.
+
+    The content field may be:
+    - a plain string
+    - a list of content parts (objects or dicts containing ``text``/``content``)
+    - other objects (fallback to ``str``)
+    """
+    if isinstance(raw_content, str):
+        return raw_content
+
+    if isinstance(raw_content, list):
+        parts: List[str] = []
+        for part in raw_content:
+            if isinstance(part, dict):
+                t = part.get("text") or part.get("content")
+                if t:
+                    parts.append(str(t))
+            else:
+                t = getattr(part, "text", None) or getattr(part, "content", None)
+                if t:
+                    parts.append(str(t))
+        return "".join(parts)
+
+    return str(raw_content)
 
 class BaseAgent(ABC):
     """Base class for all API testing agents"""
@@ -96,6 +209,28 @@ class BaseAgent(ABC):
         resolved_emb_base_url = embedding_base_url or resolved_base_url
         resolved_emb_api_key = embedding_api_key or resolved_api_key
         self.emb_client = AsyncOpenAI(base_url=resolved_emb_base_url, api_key=resolved_emb_api_key)
+
+    def _get_text_from_response(self, resp: Any) -> str:
+        """Safely extract string content from a ChatCompletion response."""
+
+        choices = getattr(resp, "choices", None)
+        if not choices:
+            raise ValueError("LLM response has no choices")
+
+        first = choices[0]
+        message = getattr(first, "message", None)
+        if message is None:
+            raise ValueError("LLM response has no message")
+
+        raw_content = getattr(message, "content", None)
+        if raw_content is None:
+            raise ValueError("LLM response content is empty")
+
+        text = _extract_text_from_message_content(raw_content).strip()
+        if not text:
+            raise ValueError("LLM response content is empty")
+
+        return text
 
     def extract_pdf_text_from_base64(self, pdf_b64: str) -> str:
         """Extract text from base64-encoded PDF (legacy support)."""
@@ -149,6 +284,34 @@ class BaseAgent(ABC):
     def blocks_to_text(self, blocks: List[Dict[str, Any]], enable_mm: bool = False) -> str:
         """Convert normalized blocks to plain text, optionally including multimodal markers."""
         return _blocks_to_text(blocks, enable_mm=enable_mm)
+
+    def blocks_to_prompt_content(
+        self,
+        blocks: List[Dict[str, Any]],
+        *,
+        enable_mm: bool = False,
+        max_blocks: int = 1_000,
+        max_images: int = 48,
+        max_text_chars_per_block: int = 10_000,
+    ) -> str | List[Dict[str, Any]]:
+        """
+        Build prompt-ready content from normalized blocks.
+
+        - When ``enable_mm`` is False, returns plain text (no image URLs).
+        - When True, returns a multimodal content list mixing text and ``image_url``
+          parts similar to detect/4_1_mas_error_detection.py.
+        """
+
+        if not enable_mm:
+            return _blocks_to_text(blocks, enable_mm=False)
+
+        return _blocks_to_multimodal_document(
+            blocks,
+            max_blocks=max_blocks,
+            max_images=max_images,
+            max_text_chars_per_block=max_text_chars_per_block,
+            enable_mm=True,
+        )
         
     async def get_embedding(self, text: str) -> list[float]:
         """
@@ -174,22 +337,15 @@ class BaseAgent(ABC):
         *,
         model: str,
         messages: list[dict[str, Any]],
-        stream: bool = True,
         temperature: float = 0.2,
         max_tokens: int = 65536,
     ):
-        """
-        单次 API 调用（可流式/非流式）
-
-        stream=True  -> 返回 AsyncStream[ChatCompletionChunk]
-        stream=False -> 返回 ChatCompletion
-        """
+        """单次 API 调用（非流式）。"""
         return await self.client.chat.completions.create(
             model=model,
             messages=messages,  # type: ignore
             max_tokens=max_tokens,
             temperature=temperature,
-            stream=stream,
         )
 
     def _should_retry_error(self, e: Exception) -> bool:
@@ -206,7 +362,7 @@ class BaseAgent(ABC):
         try:
             import inspect
             # frame 0 is this function
-            # frame 1 is _call_llm_with_retry (or _stream_with_retry)
+            # frame 1 is _call_llm_with_retry
             # frame 2 is the actual caller
             stack = inspect.stack()
             if len(stack) > 2:
@@ -220,93 +376,18 @@ class BaseAgent(ABC):
             pass
         return "Unknown caller"
 
-    async def _stream_with_retry(
-        self,
-        *,
-        model: str,
-        messages: list[dict[str, Any]],
-        temperature: float,
-        max_tokens: int,
-        max_retries: int,
-        initial_delay: float,
-        caller_info: Optional[str] = None,  # Deprecated, calculated internally on error
-    ) -> AsyncGenerator[Any, None]:
-        """
-        Internal helper to handle streaming retries.
-        Retries as long as no content has been yielded.
-        """
-        delay = initial_delay
-        last_exception = None
-
-        for attempt in range(max_retries + 1):
-            has_yielded_content = False
-            try:
-                response = await self._call_llm_once(
-                    model=model,
-                    messages=messages,
-                    stream=True,
-                    temperature=temperature,
-                    max_tokens=max_tokens,
-                )
-                
-                async for chunk in response:
-                    content = None
-                    if chunk.choices and chunk.choices[0].delta:
-                        content = chunk.choices[0].delta.content
-                    
-                    if content:
-                        has_yielded_content = True
-                    
-                    yield chunk
-                
-                return
-
-            except Exception as e:
-                # Calculate caller info only when error occurs
-                current_caller = self._get_caller_info()
-                
-                if has_yielded_content:
-                    logger.error(f"Caller: {current_caller} | Stream interrupted after content yielded: {type(e).__name__}: {e}")
-                    raise e
-                
-                if not self._should_retry_error(e):
-                    logger.error(f"Caller: {current_caller} | Non-retryable error: {type(e).__name__}: {e}")
-                    raise e
-
-                last_exception = e
-                if attempt < max_retries:
-                    logger.warning(
-                        f"Retry {attempt + 1}/{max_retries} | "
-                        f"Caller: {current_caller} | Error: {type(e).__name__}: {e}"
-                    )
-                    logger.info(
-                        f"Retry {attempt + 1}/{max_retries} | "
-                        f"Caller: {current_caller} | Retrying in {delay:.2f} seconds..."
-                    )
-                    await asyncio.sleep(delay)
-                    delay = min(delay * self.BACKOFF_MULTIPLIER, self.MAX_RETRY_DELAY)
-                else:
-                    logger.error(f"Caller: {current_caller} | All {max_retries} retry attempts exhausted")
-        
-        if last_exception:
-            raise last_exception
-
     async def _call_llm_with_retry(
         self,
         *,
         model: str,
         messages: list[dict[str, Any]],
-        stream: bool = True,
         temperature: Optional[float] = None,
         max_tokens: Optional[int] = None,
         max_retries: Optional[int] = None,
         initial_delay: Optional[float] = None,
     ):
         """
-        带重试的 API 调用
-
-        - stream=True  时，返回 AsyncStream[ChatCompletionChunk]
-        - stream=False 时，返回 ChatCompletion
+        带重试的 API 调用（非流式返回 ChatCompletion）
         """
         if temperature is None:
             temperature = self.config.get("llm.default_temperature", 0.2)
@@ -317,49 +398,6 @@ class BaseAgent(ABC):
         if initial_delay is None:
             initial_delay = self.INITIAL_RETRY_DELAY
 
-        if stream:
-            return self._stream_with_retry(
-                model=model,
-                messages=messages,
-                temperature=temperature,
-                max_tokens=max_tokens,
-                max_retries=max_retries,
-                initial_delay=initial_delay,
-            )
-
-        # Non-streaming logic
-        
-        # 1. For reasoning models, use pseudo-streaming to avoid timeouts
-        if model == self.reasoning_model:
-            full_content = []
-            try:
-                generator = self._stream_with_retry(
-                    model=model,
-                    messages=messages,
-                    temperature=temperature,
-                    max_tokens=max_tokens,
-                    max_retries=max_retries,
-                    initial_delay=initial_delay,
-                )
-                
-                async for chunk in generator:
-                    if chunk.choices and chunk.choices[0].delta.content:
-                        full_content.append(chunk.choices[0].delta.content)
-                
-                content_str = "".join(full_content)
-                
-                # Construct a mock response object that mimics ChatCompletion
-                from types import SimpleNamespace
-                message = SimpleNamespace(content=content_str)
-                choice = SimpleNamespace(message=message)
-                response = SimpleNamespace(choices=[choice])
-                return response
-
-            except Exception as e:
-                 # _stream_with_retry already handles retries and logging.
-                 raise e
-
-        # 2. For standard models, use normal non-streaming call with retry
         last_exception: Optional[Exception] = None
         delay = initial_delay
 
@@ -368,15 +406,12 @@ class BaseAgent(ABC):
                 response = await self._call_llm_once(
                     model=model,
                     messages=messages,
-                    stream=False,
                     temperature=temperature,
                     max_tokens=max_tokens,
                 )
-                
-                if not response.choices:
-                    raise ValueError("LLM response has no choices")
-                if not response.choices[0].message.content:
-                    raise ValueError("LLM response content is empty")
+
+                # Validate that the response contains usable content; raises for retries otherwise
+                self._get_text_from_response(response)
                 return response
 
             except Exception as e:

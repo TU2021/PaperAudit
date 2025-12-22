@@ -118,14 +118,13 @@ Write an academic dishonesty report.
             {"role": "user", "content": prompt}
         ]
 
-        logger.info(f"Calling LLM with retry mechanism (full-paper, stream=False)...")
+        logger.info(f"Calling LLM with retry mechanism (full-paper, non-stream)...")
 
         try:
             # ✅ 非流式：一次性拿完整结果
             resp = await self._call_llm_with_retry(
                 model=self.reasoning_model,
                 messages=messages,
-                stream=False,
                 temperature=self.config.get("agents.cheating_detector.temperature", None)
             )
         except Exception as e:
@@ -135,21 +134,7 @@ Write an academic dishonesty report.
 
         # 解析非流式返回
         try:
-            choices = getattr(resp, "choices", None)
-            if not choices:
-                logger.error("No choices in response.")
-                yield "data: [ERROR]\n\n"
-                return
-
-            first = choices[0]
-            message = getattr(first, "message", None)
-            if message is None:
-                logger.error("No message in first choice.")
-                yield "data: [ERROR]\n\n"
-                return
-
-            raw_content = getattr(message, "content", "")
-            full_text = self._extract_text_from_message_content(raw_content).strip()
+            full_text = self._get_text_from_response(resp)
 
         except Exception as e:
             logger.error(f"Error while parsing non-stream response: {e}")
@@ -260,7 +245,6 @@ Write an academic dishonesty report.
                     resp = await self._call_llm_with_retry(
                         model=self.reasoning_model,
                         messages=messages,
-                        stream=False,      # 非流式
                         temperature=self.config.get("agents.cheating_detector.temperature", None),
                     )
                 except Exception as e:
@@ -270,19 +254,7 @@ Write an academic dishonesty report.
 
             # 解析非流式结果
             try:
-                choices = getattr(resp, "choices", None)
-                if not choices:
-                    msg = "[CheatingDetector] Empty response for this section.\n"
-                    return section_header + msg
-
-                first = choices[0]
-                message = getattr(first, "message", None)
-                if message is None:
-                    msg = "[CheatingDetector] No message in response for this section.\n"
-                    return section_header + msg
-
-                raw_content = getattr(message, "content", "")
-                section_text = self._extract_text_from_message_content(raw_content).strip()
+                section_text = self._get_text_from_response(resp)
             except Exception as e:
                 err_msg = f"[CheatingDetector] Error parsing section '{sec_title}' response: {e}\n"
                 logger.error(err_msg)
