@@ -132,18 +132,32 @@ Instruction: {query}"""
         logger.info(f"Starting paper review...")
         logger.info(f"Query: {query[:100] if query else '(empty)'}...")
         
-        text = self.blocks_to_text(self.prepare_paper_blocks(paper_json), enable_mm=enable_mm)
-        logger.info(f"Extracted paper text length: {len(text)} characters")
-        
-        if not text:
+        paper_blocks = self.prepare_paper_blocks(paper_json)
+        paper_content = self.blocks_to_prompt_content(paper_blocks, enable_mm=enable_mm)
+        log_text = self.blocks_to_text(paper_blocks, enable_mm=True)
+        logger.info(f"Extracted paper text length: {len(log_text)} characters (with image markers if any)")
+
+        if not log_text:
             logger.warning("WARNING: No text extracted from PDF!")
             yield f"data: {json.dumps({'object': 'chat.completion.chunk', 'choices': [{'delta': {'content': 'Error: Failed to extract text from PDF'}}]})}\n\n"
             yield "data: [DONE]\n\n"
             return
 
+        if enable_mm:
+            user_content = [
+                {"type": "text", "text": "Review the following paper.\n\nPaper:"},
+            ]
+            if isinstance(paper_content, list):
+                user_content.extend(paper_content)
+            else:
+                user_content.append({"type": "text", "text": str(paper_content)})
+            user_content.append({"type": "text", "text": f"\nInstruction: {query}"})
+        else:
+            user_content = self.USER_PROMPT_TEMPLATE.format(text=paper_content, query=query)
+
         messages = [
             {"role": "system", "content": self.SYSTEM_PROMPT},
-            {"role": "user", "content": self.USER_PROMPT_TEMPLATE.format(text=text, query=query)}
+            {"role": "user", "content": user_content}
         ]
 
         logger.info(f"Calling LLM with retry mechanism (non-stream)...")

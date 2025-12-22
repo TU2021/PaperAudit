@@ -52,6 +52,91 @@ def _blocks_to_text(blocks: List[Dict[str, Any]], enable_mm: bool = False) -> st
             lines.append(f"[IMAGE]{f' {url}' if url else ''}")
     return "\n".join(lines)
 
+
+def _guess_mime_from_b64(data_b64: str) -> str:
+    head = (data_b64 or "")[:20]
+    if head.startswith("iVBOR"):  # PNG
+        return "image/png"
+    if head.startswith("/9j/"):  # JPEG
+        return "image/jpeg"
+    if head.startswith("R0lGOD"):  # GIF
+        return "image/gif"
+    return "image/png"
+
+
+def _block_to_multimodal_parts(
+    b: Dict[str, Any],
+    *,
+    max_text_chars_per_block: int = 10_000,
+    enable_mm: bool = True,
+) -> List[Dict[str, Any]]:
+    parts: List[Dict[str, Any]] = []
+    ci = b.get("content_index", b.get("index"))
+    if isinstance(ci, str):
+        try:
+            ci = int(ci)
+        except Exception:
+            ci = None
+
+    sec = (b.get("section") or "").strip()
+    typ = b.get("type")
+    header = f"[Block #{ci if ci is not None else '?'} | {typ or 'unknown'}{(' |Section: ' + sec) if sec else 'None'}]"
+    parts.append({"type": "text", "text": header})
+
+    if typ == "text":
+        t = (b.get("text") or "")
+        if max_text_chars_per_block and len(t) > max_text_chars_per_block:
+            t = t[:max_text_chars_per_block]
+        if t.strip():
+            parts.append({"type": "text", "text": t})
+    elif typ == "image_url":
+        if not enable_mm:
+            parts.append({"type": "text", "text": "[Image omitted: multimodal disabled]"})
+            return parts
+
+        img = b.get("image_url")
+        url = None
+        if isinstance(img, str):
+            url = img
+        elif isinstance(img, dict):
+            if isinstance(img.get("url"), str):
+                url = img["url"]
+            elif isinstance(img.get("data_b64"), str):
+                mime = img.get("mime") or _guess_mime_from_b64(img["data_b64"])
+                url = f"data:{mime};base64,{img['data_b64']}"
+        if isinstance(url, str) and (url.startswith("data:") or url.startswith("http")):
+            parts.append({"type": "image_url", "image_url": {"url": url}})
+
+    return parts
+
+
+def _blocks_to_multimodal_document(
+    blocks: List[Dict[str, Any]],
+    *,
+    max_blocks: int = 1_000,
+    max_images: int = 48,
+    max_text_chars_per_block: int = 10_000,
+    enable_mm: bool = True,
+) -> List[Dict[str, Any]]:
+    parts: List[Dict[str, Any]] = []
+    img_count = 0
+
+    for b in blocks[:max_blocks]:
+        for p in _block_to_multimodal_parts(
+            b,
+            max_text_chars_per_block=max_text_chars_per_block,
+            enable_mm=enable_mm,
+        ):
+            if p.get("type") == "image_url":
+                if not enable_mm:
+                    continue
+                if img_count >= max_images:
+                    continue
+                img_count += 1
+            parts.append(p)
+
+    return parts
+
 logger = get_logger(__name__)
 
 
@@ -199,6 +284,34 @@ class BaseAgent(ABC):
     def blocks_to_text(self, blocks: List[Dict[str, Any]], enable_mm: bool = False) -> str:
         """Convert normalized blocks to plain text, optionally including multimodal markers."""
         return _blocks_to_text(blocks, enable_mm=enable_mm)
+
+    def blocks_to_prompt_content(
+        self,
+        blocks: List[Dict[str, Any]],
+        *,
+        enable_mm: bool = False,
+        max_blocks: int = 1_000,
+        max_images: int = 48,
+        max_text_chars_per_block: int = 10_000,
+    ) -> str | List[Dict[str, Any]]:
+        """
+        Build prompt-ready content from normalized blocks.
+
+        - When ``enable_mm`` is False, returns plain text (no image URLs).
+        - When True, returns a multimodal content list mixing text and ``image_url``
+          parts similar to detect/4_1_mas_error_detection.py.
+        """
+
+        if not enable_mm:
+            return _blocks_to_text(blocks, enable_mm=False)
+
+        return _blocks_to_multimodal_document(
+            blocks,
+            max_blocks=max_blocks,
+            max_images=max_images,
+            max_text_chars_per_block=max_text_chars_per_block,
+            enable_mm=True,
+        )
         
     async def get_embedding(self, text: str) -> list[float]:
         """

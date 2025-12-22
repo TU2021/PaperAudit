@@ -5,6 +5,9 @@ import json
 from typing import Any, AsyncGenerator, Optional
 
 from .base_agent import BaseAgent
+from .logger import get_logger
+
+logger = get_logger(__name__)
 
 class BaseLineAgent(BaseAgent):
     """Agent for testing the /paper_review endpoint"""
@@ -39,21 +42,41 @@ class BaseLineAgent(BaseAgent):
     ) -> AsyncGenerator[str, None]:
         """Execute paper review task with streaming response."""
 
-        text = self.blocks_to_text(self.prepare_paper_blocks(paper_json), enable_mm=enable_mm)
+        paper_blocks = self.prepare_paper_blocks(paper_json)
+        paper_content = self.blocks_to_prompt_content(paper_blocks, enable_mm=enable_mm)
+
+        log_text = self.blocks_to_text(paper_blocks, enable_mm=True)
+        logger.info(f"Prepared paper content: {len(log_text)} characters (including image markers if any)")
 
         # Build prompt with PDF content
-        prompt = f"""Review the following paper:
+        if enable_mm:
+            prompt_content = [
+                {
+                    "type": "text",
+                    "text": "Review the following paper."
+                            "\n\nPaper:",
+                },
+            ]
+            if isinstance(paper_content, list):
+                prompt_content.extend(paper_content)
+            else:
+                prompt_content.append({"type": "text", "text": str(paper_content)})
+            prompt_content.append({"type": "text", "text": f"\nInstruction: {query}"})
+        else:
+            prompt_content = (
+                f"""Review the following paper:
 
 Paper:
-{text}
+{paper_content}
 
 Instruction: {query}"""
+            )
 
         temp = self.config.get("agents.baseline.temperature", None)
         try:
             response = await self._call_llm_with_retry(
                 model=self.model,
-                messages=[{"role": "user", "content": prompt}],
+                messages=[{"role": "user", "content": prompt_content}],
                 max_tokens=2048,
                 temperature=temp,
             )
