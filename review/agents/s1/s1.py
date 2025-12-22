@@ -8,7 +8,6 @@ from .cheating_detector import CheatingDetector
 from .motivation_evaluator import MotivationEvaluator
 from .summarizer import Summarizer
 from .paper_memory_summarizer import PaperMemorySummarizer
-from .paper_structurer import PaperStructurer
 from ..logger import get_logger, get_artifact_logger
 
 logger = get_logger(__name__)
@@ -49,7 +48,7 @@ class S1Agent(BaseAgent):
         self.motivation_evaluator = MotivationEvaluator(**shared_kwargs)
         self.summarizer = Summarizer(**shared_kwargs)
         self.paper_memory_summarizer = PaperMemorySummarizer(**shared_kwargs)
-        self.paper_structurer = PaperStructurer(**shared_kwargs)
+        # PaperStructurer is deprecated in favor of consuming pre-sectioned JSON
 
     def _parse_sse_chunk(self, sse_string: str) -> str:
         """
@@ -95,6 +94,44 @@ class S1Agent(BaseAgent):
         }
         return f"data: {json.dumps(response_data)}\n\n"
 
+    def _build_sections_from_blocks(self, blocks: List[Dict[str, Any]], enable_mm: bool) -> List[Dict[str, str]]:
+        """Group normalized blocks by their `section` field to avoid LLM-based structuring."""
+
+        sections: List[Dict[str, str]] = []
+        current_title: Optional[str] = None
+        buffer: List[Dict[str, Any]] = []
+
+        def flush():
+            nonlocal buffer, current_title
+            if not buffer:
+                return
+            content = self.blocks_to_text(buffer, enable_mm=enable_mm)
+            if content.strip():
+                sections.append({
+                    "title": current_title or "Unknown Section",
+                    "content": content,
+                })
+            buffer = []
+
+        for block in blocks:
+            title = (block.get("section") or "").strip() or None
+            if current_title is None:
+                current_title = title
+            elif title is not None and title != current_title:
+                flush()
+                current_title = title
+            buffer.append(block)
+
+        flush()
+
+        if not sections:
+            sections.append({
+                "title": "Full Paper",
+                "content": self.blocks_to_text(blocks, enable_mm=enable_mm),
+            })
+
+        return sections
+
     async def _run_with_progress(self, task_coro, description: str, result_container: List[Any]):
         task = asyncio.create_task(task_coro)
         yield self._create_chunk(f"> {description}...\n> ")
@@ -134,31 +171,13 @@ class S1Agent(BaseAgent):
         _save_json("paper_blocks", blocks)
 
         # =========================
-        # Step 0: 先用 LLM 规整章节结构
+        # Step 0: 按 section 字段直接聚合章节
         # =========================
-        # yield json.dumps({
-        #     "status": "processing",
-        #     "stage": "paper_structuring",
-        # }) + "\n"
-
-        async def collect_structured_sections() -> List[Dict[str, str]]:
-            logger.info("Starting PaperStructurer.build_structure...")
-            try:
-                sections_: List[Dict[str, str]] = await self.paper_structurer.run(raw_pdf_text)
-                logger.info(f"PaperStructurer returned {len(sections_)} sections")
-                for i, sec in enumerate(sections_, start=1):
-                    title = sec.get("title", "")
-                    content_len = len(sec.get("content", ""))
-                    logger.info(f"  - Section {i}: {title} (len={content_len} chars)")
-                return sections_
-            except Exception as e:
-                logger.error(f"PaperStructurer.build_structure failed: {e}")
-                return [{"title": "Full Paper (fallback from S1Agent)", "content": raw_pdf_text}]
-
-        sections_res = []
-        async for chunk in self._run_with_progress(collect_structured_sections(), "(1/4) Structuring paper sections", sections_res):
-            yield chunk
-        sections: List[Dict[str, str]] = sections_res[0]
+        yield self._create_chunk("> (1/4) Aggregating sections from paper JSON...\n")
+        sections: List[Dict[str, str]] = self._build_sections_from_blocks(blocks, enable_mm=enable_mm)
+        for i, sec in enumerate(sections, start=1):
+            logger.info(f"  - Section {i}: {sec.get('title', '')} (len={len(sec.get('content',''))} chars)")
+        yield self._create_chunk("\n")
 
         # ✅ NEW: 保存章节结构
         _save_json("sections", sections)
@@ -181,7 +200,9 @@ class S1Agent(BaseAgent):
             try:
                 # Try to consume as async generator first, then fall back to str
                 memory_chunks: List[str] = []
-                async for chunk in self.paper_memory_summarizer.run(raw_pdf_text):
+                async for chunk in self.paper_memory_summarizer.run(
+                    normalized_paper_text, section_titles=[s.get("title", "") for s in sections]
+                ):
                     memory_chunks.append(chunk)
                 memory = "".join(memory_chunks)
                 logger.info(f"Paper memory summarization completed, length={len(memory)}")
@@ -189,7 +210,9 @@ class S1Agent(BaseAgent):
             except TypeError:
                 # If it returns str directly (not async generator)
                 try:
-                    memory = await self.paper_memory_summarizer.run(raw_pdf_text)
+                    memory = await self.paper_memory_summarizer.run(
+                        normalized_paper_text, section_titles=[s.get("title", "") for s in sections]
+                    )
                     logger.info(f"Paper memory summarization completed, length={len(memory)}")
                     return memory
                 except Exception as e:
@@ -364,18 +387,13 @@ class S1Agent(BaseAgent):
         _save_text("raw_pdf_text", raw_pdf_text)
         _save_json("paper_blocks", blocks)
 
-        # Step 0: Structure paper sections using LLM
-        logger.info("Starting PaperStructurer.build_structure...")
-        try:
-            sections: List[Dict[str, str]] = await self.paper_structurer.run(raw_pdf_text)
-            logger.info(f"PaperStructurer returned {len(sections)} sections")
-            for i, sec in enumerate(sections, start=1):
-                title = sec.get("title", "")
-                content_len = len(sec.get("content", ""))
-                logger.info(f"  - Section {i}: {title} (len={content_len} chars)")
-        except Exception as e:
-            logger.error(f"PaperStructurer.build_structure failed: {e}")
-            sections = [{"title": "Full Paper (fallback)", "content": raw_pdf_text}]
+        # Step 0: Structure paper sections directly from normalized blocks
+        logger.info("Aggregating sections from paper JSON (no LLM structuring)...")
+        sections: List[Dict[str, str]] = self._build_sections_from_blocks(blocks, enable_mm=enable_mm)
+        for i, sec in enumerate(sections, start=1):
+            title = sec.get("title", "")
+            content_len = len(sec.get("content", ""))
+            logger.info(f"  - Section {i}: {title} (len={content_len} chars)")
 
         _save_json("sections", sections)
 
@@ -390,14 +408,18 @@ class S1Agent(BaseAgent):
         logger.info("Starting paper memory summarization...")
         try:
             paper_memory_chunks: List[str] = []
-            async for chunk in self.paper_memory_summarizer.run(raw_pdf_text):
+            async for chunk in self.paper_memory_summarizer.run(
+                normalized_paper_text, section_titles=[s.get("title", "") for s in sections]
+            ):
                 paper_memory_chunks.append(chunk)
             paper_memory = "".join(paper_memory_chunks)
             logger.info(f"Paper memory summarization completed, length={len(paper_memory)}")
         except TypeError:
             # If paper_memory_summarizer.run returns str directly (not async generator)
             try:
-                paper_memory = await self.paper_memory_summarizer.run(raw_pdf_text)
+                paper_memory = await self.paper_memory_summarizer.run(
+                    normalized_paper_text, section_titles=[s.get("title", "") for s in sections]
+                )
                 logger.info(f"Paper memory summarization completed, length={len(paper_memory)}")
             except Exception as e:
                 logger.error(f"Paper memory summarization failed: {e}")

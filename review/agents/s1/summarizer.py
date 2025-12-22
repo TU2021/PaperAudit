@@ -175,7 +175,7 @@ Motivation Evaluation Report: {motivation_report}
 
     async def run(self, pdf_content: str, query: str, cheating_report: str, motivation_report: str) -> AsyncGenerator[str, None]:
         """
-        Execute paper review task with streaming response
+        Execute paper review task with a single non-streaming LLM call and emit SSE-style chunks.
 
         Args:
             pdf_content: well-formed structured text of the paper
@@ -184,64 +184,30 @@ Motivation Evaluation Report: {motivation_report}
         Yields:
             Content chunks from the API response
         """
-        logger.info(f"Starting paper review...")
+        logger.info("Starting paper review...")
         logger.info(f"Query: {query[:100] if query else '(empty)'}...")
 
         messages = [
             {"role": "system", "content": self.SYSTEM_PROMPT},
             {"role": "user", "content": self.USER_PROMPT_TEMPLATE.format(
-                text=pdf_content, 
-                query=query, 
-                cheating_report=cheating_report, 
+                text=pdf_content,
+                query=query,
+                cheating_report=cheating_report,
                 motivation_report=motivation_report
             )}
         ]
 
-        logger.info(f"Calling LLM with retry mechanism...")
+        logger.info("Calling LLM (stream=False) with retry mechanism...")
         logger.info(f"Model: {self.reasoning_model}")
         logger.info(f"Base URL: {self.client.base_url}")
-        
+
         try:
-            # Call LLM model with streaming and retry mechanism
-            stream = await self._call_llm_with_retry(
+            resp = await self._call_llm_with_retry(
                 model=self.reasoning_model,
                 messages=messages,
-                stream=True,
+                stream=False,
                 temperature=self.config.get("agents.summarizer.temperature", None)
             )
-            assert isinstance(stream, AsyncGenerator), f"Expected AsyncGenerator, got {type(stream)}"
-            
-            logger.info(f"LLM stream object type: {type(stream)}")
-            logger.info("LLM call successful, streaming response...")
-            chunk_count = 0
-            content_count = 0
-            
-            # Stream back results
-            async for chunk in stream:
-                chunk_count += 1
-                
-                if chunk.choices and len(chunk.choices) > 0:
-                    delta_content = chunk.choices[0].delta.content
-                    content_count += 1
-                    if chunk_count % 50 == 0:
-                        logger.debug(f"Chunk #{chunk_count} received: {delta_content[:10]}")
-                    response_data = {
-                        "object": "chat.completion.chunk",
-                        "choices": [{
-                            "delta": {
-                                "content": delta_content
-                            }
-                        }]
-                    }
-                    yield f"data: {json.dumps(response_data)}\n\n"
-                    
-                else:
-                    if chunk_count % 100 == 0:
-                        logger.debug(f"Chunk #{chunk_count} has no choices")
-            
-            logger.info(f"Streaming completed. Total chunks: {chunk_count}, Content chunks: {content_count}")
-            yield "data: [DONE]\n\n"
-            
         except Exception as e:
             logger.error(f"Error during LLM call: {type(e).__name__}: {str(e)}")
             import traceback
@@ -249,3 +215,33 @@ Motivation Evaluation Report: {motivation_report}
             error_message = f"Error: {type(e).__name__}: {str(e)}"
             yield f"data: {json.dumps({'object': 'chat.completion.chunk', 'choices': [{'delta': {'content': error_message}}]})}\n\n"
             yield "data: [DONE]\n\n"
+            return
+
+        try:
+            choices = getattr(resp, "choices", None)
+            if not choices:
+                raise ValueError("Empty choices from completion response")
+            message = getattr(choices[0], "message", None)
+            content = getattr(message, "content", None) if message is not None else None
+            if not content:
+                raise ValueError("Empty content from completion response")
+            full_text = content if isinstance(content, str) else str(content)
+        except Exception as parse_err:
+            logger.error(f"Error while parsing completion response: {parse_err}")
+            error_message = f"Error: {type(parse_err).__name__}: {parse_err}"
+            yield f"data: {json.dumps({'object': 'chat.completion.chunk', 'choices': [{'delta': {'content': error_message}}]})}\n\n"
+            yield "data: [DONE]\n\n"
+            return
+
+        # Emit SSE-style chunks from the full text for compatibility with upstream consumers
+        for paragraph in full_text.split("\n\n"):
+            para = paragraph.strip()
+            if not para:
+                continue
+            response_data = {
+                "object": "chat.completion.chunk",
+                "choices": [{"delta": {"content": para}}],
+            }
+            yield f"data: {json.dumps(response_data)}\n\n"
+
+        yield "data: [DONE]\n\n"

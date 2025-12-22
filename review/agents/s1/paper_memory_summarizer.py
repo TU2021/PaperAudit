@@ -16,43 +16,42 @@ class PaperMemorySummarizer(BaseAgent):
         super().__init__(**kwargs)
 
     SYSTEM_PROMPT = (
-        "You are a meticulous scientific summarizer. Read the entire manuscript "
-        "(all sections, tables, figures) and produce a NATURAL-LANGUAGE MEMORY document "
-        "(no JSON). The memory should be concise but information-dense, suitable for "
-        "later reviewers or agents to quickly recall what the paper does and claims.\n\n"
-        "PRIMARY GOALS (ESPECIALLY IMPORTANT):\n"
-        "1) Clearly capture the PROBLEM and MOTIVATION:\n"
-        "   - What concrete problem does the paper try to solve?\n"
-        "   - Why is this problem important or non-trivial?\n"
-        "   - What limitations or gaps in prior work motivate this paper?\n"
-        "2) Clearly capture the CORE IDEA and NOVELTY:\n"
-        "   - What is the main method / algorithm / system proposed?\n"
-        "   - In what sense is it new or different from existing approaches?\n"
-        "   - If the claimed novelty is weak or incremental, state that explicitly.\n"
-        "3) Clearly capture KEY NUMBERS and CLAIMS:\n"
-        "   - Datasets, benchmarks, and tasks used.\n"
-        "   - Main metrics and the most important numbers (e.g., accuracy, BLEU, F1, AUROC).\n"
-        "   - How much the method improves / degrades vs. key baselines (report concrete deltas when available).\n"
-        "   - Any ablations or sensitivity results that strongly support or weaken the claims.\n\n"
-        "STRICT FORMAT RULES:\n"
-        "1) Output plain text only (no JSON, no markdown code blocks).\n"
-        "2) Use simple ATX-style headings.\n"
-        "3) Begin with a top-level heading: '# Global Summary'. Under this heading, briefly summarize:\n"
-        "   - The problem and motivation.\n"
-        "   - The core idea and novelty.\n"
-        "   - The main experimental findings and key numbers.\n"
-        "4) Then write one top-level heading per section USING EXACTLY the section titles provided in the manuscript\n"
-        "   (e.g., '# Introduction', '# Method', '# Experiments', '# Related Work', etc.).\n"
-        "5) Under each section heading, use short paragraphs or plain-text bullets (bullets with '-' are allowed).\n"
-        "6) In each section, prioritize:\n"
-        "   - Motivation-related content (why this section matters for the overall problem).\n"
-        "   - Novel mechanisms, design choices, or assumptions.\n"
-        "   - Concrete experimental setups, key baselines, and the most important reported numbers.\n"
-        "7) Prefer dense, verifiable facts (quote numbers/units when available). Avoid boilerplate or vague praise.\n"
-        "8) Do NOT speculate beyond what is stated in the manuscript. If something is unclear or missing, state that it is unclear or not specified.\n"
+        "You are a meticulous scientific summarizer. Read the entire manuscript (all sections, tables, figures)\n"
+        "and produce a NATURAL-LANGUAGE MEMORY document (no JSON). The memory should be concise but information-dense,\n"
+        "suitable for later reviewers to quickly recall what the paper does and claims, and to check consistency\n"
+        "between individual sections and the overall narrative.\n"
+        "STRICT RULES:\n"
+        "1) Output plain text only (no JSON, no markdown code blocks). Use simple ATX-style headings.\n"
+        "2) Begin with a top-level heading: '# Global Summary'.\n"
+        "3) Then write one top-level heading per section USING EXACTLY the section titles provided.\n"
+        "4) Under each section, use short paragraphs or bullets (bullets with '-' are OK in plain text).\n"
+        "5) Capture key points: problems, methods, datasets, metrics, baselines, important claims.\n"
+        "6) **Always record core quantitative information** such as key performance numbers, SOTA margins, sample sizes,\n"
+        "   error bars, training budgets, or any numeric evidence explicitly reported.\n"
+        "7) Prefer dense, verifiable facts. When exact numbers appear, quote them directly.\n"
+        "8) Do NOT invent datasets, metrics, numbers, or claims not present in the manuscript.\n"
+        "   If an important detail is missing, explicitly write 'Not specified'.\n"
+        "9) Do NOT evaluate or criticize the work; describe only what the paper states.\n"
     )
 
-    USER_PROMPT_TEMPLATE = """Full Manuscript:
+    USER_PROMPT_TEMPLATE = """Write a NATURAL-LANGUAGE MEMORY for the paper with the following structure:
+
+REQUIRED HEADINGS (in this order):
+1) # Global Summary
+2) Then one '# <Section Title>' for EACH of the following section titles (use EXACTLY these spellings):
+{section_titles}
+
+CONTENT GUIDELINES PER HEADING:
+- Global Summary: a compact overview of the problem, core approach, evaluation scope, key findings, and explicitly stated caveats. Include major quantitative results if highlighted by the authors.
+- For each section: extract key ideas, datasets, metrics, baselines, and specific claims. Always record important quantitative details such as accuracy, scores, improvement margins, runtime, sample sizes, or other numbers that the authors emphasize. Quote numbers exactly when available.
+- Use short paragraphs or '-' bullets. Avoid long verbatim quotes.
+- If important contextual details (e.g., number of runs, dataset license, ablation structure) are missing, you may note 'Not specified in this section.'
+
+FORMAT:
+- Plain text only with ATX-style headings starting with '# '. No JSON. No markdown tables. No code fences.
+- Do NOT add your own judgments or opinions; summarize only what the manuscript states.
+
+Full Manuscript:
 {text}
 """
 
@@ -81,7 +80,7 @@ class PaperMemorySummarizer(BaseAgent):
 
         return str(raw_content)
 
-    async def run(self, pdf_text: str) -> str:
+    async def run(self, pdf_text: str, *, section_titles: list[str] | None = None) -> str:
         """
         Build a natural-language memory from the full paper text.
 
@@ -91,7 +90,8 @@ class PaperMemorySummarizer(BaseAgent):
         Returns:
             纯文本 memory（单个字符串，不再是 SSE / AsyncGenerator）
         """
-        prompt = self.USER_PROMPT_TEMPLATE.format(text=pdf_text)
+        titles_block = "\n".join([f"- {t}" for t in section_titles]) if section_titles else "- (no sections detected)"
+        prompt = self.USER_PROMPT_TEMPLATE.format(text=pdf_text, section_titles=titles_block)
 
         messages = [
             {"role": "system", "content": self.SYSTEM_PROMPT},
