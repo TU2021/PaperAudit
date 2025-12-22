@@ -370,9 +370,8 @@ class S1Agent(BaseAgent):
         def _save_text(name: str, text: str):
             # Log to artifact logger
             artifact_logger.info(f"\n=== {name} ===\n{text}")
-            # Store in artifacts dict
-            if name not in ['raw_pdf_text', 'normalized_paper', 'paper_memory', 'motivation_evaluation']:
-                artifacts[name] = text
+            # Store in artifacts dict for downstream persistence
+            artifacts[name] = text
 
         def _save_json(name: str, obj: Any):
             # Log to artifact logger

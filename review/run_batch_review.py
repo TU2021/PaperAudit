@@ -92,6 +92,20 @@ def save_json(path: Path, obj: Dict[str, Any]) -> None:
         json.dump(obj, f, ensure_ascii=False, indent=2)
 
 
+def save_text(path: Path, content: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(content, encoding="utf-8")
+
+
+def format_cheating_detection(det: Any) -> str:
+    if isinstance(det, str):
+        return det
+    try:
+        return json.dumps(det, ensure_ascii=False, indent=2)
+    except Exception:
+        return str(det)
+
+
 def main() -> None:
     args = parse_args()
     input_dir = Path(args.input_dir).expanduser().resolve()
@@ -134,6 +148,13 @@ def main() -> None:
         model_tag = sanitize_filename(args.model)
         summary_path = review_dir / f"final_summary_{model_tag}.txt"
         summary_path.write_text(result.get("final_assessment", ""), encoding="utf-8")
+
+        # Persist intermediate LLM artifacts for transparency/debugging
+        artifacts = result.get("artifacts", {})
+        save_text(review_dir / f"paper_memory_{model_tag}.txt", str(artifacts.get("paper_memory", "")))
+        save_text(review_dir / f"cheating_review_{model_tag}.txt", format_cheating_detection(artifacts.get("cheating_detection", "")))
+        save_text(review_dir / f"final_cheat_report_{model_tag}.txt", format_cheating_detection(result.get("cheating_detection", "")))
+        save_text(review_dir / f"motivation_report_{model_tag}.txt", str(artifacts.get("motivation_evaluation", result.get("motivation_evaluation", ""))))
 
         output_path = review_dir / f"review_output_{model_tag}.json"
         save_json(
