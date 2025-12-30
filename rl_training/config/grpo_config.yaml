@@ -1,0 +1,64 @@
+# grpo_minimal.yaml
+hydra:
+  searchpath:
+    - /mnt/parallel_ssd/home/zdhs0124/AI4S_review/verl/verl/trainer/config
+
+defaults:
+  - ppo_trainer
+  - _self_
+
+algorithm:
+  adv_estimator: grpo
+  norm_adv_by_std_in_grpo: true
+  use_kl_in_reward: false
+  grpo:
+    clip_adv: true
+    clip_adv_value: 5.0
+    gamma: 1.0
+    lam: 0.95
+
+actor_rollout_ref:
+  hybrid_engine: true
+
+  model:
+    trust_remote_code: true
+
+  rollout:
+    name: vllm
+    tensor_model_parallel_size: 1
+    pipeline_model_parallel_size: 1
+    log_prob_micro_batch_size_per_gpu: 1
+    enforce_eager: false
+    free_cache_engine: true
+
+  actor:
+    entropy_coeff: 0.01
+    use_kl_loss: false
+    kl_loss_coef: 0.0
+    fsdp_config:
+      param_offload: true
+      optimizer_offload: true
+
+  ref:
+    log_prob_micro_batch_size_per_gpu: 1
+    fsdp_config:
+      param_offload: true
+
+data:
+  micro_batch_size_per_gpu: 1 
+  return_raw_chat: true
+  filter_overlong_prompts: true
+
+critic:
+  enable: false
+
+reward_model:
+  enable: false
+
+custom_reward_function:
+  kwargs: {}
+
+trainer:
+  val_before_train: false
+  max_steps: -1
+  fp16: true

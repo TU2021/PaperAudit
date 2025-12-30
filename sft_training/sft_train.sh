@@ -1,0 +1,37 @@
+CUDA_VISIBLE_DEVICES=0,1,2,3 \
+torchrun --nproc_per_node=4 --master_port=29501 src/train.py \
+    --model_name_or_path xxxx/Qwen3-8B/ \
+    --trust_remote_code True \
+    --stage sft \
+    --do_train True \
+    --finetuning_type lora \
+    --lora_rank 64 \
+    --lora_alpha 128 \
+    --lora_dropout 0.05 \
+    --lora_target all \
+    --dataset qwen3_alpaca \
+    --template qwen \
+    --cutoff_len 20480 \
+    --overwrite_cache True \
+    --preprocessing_num_workers 8 \
+    --dataloader_num_workers 4 \
+    --output_dir xxxx/Qwen3-8B-lora/ \
+    --logging_steps 10 \
+    --save_steps 100 \
+    --plot_loss True \
+    --overwrite_output_dir True \
+    --save_only_model False \
+    --report_to tensorboard \
+    --per_device_train_batch_size 2 \
+    --gradient_accumulation_steps 8 \
+    --learning_rate 5e-5 \
+    --num_train_epochs 3.0 \
+    --lr_scheduler_type cosine \
+    --warmup_ratio 0.1 \
+    --max_grad_norm 1.0 \
+    --bf16 True \
+    --fp16 False \
+    --gradient_checkpointing True \
+    --ddp_timeout 180000000 \
+    --torch_compile False \
+    --deepspeed xxxx/ds_z3_config.json

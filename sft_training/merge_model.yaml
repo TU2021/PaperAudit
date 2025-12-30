@@ -1,0 +1,12 @@
+model_name_or_path: xxxx/model/Qwen3-14B
+
+adapter_name_or_path: xxxx/Qwen3-14B-lora
+template: qwen
+trust_remote_code: true
+
+export_dir: xxxx/Qwen3-14B-merged  
+export_size: 5
+export_device: cpu
+export_legacy_format: false
+
+

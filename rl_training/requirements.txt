@@ -1,0 +1,277 @@
+absl-py==2.3.1
+accelerate==1.12.0
+aiohappyeyeballs==2.6.1
+aiohttp==3.13.2
+aiohttp-cors==0.8.1
+aiosignal==1.4.0
+airportsdata==20250909
+annotated-doc==0.0.4
+annotated-types==0.7.0
+anthropic==0.75.0
+antlr4-python3-runtime==4.9.3
+anyio==4.12.0
+archspec @ file:///home/task_175812491784513/conda-bld/archspec_1758124989039/work
+astor==0.8.1
+asttokens==3.0.1
+attrs==25.4.0
+av==16.0.1
+blake3==1.0.8
+blobfile==3.0.0
+boltons @ file:///croot/boltons_1751383775419/work
+brotlicffi @ file:///home/task_176295012249926/conda-bld/brotlicffi_1762950228950/work
+build==1.3.0
+cachetools==6.2.3
+cbor2==5.7.1
+certifi @ file:///home/task_176313480683104/conda-bld/certifi_1763135330277/work/certifi
+cffi @ file:///home/task_176183215096628/conda-bld/cffi_1761832773152/work
+cfgv==3.5.0
+charset-normalizer @ file:///home/task_176174481308776/conda-bld/charset-normalizer_1761744826568/work
+click==8.2.1
+cloudpickle==3.1.2
+codetiming==1.4.0
+colorful==0.5.8
+compressed-tensors==0.11.0
+conda @ file:///home/task_176045696297042/conda-bld/conda_1760457876558/work/conda-src
+conda-libmamba-solver @ file:///opt/miniconda3/conda-bld/conda-libmamba-solver_1761744809966/work/src
+conda-package-handling @ file:///home/task_176236634781570/conda-bld/conda-package-handling_1762366405441/work
+conda_package_streaming @ file:///home/task_176236130473029/conda-bld/conda-package-streaming_1762361643953/work
+cuda-bindings==13.1.1
+cuda-pathfinder==1.3.3
+cuda-python==13.1.1
+cupy-cuda12x==13.6.0
+datasets==4.4.1
+decorator==5.2.1
+decord==0.6.0
+depyf==0.19.0
+dill==0.4.0
+diskcache==5.6.3
+distlib==0.4.0
+distro @ file:///croot/distro_1714488253808/work
+dnspython==2.8.0
+docstring_parser==0.17.0
+einops==0.8.1
+email-validator==2.3.0
+executing==2.2.1
+fastapi==0.124.4
+fastapi-cli==0.0.16
+fastapi-cloud-cli==0.6.0
+fastar==0.8.0
+fastrlock==0.8.3
+filelock==3.20.0
+flash_attn @ file:///mnt/parallel_ssd/home/zdhs0124/AI4S_review/verl/flash_attn-2.8.1+cu12torch2.8cxx11abiFALSE-cp312-cp312-linux_x86_64.whl
+flashinfer-python==0.3.1
+frozendict @ file:///home/task_176175050888873/conda-bld/frozendict_1761750665347/work
+frozenlist==1.8.0
+fsspec==2025.10.0
+gguf==0.17.1
+gitdb==4.0.12
+GitPython==3.1.45
+google-api-core==2.28.1
+google-auth==2.43.0
+googleapis-common-protos==1.72.0
+grpcio==1.76.0
+h11==0.16.0
+hf-xet==1.2.0
+hf_transfer==0.1.9
+httpcore==1.0.9
+httptools==0.7.1
+httpx==0.28.1
+huggingface-hub==0.36.0
+hydra-core==1.3.2
+identify==2.6.15
+idna @ file:///home/task_176191177554882/conda-bld/idna_1761911981359/work
+importlib_metadata==8.7.0
+iniconfig==2.3.0
+interegular==0.3.3
+ipython==9.8.0
+ipython_pygments_lexers==1.1.1
+jedi==0.19.2
+Jinja2==3.1.6
+jiter==0.12.0
+jsonpatch @ file:///croot/jsonpatch_1714483231291/work
+jsonpointer @ file:///croot/jsonpointer_1753788433671/work
+jsonschema==4.25.1
+jsonschema-specifications==2025.9.1
+lark==1.2.2
+libmambapy @ file:///home/task_176311149017007/conda-bld/mamba-split_1763111542503/work/libmambapy
+liger_kernel==0.6.4
+llguidance==0.7.30
+llvmlite==0.44.0
+lm-format-enforcer==0.11.3
+loguru==0.7.3
+lxml==6.0.2
+Markdown==3.10
+markdown-it-py==4.0.0
+MarkupSafe==3.0.3
+mathruler==0.1.0
+matplotlib-inline==0.2.1
+mdurl==0.1.2
+menuinst @ file:///home/task_176286080652461/conda-bld/menuinst_1762860821842/work
+mistral_common==1.8.6
+modelscope==1.33.0
+mpmath==1.3.0
+msgpack==1.1.2
+msgspec==0.20.0
+multidict==6.7.0
+multiprocess==0.70.18
+nest-asyncio==1.6.0
+networkx==3.6.1
+ninja==1.13.0
+nodeenv==1.9.1
+numba==0.61.2
+numpy==1.26.4
+nvidia-cublas-cu12==12.8.4.1
+nvidia-cuda-cupti-cu12==12.8.90
+nvidia-cuda-nvrtc-cu12==12.8.93
+nvidia-cuda-runtime-cu12==12.8.90
+nvidia-cudnn-cu12==9.10.2.21
+nvidia-cudnn-frontend==1.16.0
+nvidia-cufft-cu12==11.3.3.83
+nvidia-cufile-cu12==1.13.1.3
+nvidia-curand-cu12==10.3.9.90
+nvidia-cusolver-cu12==11.7.3.90
+nvidia-cusparse-cu12==12.5.8.93
+nvidia-cusparselt-cu12==0.7.1
+nvidia-ml-py==13.590.44
+nvidia-nccl-cu12==2.27.3
+nvidia-nvjitlink-cu12==12.8.93
+nvidia-nvtx-cu12==12.8.90
+omegaconf==2.3.0
+openai==1.99.1
+openai-harmony==0.0.4
+opencensus==0.11.4
+opencensus-context==0.1.3
+opencv-fixer==0.2.5
+opencv-python==4.12.0.88
+opencv-python-headless==4.12.0.88
+opentelemetry-api==1.39.1
+opentelemetry-exporter-prometheus==0.60b1
+opentelemetry-proto==1.39.1
+opentelemetry-sdk==1.39.1
+opentelemetry-semantic-conventions==0.60b1
+optree==0.18.0
+orjson==3.11.5
+outlines==0.1.11
+outlines_core==0.2.11
+packaging @ file:///home/task_176104874243446/conda-bld/packaging_1761049080023/work
+pandas==2.3.3
+parso==0.8.5
+partial-json-parser==0.2.1.1.post7
+peft==0.18.0
+pexpect==4.9.0
+pillow==12.0.0
+platformdirs @ file:///home/task_176235638281825/conda-bld/platformdirs_1762356487196/work
+pluggy @ file:///croot/pluggy_1733169602837/work
+pre_commit==4.5.0
+prettytable==3.17.0
+prometheus-fastapi-instrumentator==7.1.0
+prometheus_client==0.23.1
+prompt_toolkit==3.0.52
+propcache==0.4.1
+proto-plus==1.26.1
+protobuf==6.33.2
+psutil==7.1.3
+ptyprocess==0.7.0
+pure_eval==0.2.3
+py-cpuinfo==9.0.0
+py-spy==0.4.1
+pyarrow==22.0.0
+pyasn1==0.6.1
+pyasn1_modules==0.4.2
+pybase64==1.4.3
+pybind11==3.0.1
+pycosat @ file:///croot/pycosat_1736868416091/work
+pycountry==24.6.1
+pycparser @ file:///home/task_175749564075091/conda-bld/pycparser_1757496039511/work
+pycryptodomex==3.23.0
+pydantic==2.12.5
+pydantic-extra-types==2.10.6
+pydantic_core==2.41.5
+pyecharts==2.0.9
+Pygments==2.19.2
+pylatexenc==2.10
+pyproject_hooks==1.2.0
+PySocks @ file:///home/task_176175225699803/conda-bld/pysocks_1761753009944/work
+pytest==9.0.2
+python-dateutil==2.9.0.post0
+python-dotenv==1.2.1
+python-json-logger==4.0.0
+python-multipart==0.0.20
+pytz==2025.2
+pyvers==0.1.0
+PyYAML==6.0.3
+pyzmq==27.1.0
+qwen-vl-utils==0.0.14
+ray==2.52.1
+referencing==0.37.0
+regex==2025.11.3
+requests @ file:///home/task_176235960792214/conda-bld/requests_1762359619036/work
+rich==13.9.4
+rich-toolkit==0.17.0
+rignore==0.7.6
+rpds-py==0.30.0
+rsa==4.9.1
+ruamel.yaml @ file:///home/task_176253517100139/conda-bld/ruamel.yaml_1762535953285/work
+ruamel.yaml.clib @ file:///home/task_176253017793460/conda-bld/ruamel.yaml.clib_1762530230394/work
+ruff==0.14.9
+safetensors==0.7.0
+scipy==1.16.3
+sentencepiece==0.2.1
+sentry-sdk==2.47.0
+setproctitle==1.3.7
+setuptools==79.0.1
+sgl-kernel==0.3.9.post2
+sglang==0.5.2
+shellingham==1.5.4
+simplejson==3.20.2
+six==1.17.0
+smart_open==7.5.0
+smmap==5.0.2
+sniffio==1.3.1
+soundfile==0.13.1
+soxr==1.0.0
+stack-data==0.6.3
+starlette==0.50.0
+swanlab==0.7.4
+sympy==1.14.0
+tabulate==0.9.0
+tensorboard==2.20.0
+tensorboard-data-server==0.7.2
+tensordict==0.10.0
+tiktoken==0.12.0
+timm==1.0.16
+tokenizers==0.22.1
+torch==2.8.0
+torch_memory_saver==0.0.8
+torchao==0.9.0
+torchaudio==2.8.0
+torchdata==0.11.0
+torchvision==0.23.0
+tqdm @ file:///home/task_176286301777781/conda-bld/tqdm_1762863350242/work
+traitlets==5.14.3
+transformers==4.56.1
+triton==3.4.0
+truststore @ file:///home/task_176252091028135/conda-bld/truststore_1762520923980/work
+typer==0.20.0
+typing-inspection==0.4.2
+typing_extensions==4.15.0
+tzdata==2025.2
+urllib3 @ file:///croot/urllib3_1750775463400/work
+uvicorn==0.38.0
+uvloop==0.22.1
+-e git+https://github.com/volcengine/verl@e36433ce51fd1e3ec2780de42f1a11ebd2f4d180#egg=verl
+virtualenv==20.35.4
+vllm==0.11.0
+wandb==0.23.1
+watchfiles==1.1.1
+wcwidth==0.2.14
+websockets==15.0.1
+Werkzeug==3.1.4
+wheel==0.45.1
+wrapt==2.0.1
+xformers==0.0.32.post1
+xgrammar==0.1.25
+xxhash==3.6.0
+yarl==1.22.0
+zipp==3.23.0
+zstandard @ file:///home/task_175818889319276/conda-bld/zstandard_1758189073541/work
