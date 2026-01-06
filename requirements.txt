@@ -1,0 +1,63 @@
+# ============================================================================
+# PaperAudit Project Requirements
+# ============================================================================
+# This file contains all dependencies needed to run the PaperAudit project.
+# Install with: pip install -r requirements.txt
+# ============================================================================
+
+# Core dependencies
+python-dotenv>=1.0.1  # Environment variable management
+PyYAML>=6.0.0  # YAML file parsing
+
+# Web framework and API
+fastapi>=0.115.0  # Web framework for API endpoints
+uvicorn>=0.32.0  # ASGI server
+httpx>=0.24.1  # HTTP client (async)
+aiohttp>=3.13.2  # Async HTTP client/server
+starlette>=0.49.3  # ASGI framework (dependency of FastAPI)
+
+# OpenAI and LLM APIs
+openai>=1.3.0  # OpenAI API client
+litellm>=1.0.0  # Unified LLM API interface
+tiktoken>=0.12.0  # Token counting for OpenAI models
+
+# PDF processing
+PyPDF2>=3.0.1  # PDF file reading and manipulation
+Pillow>=11.3.0  # Image processing (PIL)
+
+# Data processing
+pandas>=2.3.3  # Data manipulation and analysis
+numpy>=1.26.0  # Numerical computing
+pyarrow>=22.0.0  # Apache Arrow integration for Parquet files
+
+# Machine Learning and Deep Learning
+torch>=2.8.0  # PyTorch deep learning framework
+transformers>=4.56.1  # Hugging Face transformers library
+accelerate>=1.11.0  # Hugging Face accelerate for distributed training
+peft>=0.17.1  # Parameter-Efficient Fine-Tuning
+datasets>=4.0.0  # Hugging Face datasets library
+safetensors>=0.5.3  # Safe and fast serialization format
+tokenizers>=0.22.1  # Fast tokenizers
+
+# Training and RL (optional, for training modules)
+deepspeed>=0.16.9  # DeepSpeed for distributed training
+trl>=0.9.6  # Transformer Reinforcement Learning
+
+# Utilities
+tqdm>=4.67.1  # Progress bars
+requests>=2.32.5  # HTTP library
+arxiv>=0.0.0  # ArXiv API client
+openreview>=1.0.0  # OpenReview API client
+
+# Async and concurrency
+aiofiles>=24.1.0  # Async file operations
+
+# Logging and monitoring
+python-json-logger>=4.0.0  # JSON formatted logging
+
+# Optional: For advanced features
+# Uncomment the following if you need these features:
+# vllm>=0.11.0  # vLLM for fast LLM inference
+# wandb>=0.23.1  # Weights & Biases for experiment tracking
+# tensorboard>=2.20.0  # TensorBoard for visualization
+
