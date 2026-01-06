@@ -1,0 +1,47 @@
+Based on a critical review of the manuscript, several clear internal inconsistencies and integrity risks have been identified. These issues materially affect the trustworthiness and scientific validity of the reported findings.
+
+### Summary of Key Issues
+
+The manuscript contains significant internal contradictions across its main body and appendices, particularly concerning the core experimental results and the sample sizes used. There are also instances of selective reporting and numerical mismatches between text, tables, and figures.
+
+### Detailed Analysis of Inconsistencies
+
+**1. Contradictory Results Between Main Text and Appendix C**
+
+The paper claims that an expanded analysis in Appendix C "confirm[s] the robustness of our main findings" (Block #56). However, the results presented in the appendix are qualitatively different from and contradictory to those in the main text.
+
+*   **Qwen2.5-7B:**
+    *   **Main Text:** Section 6.1 (Block #17) claims effects are "uniformly negative across types." However, the accompanying data under Figure 3 (Block #19) and the bar chart (Block #25) report positive `Δλ₂` values for non-concatenative (~+0.02) and particle (~+0.01) voice types. This is a direct contradiction within the main results section.
+    *   **Appendix C:** The expanded analysis (n=50) shows uniformly negative `Δλ₂` effects for all reported voice types (periphrastic: -0.037, analytic: -0.036, affixal: -0.029, non-concatenative: -0.016) (Figure 10, Block #98).
+    *   **Inconsistency:** The appendix does not confirm the main result; it presents a different one. The main text's finding of mixed positive and negative effects is replaced by a finding of uniformly negative effects in the "validation" analysis.
+
+*   **LLaMA-3.2-1B:**
+    *   **Main Text:** Figure 4 (Block #28) shows that analytic languages have a modest positive effect (`Δλ₂[2,5]` ≈ +0.004), while affixal languages have a negative effect (≈ -0.030).
+    *   **Appendix C:** The expanded analysis shows uniformly negative effects for all reported voice types, including analytic (`Δλ₂[2,5]` = -0.012) (Figure 12, Block #106, #114).
+    *   **Inconsistency:** The finding of a positive effect for analytic languages in the main text is contradicted by a negative effect in the appendix's validation analysis. The claim that the appendix "confirm[s] the robustness" (Block #56) is not supported by the data provided.
+
+**2. Conflicting Reports on Experimental Sample Size**
+
+The manuscript provides multiple, conflicting statements about the number of paraphrases used in the primary analysis, a critical experimental parameter.
+*   Section 4 (Block #13) and Section 6.1 (Block #17) state that "at least 10 paraphrases per voice" were used.
+*   Appendix E.1 (Block #83) states, "Our multilingual voice set uses 10 paraphrases per voice per language."
+*   Appendix D (Block #77) states, "Given three paraphrases per voice per language, we center inference on language-type...".
+*   Appendix C (Block #67) mentions "consistency between n=3 and n=10 results," but no results for n=3 are explicitly presented or analyzed.
+
+This repeated contradiction regarding the sample size undermines the credibility of the entire experimental setup.
+
+**3. Selective Reporting of Correlation Statistics**
+
+The analysis of tokenizer stress appears to involve selective reporting to support a narrative.
+*   **Table 1 (Block #14)** reports both Pearson `r` and Spearman `ρ` correlations. For Qwen2.5-7B, the values are contradictory (Pearson `r` = 0.51, Spearman `ρ` = -0.11), suggesting the positive linear correlation is driven by outliers and is not monotonic. A similar, though less stark, contradiction exists for Phi-3-Mini (`r` = -0.44, `ρ` = 0.18).
+*   **Table 2 (Block #19)** presents the same analysis but omits the Spearman correlations. The discussion in both Section 5 (Block #14) and Section 6.2 (Block #18) focuses exclusively on the Pearson `r` values, ignoring the contradictory evidence from the Spearman `ρ` values shown in Table 1. This omission conceals evidence that weakens the paper's claim of a clear linear relationship.
+
+**4. Numerical Mismatches and Internal Contradictions in Results**
+
+Several specific numerical claims are inconsistent with the data presented in figures and tables.
+*   **Phi-3-Mini Voice Type Analysis (Figure 2):** The data table in Block #19 reports the `Δλ₂` for the "periphrastic" voice type as `+0.011`. However, the corresponding bar chart (Block #22) shows a visually negative bar. Furthermore, a manual average of the per-language data for periphrastic languages provided in the same block (e.g., FR: -0.134, ES: -0.013, DE: +0.005) results in a negative mean, dominated by the French value. The reported value of `+0.011` is inconsistent with the paper's own underlying data.
+*   **Overstated Claim on Reasoning Performance:** Section 7.1 (Block #32) claims that "Fiedler connectivity tracks performance." However, the data in Table 5 shows that the "Standard" strategy has lower accuracy (0.600) but a substantially higher Fiedler z-score (+1.286) than the "CoT" strategy (accuracy 0.695, Fiedler z-score +0.455). This directly contradicts the claim of a simple tracking relationship.
+
+### Conclusion
+
+The manuscript suffers from multiple high-impact inconsistencies that compromise its scientific integrity. The contradictions between the main results and the "validation" appendix, the conflicting reports on sample size, the selective reporting of statistics, and the numerical errors in the results sections are all serious flaws. These issues prevent a reliable assessment of the paper's contributions and suggest that the findings are not robust. The manuscript requires substantial revision to address these fundamental problems of internal consistency and reporting.

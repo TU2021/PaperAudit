@@ -1,0 +1,129 @@
+{
+  "paper": "Causal Reasoning Favors Encoders_ Limits of Decoder-Only Models",
+  "runs": [
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "deepreviewer",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "deep_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "55f39c3e353412551a5ae68e81fc4acc489b4edd",
+      "inputs": {
+        "human_review": "review_origin.txt",
+        "ai_review": "reviews/deepreviewer/gpt-5-2025-08-07/paper_origin/deep_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 1.0,
+        "weakness_coverage_recall": 0.75,
+        "ai_extra_major_points_rate": 0.57,
+        "symmetric_coverage_similarity": 0.5,
+        "note": "The AI review covers all of the human's strength points but misses the key human concern that the paper's operationalization of 'causal reasoning' is limited to logical deduction. Conversely, the AI raises several major methodological weaknesses not mentioned by the human, such as the confounded experimental setup (fine-tuning vs. ICL) and biased failure handling."
+      },
+      "generated_at": "2025-12-27T23:47:14"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "baseline_review.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "b3137abdd5dd456ecfb029f7bed4151251d086e2",
+      "inputs": {
+        "human_review": "review_origin.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/baseline_review.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 1.0,
+        "weakness_coverage_recall": 0.43,
+        "ai_extra_major_points_rate": 0.41,
+        "symmetric_coverage_similarity": 0.48,
+        "note": "The AI review achieves perfect coverage of the strengths identified by humans (architecture comparison, dataset design, efficiency), but aligns less well on weaknesses, missing substantive human points regarding external benchmarks (CLADDER/CLEAR), theoretical rigor in Section 3.2, and the lack of chain-of-thought supervision. Conversely, the AI review introduces a distinct set of detailed methodological critiques—focusing on statistical significance, parsing error handling, and API fairness—that were not present in the human reviews."
+      },
+      "generated_at": "2025-12-27T23:53:35"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "final_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "0a71ca7d783136ba33fb6b5ec9aad08ece2f0c09",
+      "inputs": {
+        "human_review": "review_origin.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/final_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 1.0,
+        "weakness_coverage_recall": 0.38,
+        "ai_extra_major_points_rate": 0.67,
+        "symmetric_coverage_similarity": 0.35,
+        "note": "The reviews align perfectly on strengths and the central definition issue regarding causal versus logical reasoning. However, the AI review uncovers significant methodological flaws (statistical rigor, API fairness, parsing errors) missed by humans, while failing to note the missing benchmarks and presentation issues raised by the human reviewers."
+      },
+      "generated_at": "2025-12-28T00:04:24"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "deepreviewer",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "deep_review_merge.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "752f27bc09e656c7d041a880d0c174422eea6ca4",
+      "inputs": {
+        "human_review": "review_origin.txt",
+        "ai_review": "reviews/deepreviewer/gpt-5-2025-08-07/paper_origin/deep_review_merge.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 1.0,
+        "weakness_coverage_recall": 0.0,
+        "ai_extra_major_points_rate": 1.0,
+        "symmetric_coverage_similarity": 0.2,
+        "note": "The AI review perfectly covers the human's strength points but completely misses all of the human's weakness points, most notably the critique that the paper's framing of \"causal reasoning\" is limited to logical deduction. Conversely, the AI raises numerous, more technical weaknesses (e.g., architecture-training confounds, statistical rigor gaps) not mentioned by the human reviewer."
+      },
+      "generated_at": "2025-12-28T00:18:04"
+    }
+  ]
+}

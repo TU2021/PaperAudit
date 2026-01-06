@@ -1,0 +1,100 @@
+# Global Summary
+This paper investigates the causal reasoning capabilities of different transformer architectures, hypothesizing that encoder-based models are inherently better suited for multi-hop logical deduction than decoder-only models. The core argument is that encoders can project the entire input into a latent space, enabling a global evaluation of logical constraints, while decoders' recursive, token-by-token processing is less robust. To test this, the authors create a synthetic first-order logic (FOL) dataset based on SimpleLogic, with one training set and two out-of-distribution (OOD) test sets: one with deeper reasoning chains (NL) and another with randomized, non-natural language tokens (NNL) to ablate lexical cues. The study compares fine-tuned encoder-only (BERT), encoder-decoder (BART, Flan-T5), and decoder-only (Qwen3-1.7B) models against large language models (LLMs) like GPT-4.1, Claude Opus 4.1, and GPT-5 using zero- and few-shot in-context learning (ICL).
+
+The key finding is that fine-tuned encoder and encoder-decoder models demonstrate superior robustness and generalization, particularly on the NNL dataset and at greater reasoning depths. For instance, fine-tuned BERT-Base achieves the highest accuracy (61%) and AUROC (0.60) on the NNL split, while the fine-tuned decoder-only Qwen3-1.7B scores 53% accuracy. Most decoder-only LLMs evaluated via ICL are brittle to these distributional shifts. The major exception is GPT-5, which achieves near-perfect accuracy (100% on both test sets) but at a substantially higher computational cost and latency (efficiency of 1.1 Accuracy/Hour vs. 640 for BART-Base). The authors conclude that for cost-effective and reliable causal reasoning, fine-tuned encoder-based architectures are preferable to decoder-only models relying on ICL, which only close the performance gap at massive scale.
+
+# Introduction
+- The paper frames causal reasoning as requiring two core capabilities: multi-hop composition (chaining implications) and strict conjunctive control (satisfying all premises). These are formalized as first-order logic (FOL) deduction.
+- It notes that Large Language Models (LLMs) show limitations in logical reasoning, such as inconsistency, reliance on memorization, and spurious lexical features.
+- The central research question is whether architectural choices—specifically, encoder-enabled vs. decoder-only models—fundamentally constrain logical reasoning abilities.
+- The core hypothesis is that an encoder's ability to project the full input into a latent space allows for more reliable causal composition, especially under distributional shifts, compared to the recursive, token-by-token inference of decoders.
+- To test this, the authors create synthetic datasets to evaluate robustness to OOD shifts: (1) progressively deeper reasoning chains and (2) a version with randomized characters to remove natural language cues.
+- The study finds that encoder-only models generalize better than decoders, with the performance gap widening as reasoning depth increases.
+- An exception is GPT-5, which achieves near-perfect accuracy but with substantial latency and presumed high compute cost.
+- The main conclusion is that in-context learning (ICL) alone is not an effective mechanism for causal reasoning, and robust, cost-effective performance is better achieved with fine-tuned encoder or encoder-decoder architectures.
+
+# Abstract
+- The paper investigates the performance of in-context learning (ICL) for causal reasoning, which demands multi-hop composition and strict conjunctive control.
+- It hypothesizes that encoder and encoder-decoder architectures are better suited for this type of reasoning than decoder-only models due to their ability to project the entire input into a latent space.
+- The method involves comparing fine-tuned models of all three architectures with zero- and few-shot ICL on decoder-only LLMs, using both natural-language (NL) and non-natural-language (NNL) test sets.
+- The findings indicate that ICL alone is insufficient, as models often focus on irrelevant lexical features. Decoder-only models are found to be brittle to distributional shifts.
+- Fine-tuned encoder and encoder-decoder models generalize more robustly, especially on the NNL split. Only very large-scale decoder-only models match or surpass their performance.
+- The paper concludes that for cost-effective and robust short-horizon causal reasoning, targeted fine-tuning on encoder or encoder-decoder architectures is preferable.
+
+# Related Work
+- This section reviews prior work on logical reasoning in LLMs, categorized into architecture, benchmarks, and improvement methods.
+- **Architecture:** Mentions studies on encoder-only models for FOL tasks (Pirozelli et al., 2024), transformers on compositional tasks (Dziri et al., 2023), and a finding that encoder and decoder models have comparable performance on first-order logical entailment (Zheng et al., 2025).
+- **Benchmarks:** Lists several benchmarks designed to test LLM deductive abilities, including JustLogic, DivLogicEval, FOLIO, PrOntoQA, and LogicBench. These benchmarks are noted to reveal persistent weaknesses in LLM reasoning.
+- **Improving logical reasoning:** Summarizes methods to enhance LLM reasoning, such as augmenting them with symbolic solvers (Logic-LM), skill-based decomposition (LogicAsker), data synthesis (LogicPro), and diversified proof generation with feedback (DREAM).
+
+# Preliminaries
+- **Logical Reasoning and Our Dataset:** This section defines the deductive backbone of causal reasoning as logical implications requiring multi-hop reasoning and conjunctive control. The experimental setup is designed to test these requirements by stratifying tasks by compositional depth, making structural reasoning more important than lexical relations.
+- **Architectural Considerations for Logical Reasoning:** An informal argument is presented for why encoders may be advantageous. Encoders can integrate information from the entire sequence at each layer, creating a global representation in a single pass. This "projection" is well-suited for evaluating logical programs. In contrast, decoder-only models are recursive and must propagate information sequentially, which can be inefficient if clauses are not ordered optimally and may require backtracking.
+
+# Method
+- **Dataset:**
+    - The work is based on the SimpleLogic benchmark, a subset of FOL without disjunctions.
+    - A training set of 40,000 samples is created with reasoning depths from 0 to 7 (5,000 samples per depth).
+    - Two OOD test sets are created, each with 3,600 samples from depths 0 to 11 (300 per depth):
+        1.  **Natural Language (NL) dataset:** Similar to the training set but with deeper reasoning chains.
+        2.  **Non-Natural Language (NNL) dataset:** Uses random characters to form an ungrammatical vocabulary, removing lexical cues.
+    - Special tokens `[AND]`, `[IMPLY]`, and `[PERIOD]` are used as separators.
+- **Models Used:**
+    - Encoder-only: BERT-base and BERT-large.
+    - Encoder-decoder: BART-base and BART-large.
+    - Decoder-only: GPT-4.1, Qwen 2.5 (non-reasoning); GPT-5, Claude Opus 4.1, Qwen3-1.7B (reasoning).
+    - Models fine-tuned: BERT, BART, and Qwen3.
+- **Evaluation Metrics:**
+    - Overall accuracy.
+    - Per-depth precision, recall, and F1-score (macro-averaged).
+    - AUROC for statistical significance.
+    - For LLM API calls, the system retries up to five times on failure, and any remaining failed calls default to a prediction of 0.
+
+# Experiments
+- **Non-Finetuned Results:**
+    - Zero-shot and five-shot ICL performance was similar (+0.5% average accuracy), so only zero-shot is reported.
+    - NL dataset accuracies: GPT-4.1 (64%), Qwen-2.5 (47%), Qwen-3 1.7B (65%).
+    - NNL dataset accuracies: GPT-4.1 (65%), Qwen-2.5 (53%), Qwen-3 1.7B (61%).
+    - SOTA reasoning models: GPT-5 achieved 100% accuracy on both NL and NNL datasets. Claude Opus 4.1 scored 93% on NL and 65-66% on NNL.
+    - Smaller non-finetuned models (BERT, BART, Flan-T5) performed poorly, often outputting a single label or failing to parse (e.g., Flan-T5-Base had 100% parsing errors).
+- **Finetuned Results:**
+    - NL dataset accuracies: Flan-T5-Base (76%), BART-Base (74%), Qwen3-1.7B (73%), BERT-Base (71%).
+    - NNL dataset accuracies: BERT-Base (61%), BART-Base (55%), Flan-T5-Base (54%), Qwen3-1.7B (53%).
+    - NL dataset AUROC: BERT-Base (0.76), Flan-T5-Base (0.66), BART-Base (0.62), Qwen3-1.7B (0.50, near-random).
+    - NNL dataset AUROC: BERT-Base (0.60), Qwen3-1.7B (0.60), BART-Base (0.53), Flan-T5-Base (0.51).
+- **Ablation: (Data) Depth Versus Accuracy:**
+    - On the NNL dataset, the performance of Flan-T5-Base and Qwen3-1.7B dropped to random by depth 4 and 3, respectively. BERT-Base was more robust, declining to random at depth 7.
+    - OLS analysis on the first four depths showed a much sharper accuracy decline on the NNL dataset (avg. slope = -10.91) compared to the NL dataset (avg. slope = -4.73).
+- **Ablation: Inference Time:**
+    - Efficiency (Accuracy/Hour) was calculated. BART-Base was most efficient (640), while GPT-5 was least efficient (1.1).
+    - GPT-5 took 90.6 hours for inference, compared to 0.1 hours for BART-Base.
+    - LLMs took approximately twice as long to process the NNL split.
+- **Mechanistic Interpretability of Logical Flow:**
+    - Uses curvature similarity to probe if models apply consistent internal update rules across reasoning depths.
+    - On depths 6-11, BERT (encoder-only) showed the highest and most stable curvature similarity (from 0.86 to 0.78).
+    - The decoder-only Qwen showed the steepest decline and lowest stability (0.59 to 0.57).
+    - The stability ordering was BERT > Flan-T5 > Bart > Qwen, aligning with the degree of bidirectional contextualization.
+
+# Conclusion
+- The study concludes that ICL in LLMs has limited ability to perform robust causal reasoning.
+- Fine-tuned encoder-based architectures like BERT are more efficient and robust than most decoder-only LLMs, especially at greater reasoning depths and under lexical perturbations (OOD shifts).
+- The recursive nature of ICL is framed as a hindrance for structured logical reasoning compared to the global projection mechanism of encoders.
+- GPT-5 is a notable exception, achieving near-perfect accuracy, but this performance comes at a massive scale and computational cost.
+- The findings suggest a trade-off: encoder/encoder-decoder models are a resource-efficient and reliable choice for causal reasoning, while decoder-only models require immense scale to close the performance gap.
+- The paper suggests future work could explore hybrid architectures that combine the convenience of ICL with the reasoning capabilities of encoders.
+
+# Appendix
+- **Dataset Generation:** The dataset is generated using an algorithm based on Dijkstra's to find minimal proof chains and label instances. Negative samples are created via three strategies: premise-missing, distractor chains, and adversarial swaps.
+- **Detailed Methods:**
+    - Provides specific model versions used, e.g., GPT-5 (2025-08-07).
+    - LLM API calls used temperature 0, with 128 completion tokens for non-reasoning models and 5,000 for reasoning models.
+    - Fine-tuning was done for 3 epochs on a single NVIDIA RTX 6000 GPU with a batch size of 8 and a learning rate of 5e-5. Models were supervised on both the final label and the intermediate proof chain.
+    - Learning curves show Flan-T5-Base and BART-Base achieved a lower final loss (~0.15) than BERT-Base and Qwen3-1.7B (~0.5).
+    - An automatic prompt optimization experiment on GPT-4.1 yielded only a marginal (~1%) performance increase.
+- **AUC/ROC Evaluation:** Provides detailed ROC curves and AUC scores. Non-finetuned models performed near-random (AUCs 0.37-0.56). Finetuning significantly improved discrimination, with BERT-Base reaching an AUC of 0.759 on the NL dataset.
+- **Test Results on NL and NNL Datasets:** Contains extensive tables and figures with per-depth precision, recall, and F1 scores for all models.
+    - Key summaries: On the NL dataset, fine-tuned Flan-T5-Base had the highest average accuracy (76%). On the NNL dataset, fine-tuned BERT-Base performed best (61%).
+    - For decoder-only models, GPT-5 consistently achieved near-perfect scores across all depths and datasets. Claude Opus 4.1's performance dropped significantly from the NL (93% avg accuracy) to the NNL dataset (66% avg accuracy).
+
+# References
+This section contains a list of all the scientific papers and resources cited throughout the manuscript.

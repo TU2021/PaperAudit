@@ -1,0 +1,70 @@
+# Innovation & Motivation Report
+
+## 1. The Authors' Claimed Contribution
+- Core Problem: Deciding when a system should abstain because it can only produce explanations that users judge as low quality, even if the prediction itself might be correct.
+- Claimed Gap: “LtR traditionally abstains based on prediction uncertainty or input novelty, ignoring explanation quality.” Further, “No integration of explanation-quality metrics into rejection.” The paper positions LtX as filling this omission by “incorporating user-perceived explanation quality into rejection” (Intro/Related Work).
+- Proposed Solution: A formal LtX wrapper m_(f,e,r)(x) that returns ® when a learned rejector r judges explanation z as low-quality (r(z) < τ). ULER learns r from modest human feedback: binary explanation-quality labels plus per-feature correctness/incorrectness judgments, supported by a targeted, quality-aware augmentation in explanation space, and then trains a simple classifier (e.g., SVM) to score explanation quality.
+
+## 2. Comparative Scrutiny (The "Trial")
+Here, we analyze how the paper stands against the identified similar works.
+
+### vs. Learning to Reject Low-Quality Explanations via User Feedback (same title/authors)
+- Identified Overlap: The text and claims match the Manuscript; the resemblance notes describe ULER’s LtX instantiation with labels, per-feature judgments, augmentation, and thresholded rejection.
+- Manuscript's Defense: Not applicable—this appears to be the same work (no distinct prior art to differentiate from).
+- Reviewer's Assessment: No novelty conflict indicated here; treat as duplication in the similarity list rather than an external prior.
+
+### vs. Logic-based Explanations for Linear Support Vector Classifiers with Reject Option
+- Identified Overlap: Both couple abstention with explanations; that work explains why a reject occurred for an SVC with a reject option, whereas the Manuscript rejects when explanations would be low-quality.
+- Manuscript's Defense: The Manuscript explicitly states that prior reject/defer work “improves reliability but ignore[s] explanation quality” and that “none consider explanation quality in rejection” (Introduction; Related Work).
+- Reviewer's Assessment: The trigger and objective are materially different. Prior work explains rejection decisions post hoc for uncertainty-triggered abstention; this paper makes explanation quality itself the abstention trigger and learns a user-aligned quality score. The distinction is significant and not a strawman.
+
+### vs. “Even if …” — Diverse Semifactual Explanations of Reject
+- Identified Overlap: Both inhabit the reject-option/XAI space; the cited work explains rejects via semifactuals, while the Manuscript rejects when explanations are (predicted to be) unsatisfactory.
+- Manuscript's Defense: As above, the Manuscript claims the gap is abstention due to explanation quality, rather than explaining rejects caused by prediction uncertainty (Intro/Related Work: “LtR… ignore[s] explanation quality.”).
+- Reviewer's Assessment: Complementary, not overlapping in core contribution. The cited work focuses on making rejection intelligible; the Manuscript defines a new abstention criterion grounded in human-judged explanation quality and shows how to learn it. The difference is substantive.
+
+### vs. Model Agnostic Local Explanations of Reject (and Explaining Reject Options of LVQ)
+- Identified Overlap: Both propose to explain rejection decisions; the Manuscript proposes to reject because the explanation would be low-quality.
+- Manuscript's Defense: The gap statement is clear: “None consider explanation quality in rejection.” The paper also notes that “ULER has a complementary goal and could be combined with existing LtR” (Related Work), acknowledging modularity with standard reject options.
+- Reviewer's Assessment: Again, orthogonal aims. These papers provide post hoc reasons for rejection; the Manuscript proposes a user-centric selection rule to avoid presenting explanations deemed low quality. The Manuscript’s positioning is fair; however, it does not explicitly cite these specific explainer-of-rejects works, which would have strengthened the contrast.
+
+### vs. Optimal strategies for reject option classifiers; Double Ramp Loss Based Reject Option; Conformal Prediction with reject option; Regression with reject option
+- Identified Overlap: All share the selective prediction architecture: learn a scalar score and threshold it to control coverage vs. risk; conformal prediction provides distribution-free guarantees for prediction errors.
+- Manuscript's Defense: The paper frames LtX as extending the reject-option paradigm to explanation quality and explicitly claims that prediction-uncertainty/novelty-based abstention is misaligned with human-perceived explanation quality (evidence: explanation-aware methods beat standard LtR in their experiments; Introduction/Experiments).
+- Reviewer's Assessment: The selection mechanism (score + threshold) is standard and acknowledged; the novelty lies in (i) the abstention criterion (human-judged explanation quality), (ii) a concrete, user-feedback-driven learning protocol (binary quality labels plus per-feature judgments), and (iii) a targeted augmentation in explanation space. The Manuscript does not provide new theory for selective risk but repurposes the architecture to a new abstention target and empirically validates the misalignment claim. This is a valid and meaningful distinction.
+
+### vs. Considerations When Learning Additive Explanations; Axiomatic frameworks for explanation quality; Provably Better Explanations with Optimized Aggregation of Feature Attributions
+- Identified Overlap: All center on attribution quality and human usability; one line improves explanations (aggregation), others assess/compare explanation quality. The Manuscript uses additive attribution methods (KernelSHAP, LIME) and critiques machine-side metrics’ alignment with human judgments.
+- Manuscript's Defense: It explicitly argues that “Machine-side [metrics] may not align with human judgment” and identifies PASTA as “closest human-side metric but not designed for rejection,” using PASTARej as a baseline and showing ULER’s superiority (Related Work; Experiments).
+- Reviewer's Assessment: The Manuscript’s stance is well supported by experiments (PASTARej underperforms ULER, including in the human study). It does not attempt to improve explanations; it enforces a user-aligned gate to abstain. This is synergistic with aggregation/axiomatic assessment work rather than redundant. The differentiation is credible and empirically substantiated.
+
+## 3. Novelty Verdict
+- Innovation Type: Substantive
+- Assessment:
+  The manuscript introduces LtX, a clear and well-motivated abstention criterion rooted in user-perceived explanation quality, and provides a concrete learning recipe (binary explanation ratings plus per-feature feedback with targeted augmentation) that consistently outperforms both standard LtR and explanation-aware baselines across multiple datasets and a human study. Existing reject-option literature focuses on abstaining due to prediction risk and sometimes explaining rejects; attribution-quality literature assesses or improves explanations but does not turn explanation quality into a rejection policy. The paper’s motivation is therefore defensible and distinct from the listed similar works.
+  - Strength:
+    - Convincing gap articulation: “LtR… ignores explanation quality” and “No integration of explanation-quality metrics into rejection,” with empirical evidence that prediction-uncertainty/novelty proxies are misaligned for LtX.
+    - Clear formalization of LtX and modularity (r over z), enabling combination with standard LtR—a credible positioning vis-à-vis prior selective prediction work.
+    - Human-centered supervision (binary rating + per-feature signals) and targeted augmentation are concrete, implementable additions; superiority over PASTARej and machine-side metrics is shown, including on a human-annotated dataset.
+    - Public release of a new human-annotated explanation-quality dataset strengthens significance.
+  - Weakness:
+    - The selection mechanism (learn a score, threshold for coverage) follows well-trodden ground in reject-option literature; no new theoretical guarantees or selection theory are provided for the LtX setting.
+    - The manuscript does not explicitly engage with the “explaining rejects” sub-literature (e.g., semifactual/counterfactual explanations of rejection) to delineate complementarity in detail, though its high-level claim of orthogonality is fair.
+    - Empirical scope is mostly tabular with one human-study domain; generality beyond additive attributions and tabular settings remains to be shown.
+
+## 4. Key Evidence Anchors
+- Introduction:
+  - “LtR traditionally abstains based on prediction uncertainty or input novelty, ignoring explanation quality.”
+  - “No integration of explanation-quality metrics into rejection.”
+  - “PASTA is closest human-side metric but not designed for rejection.”
+- Method:
+  - LtX definition: “m_(f,e,r)(x) returns ® if r(z) < τ; otherwise returns (f(x), z). Rejector operates on explanation z rather than x or f(x).”
+  - ULER supervision and augmentation: binary labels y_z and per-feature sets W_z/C_z; “z_aug ∼ N(z, ε0 s × Σ)… s_i guided by W_z/C_z and label.”
+- Related Work:
+  - “Learning to Reject/Defer/Triage… None consider explanation quality in rejection. ULER has a complementary goal and could be combined with existing LtR.”
+  - “Machine-side [metrics]… may not align with human judgment. PASTA is closest human-side metric but not designed for rejection.”
+- Experiments:
+  - Across eight datasets, ULER “rejects the highest number of low-quality explanations in ~94% of experiments” and achieves leading AUROCs (e.g., churn 0.92 ± 0.01; wine 0.93 ± 0.03).
+  - Human study: ULER AUROC 0.63 ± 0.05 vs PASTARej 0.51 ± 0.09 (p < 0.01), demonstrating alignment with user judgments.
+- Conclusion:
+  - “Introduces LtX and ULER, learning to abstain when explanations are low-quality per user judgments… ULER effectively identifies low-quality explanations, outperforming standard LtR and explanation-quality metrics.”

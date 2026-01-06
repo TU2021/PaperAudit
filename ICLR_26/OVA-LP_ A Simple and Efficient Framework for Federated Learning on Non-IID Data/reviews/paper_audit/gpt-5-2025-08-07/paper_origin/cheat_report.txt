@@ -1,0 +1,54 @@
+Integrity and Consistency Risk Report
+
+1) Abstract misassignment of baseline performance
+- Evidence: Abstract (Block 2) states “retains only 10.1% (PFPT) and 34.5% (FFT-MoE).”
+- Contradiction: Main text reverses this mapping—Fig. 4 caption and text (Blocks 30–32) say “FFT-MoE plateaus near 10.1%, while PFPT rises slowly but saturates at 34.5%.”
+- Impact: Key headline claim in the Abstract misattributes results to baselines, risking misleading conclusions about comparative robustness.
+
+2) Unclear/likely non-comparable client participation across methods
+- Evidence:
+  - OvA-LP configuration (Block 25): “trained with 100% client participation.”
+  - PFPT baseline configuration (Table 8, Block 63): “Active client ratio 0.1 (10/100).”
+  - FFT-MoE baseline configuration (Table 8, Block 63): “Active client ratio 1.0 (full).”
+  - Shared setting (Block 24): “100 clients for 50 rounds … primary experiments.”
+- Issue: PFPT is run with 10% active clients while OvA-LP uses 100% active clients, and the “shared setting” implies uniform experimental conditions. Running baselines under different participation ratios materially affects gradient variance and convergence, which directly impacts the R(t) metric used throughout (Blocks 27, 30–32).
+- Impact: This undermines fairness and the validity of baseline comparisons; PFPT’s lower participation could artificially depress or distort its R(t) trajectory and final R(50) reported.
+
+3) Ambiguity/inconsistency around the “Acc@95” metric
+- Evidence:
+  - Evaluation philosophy (Block 27) defines R(t) = AccNonIID(t)/AccIID(t) × 100 and uses R(50) for bars.
+  - Ablation prose (Block 51): “LP-Softmax requires 27 rounds … to reach Acc@95, whereas OvA-LP (2-stage) reaches the same point in a single round.”
+  - Yet ablation relative results (Blocks 28–29) show LP-Softmax Non-IID plateauing at 56.3% R(50), seemingly never reaching 95% of IID.
+- Issue: “Acc@95” is not explicitly defined anywhere; the usage conflicts with observed R(t)/R(50) outcomes (LP-Softmax Non-IID cannot plausibly reach 95 given its reported 56.3%). Tables 3–5 repeatedly report “Acc@95 (Rounds)” but the target (R(t)=95%, absolute accuracy=95%, or 95% of final accuracy) is not specified.
+- Impact: This ambiguity compromises interpretability of time-to-convergence and “total communication until convergence” claims, and prevents independent verification of reported efficiency gains.
+
+4) Missing mechanism for negatives in Stage 2 under extreme label skew (e.g., Shard-1)
+- Evidence:
+  - Method description (Block 22): Stage 2 “introduce[s] a large set of negatives.”
+  - Experimental setup includes Shard-1 and Shard-2 (Blocks 24–25), where many clients have only one or two classes locally.
+  - Precomputing uses “own data” (Fig. 13, Block 13).
+- Issue: The manuscript does not specify how a client with only one class obtains negatives for the positive class head (e.g., how the “Cat” head gets non-“Cat” negatives in Shard-1). The figures (Blocks 12–13) depict negatives but do not explain their source (local re-labeling, server-provided negatives, cross-client sharing, synthetic negatives, or using non-target samples as negatives across heads).
+- Impact: This is a critical procedural detail for OvA training; without it, the method is not reproducible and the claimed stability under extreme non-IID (Shard-1) cannot be independently validated.
+- Evidence status: No direct evidence found in the manuscript specifying the negative-sampling or provisioning mechanism under Shard-1.
+
+5) Encoder mismatch across methods may confound robustness claims
+- Evidence:
+  - OvA-LP uses ViT-L/16 (Block 25).
+  - Baselines use their original encoders (e.g., ViT-B/32, ViT-B/16; Blocks 26, 63).
+- Issue: While each method’s R(t) is normalized to its own IID baseline, encoder capacity and pretrained feature quality affect non-IID stability (per the paper’s own geometry argument in Sec. 3.2, Blocks 16–17). Cross-method comparisons of R(50) may be affected by different encoder strengths.
+- Impact: Not a contradiction, but it weakens the strength of claims like “post-hoc baselines retain only 10.1%/34.5% while OvA-LP retains ~95.9%,” since encoder choice is entangled with the robustness effect being attributed to OvA-LP. A controlled comparison with matched encoders would strengthen validity.
+- Evidence status: The manuscript acknowledges different encoders but does not quantify their impact on R(t) across methods under matched conditions.
+
+Additional observations
+- Minor numeric variance: The Abstract’s “averaged … retains 95.9%” vs. Fig. 5’s reported R(50) values (Dirichlet 94.9%, Shard-1 96.1%, Shard-2 96.7%) would average to ~96.1%. This is small and likely due to different runs or settings; not a major integrity concern.
+- Communication metrics: Total vs per-round server/client numbers are consistent once interpreted as “until Acc@95” (Table 5 aligns with Table 6 when multiplied by the reported rounds). No clear contradiction.
+
+Recommendations to resolve
+- Correct the Abstract’s mapping of baseline results (PFPT vs FFT-MoE).
+- Ensure consistent client participation across methods in the main comparisons or provide sensitivity analyses showing PFPT at 100% participation.
+- Precisely define “Acc@95” once and use it consistently; reconcile conflicts with LP-Softmax Non-IID outcomes.
+- Specify the Stage-2 negative provisioning mechanism for Shard-1/Shard-2, including sampling ratios, sources, and privacy-preserving logistics.
+- Provide matched-encoder comparisons (e.g., all methods on ViT-L/16) to isolate the contribution of OvA-LP from encoder capacity effects.
+
+Conclusion
+The manuscript contains several high-impact consistency issues: a headline misassignment of baseline performance in the Abstract, non-comparable participation ratios across methods, ambiguous definition and usage of “Acc@95,” and missing details on negative sampling under extreme label skew. These materially affect the correctness, interpretability, and trustworthiness of the reported results. Beyond these, no further clear integrity-related contradictions were identified based on the provided content.

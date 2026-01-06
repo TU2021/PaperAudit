@@ -1,0 +1,240 @@
+Summary
+The paper investigates whether encoder-only and encoder–decoder architectures are better suited than decoder-only LLMs for short-horizon causal reasoning formulated as deductive inference in a Horn-clause subset of first-order logic. The authors generate a SimpleLogic-style dataset with controlled reasoning depths, create two OOD test splits (deeper NL sequences and a non-natural-language NNL variant with randomized tokens), and evaluate zero-/few-shot ICL in several decoder-only APIs (GPT-4.1, GPT-5, Claude Opus 4.1, Qwen2.5/3) against fine-tuned encoders/enc-dec (BERT, BART, Flan-T5) and one open decoder (Qwen3-1.7B). Results show: (i) zero-/few-shot ICL often fails and is brittle to distribution shifts; (ii) fine-tuned encoders/enc-decoders generalize better by depth and to NNL; (iii) a very large decoder (GPT-5) attains near-perfect accuracy but at high latency; (iv) a mechanistic interpretability probe (“curvature similarity”) suggests encoders preserve more stable geometric invariants with depth (Section 7, Figure 5).
+
+Soundness
+- Positives: The dataset design (Section 4.1; Appendix A) targets reasoning depth control and OOD lexical ablation, with proof chains and negative sampling invariants. Multiple metrics (accuracy, per-depth precision/recall/F1, AUROC) are reported (Section 4.3; Appendix C), and ablations study depth-vs-accuracy (Section 6.1) and inference time (Section 6.2, Table 1).
+- Concerns: Experimental fairness is mixed: encoders/enc-decoders are fine-tuned (Appendix B.3) with supervision on proof chains, while closed-weight decoders are only evaluated via ICL; only one decoder with open weights (Qwen3-1.7B) is fine-tuned (Section 4.2). This creates a confound between architecture and training regime. The evaluation pipelines introduce biases: failed API calls are defaulted to label 0 (Section 4.3; Section B.2), which can skew class distributions and AUROC/accuracy, particularly for models that exhibit more parsing/API failures (Figure 3). The NNL split intentionally uses tokens “likely unseen by the tokenizers” (Section 4.1), but tokenization differences across model families (byte-level vs subword) are not controlled and may explain part of the reported brittleness. Statistical inference is not properly conducted: AUROC is described as the “measure of statistical significance” (Section 4.3), which is incorrect; no confidence intervals or hypothesis tests are provided. Mechanistic interpretability (Section 7) lacks methodological detail (how curvature is computed, layer selection, trajectory construction, similarity metric), limiting the evidentiary weight of Figure 5. Several quantitative inconsistencies and implausible claims (e.g., GPT-5 100% across all depths and both NL/NNL, Section 5.1; Appendix Tables 8, 11) warrant verification.
+
+Presentation
+The narrative is clear in motivation and high-level argument (Sections 1, 3.2). Figures and tables cover many slices (depth-wise curves, ROC), which is valuable. However, there are presentation issues:
+- Class distribution tables mix malformed values (Figure 3 shows lines that sum to >100% and repeated numbers).
+- Some tables/figures include approximate (“~”) values without precise numbers (Appendix Sections E–F) and repeated labels; several depth-wise metric plots are hard to map to exact numeric claims (Figures 9–13).
+- Assumptions about architectures are marked “?” and “decoder-only” by conjecture (Table 2; footnote in Section 1), which is risky.
+- The mechanistic section (Section 7) introduces “curvature similarity” but omits definitions and computation details; Figure 5 gives numbers without a method.
+Overall readability is good, but quantitative reliability and methodological specificity need improvement.
+
+Contribution
+The paper’s key contribution is a controlled, depth-stratified comparison of encoder-enabled vs decoder-only models under OOD lexical perturbations, coupled with a claim that encoders’ global projection confers advantages for strict conjunctive composition (Sections 3.2, 5, 6). The NNL split is a useful stress test to ablate natural-language cues and spurious lexical correlations. The attempt to connect behavior to representational geometry (Section 7) is interesting and timely. The practical message (encoders are more efficient/reliable for short-horizon causal reasoning unless decoders are massive) could influence system design. However, novelty is moderated by prior work comparing architectures on logical reasoning (Section 2, Architecture paragraph; Tian et al., Han et al., Zheng et al.), and the mechanistic account lacks technical depth to substantiate strong claims.
+
+Strengths
+- Clear problem framing of causal reasoning as strict conjunctive, multi-hop deductive inference (Sections 1, 3.1).
+- Depth-controlled dataset and two OOD test splits, including NNL lexical ablation (Section 4.1; Appendix A).
+- Multi-view evaluation (accuracy, per-depth metrics, ROC/AUC) and depth-wise analyses (Section 6.1; Figures 4, 30–31).
+- Practical efficiency comparison (Section 6.2; Table 1) highlighting cost-performance trade-offs.
+- Strong empirical observation that fine-tuned encoders/enc-decoders maintain better discrimination with depth than small decoders on both NL and NNL (Section 5.2; Appendix C.2; Figures 66–67).
+
+Weaknesses
+- Confounded comparison: encoders/enc-decoders are fine-tuned (with proof-chain supervision, Appendix B.3) while most decoders are zero-/few-shot only (Sections 4.2, 5.1–5.2).
+- Defaulting failed API/parsing calls to 0 (Section 4.3; Section B.2) biases results and class distributions (Figure 3).
+- Inadequate statistical treatment: AUROC mislabeled as a “measure of statistical significance” (Section 4.3); no CIs or tests.
+- Mechanistic interpretability lacks a defined methodology (Section 7; Figure 5), reducing credibility of geometric claims.
+- Tokenization confound in NNL split (Section 4.1) and unequal completion budgets (128 vs 5,000 tokens, Appendix B.2) may unfairly affect decoders.
+- Some figures/tables contain inconsistent or implausible numbers (Figure 3; GPT-5’s uniform perfection in Section 5.1; Appendix Tables 11–12) and many approximate (“~”) values, undermining confidence.
+
+Questions
+1. Can you equalize training regimes by fine-tuning a comparably sized decoder (e.g., LLaMA-family or open Qwen variant) on the same proof-chain supervision (Appendix B.3) and report matched comparisons?
+2. How many API failures occurred per model per split, and how sensitive are results to the “default to 0” choice (Section 4.3)? Provide ablations where failures are dropped or imputed neutrally and report robustness.
+3. For the NNL split, what are the tokenizer statistics (avg token length per atom) across models? Can you include a byte-level tokenizer encoder baseline to disentangle tokenization effects?
+4. Please provide proper statistical significance (confidence intervals; bootstrap across instances; depth-wise tests) rather than interpreting AUROC as significance (Section 4.3).
+5. Mechanistic probe: define curvature computation (layers, metric, trajectory, normalization), the similarity measure, and variance across runs; add controls (random labels; permuted clauses).
+6. Architecture assumptions: can you avoid conjecture (“?” in Table 2; footnote in Section 1) by restricting claims to documented models or by reporting results without attributing architecture?
+7. Inference-time efficiency (Section 6.2): since some numbers are API-based estimates, can you report per-instance latency distributions and normalize by token count to reduce hardware/API confounds?
+
+Rating
+- Overall (10): 6 — Useful depth-controlled OOD comparison and practical takeaways, but confounded training regimes, default-to-0 failure handling, and under-specified mechanistic method limit confidence (Sections 4.2–4.3, 5.2, 6.2, 7; Figure 3; Table 1).
+- Novelty (10): 6 — Interesting NNL lexical ablation and geometric angle, though architectural comparisons on FOL have precedent and the mechanistic contribution lacks methodological detail (Section 2; Section 7).
+- Technical Quality (10): 5 — Methodological gaps (failure defaults, statistical inference, tokenization confounds) and incomplete mechanistic specification undermine rigor (Sections 4.3, 6.2, 7; Figure 5).
+- Clarity (10): 6 — Generally readable, but numerical inconsistencies and “~” approximate reporting blur precision (Figure 3; Appendix E–F; Tables 11–12).
+- Confidence (5): 4 — Based on careful reading of the manuscript, figures, and appendices; concerns about data handling and missing method details reduce certainty.
+
+---
+
+Summary
+This paper studies causal reasoning as multi-hop conjunctive deduction and argues that encoder(-decoder) architectures, by globally projecting inputs, better handle composition and OOD shifts than decoder-only models that aggregate autoregressively. The authors generate SimpleLogic-style datasets with depth control and an OOD NNL split using randomized tokens; they evaluate zero-/few-shot ICL for several decoder-only APIs vs fine-tuned BERT/BART/Flan-T5/Qwen3-1.7B. They additionally propose a geometric mechanistic probe (“curvature similarity”) indicating encoders preserve more stable internal updates across depth.
+
+Soundness
+The dataset design is sound for isolating compositional depth (Section 4.1; Appendix A.1–A.2). Proof chains provide supervision and analysis leverage (Appendix B.3). However, several methodological decisions compromise causal attribution to architecture:
+- The encoder/enc-dec baselines are fine-tuned with proof-chain supervision (Appendix B.3), while most decoders are evaluated via ICL only (Sections 4.2, 5.1). This conflates architecture with training signal and regime.
+- API failure handling defaults to label 0 after retries (Section 4.3; Section B.2), biasing metrics and class distributions, especially for models with more failures (Figure 3).
+- The NNL split intentionally stresses tokenization (Section 4.1), but without controlling for tokenizer type and token length, differences may reflect preprocessing rather than reasoning ability.
+- Statistical analysis is limited: AUROC is reported and referred to as “statistical significance” (Section 4.3), but no hypothesis tests or CIs are presented; some reported AUCs near 0.5 coexist with accuracies ≈0.7–0.76 (Section 5.2; Appendix C.2), suggesting thresholding/class imbalance effects that deserve explicit treatment.
+
+Presentation
+The paper is well-organized and motivates the central hypothesis effectively (Sections 1, 3.2). The breadth of figures is a strength (depth-wise accuracy, ROC curves, class distributions). Nonetheless:
+- Numerical inconsistencies and formatting errors are present (Figure 3; multiple approximate series in Appendix E–F; repeated or malformed percentage lines).
+- The mechanistic section (Section 7) explains the intuition but omits computation specifics; Figure 5 reports “curvature similarity” without equations, layer choices, or variance estimates.
+- The inference efficiency table (Table 1) mixes on-prem and API estimates and compares models under different token budgets (Appendix B.2), which the text notes but does not adjust for.
+
+Contribution
+The work adds: (i) an OOD NNL stress test to ablate lexical shortcuts; (ii) depth-wise evaluation revealing that encoder/enc-decoders retain discrimination with increasing depth better than small decoders; (iii) a practical efficiency perspective; and (iv) a nascent geometric lens for mechanistic reasoning. These are valuable, especially for practitioners prioritizing robustness under distribution shift. The novelty is moderate given existing architectural comparisons on logical reasoning, and the geometric contribution requires more methodological specification to be compelling.
+
+Strengths
+- Clear separation between training NL and OOD NL/NNL test splits with depth control (Section 4.1; Figure 2).
+- Multi-metric reporting, including per-depth slices and ROC curves (Sections 4.3, 5.2; Figures 66–67; Appendix C).
+- Practical insight that small encoders/enc-decoders are more cost-effective for short-horizon deductive tasks (Section 6.2; Table 1).
+- Attempt to bridge behavior and internal structure via curvature similarity (Section 7), aligning with emerging interpretability literature.
+
+Weaknesses
+- Unfair comparison due to non-matched training regimes (fine-tuned encoders vs ICL decoders), with only one decoder fine-tuned (Section 4.2; Appendix B.3).
+- Failure handling and prompt token budgets differ across model families (Section 4.3; Appendix B.2), potentially affecting outcomes.
+- Missing statistical rigor (no CIs/tests; AUROC mischaracterized as significance, Section 4.3).
+- Mechanistic method under-specified (Section 7; Figure 5); no reproducible definitions or code pointers for curvature.
+- Several quantitative/reporting errors (Figure 3 lines summing >100%; implausible GPT-5 perfection, Section 5.1; Appendix Tables 11–12).
+
+Questions
+1. Could you fine-tune an open decoder (e.g., LLaMA or additional Qwen variants) on the same proof-chain supervision to create a like-for-like comparison?
+2. Provide an ablation replacing “default to 0” on failed calls with dropping the instance, and report changes in class distributions and AUC/accuracy (Section 4.3).
+3. Report tokenizer diagnostics (avg subword pieces per NNL atom) per model and run controlled experiments with byte-level tokenizers for encoders to isolate tokenization effects.
+4. Add confidence intervals (bootstrap across instances and depths) and formal tests to support claims of superiority and robustness.
+5. Detail the curvature computation: layer indices, path construction across reasoning steps, similarity metric, normalization, and error bars; include sanity checks (random labels) and baselines.
+
+Rating
+- Overall (10): 6 — Solid dataset design and practical message, but confounds in training regimes and limited statistical/mechanistic rigor weaken causal claims (Sections 4.1–4.3, 5.2, 7; Figure 3; Table 1).
+- Novelty (10): 6 — OOD NNL perturbation and geometric probe are interesting, yet architectural reasoning benchmarks exist and the mechanistic method is underdeveloped (Section 2; Section 7).
+- Technical Quality (10): 5 — Default-to-0 failures, unequal token budgets, lack of statistical tests, and under-specified curvature analysis detract from rigor (Sections 4.3, B.2, 7).
+- Clarity (10): 6 — Clear structure, but several figures/tables have inconsistencies and approximations that hinder precise interpretation (Figure 3; Appendix E–F).
+- Confidence (5): 4 — High-level assessment supported by manuscript anchors; numerical/reporting issues and missing method details reduce reviewer certainty.
+
+---
+
+Summary
+The authors argue that encoder-based architectures excel at strict conjunctive multi-hop reasoning because they project entire sequences into global latent representations, whereas decoder-only models aggregate autoregressively and are brittle to OOD shifts. They demonstrate this with a SimpleLogic-derived dataset (40k training; two OOD tests up to depth 11), including a non-natural-language (NNL) split intended to remove lexical cues. Encoders/enc-decoders fine-tuned with supervision on proof chains generally outperform small decoder-only models on deeper chains and NNL, while a large decoder (GPT-5) achieves near perfection but at high latency.
+
+Soundness
+The core hypothesis is plausible and grounded in transformer information flow (Section 3.2). The dataset scaffolds multi-hop conjunction without disjunctions (Section 4.1), making composition tractable and measurable. However, claims that “ICL alone is insufficient” (Abstract; Conclusion) extend beyond the presented evidence, because most decoder-only evaluations are zero-/few-shot and only one decoder is fine-tuned; additionally, chain-of-thought supervision for encoders (Appendix B.3) may be the decisive factor. The NNL split removes lexical cues, but its construction (random characters “likely unseen by the tokenizers”, Section 4.1) may penalize models unevenly; more controls are required. The mechanistic curvature analysis (Section 7; Figure 5) is intriguing but methodologically opaque, limiting its probative value.
+
+Presentation
+The paper is generally well-written with a coherent storyline. Figures provide depth-wise breakdowns (Figures 4, 30–31), ROC curves (Figures 61–67), and efficiency (Table 1). Yet the presentation suffers from:
+- Inconsistent or implausible numeric reporting (Figure 3 distributions; GPT-5 100% across all depths in Section 5.1; Appendix Tables 11–12).
+- Use of approximate (“~”) values for many depth-wise metrics (Appendix E–F), complicating verification.
+- Lack of equations and procedure in the mechanistic section (Section 7), despite precise numeric outputs.
+- Architectural assumptions for closed models (Table 2; Section 1 footnote) that weaken interpretive clarity.
+
+Contribution
+The work contributes an OOD reasoning testbed with depth control and a non-natural lexical ablation, and a multi-metric analysis highlighting that encoders/enc-decoders can be more robust and efficient than small decoders for short-horizon deduction. The efficiency analysis is practically useful. The mechanistic perspective attempts to ground behavioral differences in representation geometry, which could be impactful if fleshed out. Overall significance is moderate: it reinforces emerging consensus about training signals and architecture, rather than providing conclusive evidence isolating architecture.
+
+Strengths
+- Well-motivated focus on strict conjunctive control and multi-hop composition (Sections 1, 3.1).
+- Controlled dataset with proof chains enabling targeted supervision and evaluation (Section 4.1; Appendix A).
+- Systematic depth-wise and OOD analyses (Figures 4, 30–31; Appendix C).
+- Practical efficiency comparison highlighting cost/latency trade-offs (Section 6.2; Table 1).
+
+Weaknesses
+- Non-matched training regimes across architectures (fine-tuned encoders vs ICL decoders) confound the main claim (Sections 4.2, 5.1–5.2; Appendix B.3).
+- Failure-handling default to 0 (Section 4.3; Appendix B.2) can bias outcomes; class distributions in Figure 3 indicate skew and parsing errors.
+- Statistical interpretation gaps (AUROC ≠ significance; no CIs/tests; Section 4.3).
+- Mechanistic curvature analysis lacks methodological detail and validation (Section 7; Figure 5).
+- Tokenization and prompt budget differences not controlled (Section 4.1; Appendix B.2).
+
+Questions
+1. Please run matched fine-tuning for an open decoder on the same loss (label + proof-chain) and report depth/NNL results to isolate architecture effects.
+2. Remove the “default to 0” policy and report results with failed calls excluded or handled via neutral imputation; quantify failure rates per model (Section 4.3).
+3. Provide tokenizer diagnostics (subword lengths per atom) and run an encoder with byte-level tokenization to control for NNL tokenization effects.
+4. Include confidence intervals and statistical tests for accuracy and AUC, and calibrate thresholds to address class imbalance explicitly.
+5. Formalize and open-source the curvature computation pipeline: layer selection, trajectory definition, similarity metrics, error bars, and control experiments.
+
+Rating
+- Overall (10): 6 — Valuable dataset and practical insights, but confounds and under-specified methods limit the strength of the architectural conclusion (Sections 4.2–4.3, 5.2, 6.2, 7; Figure 3; Table 1).
+- Novelty (10): 6 — NNL lexical ablation and geometric angle add interest, though architectural comparisons on logic exist; mechanistic novelty is not fully realized (Section 2; Section 7).
+- Technical Quality (10): 5 — Unequal training regimes, default-to-0 failures, missing statistical rigor, and unclear mechanistic computation reduce technical soundness (Sections 4.3, B.2, 7).
+- Clarity (10): 6 — Clear narrative but numerical/reporting inconsistencies and approximations undercut precision (Figure 3; Appendices E–F).
+- Confidence (5): 4 — Based on detailed reading; numerical inconsistencies and methodological gaps reduce certainty.
+
+---
+
+Summary
+The paper evaluates causal reasoning (strict conjunctive Horn-clause deduction) across architectures, arguing that encoders’ global projection favors robust multi-hop composition under distribution shifts compared to decoder-only models. A SimpleLogic-derived dataset with depth control (0–11) is used with two OOD test sets: deeper NL and NNL with randomized tokens. Encoders/enc-decoders fine-tuned with proof-chain supervision outperform small decoders in OOD settings; a very large decoder (GPT-5) matches/exceeds at higher compute cost. A mechanistic analysis (curvature similarity) suggests encoders preserve stable geometric invariants over increasing depth.
+
+Soundness
+Conceptually, the encoder vs decoder reasoning argument (Section 3.2) is reasonable. The dataset aligns with the target capability (Section 4.1; Appendix A). The empirical setup spans multiple families (Section 4.2) and evaluates several metrics (Section 4.3). Yet, a number of issues compromise the strength of the conclusion:
+- Training regime mismatch: encoder/enc-dec models receive supervised fine-tuning (including proof chains, Appendix B.3), whereas most decoders are limited to zero-/few-shot ICL (Sections 4.2, 5.1–5.2), conflating architecture and training.
+- API failures default to 0 (Section 4.3), introducing biased negatives; Figure 3 shows severe skew in non-finetuned class distributions.
+- NNL construction may introduce tokenizer-driven OOD that is not evenly felt across models; controls are absent (Section 4.1).
+- Statistical claims rely on AUROC without confidence intervals or tests (Section 4.3), and some AUCs near 0.5 coexist with accuracies ≈0.7 (Section 5.2), indicating threshold dependence and class balance issues that are not carefully addressed.
+- Mechanistic curvature analysis (Section 7; Figure 5) lacks formal specification and validation, limiting interpretability.
+
+Presentation
+The manuscript is well-structured and reads clearly. The figures and tables are extensive, which is commendable. However, several presentation problems exist:
+- Erroneous or inconsistent numeric entries (Figure 3; some percentage lines exceed totals or repeat values).
+- Use of approximate values (“~”) across many depth-wise tables, hindering replication (Appendix E–F).
+- Mechanistic analysis lacks equations/procedural detail while presenting precise curves (Section 7; Figure 5).
+- Architectural assumptions (Table 2; Section 1 footnote) are speculative, weakening attribution.
+
+Contribution
+The paper’s contributions are practical and potentially impactful: an OOD depth-stratified benchmark including NNL lexical ablation; evidence that smaller, fine-tuned encoders/enc-decoders can be more robust/efficient for short-horizon causal reasoning; and a tentative geometric mechanistic link. The novelty lies more in the combination and the NNL stress test than in fundamentally new algorithms. The mechanistic angle could be significant if methodologically strengthened.
+
+Strengths
+- Clear articulation of strict conjunctive multi-hop reasoning demands (Sections 1, 3.1).
+- Controlled dataset with proof chains, depth curriculum, and OOD splits (Section 4.1; Appendix A).
+- Multi-perspective evaluation, including depth-wise and ROC views (Sections 5–6; Appendix C).
+- Practical compute/latency discussion (Section 6.2; Table 1).
+- Consistent observation that encoders/enc-decoders retain discrimination better with depth and in NNL (Section 5.2; Figures 66–67).
+
+Weaknesses
+- Architecture vs training confound (fine-tuning vs ICL) not resolved (Sections 4.2, B.3).
+- Biased failure handling (default label 0) and unequal token budgets (Appendix B.2).
+- Limited statistical rigor and threshold calibration (Section 4.3).
+- Mechanistic analysis insufficiently specified (Section 7).
+- Some implausible results (GPT-5 perfect accuracy, Section 5.1) not contextualized; reporting inconsistencies (Figure 3; Appendix tables).
+
+Questions
+1. Could you present results from fine-tuning a decoder-only model at similar parameter scale under identical supervision (label + proof-chain) to separate architecture from training signal?
+2. What is the per-model failure rate and how do results change if failed calls are dropped or assigned neutral treatment rather than 0 (Section 4.3)?
+3. Provide tokenizer analyses and control experiments to determine whether NNL performance differences are due to reasoning or tokenization.
+4. Add confidence intervals and formal statistical tests to ROC/accuracy; clarify class balance per depth.
+5. Fully specify and validate the curvature probe (equations, trajectories, layers, similarity metric), and report variance across seeds.
+
+Rating
+- Overall (10): 6 — Good practical contribution and dataset, but methodological confounds and under-specified mechanistic analysis weaken the central claim (Sections 4.2–4.3, 5.2, 7; Figure 3; Table 1).
+- Novelty (10): 6 — The NNL OOD and geometric framing are interesting but not fully developed; prior architectural comparisons exist (Section 2).
+- Technical Quality (10): 5 — Confounded training regimes, failure handling biases, missing statistical tests, and unclear mechanistic methods reduce rigor (Sections 4.3, B.2, 7).
+- Clarity (10): 6 — Clear narrative; quantitative inconsistencies and approximate reporting diminish clarity (Figure 3; Appendix E–F).
+- Confidence (5): 4 — Assessment based on a thorough read; reporting/method gaps limit confidence.
+
+---
+
+Summary
+The study examines the limits of decoder-only LLMs on causal reasoning framed as Horn-clause deduction and argues that encoder(-decoder) architectures, via global projection, better support multi-hop conjunctive control under OOD shifts. A SimpleLogic-derived corpus with depth control and two OOD splits (deeper NL and randomized-token NNL) is used to compare zero-/few-shot decoders (GPT-4.1, GPT-5, Claude Opus 4.1, Qwen2.5/3) against fine-tuned BERT/BART/Flan-T5 and a fine-tuned Qwen3-1.7B. Encoders/enc-decoders generally outperform small decoders in OOD settings; extremely large decoders can match but with worse efficiency. A mechanistic probe (“curvature similarity”) suggests encoder representations maintain stable geometry with depth.
+
+Soundness
+The framing of causal reasoning as strict conjunctive multi-hop logic is well-justified (Sections 1, 3.1). The depth-controlled datasets target the intended capability (Section 4.1). However, several methodological choices weaken the causal inference from results to architecture:
+- Training regime confound: encoders/enc-decoders are fine-tuned with proof-chain supervision (Appendix B.3) while most decoders are evaluated via ICL only (Sections 4.2, 5.1–5.2).
+- Failure handling defaults failed calls to 0 (Section 4.3; Appendix B.2), which biases outcomes; class distributions reveal skew and parsing errors (Figure 3).
+- Statistical evaluation is limited: AUROC is used but incorrectly described as “measure of statistical significance” (Section 4.3); no CIs or tests are provided; thresholding and class balance are not fully addressed.
+- Mechanistic probe lacks procedural detail (Section 7), making Figure 5 difficult to interpret or reproduce.
+- Inference time comparisons mix on-prem and API estimates (Section 6.2; Table 1) under unequal completion limits (Appendix B.2), complicating efficiency conclusions.
+
+Presentation
+The paper is readable and logically structured. Visualizations are abundant and helpful, but several figures/tables contain errors or approximations:
+- Figure 3 includes malformed distributions and repeated values; multiple appendix tables use “~” approximations.
+- Mechanistic section presents numeric curves without methodological specification.
+- Architectural labeling for closed models is conjectural (Table 2; Section 1 footnote).
+
+Contribution
+The work contributes a depth-stratified OOD benchmark for deductive reasoning with an NNL lexical ablation, multi-view evaluation, and a practical efficiency perspective, plus an initial mechanistic lens. The main takeaway—that encoders/enc-decoders are cost-effective and robust for short-horizon causal reasoning relative to small decoders—is useful. The novelty is moderate due to prior architectural comparisons; the mechanistic contribution needs formalization to be impactful.
+
+Strengths
+- Strong motivation connecting causal reasoning requirements to architectural properties (Sections 1, 3.2).
+- Thoughtful dataset construction with proof chains and depth control (Section 4.1; Appendix A).
+- Comprehensive evaluation across depths and metrics (Sections 5–6; Appendix C).
+- Practical focus on compute/latency trade-offs (Section 6.2; Table 1).
+
+Weaknesses
+- Confounded comparison due to heterogeneous training regimes (Appendix B.3; Sections 4.2, 5.2).
+- Biased failure handling and unequal token budgets (Section 4.3; Appendix B.2).
+- Insufficient statistical rigor (Section 4.3) and lack of detailed mechanistic methods (Section 7).
+- Reporting inconsistencies and plausibility issues (Figure 3; GPT-5 perfection in Section 5.1; Appendix Tables 11–12).
+
+Questions
+1. Can you perform matched fine-tuning for an open decoder-only model at comparable scale with identical supervision to isolate architecture?
+2. Provide failure-rate statistics and ablate the “default to 0” policy; show sensitivity of metrics to failure handling (Section 4.3).
+3. Report tokenizer characteristics on NNL and control for tokenization (e.g., byte-level encoders) to ensure fairness.
+4. Add confidence intervals and hypothesis tests for reported metrics; clarify thresholding strategy and class balance per depth.
+5. Fully specify and validate the curvature probe (equations, layers, similarity definition, variance across seeds) and include controls.
+
+Rating
+- Overall (10): 6 — Meaningful practical insights with solid dataset scaffolding, but methodological confounds and under-specified analysis limit the strength of claims (Sections 4.1–4.3, 5.2, 6.2, 7; Figure 3; Table 1).
+- Novelty (10): 6 — Combination of OOD NNL and mechanistic perspective is interesting, though architectural comparisons are not new and the mechanistic method is insufficiently detailed (Section 2; Section 7).
+- Technical Quality (10): 5 — Confounds, biased failure handling, and limited statistical/mechanistic rigor reduce quality (Sections 4.3, B.2, 7).
+- Clarity (10): 6 — Generally clear, but numeric inconsistencies and approximations impair precision (Figure 3; Appendix tables).
+- Confidence (5): 4 — Assessment grounded in manuscript anchors; concerns about reporting accuracy and missing methods lower confidence.

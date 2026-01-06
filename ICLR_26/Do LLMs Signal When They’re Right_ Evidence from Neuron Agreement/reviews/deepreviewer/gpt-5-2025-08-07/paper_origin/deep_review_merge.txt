@@ -1,0 +1,38 @@
+Summary
+The paper investigates whether correctness signals are reflected in the internal activations of large language models and leverages these signals for label-free ensemble decoding. Empirically, the authors report three main observations: (i) external confidence metrics (e.g., entropy, self-certainty) correlate with internal activation states, suggesting these metrics are low-dimensional projections of richer neuron-level information; (ii) correct generations activate substantially fewer unique neurons than incorrect ones throughout the trajectory; and (iii) correct generations exhibit higher cross-sample agreement in which neurons are activated. Building on these findings, the paper introduces Neuron-Agreement Decoding (NAD), a family of selectors that operate solely on internal signals: Jaccard-similarity-based consensus across activated-neuron sets (kNN, medoid, DBSCAN) and a sparsity heuristic (MinAct) that selects the trajectory with the fewest activated neurons. A practical early-stopping mechanism truncates generation at B=32 tokens, computes internal signals on partial completions, and continues only the selected trajectory, yielding large token savings. Experiments with Qwen and DeepSeek models on math/science benchmarks (e.g., AIME24/25, GPQA) and code tasks (e.g., HumanEval, MBPP, LCBv5) show NAD is competitive with majority voting where applicable, consistently outperforms simple averaging (Avg@64) in code settings, and reduces token usage by roughly 98–99% with small accuracy loss. The methodology centers on an operational definition of activated neurons via per-token FFN contribution scores in SwiGLU layers, aggregates sets over chunks, and compares samples using Jaccard similarity. Ablations on activation aggregation choices and early-stopping positions, along with qualitative clustering analyses, support the proposed approach.
+
+Strengths
+- Clear and repeated empirical evidence linking correctness to neuron-level properties:
+  - Correct responses use sparser activation patterns and display higher cross-sample agreement.
+  - Correlations between external confidence measures and internal activation states suggest internal signals subsume more information than output distributions alone.
+- Practical, unsupervised selection framework:
+  - NAD variants (kNN, medoid, DBSCAN) use only internal activation-set similarity; MinAct leverages sparsity.
+  - Does not require comparable outputs, making it applicable to open-ended tasks (e.g., code) where multiple valid solutions exist.
+- Strong efficiency gains:
+  - Early stopping at B=32 tokens enables aggressive pruning of parallel samples, saving ~98–99% of tokens with minimal accuracy degradation.
+- Competitive performance:
+  - On math/science, NAD is competitive with majority voting; on code, it consistently outperforms averaging-based baselines where voting is not straightforward.
+- Thoughtful analyses and ablations:
+  - Top-k aggregation ablation and early-stopping sweeps provide insight into design choices and show early correctness signals are already informative.
+- Potential broader impact:
+  - The findings may inform interpretability, calibration, and inference-time control by highlighting neuron-level agreement and sparsity as signals of correctness.
+- Generally clear presentation and coherent methodological pipeline with illustrative figures and tables spanning multiple datasets and two model families.
+
+Weaknesses
+- Evidence for the “low-dimensional projection” claim is suggestive rather than conclusive:
+  - Correlations and visualizations (e.g., t-SNE) do not establish sufficiency or causality; no reconstruction or formal analysis demonstrates that external metrics are projections of internal states.
+- Incomplete modeling of internal dynamics:
+  - Activation definitions rely on FFN/SwiGLU contribution scores and exclude attention and residual pathways, which may materially influence internal representations and the observed signals.
+- Coarse similarity metric:
+  - Jaccard over unions of activated-neuron sets discards activation magnitude, duration, and temporal structure; no exploration of weighted or temporally aligned similarities that could capture richer dynamics and potentially improve selection robustness.
+- Limited robustness and statistical reporting:
+  - Results are presented without confidence intervals or multiple-seed variability; stability across seeds and datasets is unclear.
+  - Sensitivity to sampling hyperparameters (temperature, top-p), number of samples n, and selection hyperparameters (e.g., k in kNN, DBSCAN eps/min_samples, token-level top-k threshold) is not systematically studied.
+  - Potential confounds (e.g., output length, diversity, prompt-induced exploration) are only partially addressed; deeper length-control and complexity-matched analyses are limited.
+- Baselines and comparisons:
+  - For code, evaluation uses a single-execution regime; comparisons to standard multi-execution/test-harness baselines (e.g., pass@k) and to strong output-based or self-evaluation selectors are missing, weakening claims about superiority in open-ended settings.
+- Practical deployment considerations under-specified:
+  - The approach requires internal access to model activations, limiting applicability to closed-source APIs and production settings.
+  - Systems overhead (storage of activation sets, per-instance latency, peak memory) is acknowledged qualitatively but not quantified; only token-count savings are reported, leaving real-world speedups and resource requirements uncertain.
+- Reproducibility details:
+  - Some algorithmic and hyperparameter specifics (e.g., exact kNN/DBSCAN settings) are insufficiently detailed, and an end-to-end pseudocode or clearer schematic of activation computation could aid reproducibility.

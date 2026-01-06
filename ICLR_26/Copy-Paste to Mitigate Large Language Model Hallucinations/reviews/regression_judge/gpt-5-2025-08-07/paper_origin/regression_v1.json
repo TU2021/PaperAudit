@@ -1,0 +1,113 @@
+{
+  "paper": "Copy-Paste to Mitigate Large Language Model Hallucinations",
+  "runs": [
+    {
+      "config": {
+        "judge_model": "gpt-5-2025-08-07",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "baseline_file": "baseline_review.txt",
+        "final_file": "final_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 600,
+        "metric": "regression_v2_minimal",
+        "prompt_hash": "2142c04332"
+      },
+      "config_key": "1a46f14f5902ebb0fc2c14773cec6644d2fa5338",
+      "inputs": {
+        "baseline_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/baseline_review.txt",
+        "final_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/final_review_all.txt"
+      },
+      "regression": {
+        "score_delta": {
+          "baseline_score": 7.0,
+          "final_score": 7.0,
+          "delta": 0.0,
+          "scale_hint": "1-10"
+        },
+        "differences": [
+          {
+            "diff_type": "new_critique",
+            "summary": "Figure axis/caption inconsistency in logits-power analysis",
+            "paperaudit_types": [
+              "RHETORICAL_PRESENTATION_MANIPULATION",
+              "CONTEXT_MISALIGNMENT_INCOHERENCE"
+            ],
+            "why_impacts_score": "Undermines trust in analysis plots and reduces clarity",
+            "evidence": {
+              "baseline_quote": "Logits power and UMAP visualizations show earlier and stronger contextual reliance providing technical evidence of 'recalibration'.",
+              "final_quote": "Caption says 'values above x=0 indicate CTX,' but x-axis is response length, creating axis/caption inconsistency."
+            }
+          },
+          {
+            "diff_type": "new_critique",
+            "summary": "Algorithm 4 typesetting/implementation inconsistency",
+            "paperaudit_types": [
+              "EXPERIMENTAL_DESIGN_PROTOCOL",
+              "EVIDENCE_DATA_INTEGRITY"
+            ],
+            "why_impacts_score": "Impairs reproducibility of core κ/δ metrics central to claims",
+            "evidence": {
+              "baseline_quote": "Copy fragment detection (Algorithm 4) relies on exact subsequence matches, potentially penalizing legitimate paraphrases.",
+              "final_quote": "Algorithm 4 contains a typesetting/implementation inconsistency (line 15 missing closing parenthesis/bracket), impeding reproducibility of κ/δ."
+            }
+          },
+          {
+            "diff_type": "new_critique",
+            "summary": "Dataset accounting inconsistency (PubMedQA counts conflict)",
+            "paperaudit_types": [
+              "EVIDENCE_DATA_INTEGRITY",
+              "CONTEXT_MISALIGNMENT_INCOHERENCE"
+            ],
+            "why_impacts_score": "Raises doubts about evaluation validity and reported results",
+            "evidence": {
+              "baseline_quote": "Four datasets spanning daily life, science counterfactuals, biomedicine, and Wikidata, enabling cross-domain assessment.",
+              "final_quote": "Table 3’s caption reports PubMedQA '20,000' while Appendix lists '1,000' and Figure 7 shows '1000/1000', creating numerical inconsistency."
+            }
+          },
+          {
+            "diff_type": "new_critique",
+            "summary": "Ambiguity in training/evaluation roles vs. 'only 365' claim",
+            "paperaudit_types": [
+              "EXPERIMENTAL_DESIGN_PROTOCOL",
+              "CLAIM_RESULT_DISTORTION",
+              "CONTEXT_MISALIGNMENT_INCOHERENCE"
+            ],
+            "why_impacts_score": "Weakens efficiency claims and risks train–test leakage concerns",
+            "evidence": {
+              "baseline_quote": "The claimed 365-sample preference data is central, but the constructed dataset is not released or fully tabulated.",
+              "final_quote": "Appendix marks FaithEval and PubMedQA 'Train + Eval' while §4.1.2 emphasizes 'only 365'; roles and counts not reconciled."
+            }
+          },
+          {
+            "diff_type": "dropped_strength",
+            "summary": "Tempered claim about non-counterfactual gains (not universal improvement)",
+            "paperaudit_types": [
+              "CLAIM_RESULT_DISTORTION"
+            ],
+            "why_impacts_score": "Reduces perceived robustness/generalizability of improvements",
+            "evidence": {
+              "baseline_quote": "Non-counterfactual performance gains in Table 3 across ConFiQA subsets and PubMedQA, demonstrating utility beyond counterfactual stress tests.",
+              "final_quote": "Non-counterfactual results show strong gains with a slight drop for Llama-3.1-8B on PubMedQA, indicating dataset-specific variability."
+            }
+          },
+          {
+            "diff_type": "score_rationale_shift",
+            "summary": "Lower clarity subscore tied to new inconsistencies",
+            "paperaudit_types": [
+              "RHETORICAL_PRESENTATION_MANIPULATION",
+              "CONTEXT_MISALIGNMENT_INCOHERENCE"
+            ],
+            "why_impacts_score": "Explicitly justifies a lower clarity score due to added issues",
+            "evidence": {
+              "baseline_quote": "Clarity (10): 7 — key tables/thresholds are missing and availability statements conflict.",
+              "final_quote": "Clarity (10): 6 — key tables are missing and there are caption/axis and dataset-count inconsistencies."
+            }
+          }
+        ]
+      },
+      "generated_at": "2026-01-05T20:36:54"
+    }
+  ]
+}

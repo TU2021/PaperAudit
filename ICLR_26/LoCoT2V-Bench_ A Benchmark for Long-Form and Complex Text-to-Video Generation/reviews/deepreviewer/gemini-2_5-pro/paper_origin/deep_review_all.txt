@@ -1,0 +1,160 @@
+Here are four distinct reviews of the paper "LOCOT2V-BENCH: A BENCHMARK FOR LONG-FORM AND COMPLEX TEXT-TO-VIDEO GENERATION".
+
+***
+
+### **Review 1**
+
+**Summary**
+This paper introduces LoCoT2V-Bench, a new benchmark designed to evaluate long-form video generation (LVG) models under complex text prompts. The authors address the limitations of existing benchmarks, which typically focus on short clips and simple prompts. The core contributions are a new suite of 240 complex prompts derived from real-world videos, and a comprehensive, multi-dimensional evaluation framework. This framework includes novel metrics such as event-level text-video alignment, fine-grained temporal consistency (intra- and inter-event), content clarity, and a high-level "Human Expectation Realization Degree" (HERD) metric. The authors use this benchmark to evaluate nine open-source LVG models, revealing that while they perform well on static quality, they struggle with long-range coherence, fine-grained alignment, and narrative aspects.
+
+**Soundness**
+The methodology is sound and well-reasoned. The prompt construction process, starting from real-world videos and using MLLMs for generation and refinement (Block #13, #15), ensures the prompts are both realistic and challenging. The evaluation framework is exceptionally thorough, logically breaking down video quality into five key dimensions (Block #17). The decision to supplement established metrics with novel ones is well-justified. For instance, moving beyond simple CLIP-scores to MLLM-based overall alignment and a structured event-level alignment (Block #21) is a necessary step for handling complex prompts. The introduction of HERD (Block #26) to quantify abstract qualities like narrative flow and emotional response is an innovative and forward-thinking approach to capture aspects of video quality that are crucial for long-form content but often ignored. The experimental analyses are robust, investigating potential biases and metric entanglements (Sections 4.3, 4.4).
+
+**Presentation**
+The paper is very well-presented. The structure is logical and easy to follow. Figure 1 provides an excellent, comprehensive overview of the entire benchmark, effectively communicating the scope and components of the work. The tables are clear and packed with information (e.g., Table 1's comparison to other benchmarks, Table 2's main results). The use of radar charts (Figure 7) to visualize the multi-dimensional performance of different models is highly effective. The writing is clear and precise. The extensive appendix provides necessary details for reproducibility and deeper understanding.
+
+**Contribution**
+The contribution of this paper is highly significant. It addresses a critical and timely need in the field of generative AI for a rigorous evaluation protocol for long-form video. Existing benchmarks are rapidly becoming inadequate as models advance. LoCoT2V-Bench provides a much-needed, more challenging standard. The novel metrics, particularly event-level alignment, inter-event consistency, and the HERD framework, represent a substantial conceptual advance in video evaluation. The insights derived from evaluating nine contemporary models (Block #27) are valuable to the community, clearly highlighting current limitations and providing concrete directions for future research.
+
+**Strengths**
+- **Comprehensiveness:** The five-dimension evaluation framework with 26 sub-dimensions is arguably one of the most thorough to date.
+- **Novelty of Metrics:** The introduction of Content Clarity and HERD pushes evaluation beyond low-level fidelity towards high-level semantic and narrative coherence, which is crucial for long videos.
+- **Challenging Prompt Suite:** The prompts are demonstrably longer and more complex than those in prior benchmarks (Table 1), ensuring the benchmark will remain relevant.
+- **Actionable Insights:** The analysis clearly pinpoints weaknesses in current LVG models, such as poor performance on inter-event consistency and narrative flow (Table 3, Table 4), offering clear targets for improvement.
+- **Fine-Grained Analysis:** The distinction between intra- and inter-event consistency (Block #23) is a subtle but important contribution for diagnosing temporal coherence issues.
+
+**Weaknesses**
+- The prompt suite size of 240 samples (Block #7) is reasonable but could be larger to ensure even greater diversity and statistical power, especially when divided across 18 themes.
+- While the use of MLLMs for evaluation is a key strength, it also introduces a dependency on the specific models used (e.g., Qwen2.5-VL, DeepSeek-V3.1). The performance of the benchmark itself may change as these underlying evaluation models evolve.
+
+**Questions**
+1. The HERD framework is a fantastic idea. Have the authors considered how this framework could be extended to an interactive evaluation setting, where a human could pose follow-up questions to the MLLM about the video?
+2. The authors use MLLMs to generate descriptions for overall alignment and to answer VQA questions for HERD. How sensitive are these results to the choice of MLLM? For example, did you experiment with using GPT-4o instead of Qwen2.5-VL and observe any significant differences in the rankings?
+3. Regarding the prompt construction (Block #13), are there plans to expand the dataset with more videos and themes in the future to further increase its diversity?
+
+**Rating**
+- Overall (10): 9 — This paper presents a comprehensive, novel, and much-needed benchmark that significantly advances the evaluation of long-form video generation.
+- Novelty (10): 9 — The introduction of complex prompts grounded in real videos and novel metrics like HERD and event-level alignment is highly original.
+- Technical Quality (10): 9 — The methodology is technically deep, well-implemented, and thoroughly validated through extensive experiments and analyses.
+- Clarity (10): 10 — The paper is exceptionally well-written and organized, with excellent figures and tables that clearly communicate the work's contributions (Figure 1, Table 1).
+- Confidence (5): 5 — I am highly confident in my evaluation, as the paper provides extensive details and the methodology is well-justified.
+
+***
+
+### **Review 2**
+
+**Summary**
+The paper proposes LoCoT2V-Bench, a benchmark for evaluating long-form and complex text-to-video generation. It consists of a new prompt suite derived from real-world videos and a multi-dimensional evaluation framework. This framework heavily relies on Large Language Models (LLMs) and Multimodal Large Language Models (MLLMs) to assess dimensions like text-video alignment, content clarity, and a novel "Human Expectation Realization Degree" (HERD). The authors test nine models and conclude that they struggle with fine-grained and high-level aspects of video generation.
+
+**Soundness**
+The soundness of the proposed evaluation methodology is a major concern. The entire framework is a complex cascade of different models judging the output of other models, which raises several critical issues:
+1.  **Lack of Human Validation:** The paper introduces novel metrics like Content Clarity (Block #24) and HERD (Block #26) to measure high-level, human-centric attributes. However, these metrics are scored entirely by MLLMs. There is no study correlating these automated scores with actual human judgments. Calling the metric "Human Expectation Realization Degree" is misleading when no humans are involved in the scoring loop. Without this validation, the metrics lack grounding and may not reflect true perceptual quality.
+2.  **Reproducibility and Bias:** The "LLM-as-a-judge" paradigm is notoriously difficult to reproduce. The results are sensitive to the specific model version, sampling parameters, and exact prompt phrasing. The paper mentions averaging over trials to mitigate randomness (Block #24) but provides insufficient detail on the number of trials or the variance observed. Furthermore, the evaluation models (Qwen, DeepSeek) may have their own inherent biases that could favor certain types of generated content, leading to unfair comparisons.
+3.  **Potential for Circularity:** The prompts are generated by MLLMs from videos (Block #15). Then, other MLLMs are used to evaluate how well a generated video matches that prompt (Block #21). This process risks becoming circular, where the benchmark evaluates how well a generative model can mimic the specific artifacts and interpretation style of another model, rather than true adherence to a human-vetted description.
+
+**Presentation**
+The paper is dense and at times difficult to follow due to the sheer number of proposed metrics (26 sub-dimensions). Figure 1, while intended as an overview, is cluttered and overwhelming. Many crucial implementation details are relegated to the appendix (e.g., Transition Smoothness in B.6, HERD construction in B.8), making it hard to fully grasp the methodology from the main text alone. The naming of the HERD metric is a point of contention, as it overclaims its connection to human perception.
+
+**Contribution**
+The paper correctly identifies an important problem: the lack of good benchmarks for long-form video. The creation of a more complex prompt suite (Table 1) is a useful contribution. However, the primary contribution—the evaluation framework—is built on a questionable foundation. Without robust validation against human evaluators, the benchmark's ability to provide reliable and meaningful scores is unproven. Therefore, the overall contribution is limited by these methodological weaknesses.
+
+**Strengths**
+- Identifies a clear and important research gap in video generation evaluation.
+- The constructed prompt suite is more complex and realistic than in previous benchmarks.
+- The ambition to evaluate high-level narrative and thematic qualities is commendable and points in a necessary direction for the field.
+
+**Weaknesses**
+- **Over-reliance on unvalidated MLLM-as-a-judge metrics.** This is the most significant flaw.
+- The name "Human Expectation Realization Degree" (HERD) is an overstatement, as the metric is fully automated and lacks human-in-the-loop validation.
+- The complexity of the evaluation pipeline, involving numerous different models, raises serious concerns about reproducibility, cost, and brittleness.
+- The paper lacks a human correlation study, which is standard practice when proposing new automated evaluation metrics for generative content.
+
+**Questions**
+1. Can you provide a correlation study between your proposed automated metrics (specifically Content Clarity and HERD) and scores from human evaluators on the same videos and dimensions? This is essential for validating the benchmark.
+2. In Section 3.2.5, you state that HERD questions are posed to an MLLM. What was the variance in the MLLM's answers across multiple runs for the same question-video pair? How do you ensure the stability of these scores?
+3. The prompt generation process (Block #15) includes a manual review step. Could you quantify the extent of this manual intervention? Were the MLLM-generated raw prompts largely usable, or did they require substantial human rewriting? This is important for understanding potential human-introduced biases.
+
+**Rating**
+- Overall (10): 4 — The paper addresses an important problem but proposes a method with significant, unaddressed soundness issues regarding the lack of human validation for its core metrics.
+- Novelty (10): 7 — The ideas for new metrics are novel, but the implementation via unvalidated LLM judges is not a robust new technique.
+- Technical Quality (10): 3 — The technical quality is low due to the lack of a human correlation study, which is a critical component for any new benchmark claiming to measure perceptual or high-level qualities.
+- Clarity (10): 6 — The paper is dense, and the core methodology is fragmented between the main text and appendix, making it difficult to understand fully. The naming of HERD is misleading.
+- Confidence (5): 5 — I am confident in my assessment of the methodological flaws, which are central to the paper's contribution.
+
+***
+
+### **Review 3**
+
+**Summary**
+This paper presents LoCoT2V-Bench, a new benchmark for evaluating long-form text-to-video models using complex prompts. The authors construct a prompt suite from real-world videos and design a five-dimensional evaluation framework that includes both existing metrics and novel ones. The new metrics aim to assess finer-grained alignment (event-level), content coherence (Content Clarity), and abstract attributes like narrative flow (HERD). The benchmark is used to evaluate nine models, highlighting their shortcomings in generating temporally and narratively coherent long videos.
+
+**Soundness**
+The methodology is logically structured, building a comprehensive evaluation by combining and extending previous work. The reuse of established metrics from VBench and EvalCrafter (Block #22, #23) provides a solid baseline. The new metrics are conceptually well-motivated; for example, decomposing temporal consistency into intra- and inter-event components (Block #23) is a smart way to diagnose different failure modes. However, the practical implementation raises questions. The entire pipeline appears extremely complex and computationally intensive, relying on a series of large models (MLLMs for prompting and evaluation, Grounded-SAM-2, etc.). This high barrier to entry could limit its adoption by researchers with limited computational resources. There is also a critical point of ambiguity in the method: Section 3.1 states that evaluation information is "integrated into... the final test prompts," which suggests evaluation criteria are leaked to the model. While Section 3.2.2 later clarifies that a "prompt base" is used to avoid this, the initial description is confusing and concerning.
+
+**Presentation**
+The paper is well-organized, with a clear introduction, methodology, and results structure. Figure 1 serves as a useful, albeit dense, visual abstract. The main results are presented in Table 2, but a reader must consult Tables 3 and 4 and the appendix to get the full picture, which fragments the information. The writing is generally clear, but the sheer density of new terminology and metrics can be challenging to absorb in a single read. The appendix is essential for understanding the work, which is acceptable but not ideal.
+
+**Contribution**
+The paper makes a solid contribution by providing a more challenging and holistic benchmark for a rapidly evolving area of research. The key contribution is not just a new dataset of prompts, but a framework that pushes evaluation towards the semantic and narrative aspects that define high-quality long-form video. The analysis of current models' failures (Block #27, #30) provides clear, actionable feedback for the community, which is a hallmark of a good benchmark paper.
+
+**Strengths**
+- **Ambitious Scope:** The benchmark attempts to measure a wide and relevant range of video attributes, from pixel-level quality to narrative flow.
+- **Actionable Findings:** The results clearly show that current models excel at visuals but fail at storytelling (e.g., low scores in Narrative Flow and Inter-event Consistency in Tables 3 & 4), providing a clear goal for future work.
+- **Grounded Prompts:** Basing prompts on real-world YouTube videos (Block #13) makes the benchmark more representative of practical use cases than purely synthetic prompts.
+- **Thoughtful Analyses:** The paper includes several interesting analyses, such as the impact of prompt complexity (Section 4.5) and the correlation between static quality and other metrics (Section 4.3).
+
+**Weaknesses**
+- **Practicality and Cost:** The complexity and likely high computational cost of running the full benchmark are significant concerns that are not addressed in the paper. This could hinder its widespread adoption.
+- **Methodological Ambiguity:** The description of how evaluation information is integrated into prompts is confusing and potentially contradictory between Section 3.1 and 3.2.2.
+- **Exclusion of SOTA:** While understandable, the evaluation is limited to open-source models. The performance of closed-source models like Sora remains an open question, making the benchmark's snapshot of the field incomplete.
+
+**Questions**
+1. Could you clarify the process described in Section 3.1: "The resulting evaluations would be subsequently integrated into our previously generated raw prompts to obtain the final test prompts." How does this work with the statement in Section 3.2.2 that you use a "prompt base... to avoid interference"? What exactly is the "final test prompt" given to the video generation models?
+2. Can you provide an estimate of the computational cost (e.g., in V100-hours) and runtime required to evaluate a single model on the full 240-prompt benchmark? This information is critical for other researchers to gauge the feasibility of using your benchmark.
+3. In the event-level alignment calculation (Block #21), you use the Hungarian algorithm for matching. How are unmatched events (either extra events in the generated video or missing events from the prompt) penalized in the final score?
+
+**Rating**
+- Overall (10): 7 — A strong and valuable contribution with a comprehensive framework, but its practical utility is hampered by high complexity and some methodological ambiguity.
+- Novelty (10): 8 — The framework introduces several novel and useful evaluation concepts, particularly for high-level coherence.
+- Technical Quality (10): 7 — The technical execution appears solid, but the complexity is a drawback, and the lack of discussion on computational cost is a notable omission.
+- Clarity (10): 7 — Generally clear, but some key methodological points are confusing or buried in the appendix, slightly hindering comprehension.
+- Confidence (5): 4 — I am confident in my assessment, but the ambiguity around the prompt construction process prevents full confidence in that specific aspect of the methodology.
+
+***
+
+### **Review 4**
+
+**Summary**
+This paper introduces LoCoT2V-Bench, a specialized benchmark for the evaluation of long-form video generation from complex text prompts. The work presents two main assets: a challenging suite of 240 prompts derived from real videos, and a hierarchical evaluation framework spanning five dimensions. This framework notably extends prior work by incorporating novel, MLLM-driven metrics for fine-grained event-level alignment, multi-faceted content clarity, and high-level thematic/narrative qualities via a proposed "Human Expectation Realization Degree" (HERD) system. By evaluating nine models, the paper demonstrates that current systems, while competent at visual quality, fall short in maintaining long-range consistency and narrative coherence.
+
+**Soundness**
+The methodology is technically sophisticated and largely sound. The prompt generation pipeline is well-designed to produce complex and realistic inputs (Block #13, #15). The evaluation framework is a thoughtful synthesis of existing metrics and novel contributions. The coarse-to-fine approach for text-video alignment (Block #21), which separates overall alignment from a structured event-level analysis with temporal ordering penalties, is a significant improvement over monolithic CLIP-scores. The introduction of `Inter-event Subject/Background Consistency` (Block #23) is a crucial metric for long videos that is missing from most benchmarks. The HERD concept (Block #26), while relying on an MLLM as a proxy for a human, is a creative and pragmatic attempt to quantify abstract qualities. The polarity-aware scoring mechanism for HERD is a clever detail that improves robustness. The analysis is also sound, for example, by checking for biases from static quality (Section 4.3).
+
+**Presentation**
+The paper is excellently presented and targeted at an expert audience. It is well-structured and the writing is precise. Table 1 provides a concise and powerful positioning of the work relative to existing benchmarks. The main results table (Table 2) and its detailed breakdowns (Tables 3, 4) are effective. The visualizations are a strong point; the radar plots in Figure 7 give a quick, multi-faceted comparison of models, and the violin plots in Figure 9 (Appendix B.11) offer a nuanced view of how prompt complexity impacts performance. The paper does an excellent job of not just presenting a tool, but also using it to generate meaningful insights about the state of the field.
+
+**Contribution**
+This work makes a substantial and timely contribution to the field. As T2V models move towards generating longer, more story-driven content, evaluation methods must also evolve. LoCoT2V-Bench is a significant step in this direction. It provides a more difficult and realistic testbed than what was previously available (e.g., VBench-Long). The conceptual contributions—formalizing event-level alignment, inter-event consistency, and a framework for narrative qualities (HERD)—provide a new vocabulary and toolset for researchers. The empirical findings themselves are a valuable contribution, offering a clear map of the challenges that need to be addressed in LVG research.
+
+**Strengths**
+- **Advanced Metrics:** The paper introduces several novel and well-motivated metrics that are highly relevant for long-form video, such as `Event-level Alignment` and `Inter-event Consistency`.
+- **High-Complexity Prompts:** The benchmark's core strength is its prompt suite, which is demonstrably more challenging than predecessors (Table 1) and better reflects the demands of complex video generation.
+- **In-depth Analysis:** The paper goes beyond simple leaderboards to provide insightful analyses on metric correlations (Table 5) and the impact of different types of prompt complexity (Section 4.5), which deepens the community's understanding.
+- **Methodological Rigor:** Details like normalizing aesthetic scores against a high-quality dataset (Appendix B.5) and using a polarity-aware design for HERD scoring (Block #26) demonstrate a high degree of methodological care.
+
+**Weaknesses**
+- The reliability of the event extraction step (Block #21), which is foundational for both event-level alignment and consistency metrics, is entirely dependent on the performance of DeepSeek-V3.1. The paper would be stronger if it included an analysis of the LLM's extraction accuracy.
+- The `Transition Smoothness` metric (Appendix B.6) combines four features with unspecified weights (`α` values). The rationale for this specific combination over simpler alternatives could be better justified.
+- The claim in Section 4.5 that text-video alignment is "less influenced by prompt complexity" seems to be an understatement. The violin plots in Figure 9 clearly show a negative correlation, especially with semantic and structural complexity.
+
+**Questions**
+1. For the `Event-level Alignment` score in Equation 1, the use of a product means that a very low score in either semantic similarity or field-level similarity can tank the entire score. Was this a deliberate design choice to heavily penalize any failure, or would a weighted average perhaps provide a more robust score?
+2. In the HERD evaluation (Section 3.2.5), "unclear" responses from the MLLM are discarded. What was the frequency of such responses across the different models tested? If a model consistently generates ambiguous or nonsensical content that leads to "unclear" answers, discarding these responses might artificially inflate its score by only evaluating it on the videos where it produced something intelligible.
+3. Table 2 shows that Vlogger has an extremely low Event-level Alignment score (23.68) but a decent Overall Alignment score (65.78). This is surprising given Vlogger's structured, multi-stage pipeline. Do you have any qualitative insights or hypotheses for this large discrepancy? Does it fail to follow the sequence of events correctly?
+
+**Rating**
+- Overall (10): 9 — An outstanding paper that provides a rigorous, comprehensive, and forward-looking benchmark that will be highly valuable to the video generation community.
+- Novelty (10): 9 — The work is highly novel in its introduction of a truly complex prompt suite and its formalization of several new, crucial evaluation dimensions.
+- Technical Quality (10): 9 — The methodology is technically strong, thorough, and executed with great care, though it relies heavily on the capabilities of current LLMs.
+- Clarity (10): 9 — The paper is very clearly written, with excellent supporting figures and tables that make the complex framework and results understandable.
+- Confidence (5): 5 — I am very confident in my evaluation. The paper is of high quality and provides sufficient detail to assess its merits and limitations.

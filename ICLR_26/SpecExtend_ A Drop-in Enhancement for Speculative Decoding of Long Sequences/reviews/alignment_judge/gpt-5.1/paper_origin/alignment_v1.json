@@ -1,0 +1,97 @@
+{
+  "paper": "SpecExtend_ A Drop-in Enhancement for Speculative Decoding of Long Sequences",
+  "judge_model": "gpt-5.1",
+  "review_agent": "deepreviewer",
+  "ai_model": "gpt-5-2025-08-07",
+  "ai_review_file": "deep_review_all.txt",
+  "inputs": {
+    "human_review": "review.txt",
+    "ai_review": "reviews/deepreviewer/gpt-5-2025-08-07/paper_origin/deep_review_all.txt"
+  },
+  "multi_review": {
+    "detected": false,
+    "num_reviews": 1,
+    "summarize_used": false,
+    "summary_note": null
+  },
+  "ai_review_consolidated": null,
+  "alignment": {
+    "motivation_strength_alignment": 0.95,
+    "weakness_error_alignment": 0.75,
+    "overall_alignment": 0.85,
+    "explanation": {
+      "strength": "Both reviews describe essentially the same core story and contributions. They agree that: (1) the paper targets a critical, practical problem of speculative decoding performance degradation at moderate-to-long input lengths; (2) SpecExtend is a training-free, drop-in enhancement that is easy to integrate; (3) the key novelty is Cross-model Retrieval (CMR) / cross-model retrieval using the target model’s attention to guide KV cache eviction in the draft model; (4) efficient attention mechanisms (FlashAttention and Hybrid Tree Attention) are integrated as part of the system to accelerate prefill and verification; (5) the method achieves substantial speedups (up to ~3.86x) while preserving short-input performance; and (6) it scales to very long contexts and is supported by extensive empirical evaluation and ablations. The AI review provides more granular details (datasets, tables, algorithms), but these expand rather than contradict the human reviewer’s identified motivations and strengths. Hence alignment on motivations and strengths is very high.",
+      "weakness": "There is solid, but not perfect, overlap in criticisms. Strongly aligned points include: (1) concern that some components (FlashAttention/HTA) are implementation-level and raise baseline-fairness issues, i.e., baselines may not use the same efficient attention techniques; (2) limited theoretical justification or deeper analysis of why final-layer attention of the last token is the right signal for retrieval; (3) desire for more nuanced analysis of retrieval design (layers, tokens, retrieval frequency) and adaptivity; and (4) questions about how the attention-based mechanism interacts with the rest of the system (e.g., HTA / standard attention, cache management). However, there are notable divergences. The human review emphasizes: missing comparison to specific related work like RAPID; fixed retrieval frequency and lack of adaptivity; and concerns about scalability beyond 16K tokens and interaction with FlashAttention that are not foregrounded as such in the AI review. Conversely, the AI review raises several weaknesses not mentioned by the human: absence of end-task quality metrics (ROUGE, AIME accuracy); small sample size per length; robustness under domain shift/adversarial contexts; and more detailed baseline fairness concerns (e.g., missing AR+FlashAttention). Because of these additional, partially orthogonal concerns, weakness alignment is moderate-to-high rather than near-perfect.",
+      "overall": "Substantively, the two reviews share the same high-level judgment: the work is a practical, well-engineered systems contribution that addresses an important performance issue in speculative decoding, with a novel attention-guided cache-retrieval mechanism and strong empirical results, but with gaps in theoretical grounding and certain aspects of the evaluation/baselines. They both frame Cross-model Retrieval as the main innovation, treat efficient attention as important but secondary, and recognize consistent speedups with preserved short-input performance. The differences are mostly in emphasis and granularity: the AI review goes deeper into experimental design, missing output-quality metrics, robustness, and detailed implementation questions, whereas the human review focuses more on specific missing baselines (e.g., RAPID), long-context scalability, and clearer dissection of contributions versus implementation details. These differences add new angles rather than contradicting each other, so overall alignment in substance and focus is high, though not perfect because the sets of weaknesses do not fully coincide."
+    }
+  },
+  "generated_at": "2025-12-27T19:29:27",
+  "runs": [
+    {
+      "config": {
+        "judge_model": "gpt-5.1",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "baseline_review.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180
+      },
+      "config_key": "3b28d70d5731760031a4514ebc98b0afd78edf6d",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/baseline_review.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "motivation_strength_alignment": 0.75,
+        "weakness_error_alignment": 0.5,
+        "overall_alignment": 0.6,
+        "explanation": {
+          "strength": "Both reviews agree on the core motivations: speculative decoding degrades at moderate/long input lengths, and SpecExtend’s main contributions are its training-free design, integration of efficient attention, and novel Cross-model Retrieval. Review B provides far more granular evidence, but the central strengths align well.",
+          "weakness": "There is partial overlap: both mention limited justification for using last-layer attention, missing or incomplete baselines, and methodological clarity issues. However, Review B raises many additional concerns—output quality metrics, hardware generality, theoretical depth, reproducibility—that Review A does not mention, reducing alignment.",
+          "overall": "Substantively, both reviews share the same big-picture judgment: strong practical contribution with methodological and evaluation gaps. But Review B covers a much larger and broader set of weaknesses, leading to only moderate overall alignment."
+        }
+      },
+      "generated_at": "2025-12-27T19:51:20"
+    },
+    {
+      "config": {
+        "judge_model": "gpt-5.1",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "final_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180
+      },
+      "config_key": "4569a6a97a67c8e2b360606eb74d6eb53b892d06",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/final_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "motivation_strength_alignment": 0.86,
+        "weakness_error_alignment": 0.57,
+        "overall_alignment": 0.73,
+        "explanation": {
+          "strength": "Both reviews agree that the paper targets early/moderate-length performance degradation in speculative decoding and propose SpecExtend as a training-free, drop-in enhancement combining efficient attention (FlashAttention, Hybrid Tree Attention) with a novel Cross-model Retrieval mechanism. They both highlight strong empirical speedups on long summarization and reasoning tasks and scalability to very long contexts, with Review B adding more detail on ablations and overheads. Review A is somewhat more skeptical about treating efficient attention as a core contribution, whereas Review B frames its integration as a clear strength, but this does not change the shared view of the main motivations and contributions.",
+          "weakness": "There is overlap in criticizing incomplete justification and specification of the Cross-model Retrieval strategy (especially reliance on final-layer attention and fixed retrieval frequency) and in raising concerns about baseline coverage and fairness. However, Review B introduces many additional major weaknesses—lack of output-quality metrics, broader reproducibility and dataset-preprocessing gaps, internal inconsistencies in formulas/tables, hardware and model-scale generality, and limited theoretical depth—that Review A does not mention. Review A uniquely questions the fairness of using efficient attention in the proposed method versus baselines and asks for more exploration of longer sequence lengths, leading to only partial alignment on weaknesses.",
+          "overall": "Substantively, both reviews see the same core problem, method, and main source of novelty (Cross-model Retrieval plus efficient attention in a training-free, drop-in framework) and share a broadly positive but qualified judgment. The AI review is much more exhaustive and surfaces several additional methodological and reporting issues, and it is more positive about efficient-attention integration while the human reviewer treats it as mostly implementation detail. As a result, the overall focus and judgment are largely consistent, but not near-perfectly aligned."
+        }
+      },
+      "generated_at": "2025-12-27T19:54:07"
+    }
+  ]
+}

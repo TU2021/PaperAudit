@@ -1,0 +1,104 @@
+{
+  "paper": "TowerVision _ Understanding and Improving Multilinguality in Vision-Language Models",
+  "runs": [
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "deepreviewer",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "deep_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180
+      },
+      "config_key": "24b66d75b94c155df325f4e5f2603b40312e4469",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/deepreviewer/gpt-5-2025-08-07/paper_origin/deep_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "motivation_strength_alignment": 0.9,
+        "weakness_error_alignment": 0.7,
+        "overall_alignment": 0.8,
+        "explanation": {
+          "strength": "Both reviews perfectly align on the core contributions: the systematic empirical study on multilingual VLM design, the new VisionBlocks dataset, and strong performance on culturally-grounded tasks. The emphasis on the value of the empirical insights and the new dataset is identical in both reviews.",
+          "weakness": "Both reviews identify limited novelty and poor OCR performance as key weaknesses, and both raise concerns about evaluation rigor. However, Review B provides more specific critiques (e.g., single LLM judge, specific metrics) and they diverge on whether a counterintuitive finding about training stages is a weakness (Review A) or a valid result (Review B).",
+          "overall": "The reviews show high overall alignment, agreeing on the paper's primary contribution as a valuable empirical study rather than an architectural one, and highlighting the same major strengths and weaknesses. Review B is more technically detailed in its critiques, but its overall judgment and focus are highly consistent with Review A."
+        }
+      },
+      "generated_at": "2025-12-27T20:03:54"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "baseline_review.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180
+      },
+      "config_key": "a14d937ebf873b90a820c8cb44da768956431bd4",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/baseline_review.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "motivation_strength_alignment": 0.9,
+        "weakness_error_alignment": 0.5,
+        "overall_alignment": 0.65,
+        "explanation": {
+          "strength": "Both reviews identify the same core strengths: the new VisionBlocks dataset, the valuable empirical study on multilingual design, strong performance on culturally-grounded tasks, and the extension to video. Review B provides more granular evidence but the key points and priorities are nearly identical to Review A.",
+          "weakness": "Both reviews agree on the model's limited OCR performance and mixed results on video tasks. However, Review B introduces several major, distinct weaknesses absent from Review A, such as the dependence on proprietary models for data/evaluation and incomplete reporting of training details, while Review A emphasizes limited architectural novelty, a point less central to Review B's critique.",
+          "overall": "The reviews show very high alignment on the paper's strengths and contributions, but only moderate alignment on its weaknesses, where Review B offers a more detailed and methodologically-focused critique. While their overall positive-but-flawed judgment is similar, their focus diverges significantly in the critical assessment, with Review B highlighting major concerns about reproducibility and transparency that Review A misses."
+        }
+      },
+      "generated_at": "2025-12-27T20:07:53"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "final_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180
+      },
+      "config_key": "565dcfbed8e348ba365acb8ebe44bf867f3cd0c2",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/final_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "motivation_strength_alignment": 0.9,
+        "weakness_error_alignment": 0.5,
+        "overall_alignment": 0.6,
+        "explanation": {
+          "strength": "Both reviews identify the same core strengths: the new VisionBlocks dataset, strong performance on cultural and translation tasks, valuable empirical insights from the multi-stage training, and the extension to video. Review B provides more granular detail, but the key contributions highlighted are identical.",
+          "weakness": "Both reviews agree on the model's limited OCR performance and mixed results on video tasks. However, Review A emphasizes the lack of architectural novelty as a primary weakness, which Review B omits, while Review B introduces several major critiques absent from A, such as reliance on proprietary models and incomplete reporting of training details.",
+          "overall": "The reviews show very high alignment on the paper's strengths but only moderate alignment on its weaknesses, leading to a partial match in overall judgment. While both identify key performance limitations (OCR, video), they focus on different conceptual flaws (A: novelty; B: reproducibility and clarity) and even interpret one finding about training data in opposite ways."
+        }
+      },
+      "generated_at": "2025-12-27T20:11:30"
+    }
+  ]
+}

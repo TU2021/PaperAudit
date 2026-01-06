@@ -1,0 +1,129 @@
+{
+  "paper": "Reinforcement Learning Fine-Tuning Enhances Activation Intensity and Diversity in the Internal Circuitry of LLMs",
+  "runs": [
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "deepreviewer",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "deep_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "55f39c3e353412551a5ae68e81fc4acc489b4edd",
+      "inputs": {
+        "human_review": "review_origin.txt",
+        "ai_review": "reviews/deepreviewer/gpt-5-2025-08-07/paper_origin/deep_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 1.0,
+        "weakness_coverage_recall": 0.6,
+        "ai_extra_major_points_rate": 0.4,
+        "symmetric_coverage_similarity": 0.56,
+        "note": "The AI review provides excellent coverage of the paper's strengths. However, it misses the human reviewers' high-level critique about the work being descriptive rather than explanatory, while introducing numerous specific methodological weaknesses not mentioned by the humans, such as attribution target mismatch and lack of statistical validation."
+      },
+      "generated_at": "2025-12-27T23:45:58"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "baseline_review.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "b3137abdd5dd456ecfb029f7bed4151251d086e2",
+      "inputs": {
+        "human_review": "review_origin.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/baseline_review.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 1.0,
+        "weakness_coverage_recall": 0.4,
+        "ai_extra_major_points_rate": 0.57,
+        "symmetric_coverage_similarity": 0.47,
+        "note": "The AI review perfectly covers all strengths but misses key conceptual weaknesses from the human review, such as the failure to explain *why* RL causes the observed changes. Conversely, the AI identifies numerous extra technical weaknesses regarding statistical rigor, experimental controls, and potential confounds not mentioned by the human."
+      },
+      "generated_at": "2025-12-27T23:50:46"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "final_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "0a71ca7d783136ba33fb6b5ec9aad08ece2f0c09",
+      "inputs": {
+        "human_review": "review_origin.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/final_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 1.0,
+        "weakness_coverage_recall": 0.83,
+        "ai_extra_major_points_rate": 0.38,
+        "symmetric_coverage_similarity": 0.59,
+        "note": "The AI review demonstrates excellent coverage of human-identified strengths and major weaknesses, particularly regarding causal validation and generalization (domain/scale). However, it misses the specific human critique that the paper is 'descriptive rather than explanatory' regarding RL theory (e.g., exploration mechanisms). Conversely, the AI provides a much more granular critique of the methodology (self-entropy bias, token alignment, filtering issues) which the human reviewers did not address."
+      },
+      "generated_at": "2025-12-28T00:01:11"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "deepreviewer",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "deep_review_merge.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "752f27bc09e656c7d041a880d0c174422eea6ca4",
+      "inputs": {
+        "human_review": "review_origin.txt",
+        "ai_review": "reviews/deepreviewer/gpt-5-2025-08-07/paper_origin/deep_review_merge.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 1.0,
+        "weakness_coverage_recall": 0.6,
+        "ai_extra_major_points_rate": 0.6,
+        "symmetric_coverage_similarity": 0.47,
+        "note": "The AI review perfectly covers all strengths but misses two human-raised weaknesses: the limitation to 7B models and the suggestion to test RLVR. Conversely, the AI raises numerous additional, highly specific methodological concerns not found in the human reviews, such as attribution target confounds and lack of statistical rigor."
+      },
+      "generated_at": "2025-12-28T00:16:52"
+    }
+  ]
+}

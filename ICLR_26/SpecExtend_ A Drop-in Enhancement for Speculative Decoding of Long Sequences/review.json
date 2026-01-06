@@ -1,0 +1,26 @@
+{
+  "paper_title": "SpecExtend: A Drop-in Enhancement for Speculative Decoding of Long Sequences",
+  "file_name": "2505.20776v3",
+  "reviewers": [
+    {
+      "reviewer_id": "3XZQ",
+      "score": 4,
+      "confidence": 4
+    },
+    {
+      "reviewer_id": "YMvQ",
+      "score": 4,
+      "confidence": 3
+    },
+    {
+      "reviewer_id": "PTZu",
+      "score": 2,
+      "confidence": 4
+    },
+    {
+      "reviewer_id": "pUT5",
+      "score": 4,
+      "confidence": 4
+    }
+  ]
+}

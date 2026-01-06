@@ -1,0 +1,35 @@
+Summary
+The paper introduces PredNext, a plug-and-play auxiliary module for self-supervised training of deep spiking neural networks (SNNs) on video. PredNext adds explicit temporal modeling via two cosine-based, cross-view predictive objectives: Step Prediction (predicting next-timestep features) and Clip Prediction (predicting the representation of a subsequent clip from the same video). The module is integrated with multiple SSL frameworks adapted to SNNs (SimCLR, MoCo, BYOL, SimSiam, Barlow Twins). Experiments on UCF101, HMDB51, and MiniKinetics show consistent gains in downstream action recognition (fine-tuning) and video retrieval, along with improved temporal feature consistency. The paper further argues that enforcing direct temporal consistency can harm representation quality, whereas predictive modeling of future features improves temporal coherence without sacrificing semantics. Comprehensive ablations analyze predictor design, step length, head size, cross-view versus same-view prediction, and clip length/stride. The work also establishes a baseline suite for deep SNN SSL on standard video datasets.
+
+Strengths
+- Clear motivation and principled design:
+  - Predictive coding intuition is adapted to SNNs, leveraging explicit temporal prediction to exploit inherent temporal dynamics.
+  - Cross-view prediction is well-justified to avoid learning view-specific artifacts, supported by ablations showing same-view prediction can collapse or underperform.
+- Simple, general, and pluggable objectives:
+  - Cosine-similarity losses for step and clip prediction are symmetric and easily combined with standard SSL losses.
+  - Minimal architectural changes, method-agnostic integration across SimCLR/MoCo/BYOL/SimSiam/Barlow Twins.
+- Consistent empirical gains:
+  - Robust improvements across multiple datasets and SSL frameworks in fine-tuning and retrieval, with supporting KNN trends.
+  - Temporal consistency analyses (e.g., curves and UMAP visualizations) substantiate the claim that predictive objectives improve temporal coherence compared to forced consistency.
+- Thorough ablations:
+  - Detailed studies of predictor components, step length (m), head hidden dimension, cross-view vs same-view targets, and temporal lengths/stride validate design choices and provide practical guidance.
+- Community value:
+  - Establishes systematic deep SNN SSL baselines on mainstream video datasets, filling a gap where SNN-focused unsupervised video learning is underexplored.
+- Presentation and clarity:
+  - Generally well organized with clear figures illustrating architecture and consistency behavior; appendices provide many implementation details, reflecting a strong intent toward reproducibility.
+
+Weaknesses
+- Reproducibility and clarity issues:
+  - Internal inconsistencies in reported settings, notably the loss weighting for the predictive objective (Algorithm 1 uses a 0.25 factor while Section 2.2 uses 1/2 symmetries) and the prediction head hidden dimension (128 in the main text vs 512 in the appendix). These discrepancies make it unclear which configuration underlies the main results.
+  - At least one caption/notation error (e.g., Table 2 caption), and some inconsistent notation further complicate replication.
+- Framing of results and initialization:
+  - The claim of performance comparable to supervised ImageNet-pretrained weights under “unsupervised training solely on UCF101” appears to rely on ImageNet-initialized models, conflating supervised initialization with the proposed unsupervised training. The framing risks being misleading without a clear separation of from-scratch vs ImageNet-initialized results.
+- Limited scope in architecture and datasets:
+  - Only a single SNN backbone (SEW-ResNet18) is evaluated, leaving generality across SNN architectures untested.
+  - No comparison to ANN baselines on the same datasets, and no neuromorphic-relevant metrics (e.g., energy/latency), which would contextualize the practical advantages of SNNs.
+  - No evaluation on event-based datasets, which are a natural fit for SNNs; the scope is confined to RGB video.
+- Missing sensitivity and statistical reporting:
+  - No reported sensitivity analysis for the balance coefficient α between SSL and predictive losses; broader sweeps across α and step-length m would clarify robustness.
+  - Lack of variance estimates or statistical significance across multiple runs, and some effect sizes are modest, making it difficult to assess the reliability of improvements.
+- Temporal sampling ambiguity:
+  - The construction of the “next sampled clip” is not fully specified with respect to non-overlap guarantees. Potential overlap could enable shortcut solutions and weaken the intended difficulty of clip prediction.

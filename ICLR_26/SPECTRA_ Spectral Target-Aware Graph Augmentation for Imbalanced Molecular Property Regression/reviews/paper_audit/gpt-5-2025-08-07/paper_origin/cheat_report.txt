@@ -1,0 +1,90 @@
+Academic integrity and internal consistency risk report
+
+Scope: I reviewed the provided manuscript text and embedded figures/tables. Below I list high‑impact issues that reflect clear internal inconsistencies, numerical mismatches, or missing methodological details that materially affect correctness, reproducibility, or trustworthiness. Each item includes explicit anchors to the manuscript.
+
+1) Overloaded and ambiguous use of the symbol α (alpha)
+- Evidence:
+  - FGW objective uses α to balance structural vs feature similarity: “(1 − α) L_GW + α⟨M, T⟩” (Section 3.2, Block #19).
+  - Spectral interpolation also uses α as a mixing coefficient: “Λ_α = (1 − α)Λ_A + αΛ_B … U_α = qr(…)” (Section 3.3, Block #20).
+  - The label is interpolated with the same α: “y_α = (1 − α)y_A + αy_B” (Section 3.4, Block #21).
+  - Hyperparameter search lists “Alpha: {0.1, …, 0.5}” (Appendix A.3, Block #51) without specifying whether this refers to FGW α, spectral mixing α, or both.
+- Why it matters: Using the same symbol for different roles without disambiguation undermines reproducibility (different α values can materially change alignments and synthesized graphs and labels). The paper does not state which α was tuned and which was fixed.
+
+2) Padding in FGW alignment lacks definition of node distributions over padded nodes
+- Evidence:
+  - “we solve a GW/FGW… on zero-padded adjacency matrices A~, B~ ∈ R^{n×n} (padding each graph to the larger node count)” (Section 3.2, Block #19).
+  - “We define probability distributions p, q ∈ Δ^n… we use uniform weights so that p_i = 1/|V_A| and q_j = 1/|V_B|.” (Section 3.2, Block #19).
+- Missing detail: For padded nodes (introduced to reach size n), the manuscript does not specify their probabilities. If p, q are length n but assign 1/|V_A| (or 1/|V_B|) to each entry, they would not sum to 1, and if padded entries are set to 0, that should be stated explicitly. This affects the feasibility of the transport plan and the validity of the coupling T.
+
+3) Inconsistency between the described alignment procedure and the pipeline figure
+- Evidence:
+  - Text: “The resulting optimal coupling T* provides a soft node-to-node correspondence; we convert it into a hard one-to-one mapping using the Hungarian assignment on −T* and reorder B accordingly.” (Section 3.2, Block #19).
+  - Figure 2 (pipeline) explicitly shows “Mapped Laplacian Matrix L_B → T L_B T^⊤” and “Mapped Node Matrix X_B → T X_B” (Block #17).
+- Why it matters: The figure implies soft alignment via multiplying by T (no discretization), while the text states conversion to a hard assignment followed by reordering. These lead to different outcomes for eigenbases and features, and the paper does not clarify which is used in experiments.
+
+4) Ill-defined reconstruction of discrete edge attributes from continuous spectral interpolants
+- Evidence:
+  - Three edge channels (bond type, stereo, conjugation) are treated as separate weighted adjacencies and interpolated spectrally (Section 3.1–3.3, Blocks #18–#20).
+  - Reconstruction: “We… assemble multi-attribute edges by scanning (u, v) with any positive channel weight and stacking per-channel features.” (Section 3.4, Block #21).
+  - Conversion back to molecules claims reconstruction of bond type/stereochemistry/conjugation and 100% validity (Section 3.6, Block #24; RQ1 results Table 1, Block #28).
+- Missing detail / inconsistency: The method does not specify how real-valued channel weights are converted (thresholded/quantized) into discrete bond attributes (e.g., single/double/aromatic; stereo flags; conjugation). Without a clear discretization rule, “stacking per-channel features” is undefined for chemistry (one bond must have one consistent attribute set). This gap directly impacts the claimed 100% validity of generated molecules (Table 1).
+
+5) Figure/Table numbering and cross-reference conflicts hinder verifiability
+- Evidence:
+  - Section 4.1 refers to t-SNE as “Figure 3” (Block #27), but the t-SNE plots later appear as separate panels (Blocks #30–#32) and are labeled in captions (a), (b), (c). Also “Table 3: t-SNE visualization…” is stated in Block #28, mislabeling a figure as a table.
+  - Section 4.1 later states “Figure 3 shows the joint distributions…” (Block #33), reusing “Figure 3” for different content (joint distributions rather than t-SNE).
+- Why it matters: Conflicting numbering breaks traceability between text and visual evidence; readers cannot reliably map claims to the correct visualizations.
+
+6) Claim about augmented molecules being “more cyclic/larger” is not supported for Lipo by Table 2
+- Evidence:
+  - Claim: “Augmented molecules are generally larger and more cyclic, with increased mean atom and ring counts in FreeSolv and ESOL and comparable ranges in Lipo.” (Section 4.1, Block #28).
+  - Table 2 numbers (Block #28):
+    - Lipo atoms mean: 27.04 (Original) vs 22.80 (Augmented) — decreased.
+    - Lipo rings mean: 3.49 (Original) vs 3.25 (Augmented) — decreased.
+- Why it matters: For Lipo, the means decrease for both size and rings, contradicting the “more cyclic”/“larger” characterization. The text narrows the claim to “comparable ranges” for Lipo, but still uses a general statement that does not hold across datasets. The conclusion about expanded structural complexity should be nuanced by dataset.
+
+7) Ambiguity on which adjacency is used for FGW when multiple edge channels exist
+- Evidence:
+  - Multiple per-channel weighted adjacencies W^(f) are defined (Section 3.1, Block #18).
+  - FGW alignment is stated to be solved on “their zero-padded adjacency matrices A~, B~” (singular) (Section 3.2, Block #19).
+- Missing detail: It is not specified whether FGW uses a particular channel, a sum/concat of channels, or a composite cost across channels. The choice affects node correspondence and subsequent spectral interpolation.
+
+8) Undefined spectral basis dimensionality (k) in Procrustes alignment
+- Evidence:
+  - “align eigenvector signs and bases with an orthogonal Procrustes map R* = arg min_{R ∈ O(k)} ||U_A^⊤ U_B − R||_F” (Section 3.3, Block #20).
+- Missing detail: k (the number of eigenvectors kept) is not defined anywhere. Whether full bases or truncated k leading modes are used materially affects reconstruction and efficiency; k is distinct from the “Chebyshev filter order (k)” in Appendix A.3 (Block #51), which risks further confusion.
+
+9) Experimental setup lacks key details necessary to interpret fairness and reproducibility
+- Evidence:
+  - Appendix A.3 (Block #51) provides hardware and hyperparameter ranges but omits:
+    - Data splitting protocol (random split vs scaffold split; proportion; seed control).
+    - Number of runs/seeds for Table 4 aggregation (only “with variance” is reported; “multiple runs” are mentioned in Appendix A.2, Block #48, but not quantified).
+    - Whether augmentation time is included in the runtime for Pareto analyses (Section 4.4, Blocks #35–#38; Figure 5).
+    - The augmentation rate perc (Section 3.5, Block #23) is not instantiated; no value(s) used are reported.
+    - KDE bandwidth used for rarity weights (Section 3.5, Block #23). Figure 1 notes Scott’s rule for descriptive histograms (Block #4) but there is no explicit evidence this bandwidth was used for augmentation budgeting.
+- Why it matters: These omissions materially affect both performance and efficiency comparisons and hinder reproducibility.
+
+10) Model naming inconsistency (baseline)
+- Evidence:
+  - Baselines listed include “ChebNet (Defferrard et al., 2016)” (Section 4.2, Block #29).
+  - Table 4 row uses “Chemb” (Block #33).
+- Why it matters: Naming inconsistency makes it unclear which baseline variant was actually used for the reported results.
+
+11) Incomplete method description in Section 3.7
+- Evidence:
+  - Update equation: H^{(ℓ+1)} = Drop(SiLU(BN(ChebConv_K(H^{(ℓ)}, A, w_e)))) (Section 3.7, Block #25).
+  - Follow-up sentence ends abruptly: “Multi-attribute edge features e_uv ∈ R^3 are projected.” (Section 3.7, Block #25).
+- Missing detail: The precise mechanism of injecting the 3‑channel edge attributes into ChebConv is not specified (projection layer definition, normalization, how A is combined with multi-channel W^(f)). This affects reproducibility and clarity of the edge-aware claim.
+
+12) Potential mismatch between Table/figure placement and section labels
+- Evidence:
+  - The runtime Pareto plot appears under “References” (Block #41), while referenced in Section 4.4 (Blocks #35–#38).
+  - Histograms of target distributions (Figure 1) are described in Introduction (Block #4) but images appear under “Related Work” (Blocks #6–#8).
+- Why it matters: Misplacement complicates verification and raises concern about manuscript assembly consistency.
+
+Summary assessment
+- The manuscript contains several substantive internal inconsistencies and missing methodological details that affect interpretability and reproducibility, particularly around the alignment procedure (soft vs hard mapping), discretization of continuous spectral edge features to chemically valid bond attributes, overloaded notation for α, and incomplete experimental protocol (splits, augmentation rate, runtime accounting).
+- Numerical claims are mostly consistent, but the generalized claim that augmented molecules are “more cyclic/larger” is not supported for the Lipo dataset by Table 2.
+- Figure/table cross-referencing issues (duplicate “Figure 3”; “Table 3” for a figure) and baseline naming inconsistency (ChebNet/Chemb) further reduce clarity.
+
+If addressed with precise clarifications and corrections, the core methodology could be more convincingly evaluated; as it stands, the above issues materially impede verification of the main claims.

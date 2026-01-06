@@ -1,0 +1,26 @@
+{
+  "paper_title": "Do LLMs Signal When They’re Right? Evidence from Neuron Agreement",
+  "file_name": "2510.26277v1",
+  "reviewers": [
+    {
+      "reviewer_id": "gDoM",
+      "score": 6,
+      "confidence": 4
+    },
+    {
+      "reviewer_id": "jKnt",
+      "score": 6,
+      "confidence": 4
+    },
+    {
+      "reviewer_id": "nzaY",
+      "score": 4,
+      "confidence": 4
+    },
+    {
+      "reviewer_id": "NEts",
+      "score": 2,
+      "confidence": 4
+    }
+  ]
+}

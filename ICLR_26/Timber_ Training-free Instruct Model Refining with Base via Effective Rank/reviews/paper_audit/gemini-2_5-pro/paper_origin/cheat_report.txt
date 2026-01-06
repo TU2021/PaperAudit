@@ -1,0 +1,50 @@
+Based on a critical review of the manuscript, several high-impact internal inconsistencies and integrity risks have been identified. These issues materially affect the scientific validity and trustworthiness of the work.
+
+### 1. Widespread Use of Future-Dated and Potentially Fabricated References
+
+A significant number of citations refer to papers with a publication year of 2025. Many of these citations include arXiv identifiers that correspond to future dates (e.g., `2505.XXXXX` for May 2025, `2508.XXXXX` for August 2025), which is impossible.
+
+**Evidence:**
+*   **Section 3, Introduction:** The paper cites "Qwen3 (Yang et al., 2025)" and "Deepseek R1 (Guo et al., 2025)".
+*   **Section 5, Preliminaries:** The paper cites "Shadow-FT shows that paired Base and Instruct are highly similar in weights (Wu et al., 2025)". The first author of the current manuscript shares the same last name, suggesting a self-citation to a future-dated paper.
+*   **Section 6, References:** At least 15 distinct references are listed with the year 2025. Examples include:
+    *   `Chen et al., 2025. ... arXiv preprint arXiv:2508.10751`
+    *   `Guo et al., 2025. ... arXiv preprint arXiv:2501.12948`
+    *   `Wu et al., 2025. ... arXiv preprint arXiv:2505.12716`
+    *   `Yang et al., 2025. ... arXiv preprint arXiv:2505.09388`
+    *   `Yue et al., 2025. ... arXiv preprint arXiv:2504.13837`
+
+This pattern of referencing non-existent or future-dated work represents a critical integrity concern, as it appears to fabricate a body of supporting literature that does not yet exist.
+
+### 2. Contradiction Between Textual Claims and Plotted Results in Figure 5
+
+The manuscript's central claim is that Timber enhances exploration capability, leading to improved Pass@k scores. This claim is contradicted by the data presented in one of the key figures.
+
+**Evidence:**
+*   **Section 4.2, Main Results (Block #23):** The text states, "The results, shown in Figure 5, indicate that both Timber and Timber-L achieve significantly higher Pass@k scores than the vanilla Instruct model."
+*   **Figure 5, Right Panel (GPQA-Diamond, Block #27):** This plot shows the performance of the "Timber" method (red line) is **lower** than the baseline "Instruct" model (green line) for smaller values of `k` (e.g., k=75, 100). For larger `k`, the improvement is marginal at best. This directly contradicts the strong claim made in the text.
+*   **Section 4.2, Main Results (Block #22):** The text claims, "The attenuation strategy of Timber is generally superior to directly dropping in Timber-L." However, in the GPQA-Diamond plot (Block #27), the "Timber-L" method (blue line) is vastly superior to the "Timber" method (red line) across all values of `k`.
+
+This inconsistency between the textual claims and the visual evidence in Figure 5 undermines the paper's core conclusion regarding the effectiveness of the proposed "Timber" method.
+
+### 3. Critical Claims Supported by Missing Figures
+
+The manuscript makes specific, quantitative claims in the analysis section that are explicitly tied to figures that are not included in the document.
+
+**Evidence:**
+*   **Section 5.2, Discuss with Model Merge (Block #31):** This section compares Timber to a simple model merging strategy. The text references "Figure 6" to support its claims about the fragility of linear scaling and the robustness of Timber. This figure is not present.
+*   **Section 5.3, Modules to Apply Timber (Block #33):** This section presents an ablation study on applying Timber to different model components (Attention vs. FFN). The text makes specific claims about which module benefits most for certain tasks, citing "Figure 7". This figure is also not present.
+
+Without these figures, the conclusions drawn in Sections 5.2 and 5.3 are entirely unsubstantiated by the provided manuscript.
+
+### 4. Inconsistent and Erroneous Data Presentation in Figure 1
+
+The data for Figure 1, which provides the foundational evidence for the paper's motivation, is presented in multiple conflicting and erroneous formats.
+
+**Evidence:**
+*   **Section 2, Preliminaries (Block #6):** The three tables intended to represent the data for Figure 1 contain severe formatting errors, with numerical values concatenated together (e.g., `q_proj: 26292630` for Llama-3.1-8B, Layer 10).
+*   **Section 2, Preliminaries (Blocks #8, #9, #10):** The bar charts for Figure 1 show different values (e.g., `q_proj` for Llama-3.1-8B, Layer 10 has values of `2629` and `2630`). While the bar charts appear to support the paper's narrative, the presence of garbled, inconsistent data in the accompanying tables raises serious concerns about the authors' diligence and data handling practices.
+
+### Summary
+
+The manuscript contains multiple, severe issues that compromise its integrity and scientific validity. The use of future-dated and likely fabricated references is a critical breach of academic standards. Furthermore, a central claim of the paper is directly contradicted by its own data in Figure 5, and other key claims are left unsubstantiated due to missing figures. These issues, combined with careless data presentation, prevent a credible assessment of the proposed method.

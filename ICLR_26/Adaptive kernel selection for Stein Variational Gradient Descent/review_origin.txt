@@ -1,0 +1,398 @@
+OpenReview.net
+Search OpenReview...
+Login
+back arrowGo to ICLR 2026 Conference homepage
+Adaptive kernel selection for Stein Variational Gradient Descent
+Download PDF
+ICLR 2026 Conference Submission24939 Authors
+20 Sept 2025 (modified: 24 Dec 2025)
+ICLR 2026 Conference Submission
+Everyone
+Revisions
+BibTeX
+CC BY 4.0
+Keywords: adaptive kernel selection, Stein Variational Gradient Descent, kernelized Stein discrepancy
+Abstract:
+A central challenge in Bayesian inference is efficiently approximating posterior distributions. Stein Variational Gradient Descent (SVGD) is a popular variational inference method which transports a set of particles to approximate a target distribution. The SVGD dynamics are governed by a reproducing kernel Hilbert space (RKHS) and are highly sensitive to the choice of the kernel function, which directly influences both convergence and approximation quality. The commonly used median heuristic offers a simple approach for setting kernel bandwidths but lacks flexibility and often performs poorly, particularly in high-dimensional settings. In this work, we propose an alternative strategy for adaptively choosing kernel parameters over an abstract family of kernels. Recent convergence analyses based on the kernelized Stein discrepancy (KSD) suggest that optimizing the kernel parameters by maximizing the KSD can improve performance. Building on this insight, we introduce Adaptive SVGD (Ad-SVGD), a method that alternates between updating the particles via SVGD and adaptively tuning kernel bandwidths through gradient ascent on the KSD. We provide a simplified theoretical analysis that extends existing results on minimizing the KSD for fixed kernels to our adaptive setting, showing convergence properties for the maximal KSD over our kernel class. Our empirical results further support this intuition: Ad-SVGD consistently outperforms standard heuristics in a variety of tasks.
+
+Supplementary Material:  zip
+Primary Area: probabilistic methods (Bayesian methods, variational inference, sampling, UQ, etc.)
+Submission Number: 24939
+Filter by reply type...
+Filter by author...
+Search keywords...
+
+Sort: Newest First
+13 / 13 replies shown
+General Response
+Official Commentby Authors21 Nov 2025, 18:51Everyone
+Comment:
+We thank all four reviewers for their very detailed and constructive feedback and suggestions, which will help to significantly strengthen the presentation of the paper. We have prepared individual responses to all mentioned weaknesses and questions. Moreover, we first address two major points that were raised by several reviewers.
+
+Additional numerical experiment:
+We have extended our initial set of synthetic experiments with an application of our adaptive SVGD to Bayesian logistic regression on the Covertype dataset, a benchmark already used in several other papers (e.g. Liu & Wang (2016) and Liu et al. (2022)). This additional experiment confirms that the advantages over the median heuristic seen in our initial experiments can also be observed for real-data applications, namely that Ad-SVGD provides a better approximation of the posterior by avoiding variance collapse (for a detailed presentation of the results, see Section 5.4 of the revised manuscript).
+
+Refined theoretical analysis:
+In Appendix B of the revised manuscript, we extend our original theoretical result, which established convergence of the maximal KSD without providing a convergence rate. We now present full iteration complexity bounds for the KL divergence under a Stein log-Sobolev inequality. This inequality, introduced in Duncan et al. (2023), provides a functional relationship between the KL divergence and the KSD. Crucially, in our adaptive kernel selection setting, we can relax this condition: Instead of requiring the inequality to hold for a fixed kernel (as in vanilla SVGD), we only require that it holds for at least one kernel in the chosen kernel class. We formalize this as a generalized Stein log-Sobolev assumption (Assumption 5 in the appendix).
+
+The resulting bounds quantify precisely how the approximation error affects the rate:
+
+With uniformly bounded errors 
+, the KL divergence converges linearly up to a residual proportional to 
+. Hence, our analysis now also covers the effect of inexact maximization of the KSD.
+With geometrically decaying errors, the KL divergence converges linearly.
+With polynomially decaying errors, we obtain a corresponding polynomial-rate upper bound.
+References:
+Duncan et al. (2023): On the geometry of Stein variational gradient descent, Journal of Machine Learning Research
+
+Liu & Wang (2016): Stein variational gradient descent: A general purpose Bayesian inference algorithm, Advances in Neural Information Processing Systems
+
+Liu et al. (2022): Grassmann Stein variational gradient descent, Proceedings of The 25th International Conference on Artificial Intelligence and Statistics
+
+Official Review of Submission24939 by Reviewer ree6
+Official Reviewby Reviewer ree608 Nov 2025, 23:01 (modified: 29 Nov 2025, 03:51)EveryoneRevisions
+Summary:
+This paper proposes a sampling algorithm, namely Adaptive Stein Variational Gradient Descent (Ad-SVGD), which is a modification of the standard SVGD by adaptively tuning the kernel parameters during sampling. The key idea is to maximize the kernelized Stein discrepancy (KSD) with respect to the kernel parameters at each iteration, thereby improving the rate of KL decrease and enhancing sample diversity.
+
+The authors:
+
+develop an adaptive kernel selection mechanism via gradient ascent on the KSD (Algorithm 1).
+
+provide a convergence analysis extending prior KSD-based results (e.g., Salim et al., 2022) to adaptive kernels under Talagrand¡¯s inequality (Theorem 3).
+
+present empirical results on Gaussian mixtures, ODE-based inverse problems, showing that Ad-SVGD mitigates variance collapse and performs better than the median heuristic.
+
+Soundness: 3: good
+Presentation: 3: good
+Contribution: 2: fair
+Strengths:
+Good motivation: the choice of kernel is essential in improving the performance of SVGD. The Ad-SVGD provides a solution from the perspectively of maximizing the KL-decay from a set of parametrized kernels, which can provide insights to further study of the choice of kernels in SVGD.
+
+Clear Math Formulation: the mathematical formulations of the Ad-SVGD and its convergence are sound and clear.
+
+Weaknesses:
+The advantages of the proposed method Ad-SVGD is not studied completely. In the introduction, the authors mentioned multiple advantages of using adapting kernels, including
+
+(1) various kernels induce geometries can make SVGD converge in stronger metric
+
+(2) larger KL decay to make the convergence faster.
+
+However, none of these advantages are studied either theoretically or numerically in the paper: the current theory only show asymptotic convergence in maximum KSD within the parametrized kernel class, and it is not clear how the maximum KSD induces convergence in stronger metric and how the Ad-SVGD is more efficient than SVGD. In the numerical examples, the running times for Ad-SVGD and Med-SVGD are also not reported.
+
+Questions:
+What is the difference between using finite many kernels as in [1] and using parametrized kernels as in Ad-SVGD? What are the advantages of using parametrized kernels?
+
+Based on Theorem 3 and results in [2], what is the iteration complexity comparison between Ad-SVGD and SVGD in the mean-field sense?
+
+Typos: line 115, equation for 
+; line 155: proportional to KSD not squared KSD; in Assumption 4, the subindex 
+ should be 
+
+Flag For Ethics Review: No ethics review needed.
+Details Of Ethics Concerns:
+NA
+
+Rating: 4: marginally below the acceptance threshold. But would not mind if paper is accepted
+Confidence: 4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.
+Code Of Conduct: Yes
+Official Comment by Authors
+Official Commentby Authors21 Nov 2025, 18:54Everyone
+Comment:
+Dear reviewer,
+
+We sincerely thank you for the time spent evaluating our work and for the constructive feedback. Below, we provide detailed responses to your concerns.
+
+Weakness 1 (Does maximizing KSD induce convergence in a stronger metric?):
+Thank you very much for raising this question. In our revised manuscript, we provide a theoretical explanation of how our adaptive SVGD scheme leverages the maximal KSD to induce convergence in a stronger metric. In the theoretical analysis of SVGD, a popular assumption is the Stein log-Sobolev inequality, which relates the KSD to the KL divergence. In contrast to vanilla SVGD, where this condition must hold for a fixed kernel, our proposed adaptive scheme only requires that the inequality holds for at least one kernel within our kernel class. For more details, please refer to our general response to all reviewers, where we discuss the refined convergence analysis under the Stein log-Sobolev condition.
+
+Weakness 2 and Question 2 (Is Ad-SVGD more efficient than SVGD? What is the iteration complexity comparison between Ad-SVGD and SVGD in the mean-field sense?):
+The theoretical analysis in our original submission did not provide iteration-complexity results in the mean-field regime, and therefore did not allow a direct comparison between Ad-SVGD and vanilla SVGD. In the revised manuscript, we now include a detailed analysis of the iteration complexity of Ad-SVGD under the Stein log-Sobolev inequality, as mentioned above. When the maximization of the KSD can be computed in closed form, both SVGD and Ad-SVGD exhibit the same linear convergence rate. However, the convergence guarantees for Ad-SVGD rely on a more flexible Stein log-Sobolev inequality. In particular, it may be possible to verify a strictly better constant in Assumption 5 for Ad-SVGD than for vanilla SVGD. In such a case, Ad-SVGD would indeed achieve a faster linear convergence rate.
+
+When the maximization of the KSD cannot be solved analytically and instead must be approximated, Ad-SVGD may converge sublinearly. This represents a trade-off: the method may converge more slowly per iteration, but in exchange it enjoys convergence guarantees under a substantially weaker assumption.
+
+In our numerical experiments, we did notice the impact of the additional computations for the adaptive kernel updates. However, our experiments showed that the effort can be kept under control by not updating the kernel at every step. To generate the results shown in the section about the new Bayesian logistic regression experiments, we only updated the kernel at every 500th step, which was still sufficient to achieve high-quality results. On our local machine, the average total runtime of Ad-SVGD was 1364 s, of which approximately 56.5 s were spent on the kernel update steps. This shows that in practical applications, the additional computational effort for the adaptive kernel updates is reasonable. It can be further alleviated by choosing a different kernel parametrization which does not use a kernel parameter for each dimension.
+
+Question 1 (What is the difference between finite multiple kernels and our approach? What are advantages of using parameterized kernels?):
+Thank you for this question and for highlighting that the distinction was not sufficiently discussed in the original submission.
+
+First, the finite multiple-kernel approach, where one uses a weighted sum of a fixed set of kernels, can be viewed as a special case of our proposed adaptive kernel selection framework. A key advantage of this parametrization is that the maximization of the KSD can be solved in closed form, eliminating the need for a gradient-ascent procedure. Consequently, in this setting our Theorem 3 applies without requiring Assumption 4.
+
+Second, our adaptive kernel selection scheme is more general, as it allows the kernel class to be parametrized over an uncountable set of kernel parameters. This flexibility is crucial when prior knowledge about how to hand-craft a small, effective set of kernels is unavailable. In such cases, the finite multiple-kernel approach may become impractical. For example, applying it to a product kernel in a 32-dimensional setting with 5 possible bandwidths per dimension would require 
+ kernels leading to severe computational overhead.
+
+Question 2 (What is the iteration complexity comparison between Ad-SVGD and SVGD in the mean-field sense?):
+See Weakness 2.
+
+Question 3 (Typos):
+Thank you very much for your careful read. We have corrected these typos.
+
+Official Comment by Reviewer ree6
+Official Commentby Reviewer ree622 Nov 2025, 00:54 (modified: 22 Nov 2025, 00:57)EveryoneRevisions
+Comment:
+I appreciate the authors' clarifications and the revision on the manuscript. In my opinion, the updated manuscript improves a lot in presentation: the newly added experiments help readers better understand the Ad-SVGD and its difference to vanilla SVGD; the extended analysis in Section B also reflects algorithmic advantages of Ad-SVGD analytically.
+
+A minor suggestion is to highlight the newly added contents, for the convenience of other reviewers and the ACs.
+
+Regarding the new result Theorem 4, I have a few follow-up questions:
+
+(1) Is it straightforward to derive a practical version of it - assuming kernel conditions (e.g. smoothness, boundness and kernel-LSI) over the class {
+} that is used in the algorithm rather than the whole parameter class 
+? This kind of result should help to get rid of the Assumption 4 that we can't verify. It also helps to understand the implemented-version of Ad-SVGD - only updating the kernel every 500 steps with one step of gradient ascent: we can track the kernels that are actually used in the algorithm and see how they benefit the generation compared to the heuristic ones.
+
+(2) If we look at the kernel conditions, it looks like there is a trade-off between better kernel-LSI constant and larger generation step-size. When the set 
+ gets larger,
+
+(i) the kernel-LSI constant 
+ increases, which implies more contraction at each step. Hence the algorithm accelerates;
+
+(ii) the (regularity) boundness parameter 
+ increases, which implies smaller step-size to ensure step-wise contraction, Hence we need to run more iterations of the algorithm to achieve the same macroscopic time.
+
+I am wondering if this trade-off is an issue when we actually implement the algorithm: if we naively choose a rich set of kernels, we may have the advantage of better geometric property, but at the expense of choosing small-step size to ensure the stability of the algorithm.
+
+Overall, I think the revision has already improved the paper a lot, and I will definitely consider to increase my score.
+
+ Replying to Official Comment by Reviewer ree6
+Official Comment by Authors
+Official Commentby Authors25 Nov 2025, 16:51Everyone
+Comment:
+Dear Reviewer,
+
+thank you very much for your positive feedback and follow-up questions. For convenience, we have highlighted the changes made during the discussion phase in blue colour. Regarding your follow-up questions:
+
+(1) Proving kernel-LSI along the iteration
+This is an insightful suggestion. A potential approach would require refining the kernel-LSI so that it holds uniformly over the entire kernel class, with a kernel-dependent constant 
+. Establishing such a result would likely involve (i) an ascent condition on the KSD with respect to the kernel parameter requiring some regularity or smoothness of the mapping 
+, together with (ii) a descent condition for the KL divergence induced by the particle update. Under these ingredients, one may indeed hope to show a property such as 
+, thereby ensuring that the inequality persists (or even strengthens) across the iterations. However, developing this refined analysis requires substantial additional work and goes beyond the scope of the current manuscript. We view this as a highly interesting direction for future research.
+
+(2) Trade-off: larger kernel-LSI constant vs. larger step size
+Thank you very much for this sharp and insightful observation. Our new theory indeed reveals an inherent trade-off between the strength of the kernel-LSI constant and the admissible step size. On the one hand, a larger kernel-LSI constant yields a stronger contraction in the KL divergence. On the other hand, enlarging the kernel class tends to increase the constant 
+, which governs the smoothness and boundedness conditions on the kernel function, and in turn forces us to choose smaller step sizes to satisfy the descent condition (7). Consequently, expanding the kernel class has two opposing effects: improving the kernel-LSI constant while simultaneously tightening the step size constraint due to larger values of 
+.
+While we did not experiment with different kernel classes in our numerical experiments, we did notice that for some problems, the stability of the algorithm was more sensitive to the learning rate. Considering the insight about this trade-off, this could indicate that choosing a smaller kernel class could be beneficial in some situations to achieve stability of the algorithm for larger step sizes.
+This interplay could be leveraged to design more advanced adaptive strategies. For example, one might combine our framework with ideas from multilevel SVGD (Alsup et al., 2022), using a warm-up phase based on a smaller kernel class and gradually enlarging it as the particle approximation becomes more accurate. Developing a rigorous convergence theory for such an approach would, however, require additional analysis, since unlike in Alsup et al. (2022) the contraction rate and the approximation error would no longer decouple additively but interact through the kernel class itself.
+
+We will include a brief discussion of both points in the next revised version of our manuscript.
+
+References:
+Alsup, T., Venturi, L. & Peherstorfer, B.. (2022). Multilevel Stein variational gradient descent with applications to Bayesian inverse problems. Proceedings of the 2nd Mathematical and Scientific Machine Learning Conference, in Proceedings of Machine Learning Research
+
+Official Review of Submission24939 by Reviewer n3rK
+Official Reviewby Reviewer n3rK05 Nov 2025, 14:17 (modified: 12 Nov 2025, 18:27)EveryoneRevisions
+Summary:
+The paper presents an adaptive kernel learning approach for Stein Variational Gradient Descent (SVGD) through the use of a parameterized family of kernels. The proposed method incorporates an additional optimization step to learn the optimal kernel parameters at each SVGD particle update. A convergence analysis for this adaptive setting is also provided, extending existing results for SVGD with fixed kernels. Experimental evaluations on synthetic datasets demonstrate that the proposed learning algorithm enhances the reliability and robustness of SVGD compared to a baseline SVGD with heuristic-based adaptive kernels.
+
+Soundness: 3: good
+Presentation: 3: good
+Contribution: 3: good
+Strengths:
+The paper presents a meaningful contribution by introducing a parameterized kernel learning mechanism for Stein Variational Gradient Descent (SVGD), supported by theoretical analysis. The proposed approach adds an adaptive optimization step that learns kernel parameters during each SVGD update, thereby reducing dependence on manually selected kernels and heuristic tuning. The paper is clearly written and logically structured, with mathematical derivations and algorithmic steps explained in a way that is easy to follow. The experimental results, though limited to synthetic data, convincingly demonstrate that the method improves the reliability and adaptability of SVGD compared to heuristic-based adaptive kernel baselines.
+
+Weaknesses:
+While the proposed approach is promising, the experimental validation remains limited. The experiments are conducted only on synthetic datasets, without evaluation on real-world problems such as posterior estimation, one of the most prominent and successful applications of SVGD. This limitation makes it difficult to assess the practical usefulness and scalability of the proposed adaptive kernel learning method. Additionally, the chosen parameterized family of kernels appears relatively narrow in scope. A broader discussion or exploration of alternative parameterized kernel classes would strengthen the work and better demonstrate the generality and adaptability of the proposed framework.
+
+From a theoretical perspective, the convergence analysis relies on several strong assumptions. It is unclear how these assumptions are satisfied or approximated in practical applications. In particular, since the authors acknowledge that Assumption 4 cannot be guaranteed, it would be valuable to include a more detailed discussion of how this limitation affects the theoretical results and whether any relaxation or empirical verification of this assumption is possible.
+
+Questions:
+Since the authors acknowledge that Assumption 4 cannot be guaranteed, how does this limitation affect the validity and interpretation of the convergence analysis results?
+
+Flag For Ethics Review: No ethics review needed.
+Rating: 4: marginally below the acceptance threshold. But would not mind if paper is accepted
+Confidence: 3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.
+Code Of Conduct: Yes
+Official Comment by Authors
+Official Commentby Authors21 Nov 2025, 18:55Everyone
+Comment:
+Dear reviewer,
+
+We sincerely thank you for the time spent evaluating our work and for the constructive feedback. Below, we provide detailed responses to your concerns.
+
+Weakness 1 (Limited experimental validation):
+In the revised manuscript, we have added a new numerical experiment on the Bayesian logistic regression model used in the original SVGD paper by Liu & Wang (2016). Please refer to our general response to all reviewers for further details.
+
+Weakness 2 (Limited discussion about kernel parametrization):
+Thank you very much for raising this point. We have added a detailed discussion about possible kernel parametrizations to our revised manuscript. In particular, we now discuss the relation to the multiple kernel approach from Ai et al. (2023) in more detail. Here one uses a weighted sum of a fixed set of kernels, which can be viewed as a special case of our proposed adaptive kernel selection framework. A key advantage of this parametrization is that the maximization of the KSD can be solved in closed form, eliminating the need for a gradient-ascent procedure. Consequently, in this setting our Theorem 3 applies without requiring Assumption 4. Moreover, our adaptive framework can accommodate a broad range of kernel parametrizations, including product kernels, Mat¨¦rn kernels, spectral kernels (based on truncated eigenfunction expansions, where singular values are learned while the basis is fixed) or low-rank kernel parametrizations that adapt the most relevant directions without requiring full product structures. We added an additional discussion to our manuscript in Section 5.1.
+
+Weakness 3 and Question 1 (Limited discussion of Assumption 4; How does the limited verifiability of Assumption 4 affect the validity and interpretation of the convergence analysis?):
+We agree that Assumption 4 is challenging to verify from a theoretical standpoint. However, we would like to emphasize that our numerical experiments were conducted without tuning to obtain highly accurate approximations of the maximal KSD at each iteration. In practice, we performed only a single gradient-ascent step every few iterations, yet the method still performed robustly. This empirical behavior suggests that Assumption 4 may be overly strict and could potentially be relaxed.\ To further clarify the role of Assumption 4 and explore possible relaxations, the revised manuscript now includes a refined iteration-complexity analysis under the Stein log-Sobolev inequality, which links the KSD to the KL divergence. In contrast to vanilla SVGD, where this condition must hold for a fixed kernel, our proposed adaptive scheme only requires that the inequality holds for at least one kernel within our kernel class. Additionally, we now provide an error bound on the KL divergence under a weaker assumption: instead of requiring the optimality gap in the KSD maximization to converge to zero, we assume only that this gap remains uniformly bounded.
+
+For more details, please refer to our general response to all reviewers, where we discuss the refined convergence analysis, as well as Appendix B of the revised manuscript.
+
+References:
+Ai et al. (2023): Stein Variational Gradient Descent with Multiple Kernels, Cognitive Computation
+
+Liu & Wang (2016): Stein variational gradient descent: A general purpose Bayesian inference algorithm, Advances in Neural Information Processing Systems
+
+Official Review of Submission24939 by Reviewer JuCV
+Official Reviewby Reviewer JuCV01 Nov 2025, 13:19 (modified: 12 Nov 2025, 18:27)EveryoneRevisions
+Summary:
+This paper aims to improve Stein Variational Gradient Descent (SVGD) by addressing one of its known limitations ¡ª the strong dependence on kernel choice. Standard SVGD typically uses a fixed kernel (such as RBF) with a manually chosen or heuristic bandwidth (e.g., the median heuristic). In practice, this choice heavily influences both stability and convergence, especially in high-dimensional or multimodal settings.
+
+To mitigate this issue, the paper proposes Adaptive SVGD (Ad-SVGD), which dynamically updates kernel parameters (such as the bandwidth) during training. The kernel is optimized by maximizing the kernelized Stein discrepancy (KSD) at each iteration, based on the intuition that a larger KSD corresponds to faster reduction in the KL divergence between the particle distribution and the target posterior.
+
+Experimental results indicate that Ad-SVGD can better maintain posterior variance and alleviate particle collapse compared to standard SVGD with a fixed bandwidth.
+
+Soundness: 2: fair
+Presentation: 3: good
+Contribution: 2: fair
+Strengths:
+The dependence of SVGD on kernel choice is well-known. Adapting the kernel parameter through KSD maximization is an intuitive and well-motivated idea that could improve practical robustness.
+The modification to SVGD is simple and lightweight, involving only an additional optimization step for the kernel parameter. It can be easily integrated into existing SVGD frameworks without altering the main update rule.
+Weaknesses:
+Most experiments are performed on toy or synthetic datasets with relatively low dimensionality. While results show qualitative improvements, more challenging or high-dimensional tests¡ªsuch as Bayesian neural networks or large-scale posterior inference¡ªwould make the empirical claims more convincing.
+The experiments are conducted mainly on small synthetic problems, so the practical effectiveness of the approach on larger or more complex tasks remains uncertain.
+The paper does not discuss computational cost or scalability, even though the adaptive kernel adds extra optimization steps that could affect efficiency.
+The comparison with other adaptive or multi-kernel SVGD variants is limited, making it difficult to clearly position this work among existing approaches.
+Questions:
+How sensitive is the method to the kernel learning rate and the number of inner optimization steps? Would overly aggressive kernel updates cause instability in particle dynamics?
+If the kernel bandwidth is initialized poorly, can the adaptive process still recover a reasonable value, or does it tend to get stuck in suboptimal regions?
+How does the adaptive kernel perform in higher-dimensional inference problems (e.g., 100¨C1000 dimensions)? Are there potential scalability issues related to the additional KSD computation?
+It would strengthen the paper to include comparisons with related adaptive or multi-kernel approaches such as Multiple Kernel SVGD (Ai et al., 2023) and Matrix Kernel SVGD (Wang et al., 2019), to better position this work within the literature.
+Since all current experiments are based on small or synthetic datasets (e.g., 1D Gaussian mixtures, linear ODE inverse problems, and small Gaussian process regression), it remains unclear whether the approach can handle complex or real-world posteriors, such as Bayesian neural networks.
+The adaptive step introduces extra computation for matrix traces and kernel gradients, yet there is no discussion of runtime or complexity. Providing even a brief analysis would clarify the practical overhead.
+The theoretical analysis assumes that the algorithm can approximately maximize KSD at each step, which may be difficult to guarantee in practice. Could the authors discuss how sensitive the theoretical results are to this assumption, and whether approximate optimization affects convergence?
+Flag For Ethics Review: No ethics review needed.
+Rating: 2: reject, not good enough
+Confidence: 3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.
+Code Of Conduct: Yes
+Official Comment by Authors
+Official Commentby Authors21 Nov 2025, 18:58Everyone
+Comment:
+Dear reviewer,
+
+We sincerely thank you for the time spent evaluating our work and for the constructive feedback. Below, we provide detailed responses to your concerns.
+
+Weakness 1 & 2 and Question 5 (Limited experiments):
+In the revised manuscript, we have added a Bayesian logistic regression experiment, a benchmark problem considered in Liu & Wang (2016) and widely used in the SVGD literature. Please refer to our general response to all reviewers for further details.
+
+Weakness 3 and Question 6 (Missing discussion about computational cost):
+Thank you very much for raising this important point. First, we would like to emphasize that our adaptive scheme does not require any additional evaluations of the log-posterior density or its gradient. This is particularly relevant in applications where these evaluations dominate the computational cost. The additional overhead of Ad-SVGD arises solely from computing the kernel function and its derivatives (up to second order) during the KSD maximization step. The number of derivative evaluations necessary for each kernel update step scales quadratically with the number of particles, as the KSD is estimated as a double sum over the particles. In our numerical experiments, we did notice the impact of the additional computations for the adaptive kernel updates. However, our experiments showed that the effort can be kept under control by not updating the kernel at every step. To generate the results shown in the section about the new Bayesian logistic regression experiments, we only updated the kernel at every 500th step, which was still sufficient to achieve high-quality results. On our local machine, the average total runtime of Ad-SVGD was 1364 s, of which approximately 56.5 s were spent on the kernel update steps. This shows that in practical applications, the additional computational effort for the adaptive kernel updates is reasonable. It can be further alleviated by choosing a different kernel parametrization which does not use a kernel parameter for each dimension.
+
+Weakness 4 and Question 4 (Limited comparison with other adaptive SVGD variants):
+Thank you for raising this point. Our primary focus in this work is to investigate whether vanilla SVGD, without additional algorithmic modifications, can perform competitively when equipped with an effective and adaptively chosen kernel. For this reason, we restrict our comparisons to the original SVGD formulation, as it provides a clean baseline for isolating the impact of kernel selection itself.
+
+Specifically, the mentioned variant of SVGD using matrix valued kernels (Wang et al. (2019)) introduces additional geometric information based on Hessian and Fisher information matrices. This introduces an additional structural component that improves performance. We will add the paper to our literature review, thank you for making us aware of this reference. Moreover, we will clarify our research question in the contribution section.
+
+Regarding the multiple kernel approach of Ai et al. (2023), where one uses a weighted sum of a fixed set of kernels, we would like to emphasize that this approach can be seen as special case of our proposed adaptive kernel selection framework. A key advantage of this parametrization is that the maximization of the KSD can be solved in closed form, eliminating the need for a gradient-ascent procedure. Consequently, in this setting our Theorem 3 applies without requiring Assumption 4. However, our adaptive kernel selection scheme is more general, as it allows the kernel class to be parametrized over an uncountable set of kernel parameters. This flexibility is crucial when prior knowledge about how to hand-craft a small, effective set of kernels is unavailable. In such cases, the finite multiple-kernel approach may become impractical. For example, applying it to a product kernel in a 32-dimensional setting with 5 possible bandwidths per dimension would require 
+ kernels leading to severe computational overhead.
+
+ Replying to Official Comment by Authors
+Continued Response
+Official Commentby Authors21 Nov 2025, 19:00Everyone
+Comment:
+Question 1.1 (sensitivity to learning rate and number optimization steps):
+Thank you for this question. In our experiments, we intentionally did not devote significant effort to fine-tuning the kernel learning rate or the number of inner optimization steps, and we found the method to be reasonably robust across a wide range of settings. As with the step size in standard SVGD, the sensitivity of these hyperparameters is problem-dependent, and if needed, one could readily incorporate adaptive step-size strategies or more advanced optimizers to further stabilize or accelerate the inner kernel-optimization loop.
+
+Question 1.2 (overly aggressive kernel updates cause instability):
+In principle, instability can occur if an overly aggressive update leads to a very poor kernel choice. However, in our experiments we consistently observed that the evolution of the kernel parameters is typically well-behaved and often monotonic (see also Figures 4 and 5 of the revised manuscript). Furthermore, we experimented with setting the kernel bandwidth to its final value from the beginning (which corresponds to a very aggressive kernel update) and found that this did not cause instability in the particle dynamics.
+
+Question 2 (Can adaptive SVGD recover from suboptimal initial kernels?):
+We observed in some toy examples that extremely poor initializations can lead to unstable particle dynamics. Practical remedies include initializing with the median heuristic or adding a short warm-up phase during which the kernel is optimized while the particles remain fixed. In our ODE and Bayesian logistic regression experiments, we simply initialized all bandwidths to 1, and Ad-SVGD successfully recovered appropriate bandwidths, often differing by several orders of magnitude, which is now also reflected in the bandwidth-evolution plots (see Figures 4 and 5 of the revised manuscript).
+
+Question 3 (Performance in high dimensions and scalability issues)?
+We expect Ad-SVGD to remain more stable than median-heuristic SVGD in high dimensions; however, our current product-kernel parametrization reaches its limit in such settings because the number of parameters scales linearly with dimension. To address this, more scalable parametrizations can be incorporated into our framework, such as Mat¨¦rn kernels, spectral kernels (based on truncated eigenfunction expansions, where singular values are learned while the basis is fixed) or low-rank kernel parametrizations that adapt the most relevant directions without requiring full product structures. These approaches avoid the exponential blow-up associated with high-dimensional product kernels and can be naturally integrated into our adaptive scheme. We have added a discussion about other possible parametrizations in Section 5.1 of the revised manuscript.
+
+Questions 4-6:
+See the responses to the weaknesses above.
+
+Question 7 (Limited discussion of Assumption 4):
+We agree that Assumption 4 is challenging to verify from a theoretical standpoint. However, we would like to emphasize that our numerical experiments were conducted without tuning to obtain highly accurate approximations of the maximal KSD at each iteration. In practice, we performed only a single gradient-ascent step every few iterations, yet the method still performed robustly. This empirical behavior suggests that Assumption 4 may be overly strict and could potentially be relaxed.
+
+To further clarify the role of Assumption 4 and explore possible relaxations, the revised manuscript now includes a refined iteration-complexity analysis under the Stein log-Sobolev inequality, which links the KSD to the KL divergence. In contrast to vanilla SVGD, where this condition must hold for a fixed kernel, our proposed adaptive scheme only requires that the inequality holds for at least one kernel within our kernel class. Additionally, we now provide an error bound on the KL divergence under a weaker assumption: instead of requiring the optimality gap in the KSD maximization to converge to zero, we assume only that this gap remains uniformly bounded.
+
+For more details, please refer to our general response to all reviewers, where we discuss the refined convergence analysis, as well as Appendix B of the revised manuscript.
+
+References:
+Ai et al. (2023): Stein Variational Gradient Descent with Multiple Kernels, Cognitive Computation
+
+Liu & Wang (2016): Stein variational gradient descent: A general purpose Bayesian inference algorithm, Advances in Neural Information Processing Systems
+
+Wang et al. (2019): Stein variational gradient descent with matrix-valued kernels, Advances in Neural Information Processing Systems
+
+Official Review of Submission24939 by Reviewer m3tA
+Official Reviewby Reviewer m3tA30 Oct 2025, 17:11 (modified: 12 Nov 2025, 18:27)EveryoneRevisions
+Summary:
+This paper introduces an adaptive kernel selection approach, Ad-SVGD, for Stein Variational Gradient Descent (SVGD). The main idea is to dynamically adjust kernel parameters by maximizing the kernelized Stein discrepancy (KSD) during the SVGD process, such that the descent direction can better fit the data. The authors also provide a theoretical convergence analysis for the proposed method. The experimental results show the effectiveness of Ad-SVGD, which outperforms the standard SVGD with the median heuristic.
+
+Soundness: 3: good
+Presentation: 3: good
+Contribution: 2: fair
+Strengths:
+The idea of dynamically adjusting the kernel parameters using KSD is reasonable.
+
+The theoretical convergence guarantee has been established.
+
+Weaknesses:
+From the theoretical perspective, it seems that some assumptions are too strong and not easy to check, e.g., Assumption 4, which depends on the behavior of the parameter to be optimized.
+
+The experiments are not comprehensive enough. First, only a one-dimension toy example is considered in Section 5.2, and examples with higher-dimension should also be implemented. Second, only the original SVGD is used for comparison, while there are indeed lots of variants and improvements have been developed in recent years. Third, as a machine learning paper, tasks like classification and regression should be employed for evaluation, such as that used in the original SVGD paper and its followers.
+
+The idea of adjusting or learning descent direction, with respect to certain criteria, for SVGD is not new, and related studies, e.g. [1][2], should be discussed or better compared with.
+
+[1] L. di Langosco et al. Neural Variational Gradient Descent. 4th Symposium on Advances in Approximate Bayesian Inference, 2022.
+
+[2] Q. Zhao et al. Stein variational gradient descent with learned direction. Information Sciences, 2023.
+
+Questions:
+The authors should address the issues mentioned in the "Weaknesses".
+
+Flag For Ethics Review: No ethics review needed.
+Rating: 4: marginally below the acceptance threshold. But would not mind if paper is accepted
+Confidence: 3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.
+Code Of Conduct: Yes
+Official Comment by Authors
+Official Commentby Authors21 Nov 2025, 19:03Everyone
+Comment:
+Dear reviewer,
+
+we sincerely thank you for the time spent evaluating our work and for the constructive feedback. Below, we provide detailed responses to your concerns.
+
+Weakness 1 (Limited discussion of Assumption 4):
+We agree that Assumption 4 is difficult to verify from a theoretical standpoint. First, the finite multiple-kernel approach, where one uses a weighted sum of a fixed set of kernels, can be viewed as a special case of our proposed adaptive kernel selection framework. A key advantage of this parametrization is that the maximization of the KSD can be solved in closed form, eliminating the need for a gradient-ascent procedure. Consequently, in this setting our Theorem 3 applies without requiring Assumption 4.
+
+Second, we would like to emphasize that our numerical experiments were conducted without tuning to obtain highly accurate approximations of the maximal KSD at each iteration. In practice, we applied only a single gradient-ascent step every few iterations, yet the method still performed robustly. This empirical evidence suggests that Assumption 4 may be stronger than necessary and could potentially be relaxed.
+
+To clarify the role of Assumption 4 and investigate such relaxations, the revised manuscript now includes a refined iteration-complexity analysis under the Stein logarithmic Sobolev inequality, which relates the KSD to the KL divergence. Importantly, unlike vanilla SVGD, which requires this inequality to hold for a fixed kernel, our adaptive scheme only needs it to hold for at least one kernel in the considered kernel class.
+
+Moreover, in the refined analysis we provide an error bound on the KL divergence under a weaker assumption: instead of requiring the optimality gap in the KSD maximization to vanish, we assume only that this gap remains uniformly bounded. This leads to more flexible and broadly applicable theoretical guarantees. For further details, please refer to our general response to all reviewers, where we elaborate on the refined convergence analysis under the Stein logarithmic Sobolev condition.
+
+Weakness 2.1 (Only a one-dimension toy example):
+Thank you very much for raising this point, we acknowledge that the original manuscript did not sufficiently reference our additional experiments in the main text; this has now been corrected in the revised version. We would like to draw your attention to Appendices A2 and A3, where we present numerical toy examples illustrating the effect of scaling with dimension. In particular, the example in Appendix A3 clearly distinguishes between the dimensionality arising from numerical discretization and that stemming from random parametrization.
+
+Weakness 2.2 (Only original SVGD used for comparison):
+Thank you for raising this point. Our primary focus in this work is to investigate whether vanilla SVGD, without additional algorithmic tricks, can perform competitively when equipped with an effective, adaptively chosen kernel. For this reason, we restrict our comparisons to the original SVGD formulation, as it provides a clean baseline for isolating the impact of kernel selection itself.
+
+We agree that several SVGD variants (e.g., Sliced SVGD of Gong et al. (2021), Grassmann SVGD of Liu et al. (2022) and others) introduce additional structural components that may further improve performance. However, our adaptive kernel-selection strategy is orthogonal to these modifications and can, in principle, be combined with any of them. Our goal in this paper is to study the kernel-choice aspect in a controlled setting, rather than benchmark against methods whose benefits arise from fundamentally different mechanisms. We will clarify our research question in the contribution section.
+
+Weakness 2.3 (Limited exp validation):
+In the revised manuscript, we have added a new numerical experiment on the Bayesian logistic regression model used in the original SVGD paper by Liu & Wang (2016). Please refer to our general response to all reviewers for further details.
+
+Weakness 3 (Related NN approaches should be discussed):
+Thank you for this comment. We were not aware of these references and will include them in our literature review.
+
+However, the methods referenced by the reviewer operate in a very different regime from ours: they rely on neural parameterizations that do not preserve the RKHS structure central to SVGD, and therefore lose the theoretical foundation on which SVGD is built. Our work addresses a fundamentally different research question. Namely, whether vanilla SVGD, without neural parametrizations or architectural heuristics, can achieve strong performance when equipped with principled, theoretically grounded kernel selection. The adaptive kernel selection mechanism we propose stays fully within the RKHS framework and maintains the connection to Stein operators, KSD minimization, and the associated convergence theory.
+
+ Replying to Official Comment by Authors
+References
+Official Commentby Authors21 Nov 2025, 19:03Everyone
+Comment:
+References:
+Gong et al. (2021): Sliced kernelized Stein discrepancy, International Conference on Learning Representations
+
+Liu & Wang (2016): Stein variational gradient descent: A general purpose Bayesian inference algorithm, Advances in Neural Information Processing Systems
+
+Liu et al. (2022): Grassmann Stein variational gradient descent, Proceedings of The 25th International Conference on Artificial Intelligence and Statistics
+
+About OpenReview
+Hosting a Venue
+All Venues
+Contact
+Sponsors
+Donate
+FAQ
+Terms of Use / Privacy Policy
+News
+OpenReview is a long-term project to advance science through improved peer review with legal nonprofit status. We gratefully acknowledge the support of the OpenReview Sponsors. ? 2025 OpenReview
+
+Adaptive kernel selection for Stein Variational Gradient Descent | OpenReview

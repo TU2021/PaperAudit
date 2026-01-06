@@ -1,0 +1,123 @@
+# Global Summary
+Problem: Multilingual vision-language models (VLMs) are often English-centric, limiting performance across languages and culturally grounded tasks. The paper studies where and how to inject multilinguality into VLMs (data composition, encoders, text backbones), and introduces TOWERVISION (image-text) and TOWERVIDEO (video-text) built on the multilingual TOWER+ LLM.
+
+Approach: Multi-stage training with (1) projector pretraining using English PixMo-Cap captions, (2) full vision finetuning on a curated multilingual multimodal dataset (VISIONBLOCKS) with high-dynamic-resolution tiling (up to 6 tiles), and (3) video finetuning on translated LLaVA-Video-178k (32-frame inputs). Vision encoder: SigLIP2-so400m/14@384px; connector: 2-layer MLP; text backbone: TOWER+ 2B/9B.
+
+Evaluation: Benchmarks across cultural VQA, OCR, TextVQA, multimodal translation (Multi30K, CoMMuTE), and multilingual video QA (ViMUL-Bench). Baselines include Qwen2.5-VL, Gemma3-Instruct, CulturalPangea-7B, Aya-Vision-8B, Llama3-LLaVA-Next-8B; video baselines: VideoLLaMA3-7B, LLaVA-Video-7B, ViMUL-7B.
+
+Key findings:
+- Cultural understanding: TOWERVISION-9B achieves “83.6” (ALM-Bench en) and “85.2” (ALM-Bench multi), competitive or SOTA among open models of similar size; TOWERVISION-2B: “77.1” (en) and “81.1” (multi).
+- Multimodal translation: TOWERVISION-9B obtains Multi30K xCOMET “95.1” (en→cs), “98.1” (en→de), “95.6” (en→fr); competitive CoMMuTE accuracies up to “78.8” (en→fr).
+- OCR: Weaker than top OCR-centric baselines (e.g., OCRBench “69.7” at 9B), but stronger than some general-purpose VLMs (Aya-Vision-8B, LLaVA-Next-8B).
+- Video: TOWERVIDEO-9B achieves ViMUL-Bench accuracies up to “51.9” (en), “49.1” (fr), “47.1” (de), with multilingual finetuning improving cross-lingual generalization vs image-only TOWERVISION.
+- Ablations: Multilingual backbones (TOWER+) outperform Gemma2; instruction tuning is not always optimal prior to modality fusion; SigLIP2 benefits low-data regimes; English-only captions suffice for projector alignment; expanding language coverage (10→20) yields consistent gains, especially at 2B scale.
+
+Caveats explicitly stated: Limited OCR-focused data in VISIONBLOCKS; reliance on translated/synthetic data; open-ended video responses judged with GPT-4o; training hardware and budgets not specified in the main text.
+
+# Abstract
+- Motivation: English-centric VLM design hampers multilingual effectiveness. The paper analyzes multilingual design choices (training data composition, encoder selection, text backbones) and builds TOWERVISION (image/video) on TOWER+.
+- Contributions:
+  - TOWERVISION: open multilingual VLMs for image-text and video-text, strong at culturally grounded tasks and multimodal translation.
+  - VISIONBLOCKS: released high-quality curated vision-language dataset.
+  - Empirical findings: Multilingual vision-language training data improves cross-lingual generalization (high-resource→underrepresented and vice versa); instruction-tuned LLMs are not always optimal starting points.
+- Results highlights: Competitive performance on ALM-Bench, Multi30K, ViMUL-Bench; surpass models trained on substantially larger datasets when fine-tuned with visual and cultural context.
+- Release: Models, data, and training recipes publicly available.
+
+# Method
+- Model family and stages:
+  - Tower+ (multilingual text-only LLM).
+  - TowerVision: two-stage image-text fusion using multilingual vision encoder on VisionBlocks Image.
+  - TowerVideo: third stage of multilingual video adaptation on VisionBlocks Video.
+- Architecture (Section 2.2):
+  - Backbone: TOWER+ 2B/9B (Gemma-based multilingual; pretraining + post-training).
+  - Vision encoder: SigLIP2-so400m/14@384px (384×384 resolution; embeddings of size “729”).
+  - Connector: 2-layer MLP projector (LLaVA-based), randomly initialized.
+- Training procedure:
+  1) Projector pretraining: caption prediction on PixMo-Cap; vision encoder and LLM frozen; English captions only; images downscaled to 384×384.
+  2) Vision finetuning: unfreeze full model; train on full VISIONBLOCKS (excluding video). Use high-dynamic resolution with tiling (max 6 tiles + global thumbnail); tile embeddings concatenated.
+  3) Video finetuning: use VISIONBLOCKS video portion; 32-frame inputs at 384×384; tiling omitted for efficiency.
+- Dataset creation (VisionBlocks; Section 2.1):
+  - Sources: PixMo mixture (minus Android-Control, Points, PointQA), CulturalGround filtered subsets, PangeaIns “Cultural” split.
+  - Translation/synthetic:
+    - Translate PixMo-Cap captions to target languages using Tower models; filter with COMETKiwi score ≥ “0.85”.
+    - Augment with diverse captioning prompt templates (language-specific).
+    - Add synthetic captions via Gemini 2.5 API with multiple system prompts.
+  - Text-only data: ~“20%” of multimodal SFT mixture (EuroBlocks from EuroLLM post-training data).
+  - Video-text: LLaVA-Video-178k; half conversations remain English; half uniformly translated into supported languages using Tower+9B.
+- Implementation: Custom fork of LLaVA-Next codebase (URL provided).
+
+# Introduction
+- Problem framing: VLMs predominantly built and trained in English; high-quality multilingual vision-text data scarce despite availability of text-only multilingual corpora.
+- Strategy: Strengthen multilingual text backbone with large-scale text-only data; complement with multimodal multilingual examples (translations + synthetic) to reduce reliance on scarce real-world multilingual multimodal data.
+- Contributions:
+  - TOWERVISION: open-source multilingual VLMs for “20” languages/dialects (English, German, Dutch, Spanish (Latin America), French, Portuguese (Portugal/Brazilian), Ukrainian, Hindi, Chinese (Simplified/Traditional), Russian, Czech, Korean, Japanese, Italian, Polish, Romanian, Norwegian (Nynorsk/Bokmål)).
+  - Systematic ablations on components (alignment projector, vision encoder, text-only LLM) and data usage across training stages.
+  - TOWERVIDEO: extends to video modality; competitive on ViMUL-Bench.
+  - VISIONBLOCKS: curated dataset consolidating/filters existing vision/video-language resources with quality-controlled translations.
+
+# Experiments
+- Evaluation scope (Section 3.1):
+  - Vision-language: ALM-Bench (cultural multilingual visual QA), OCRBench (English OCR), cc-OCR (multilingual OCR text reading subset), TextVQA (scientific understanding).
+  - Multimodal translation: CoMMuTE (contrastive accuracy with visual disambiguation) and Multi30K (xCOMET for image caption MT).
+  - Video-language: ViMUL-Bench across “14” languages (ar, bn, zh, en, fr, de, hi, ja, ru, si, es, sv, ta, ur); both open-ended and multiple choice; open-ended judged by GPT-4o.
+- Baselines (Section 3.2): CulturalPangea-7B, Aya-Vision-8B, Llama3-LLaVA-Next-8B, Qwen2.5-VL-3B/7B-Instruct, Gemma3-4B-it/12B-it; video baselines: VideoLLaMA3-7B, LLaVA-Video-7B, ViMUL-7B. Checkpoints listed in Appendix A.2.
+- Main quantitative results (Tables 1–3):
+  - Vision-language accuracies:
+    - TowerVision-9B: TextVQA “73.6”, OCRBench “69.7”, CC-OCR “56.3”, ALM-Bench (en) “83.6”, ALM-Bench (multi) “85.2”.
+    - TowerVision-2B: “68.1”, “58.6”, “46.1”, “77.1”, “81.1”.
+    - Notable baselines: Qwen2.5-VL-7B-Instruct ALM-Bench (multi) “83.6”; Gemma3-12B-it ALM-Bench (multi) “84.5”.
+  - Multimodal translation:
+    - TowerVision-9B (Multi30K xCOMET): en→cs “95.1”, en→de “98.1”, en→fr “95.6”.
+    - TowerVision-2B (Multi30K xCOMET): en→cs “90.3”, en→de “97.5”, en→fr “94.7”.
+    - TowerVision-9B (CoMMuTE accuracy): en→de “72.0”, en→fr “78.8”, en→ru “75.6”, en→zh “77.4”.
+  - Video (ViMUL-Bench accuracy % per language; averaged across MC and open-ended):
+    - TOWERVIDEO-9B: ar “38.6”, zh “44.8”, en “51.9”, fr “49.1”, de “47.1”, ja “42.3”, ru “40.9”, es “46.0”, sv “44.8”.
+    - TOWERVIDEO-2B: ar “23.0”, zh “35.9”, en “45.2”, fr “39.6”, de “39.7”, hi “37.2”, ja “34.1”, ru “38.0”, es “37.4”, sv “38.0”.
+    - Comparators: ViMUL-7B (en “48.6”), LLaVA-Video-7B (en “53.3”), VideoLLaMA3-7B (en “52.9”).
+- Findings (Section 3.3):
+  - Strong cultural performance: SOTA-like results on ALM-Bench (English and multilingual).
+  - OCR: Less competitive vs OCR-focused models (limited OCR data in VISIONBLOCKS), but exceeds some general VLM baselines.
+  - Translation: 9B variant SOTA on Multi30K across all pairs; 2B competitive vs larger baselines.
+  - Scaling: 2B→9B consistently improves across benchmarks.
+  - Video multilingual fine-tuning: improves cross-lingual reasoning vs image-only; uses fewer frames (“32” vs VideoLLaMA3 “180”).
+- Where/how multilinguality matters (Section 4):
+  - Backbones and instruction tuning (Table 4): TOWER+ backbones outperform GEMMA2 across tasks; at 9B, TOWER+it achieves ALM-Bench (multi) “85.2”, OCRBench “69.7”, CC-OCR “56.3”.
+  - Vision encoders (Table 5): SigLIP2 advantages in low-data regimes; with multilingual fine-tuning, gaps narrow. Best results with SigLIP2-(En+Multi): 2B En “77.1”, 2B Multi “81.1”; 9B En “83.6”, 9B Multi “85.2”.
+  - Projector alignment (Table 6): English-only captions suffice; En vs En+Multi at 2B Multi “81.1” vs “79.3”, 9B Multi “85.2” vs “84.1”.
+  - Language coverage (Figure 3; Table 11): Training on 20 vs 10 languages improves core and added languages; 2B core avg “65.3”→“81.3” (+“16.1”), added avg “60.2”→“75.4” (+“15.2”), unseen avg “69.2”→“83.0” (+“13.9”). 9B core avg “81.5”→“82.6” (+“1.1”); added avg “76.3”→“84.3” (+“7.6”); unseen avg “81.2”→“82.5” (+“1.2”).
+
+# Conclusion
+- Summary: Introduced TOWERVISION/TOWERVIDEO with emphasis on cultural understanding and multilinguality; demonstrated competitive or improved performance vs open multimodal systems across image/video tasks.
+- Releases: VISIONBLOCKS dataset; models; detailed training recipe across data, encoders, and backbones.
+- Empirical insights: Multilingual data and backbones boost cross-lingual generalization; instruction tuning and encoder multilinguality require careful stage/choice; expanding languages improves zero-shot transfer.
+- Caveats: OCR-oriented capabilities limited by data composition; broader multilingual improvements can vary across languages (some negative gains observed in Table 11).
+
+# Appendix
+- Acknowledgments: Supported by ERC DECOLLAGE (ERC-2022-CoG 101088763), Portuguese Recovery and Resilience Plan (C645008882-00000055), FCT/MECI UID/50008; EuroHPC MareNostrum5 grants EHPC-AI-2024A05-044 and 2025.00272.CPCA.A3.
+- Ethics: Risks include bias/misuse; diversity and quality control attempted; no sensitive personal data; not safety-critical.
+- Reproducibility: Detailed data, architectures, training, evaluation; release of models, preprocessing/training/eval code; public datasets or created synthetic/translated data; prompt sets shared.
+- VisionBlocks (Table 8):
+  - Total samples: “6,313,286”; English “3,982,630 (63.1%)”; Multilingual “2,330,656 (36.9%)”; Composition tags: Public “81%”, Translated “17%”, Synthetic “2%”.
+  - Category counts (selected):
+    - EuroBlocks-SFT “1,094,265 (17.34%)”.
+    - VBlocks-PixMo-Cap “702,205 (11.12%)”; VBlocks-PixMo-CapQA “262,862 (4.16%)”; VBlocks-PixMo-AMA “154,336 (2.44%)”.
+    - LLaVA-Video-178k-subset “697,618 (11.05%)”; LLaVA-Video-178k-translated “697,617 (11.05%)”.
+    - CulturalGround-OE “401,149 (6.35%)”; CulturalGround-MCQs “379,834 (6.02%)”; Pangea-Multi “428,838 (6.79%)”; Pangea-Cultural “55,438 (0.88%)”.
+    - VQAv2 “428,708 (6.79%)”; DVQA “199,995 (3.17%)”; PlotQA “157,070 (2.49%)”; TallyQA “98,675 (1.56%)”.
+    - Other datasets listed with exact sample counts (DocVQA, ST-VQA, TextVQA, OKVQA, A-OKVQA, AI2D, ScienceQA, IconQA, InfographicVQA, Stratos, PixMo-Docs, PixMo-Count, ChartQA, TabMWP).
+- Model checkpoints (Table 9): Links and params for Qwen2.5-VL (3B/7B), Gemma2-it/pt (2B/9B), Gemma3-it (4B/12B), CulturalPangea-7B, LLaVA-Next-7B, Aya-Vision-8B, Pixtral-12B, Phi-4-Multimodal-14B.
+- Vision encoder variants (A.3; Table 10):
+  - Evaluated resolutions/patch sizes/tiles; example results:
+    - 384×384, patch 14, 6 tiles: TextVQA “70.3”, OCRBench “62.1”, CC-OCR “46.1”, ALM-Bench “75.6”.
+    - 224×224, patch 16, 20 tiles: “68.6”, “57.8”, “44.3”, “75.2”.
+    - 512×512, patch 16, 4 tiles: “64.0”, “55.7”, “39.6”, “74.7”.
+- Cross-lingual generalization (A.4; Table 11):
+  - 2B core langs vs core+added: English “60.9”→“76.6” (+“15.8”); core avg +“16.1”; added avg +“15.2”; unseen avg +“13.9”.
+  - 9B: English “70.3”→“82.8” (+“12.5”); core avg +“1.1”; added avg +“7.6”; unseen avg +“1.2”.
+  - Per-language gains/examples: Hindi +“30.8” (2B), Portuguese +“25.8” (2B), Chinese (simp.) +“37.5” (2B); some negative gains at 9B (e.g., French −“5.7”, Dutch −“3.3”).
+- System prompts (A.5): Translation prompts per language; Gemini 2.5 prompts for synthetic caption generation (final-answer formats, caption+answer, markers).
+- Video multilingual effect (Table 7): TOWERVIDEO-2B English-only vs multilingual; multilingual improves several languages (zh “35.9” vs “26.7”; de “39.7” vs “34.8”; es “37.4” vs “37.8” slightly lower; language-specific numbers provided).
+
+# References
+- Citations include works on VLMs and encoders (LLaVA, InternVL, NVLM, Qwen2.5-VL, SigLIP1/2, CLIP, Perception Encoder), datasets/benchmarks (LAION-5B, PixMo/Molmo, ALM-Bench, OCRBench, CC-OCR, TextVQA, Multi30K, CoMMuTE, ViMUL-Bench), multilingual LLMs (TOWER, TOWER+, EuroLLM), evaluation frameworks (lmms-eval), and related methods (instruction tuning, LLM-as-judge).
+- Key references with years/links are listed; specific technical reports and arXiv entries for baselines and datasets are provided.

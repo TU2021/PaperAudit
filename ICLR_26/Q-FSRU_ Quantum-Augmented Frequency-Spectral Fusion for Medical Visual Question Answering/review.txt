@@ -1,0 +1,48 @@
+### Summary
+
+The paper introduces **Q-FSRU**, a **medical Visual Question Answering (VQA)** model that integrates **Frequency Spectrum Representation and Fusion (FSRU)** with a **Quantum Retrieval-Augmented Generation (Quantum RAG)** mechanism. The model converts both **medical images** and **text features** into the frequency domain using the **Fast Fourier Transform (FFT)**, aiming to extract **global contextual patterns** and **filter out noise**. It then utilizes a **quantum-inspired retrieval system** to fetch relevant medical knowledge using quantum-based similarity measures, enhancing both the model's reasoning capability and its interpretability. The model was evaluated on the **VQA-RAD** dataset and demonstrated superior accuracy over earlier methods, including improvements in **cross-dataset generalization** with the **PathVQA** dataset.
+
+---
+
+### Strengths
+
+1. **Novel Integration of Quantum and Frequency-domain Techniques**:
+
+   * The fusion of **FFT-based spectral processing** and **quantum-inspired retrieval** for **medical VQA** is a unique approach that targets enhanced contextual feature extraction and more accurate medical knowledge retrieval.
+2. **Strong Empirical Results**:
+
+   * **Q-FSRU** shows **significant improvements** on both **VQA-RAD** and **PathVQA** datasets, achieving better performance in terms of **accuracy**, **F1-score**, and **AUC**. This highlights the robustness of the model across various tasks and datasets.
+3. **Clear Motivations and Architecture**:
+
+   * The paper explains the motivations behind using **quantum retrieval** for medical knowledge and the importance of **frequency-domain features** in medical imaging, providing solid reasoning for these design choices.
+4. **Comprehensive Evaluation**:
+
+   * The model undergoes extensive **ablation studies**, verifying the impact of each component (FFT, quantum retrieval, contrastive learning). The paper also provides clear experimental setups, facilitating reproducibility.
+
+---
+
+### Weaknesses
+
+1. **Ambiguities in the Retrieval Pipeline**:
+
+   * The explanation of how the **quantum retrieval** mechanism interacts with the final **classifier** is unclear. In particular, there is an inconsistency between Sections 4.5.1 and 4.5.2 regarding how the retrieved knowledge is integrated into the final prediction. A **direct ablation** comparing results with and without the **knowledge embeddings** would better demonstrate the impact of this component.
+
+2. **Limited Evaluation Scope**:
+
+   * While the paper demonstrates strong results on **VQA-RAD** and **PathVQA**, there is a lack of **breakdowns by question type** (e.g., yes/no vs. open-ended) and **modality-specific performance**. A more detailed **error analysis** and **calibration metrics** (e.g., ECE/NLL) would enhance the claim of clinical suitability.
+
+3. **Unclear Quantum Benefit Attribution**:
+
+   * Although the paper claims a performance gain using **quantum-inspired retrieval** (a ~1.9% improvement), it is unclear whether this improvement comes from the **quantum formulation itself** or simply from the use of a different similarity kernel. More **baseline comparisons**, such as with **learned bi-encoders**, **Mahalanobis/PLDA**, and **cross-encoder reranking**, would better contextualize the advantage of the quantum approach.
+
+4. **Over-simplification of Medical Knowledge Retrieval**:
+
+   * The **generation** aspect of **Quantum RAG** is not well-defined. The model describes the **retrieval** process, but it is unclear how this knowledge is used in the final **answer generation**. Providing a clearer explanation of the **generation mechanism** would strengthen the paper¡¯s contribution.
+
+5. **Insufficient Justification for Text Frequency-domain Processing**:
+
+   * While the **frequency-domain processing of images** is explained, the **reasoning for transforming text features** into the frequency domain is not sufficiently justified. The paper does not explain **what specific patterns** the text frequency spectra capture, nor how these patterns complement the image features.
+
+6. **Evaluation on Small-Scale Datasets**:
+
+   * Both **VQA-RAD** (3,515 question-answer pairs) and **PathVQA** (32,799 question-answer pairs) are relatively **small datasets**. The performance on these datasets may not fully demonstrate the model's scalability and robustness when applied to **larger real-world datasets**. More evaluation on larger datasets would help assess generalization.

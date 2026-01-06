@@ -1,0 +1,1032 @@
+OpenReview.net
+Search OpenReview...
+Login
+back arrowGo to ICLR 2026 Conference homepage
+Bernoulli-LoRA: A Theoretical Framework for Randomized Low-Rank Adaptation
+Download PDF
+ICLR 2026 Conference Submission25467 Authors
+20 Sept 2025 (modified: 24 Dec 2025)
+ICLR 2026 Conference Submission
+Everyone
+Revisions
+BibTeX
+CC BY 4.0
+Keywords: Parameter-Efficient Fine-Tuning, Low-Rank Adaptation, Non-convex Optimization, Non-smooth Optimization, Stochastic Optimization, Variance Reduction, Adaptive Stepsizes
+TL;DR: We introduce Bernoulli-LoRA, a theoretically-grounded framework for parameter-efficient fine-tuning that randomly selects which low-rank matrix to update. We provide convergence guarantees for various optimization settings and stepsize choices.
+Abstract:
+Parameter-efficient fine-tuning (PEFT) has emerged as a crucial approach for adapting large foundational models to specific tasks, particularly as model sizes continue to grow exponentially. Among PEFT methods, Low-Rank Adaptation (LoRA) [Hu et al., 2021] stands out for its effectiveness and simplicity, expressing adaptations as a product of two low-rank matrices. While extensive empirical studies demonstrate LoRA's practical utility, the theoretical understanding of such methods remains limited. Recent work on RAC-LoRA [Malinovsky et al., 2024] took initial steps toward rigorous analysis. In this work, we introduce Bernoulli-LoRA, a novel theoretical framework that unifies and extends existing LoRA approaches. Our method introduces a probabilistic Bernoulli mechanism for selecting which matrix to update. This approach encompasses and generalizes various existing update strategies while maintaining theoretical tractability. Under standard assumptions from non-convex optimization literature, we analyze several variants of our framework: Bernoulli-LoRA-GD, Bernoulli-LoRA-SGD, Bernoulli-LoRA-PAGE, Bernoulli-LoRA-MVR, Bernoulli-LoRA-QGD, Bernoulli-LoRA-MARINA, and Bernoulli-LoRA-EF21, establishing convergence guarantees for each variant. Additionally, we extend our analysis to convex non-smooth functions, providing convergence rates for both constant and adaptive (Polyak-type) stepsizes. Through extensive experiments on various tasks, we validate our theoretical findings and demonstrate the practical efficacy of our approach. This work is a step toward developing theoretically grounded yet practically effective PEFT methods.
+
+Primary Area: optimization
+Submission Number: 25467
+Filter by reply type...
+Filter by author...
+Search keywords...
+
+Sort: Newest First
+30 / 30 replies shown
+Official Comment by Authors
+Official Commentby Authors04 Dec 2025, 19:44Everyone
+Comment:
+Dear AC, SAC, PC, and Reviewers,
+
+We would like to thank you again for the time and effort you invested in reviewing our submission. Following the reviews and subsequent discussion, we have updated the manuscript and addressed most of the raised concerns. Below we briefly summarize the main changes and indicate which reviewer comments they respond to.
+
+Reorganized front sections (structure and flow) (requested by Reviewer TCPp)
+
+We reorganized Sections 1每3 to provide a clearer narrative: the introduction now presents the LoRA/PEFT context and main contributions, followed by a concise ※Problem Setup and Notation§ section that defines 
+, 
+, 
+, and the finite-sum / expectation / FL settings. The Motivation section is integrated more smoothly with this setup.
+We added forward references from the problem setup to Table~1 and the main convergence theorems so that readers can more easily see how the formalism connects to our results.
+We positioned our work explicitly as complementary to recent LoRA-dynamics analyses (NTK, gradient flow, lazy vs feature learning) and integrated the theoretical LoRA papers suggested by Reviewer TCPp, explaining how our discrete-time convergence guarantees differ from and complement these works.
+We clarified that our analysis is conditional on a fixed pre-trained model 
+ and that 
+ encodes the fine-tuning loss, including any effects of the pre-training vs fine-tuning data.
+We now state explicitly that questions of representation learning and generalization (beyond optimization guarantees) are out of scope for this work.
+Clarified assumptions and their realism (requested by Reviewers TCPp, CiyU)
+
+We strengthened the discussion around our assumptions, emphasizing that Lipschitz smoothness, the P? condition, and the positive expected projection property are standard modeling abstractions in non-convex optimization and federated learning, rather than exact descriptions of all deep networks.
+We explicitly highlight that all of our convergence guarantees are conditional on these assumptions, in the same spirit as classical GD/SGD/FL analyses, and we provide additional pointers to the relevant optimization literature.
+Clarified the optimization variable and LoRA restriction (requested by Reviewer TnTK)
+
+In the Problem Statement, we now clearly state that the optimization variable is the low-rank update 
+, with a LoRA-style parameterization (e.g., 
+ 
+ or its chain-of-LoRA extension), and that only the low-rank factors are trainable. We also emphasize that our convergence guarantees apply to this LoRA-parameterized problem, not to unrestricted full fine-tuning.
+Explained the multi-matrix LoRA setting via concatenation / block-diagonal form (requested by Reviewer TnTK)
+
+We added a remark, together with an appendix note, explaining how multiple LoRA-modified matrices across layers can be represented as a single concatenated or block-diagonal 
+ and 
+ under the Frobenius norm. We show that, under this standard abstraction, all assumptions and theorems extend verbatim because gradients and projection matrices decompose blockwise.
+We explicitly reference prior work (Hu et al., 2021; Sun et al., 2024; Malinovsky et al., 2024; Xia et al., 2024; Zhu et al., 2024) that uses the same single-matrix abstraction for theoretical analysis while applying LoRA to many matrices in practice.
+Improved presentation of algorithms and rates
+
+We merged the previous two tables (algorithm descriptions and convergence-rate summary) into a single unified table, which lists, for each method: the setting, the update rule/base gradient estimator 
+, and the non-convex and P? convergence rates with links to the corresponding theorems. This makes the overall theoretical picture more transparent and easier to navigate.
+We hope these revisions meaningfully improve the clarity and positioning of the paper and address the main concerns raised during the review process. We remain grateful for the constructive feedback and are happy to further clarify any of these changes if needed.
+
+Sincerely,
+The authors
+
+Official Review of Submission25467 by Reviewer TnTK
+Official Reviewby Reviewer TnTK04 Nov 2025, 04:36 (modified: 12 Nov 2025, 18:30)EveryoneRevisions
+Summary:
+This paper analyzes the convergence of LoRA fine-tuning in the context of non-convex optimization.
+
+Soundness: 3: good
+Presentation: 2: fair
+Contribution: 2: fair
+Strengths:
+The theoretical results are reasonable because they are extensions of the standard results in convex and non-convex optimization.
+The study and analysis about PEFT model fine-tuning techniques are necessary.
+Weaknesses:
+The setting of the paper is a simplification of the practical use of LoRA. More specifically, it considers 
+ where LoRA is applied to only one matrix. However, in practice, LoRA is applied to many matrices (e.g., key, query, value matrices of self-attention layers) across many layers of a transformer.
+The setting of the optimization problem in this paper is unclear. Particularly, it is unclear what parameters are optimized in the target optimization problem.
+If 
+ in (1) is optimized, it refers to full fine-tuning. The objective is to prove that the LoRA updates can converge efficiently to the full fine-tuning. However, it is weird that in experimental results in Table 3, standard LoRA attains only 86% of full-parameter fine-tuning.
+The theoretical results are not surprising because they are too standard in the field.
+It would be better if the experiments are conducted with foundation models (ViT, LLMs, SDMs) because this is a common use of PEFT.
+Questions:
+What is the matrix 
+ in Eq. (8)?
+Can you suggest more insights or understanding from your theories regarding how to use LoRA more efficiently in real-world applications?
+Flag For Ethics Review: No ethics review needed.
+Rating: 4: marginally below the acceptance threshold. But would not mind if paper is accepted
+Confidence: 4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.
+Code Of Conduct: Yes
+Rebuttal to Reviewer TnTK (Part 1)
+Official Commentby Authors20 Nov 2025, 02:17Everyone
+Comment:
+Dear Reviewer TnTK,
+
+Thank you for your careful evaluation of our work. We appreciate that you:
+
+Recognized that the theoretical results are reasonable as extensions of standard convex/non-convex optimization tools.
+Emphasized that the study and analysis of PEFT fine-tuning techniques are necessary, highlighting the value of theoretical work in this area.
+We now address your concerns in detail.
+
+1. Simplified setting: LoRA applied to a single matrix
+You noted that our setting considers LoRA applied to a single matrix 
+, whereas in practical LLM fine-tuning LoRA is typically applied to many matrices (e.g., key/query/value and feed-forward projections) across many layers, and that the target optimization problem is not fully clear.
+
+Response and clarification.
+
+Our formulation
+ 
+follows the standard theoretical abstraction used in the LoRA literature. In particular, the original LoRA paper of Hu et al. (2021), LoRA in FL by Sun et al. (2024), the theoretical RAC-LoRA framework of Malinovsky et al. (2024), the COLA method of Xia et al. (2024), and AsymmLoRA by Zhu et al. (2024) all write the fine-tuning objective in terms of a single weight matrix with a low-rank update, even though in experiments LoRA modules are applied to many layers and matrices. In these works, 
+ is understood as ※the parameter block where LoRA is active§, not necessarily a literal single layer.
+
+Our analysis adopts exactly the same abstraction. Technically, when LoRA is applied to multiple matrices 
+, each with low-rank update 
+, one can stack or block-diagonalize them into a single object:
+
+either by concatenating their vectorizations into a single parameter vector, or
+by forming a block-diagonal matrix
+and defining 
+ on this aggregated parameter.
+Because we work with the Frobenius norm and Frobenius inner product, all our assumptions and proofs (Lipschitz smoothness, P? condition, expected projection assumptions, and the gradient-norm bounds) extend verbatim to this block/tensor setting: the gradient is just the concatenation of block gradients, the projection matrices become block-diagonal, and the spectral quantities that appear in the rates are determined by the blocks. In other words, our theory already covers the ※many-matrix§ case once we interpret 
+ as the concatenation of all LoRA-modified matrices.
+
+We chose to present the theory in the single-matrix notation to keep the exposition and proofs readable; this is the same simplification adopted in the theoretical treatments of RAC-LoRA and COLA, as well as in other LoRA analyses mentioned above.
+
+Planned changes in the revised version.
+
+In the revised manuscript we will:
+
+Explicitly state in the problem-formulation section that 
+ can represent either a single layer or the concatenation/block-diagonal stacking of all matrices where LoRA is applied, following the abstraction used in Hu et al. (2021), Sun et al. (2024), Malinovsky et al. (2024), Xia et al. (2024), and Zhu et al. (2024).
+Add a short remark (or appendix note) showing how the multi-matrix case is obtained via concatenation under the Frobenius norm, and why the convergence theorems and spectral assumptions carry over unchanged.
+We hope this clarifies that our optimization setting is fully compatible with the practical use of LoRA across many layers and matrices, and that the single-matrix formulation is a standard theoretical abstraction rather than a limitation of the method.
+
+References:
+Hu, Edward J., et al. ※LoRA: Low-Rank Adaptation of Large Language Models.§ International Conference on Learning Representations (ICLR), 2022.
+
+Sun, Youbang, et al. ※Improving LoRA in Privacy-Preserving Federated Learning.§ International Conference on Learning Representations (ICLR), 2024.
+
+Malinovsky, Grigory, et al. ※Randomized Asymmetric Chain of LoRA: The First Meaningful Theoretical Framework for Low-Rank Adaptation.§ arXiv, preprint arXiv:2410.08305, 2024.
+
+Xia, Wenhan, Chengwei Qin, and Elad Hazan. ※Chain of LoRA: Efficient Fine-Tuning of Language Models via Residual Learning.§ arXiv, preprint arXiv:2401.04151, 2024.
+
+Zhu, Jiacheng, et al. ※Asymmetry in Low-Rank Adapters of Foundation Models.§ Proceedings of the 41st International Conference on Machine Learning
+
+Rebuttal to Reviewer TnTK (Part 2)
+Official Commentby Authors20 Nov 2025, 02:18 (modified: 30 Nov 2025, 18:43)EveryoneRevisions
+Comment:
+2. What is actually being optimized? Clarifying the optimization problem
+You noted that the optimization problem in the paper is not clearly specified and raised the concern that, if 
+ itself is optimized, this would correspond to full fine-tuning, which contradicts the LoRA restriction. You also found it odd that standard LoRA achieves only 
+ of full fine-tuning in our experiments.
+
+Clarification.
+
+Our starting point is the general fine-tuning objective
+ 
+where 
+ denotes the fixed pre-trained model and 
+ is the trainable adaptation.
+
+Different LoRA-style methods correspond to different structured parameterizations of 
+:
+
+In the original LoRA formulation, one optimizes low-rank factors 
+ and 
+ so that
+ 
+which yields the adapted model
+ 
+
+In COLA and RAC-LoRA, the update is built as a sum of low-rank components,
+ 
+ 
+giving
+ 
+ 
+
+Our framework follows this latter, chain-style formalism. Algorithm~1 specifies how the factors 
+ and 
+ are constructed at each step, and the resulting model is
+ 
+ 
+
+Thus, throughout the paper, the optimization variable is the structured low-rank adaptation 
+ (through the factors 
+), and our convergence guarantees are for this LoRA-parameterized problem, not for unrestricted full fine-tuning.
+
+On the 86% accuracy vs full fine-tuning.
+
+Given the low rank of the LoRA adaptation and the limited capacity of the chosen architecture, it is not surprising that LoRA does not fully match full-parameter fine-tuning. LoRA restricts updates to a low-dimensional subspace; when that subspace is too small to capture the optimal full-rank solution, a gap in accuracy is expected. Our goal is to show that LoRA-style methods converge within this subspace, not that they always recover full-FT performance.
+
+We will clarify this interpretation in the experimental section.
+
+ Replying to Rebuttal to Reviewer TnTK (Part 2)
+Rebuttal to Reviewer TnTK (Part 3)
+Official Commentby Authors20 Nov 2025, 02:19Everyone
+Comment:
+3. ※Standard§ nature of theoretical results
+You commented that the theoretical results are not surprising and are largely standard.
+
+Response.
+
+We respectfully but firmly disagree with the implication that ※standard-looking§ convergence rates make the contribution marginal.
+
+First, it is unavoidable that our bounds resemble classical non-convex rates in form: we work under standard smoothness / P?-type assumptions and use first-order information, so one cannot hope for exotic asymptotic orders. Where our work is non-trivial is not in inventing a new inequality, but in showing that these classical guarantees actually hold for a highly structured and biased LoRA-type update:
+
+with a low-rank parameterization of the update,
+with random sketching / Bernoulli selection and projection operators 
+,
+and, in several variants, in federated settings with compression and error feedback.
+Before our work, it was not at all clear that one can recover clean, GD-style convergence guarantees in this regime without adding restrictive assumptions. In particular, even for RAC-style LoRA-type methods, there was no unified analysis covering GD/SGD/variance reduction/FL variants within a single framework.
+
+Second, we would like to stress that in modern optimization it is very common 〞 and often technically demanding 〞 to obtain new results using ※known§ tools. Almost all influential convergence analyses build on smoothness, descent lemmas, Lyapunov functions, etc.; what matters is where and how these tools are applied. In our case:
+
+we design a Bernoulli-LoRA update that is compatible with a Lyapunov-style analysis despite the bias and randomness introduced by low-rank adapters,
+we track the effect of the Bernoulli mechanism through the spectral properties of the expected projections,
+and we extend this to multiple algorithmic regimes (GD/SGD/PAGE/FL variants) within the same conceptual framework.
+To the best of our knowledge, this is the first work that provides rigorous convergence guarantees for a family of Bernoulli / RAC-style LoRA methods with stochastic, variance-reduced, and federated variants. We will make this positioning more explicit in the revised version and will carefully downplay any wording that could be read as claiming novel proof techniques rather than novel applications and extensions of established techniques to a non-trivial LoRA setting.
+
+Rebuttal to Reviewer TnTK (Part 4)
+Official Commentby Authors20 Nov 2025, 02:20 (modified: 20 Nov 2025, 02:23)EveryoneRevisions
+Comment:
+4. Lack of experiments on foundation models (ViT, LLMs, SDMs)
+You suggested that experiments on foundation models would be more convincing given how PEFT is used in practice.
+
+Response.
+
+We would like to stress that the primary contribution of this work is theoretical, not empirical benchmarking. Our goal is to provide a rigorous convergence framework for Bernoulli/RAC-style LoRA methods (including stochastic, variance-reduced, and FL variants), in the same spirit as many optimization papers where experiments serve to illustrate the theory rather than to compete as a large-scale systems paper.
+
+For this reason, we deliberately chose small-scale, controlled tasks where we can closely track the behavior predicted by our assumptions and bounds. This setting is standard for theoretical optimization work and is the most appropriate environment to validate the convergence phenomena we analyze.
+
+That said, we fully agree that showing at least one realistic PEFT scenario would strengthen the paper from a practitioner＊s perspective. Within the available resources we are working towards:
+
+including at least one more realistic PEFT experiment, e.g., fine-tuning a transformer-based model on a standard NLP or vision benchmark, and
+if feasible in the timeline, exploring a federated scenario with a moderately sized model.
+In the revised manuscript, we will (i) explicitly state that the paper should be read first and foremost as a theoretical contribution, and (ii) clearly acknowledge the absence of foundation-model experiments as a limitation of the current empirical section, while indicating the additional experiments we are adding as complementary evidence rather than the main contribution.
+
+Rebuttal to Reviewer TnTK (Part 5)
+Official Commentby Authors20 Nov 2025, 02:24 (modified: 20 Nov 2025, 02:27)EveryoneRevisions
+Comment:
+5. Question: What is the matrix 
+ in Eq. (8)?
+You asked for a clearer definition of the matrix 
+ in Eq. (8).
+
+Clarification.
+
+In Section E of the appendix, we show that the Bernoulli-LoRA update can be written in the projected-gradient form
+where 
+ (or its stochastic/VR analogue), and 
+ is a symmetric positive semidefinite matrix that encodes the effect of the LoRA parameterization, the sketch matrices, and the Bernoulli choice at iteration 
+.
+
+More precisely:
+
+At each iteration 
+, Algorithm 1 flips a Bernoulli variable to decide whether to update 
+ or 
+.
+In the Left Sketch / update-
+ case, Appendix Section E shows that the update can be written as
+with the projection matrix
+where 
+ is the sketched version of 
+ and 
+ denotes the Moore每Penrose pseudoinverse.
+In the Right Sketch / update-
+ case, a symmetric derivation yields
+with
+where 
+ is the sketched version of 
+.
+We then define the random projection operator
+or
+
+Intuitively, 
+ and 
+ are projection operators onto random low-rank subspaces determined by the current LoRA factors and the sketch matrices at step 
+. They map the full gradient direction 
+ to the actually realizable update direction in 
+ when we update only 
+ or only 
+. In expectation, these operators give rise to the matrices 
+ and 
+ whose spectra appear in our convergence bounds.
+
+In the revised version, we will:
+
+Insert the explicit formulas for 
+ and 
+ immediately after Eq. (8), with a pointer to Appendix Section 5.1 where they are derived, and
+Add a short intuitive sentence along the lines of:
+※Here 
+ is the symmetric positive semidefinite matrix that projects the full gradient 
+ onto the low-rank subspace induced by the current LoRA factors and sketch matrices at iteration 
+ (see Appendix Section 5.1 for the explicit construction).§
+
+We hope this clarifies both the formal and intuitive role of 
+ in Eq. (8).
+
+ Replying to Rebuttal to Reviewer TnTK (Part 5)
+Rebuttal to Reviewer TnTK (Part 6)
+Official Commentby Authors20 Nov 2025, 02:27Everyone
+Comment:
+6. Question: Practical insights for using LoRA more efficiently
+You asked whether our theory provides insights on how to use LoRA more efficiently in real-world applications.
+
+Insights from our analysis.
+
+While our paper is primarily theoretical, it does suggest several practical guidelines, which we will make explicit in a short ※Practical Guidelines§ paragraph:
+
+Updating one side vs both.
+Our bounds depend on the spectrum of the projection operators (through quantities such as 
+). This indicates that systematically updating the ※better-conditioned§ side (as in RAC-style schemes or extremal 
+) can be more stable than blindly updating both sides, especially when one of the two factors induces a stronger projection of the gradient.
+
+Choice of rank: accuracy每cost trade-off.
+In the Gaussian case analyzed in Appendix D (Lemma 2), we show that
+ 
+ 
+so the convergence rate in Theorem 1, $$ \mathbb{E}!\left[|\nabla f(\widetilde W^T)|F^2\right] \le \frac{2\Delta^0}{\gamma,\lambda{\min}^p T}, $$ improves linearly with the rank 
+ (for fixed 
+). Thus, larger rank accelerates convergence in our theory. At the same time, a higher rank increases the number of trainable parameters and the per-step computational and memory cost. Our analysis therefore highlights an explicit accuracy每cost trade-off in choosing the LoRA rank, rather than claiming that ※smaller rank is always better.§
+
+Stepsizes and spectral constants.
+The stepsize constraints in Theorems 1每2 depend on Lipschitz and spectral constants (e.g., via 
+). This supports the standard practice of tuning learning rates carefully and suggests that overly aggressive stepsizes can violate the theoretical conditions and hurt both convergence and stability.
+
+Federated setting and communication efficiency.
+The FL variants show that combining LoRA with compression and error feedback (QGD/MARINA/EF21-style mechanisms) still admits provable convergence. This provides a principled way to design communication-efficient PEFT methods in federated scenarios: one can safely use LoRA adapters together with standard compressors and error-feedback schemes, knowing that the resulting method fits within our convergence framework.
+
+We will highlight these points more clearly in the revised version so that practitioners can see how the theoretical analysis informs design choices such as which side to update, how to choose rank, and how to combine LoRA with FL and compression.
+
+Thank you again for your constructive feedback. We believe that the clarifications above and the planned revisions will address your concerns about the setting, optimization problem, and practical implications of our theoretical results.
+
+Official Review of Submission25467 by Reviewer 8Tnv
+Official Reviewby Reviewer 8Tnv01 Nov 2025, 15:31 (modified: 12 Nov 2025, 18:30)EveryoneRevisions
+Summary:
+The paper introduces Bernoulli-LoRA, a novel LoRA-based parameter-efficient fine-tuning (PEFT) method. At each training iteration, Bernoulli-LoRA conducts a Bernoulli trial to decide whether to optimize the 
+ or 
+ module, keeping the other fixed. Building on this framework, the authors propose seven variants of Bernoulli-LoRA tailored to different optimization scenarios, thereby addressing a broad spectrum of fine-tuning challenges. Furthermore, the paper provides a theoretical convergence analysis for Bernoulli-LoRA and all its variants, offering formal justification for the proposed approach.
+
+Soundness: 3: good
+Presentation: 3: good
+Contribution: 2: fair
+Strengths:
+The main strength of this paper lies in its theoretical contributions. Overall, the manuscript is well-written and presents a rigorous theoretical development. I have carefully examined all the proofs and confirm that they are correct. Moreover, the analytical results have the potential to be extended to a broader class of LoRA-based methods, opening up promising directions for future research on the theoretical understanding of convergence in PEFT frameworks. In addition, the proposed algorithm is straightforward to implement and practically applicable.
+
+Weaknesses:
+The reviewer is skeptical about the contribution of the paper, both practically and theoretically.
+
+About the theoretical contributions:
+It appears that Bernoulli-LoRA is a relatively straightforward modification of RAC-LoRA [1]. Specifically, rather than deterministically alternating between the left and right sketches, Bernoulli-LoRA introduces stochasticity by performing a Bernoulli trial at each iteration to decide which module to update. Consequently, the theoretical results presented in the paper seem to be direct extensions or adaptations of prior analyses, including those from RAC-LoRA. Moreover, the theoretical advantages of this stochastic modification are not clearly justified. A detailed comparison of the convergence properties between Bernoulli-LoRA and RAC-LoRA would substantially strengthen the paper. I recommend that the authors include a remark or a subsection discussing the theoretical limitations of RAC-LoRA＊s design and explaining how Bernoulli-LoRA potentially addresses these weaknesses.
+
+The paper frequently asserts that Bernoulli-LoRA provides a unifying framework for existing update strategies. This claim is ambitious but currently lacks rigorous theoretical or empirical substantiation. The authors are encouraged to explicitly identify the PEFT methods that fall under this framework and to formally articulate the theoretical mechanism through which Bernoulli-LoRA generalizes them.
+
+About the experimental results:
+Although the paper proposes multiple variants of Bernoulli-LoRA for different fine-tuning scenarios, the experimental evaluation is limited in scope and scale, which weakens the demonstration of the framework＊s practical effectiveness. To better substantiate the empirical claims, it is recommended that the authors extend the experiments to more comprehensive and widely recognized benchmarks commonly used to assess LoRA-based methods〞such as natural language understanding and generation tasks [2] or vision benchmarks [3].
+Questions:
+My main concerns are presented in the Weaknesses section. If these concerns are adequately addressed, I am willing to adjust my evaluation accordingly.
+
+References:
+
+[1] Randomized Asymmetric Chain of LoRA: The First Meaningful Theoretical Framework for Low-Rank Adaptation. arXiv, 2024.
+
+[2] LoRA: Low-Rank Adaptation of Large Language Models. ICLR, 2022.
+
+[3] V-PETL Bench: A Unified Visual Parameter-Efficient Transfer Learning Benchmark. NeurIPS, 2024.
+
+Flag For Ethics Review: No ethics review needed.
+Rating: 2: reject, not good enough
+Confidence: 4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.
+Code Of Conduct: Yes
+Rebuttal to Reviewer 8Tnv (Part 1)
+Official Commentby Authors21 Nov 2025, 17:49Everyone
+Comment:
+Dear Reviewer 8Tnv,
+
+Thank you very much for your careful reading of our submission and for the detailed and constructive review. We especially appreciate that you:
+
+Highlighted the theoretical strength of the paper and described the manuscript as well-written with a rigorous theoretical development.
+Carefully checked the proofs and confirmed their correctness.
+Noted that the analytical results have the potential to be extended to a broader class of LoRA-based methods, opening promising directions for future work.
+Pointed out that the proposed algorithm is straightforward to implement and practically applicable.
+Below we address your concerns point by point.
+
+1. Relation to RAC-LoRA and perceived lack of theoretical novelty
+You expressed skepticism about the theoretical contribution, noting that Bernoulli-LoRA appears to be a straightforward modification of RAC-LoRA, with theoretical results that seem to be direct extensions of prior analyses.
+
+Our intent and clarification.
+We agree that Bernoulli-LoRA conceptually builds on the RAC-LoRA idea of separately updating the low-rank factors. However, our goal is not to claim strictly stronger convergence rates than RAC-LoRA, but to:
+
+Generalize the update mechanism via a Bernoulli random choice, which
+
+recovers RAC-style asymmetric updates as limiting cases (e.g., always updating one side), and
+yields a family of algorithms parameterized by the Bernoulli probability 
+ and the sketch distributions.
+Extend the RAC-LoRA-style analysis beyond full-gradient methods to stochastic, variance-reduced, and federated optimization with compression and error feedback (PAGE, MVR, QGD, MARINA, EF21). These settings, particularly the combination of:
+
+low-rank reparameterization,
+random sketching (left/right), and
+communication compression + error feedback in FL,
+are not covered by existing LoRA theory.
+Introduce and analyze the ※positive expected projection§ condition and the associated random projection operator 
+. Handling the additional layer of randomness (Bernoulli mask + random sketches) in the convergence proofs required new lemmas and nontrivial adaptations of standard non-convex analysis.
+
+Even if the final rates resemble classical non-convex convergence bounds in form, obtaining them in this LoRA + random sketching + FL with compression setting is not a mechanical reuse of RAC-LoRA. This is similar in spirit to other works in optimization, where combining existing building blocks in a new setting still requires substantial new technical work.
+
+Planned changes in the paper.
+
+To better reflect this and avoid overstating novelty, we will:
+
+Explicitly separate which parts of the analysis are direct adaptations of RAC-LoRA and which are genuinely new (e.g., variance-reduced / FL variants, projection-based lemmas).
+Add a dedicated subsection ※Comparison with RAC-LoRA§ that:
+summarizes RAC-LoRA＊s assumptions and results,
+states precisely which results we extend and how,
+clarifies that our main theoretical contribution is generality and extension to new algorithmic regimes, rather than strictly better rates.
+We hope this will make the theoretical contribution more transparent and appropriately calibrated.
+
+ Replying to Rebuttal to Reviewer 8Tnv (Part 1)
+Rebuttal to Reviewer 8Tnv (Part 2)
+Official Commentby Authors21 Nov 2025, 18:13Everyone
+Comment:
+Rebuttal to Reviewer 8Tnv (Part 2)
+
+2. ※Unifying framework§ claim
+You noted that our claim that Bernoulli-LoRA provides a unifying framework is ambitious and currently under-justified, and you asked us to explicitly identify which PEFT methods fall under the framework and formalize the mechanism of generalization.
+
+Clarification.
+By ※unifying framework§ we mean that a single mathematical template 〞 a projected-gradient method
+with a Bernoulli choice of whether to update the ※left§ or ※right§ component,
+
+or
+
+can represent a family of LoRA-style updates.
+
+Here 
+ is a base gradient estimator (full gradient, minibatch gradient, PAGE, MVR, etc.), and 
+, 
+ are projection matrices onto random low-rank subspaces induced by the current LoRA factors and sketches. As derived explicitly in Appendix E, in the left-sketch branch we have
+and in the right-sketch branch
+where 
+ and 
+ are the sketched LoRA factors at iteration 
+ and 
+ denotes the Moore每Penrose pseudoinverse. Thus 
+ and 
+ encode, in matrix form, the effect of ※update 
+§ vs ※update 
+§ as projections of the full gradient onto the corresponding low-rank subspaces.
+
+Different choices of
+
+Bernoulli probability 
+,
+left/right sketch distributions, and
+base gradient estimators (GD / SGD / PAGE / MVR, etc.)
+recover or closely approximate:
+
+RAC-style left-only/right-only chains,
+COLA-like sequential low-rank updates,
+standard LoRA-type updates with factorized low-rank modules, and
+their federated / communication-efficient variants (via the FL extensions).
+Planned changes in the paper. To substantiate this more concretely, we will:
+
+Replace overly broad phrases such as ※unifies almost all PEFT methods§ by a more precise claim:
+※Our framework unifies a family of LoRA-style low-rank gradient updates, including RAC-LoRA-type asymmetric schemes and their stochastic and federated variants, under a single projection-based analysis.§
+
+This should make the scope of ※unification§ explicit and technically justified.
+
+ Replying to Rebuttal to Reviewer 8Tnv (Part 2)
+Rebuttal to Reviewer 8Tnv (Part 3)
+Official Commentby Authors21 Nov 2025, 18:14Everyone
+Comment:
+3. Limited experimental evaluation and lack of standard benchmarks
+You pointed out that the experimental evaluation is limited in scope (linear regression and MNIST) and suggested extending experiments to more comprehensive benchmarks closer to typical LoRA usage (e.g., NLU or vision tasks).
+
+Our intended role of experiments.
+The paper is primarily theoretical in nature. The experiments are deliberately small-scale and controlled, serving as sanity checks that:
+
+the proposed methods behave in line with the theoretical predictions, and
+Bernoulli-LoRA is not unstable or degenerate in practice.
+This design follows common practice in optimization papers whose main emphasis is on theory.
+
+We fully agree, however, that from a PEFT/LoRA practitioner＊s perspective, larger-scale experiments would significantly strengthen the paper.
+
+Planned additions.
+
+Within the remaining time window, we are working on:
+
+Adding at least one more realistic fine-tuning setup, for example:
+a transformer-based model (e.g., RoBERTa-style) on a text classification / NLU benchmark, or
+a moderate-scale vision backbone on a standard image dataset.
+Including federated experiments where the Bernoulli-LoRA-FL variants are actually exercised in a heterogeneous client setting.
+In the rebuttal, we will report any new results that are ready, and in the camera-ready version (if accepted) we will integrate the complete expanded experimental section. We will also explicitly state that our main contribution is the unified theoretical framework, with experiments serving as illustrative validation rather than an exhaustive empirical study.
+
+Once again, we thank you for your detailed comments and for indicating that you are willing to adjust your evaluation if these concerns are addressed. We hope the above clarifications, together with the planned revisions and additional experiments, will help resolve your doubts about the contribution of the paper.
+
+Official Review of Submission25467 by Reviewer CiyU
+Official Reviewby Reviewer CiyU31 Oct 2025, 22:32 (modified: 12 Nov 2025, 18:30)EveryoneRevisions
+Summary:
+This paper introduces Bernoulli-LoRA, a theoretical framework that generalizes Low-Rank Adaptation (LoRA) methods for parameter-efficient fine-tuning (PEFT). The key idea is to use a Bernoulli random mechanism to decide whether to update one of the two low-rank matrices A or B during each iteration. The authors establish convergence guarantees under standard non-convex optimization assumptions (smoothness, Lipschitz continuity, P? condition) and extend the analysis to the non-smooth convex case with both constant and adaptive step sizes. Empirical results on linear regression and MNIST classification demonstrate that Bernoulli-LoRA performs comparably to RAC-LoRA and COLA, while offering a cleaner and more general theoretical foundation.
+
+Soundness: 3: good
+Presentation: 3: good
+Contribution: 3: good
+Strengths:
+Introducing stochastic binary masks within LoRA＊s low-rank structure is original and intuitively appealing.
+
+The paper provides rigorous convergence theorems for multiple Bernoulli-LoRA variants, including SGD, variance reduction (PAGE, MVR), and FL settings with compression and error feedback.
+
+Experimental evidence aligns with theoretical convergence predictions﹝
+
+Weaknesses:
+Some theoretical assumptions are idealized for real-world applications. In particular, the convergence proofs rely heavily on Lipschitz smoothness and positive expected projection conditions that may not hold under real LoRA parameterizations, where f(W_0 + BA) is non-smooth and non-Lipschitz (as the paper itself admits). There is no empirical check of these assumptions.
+
+Experiments are limited to small-scale tasks (linear regression, MNIST). No evaluation on modern large-scale or multimodal models is provided.
+
+Questions:
+How does Bernoulli-LoRA behave in the presence of non-i.i.d. data in Federated Learning?
+
+Since f(W_0 + BA) loses Lipschitz smoothness, how realistic are the assumptions used in Theorem 1每8 for deep networks?
+
+Flag For Ethics Review: No ethics review needed.
+Rating: 6: marginally above the acceptance threshold. But would not mind if paper is rejected
+Confidence: 2: You are willing to defend your assessment, but it is quite likely that you did not understand the central parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.
+Code Of Conduct: Yes
+Rebuttal to Reviewer CiyU (Part 1)
+Official Commentby Authors21 Nov 2025, 18:17Everyone
+Comment:
+We thank the reviewer for the positive assessment of the soundness, presentation, and contribution of our work, and for highlighting that:
+
+introducing stochastic binary masks within the LoRA low-rank structure is original and intuitively appealing;
+the paper provides rigorous convergence theorems for multiple Bernoulli-LoRA variants (SGD, PAGE, MVR, and FL with compression and error feedback);
+the experimental evidence is consistent with the theoretical convergence behavior.
+Below we respond to the raised weaknesses and questions.
+
+1. ※Idealized§ assumptions: smoothness and positive expected projection
+Some theoretical assumptions are idealized for real-world applications. In particular, the convergence proofs rely heavily on Lipschitz smoothness and positive expected projection conditions that may not hold under real LoRA parameterizations, where 
+ is non-smooth and non-Lipschitz (as the paper itself admits). There is no empirical check of these assumptions.
+
+Response.
+
+We fully agree that our assumptions are idealized for modern deep networks and LoRA parameterizations. This is, however, standard in non-convex optimization and FL theory: smoothness, P?-type conditions, and structured projection assumptions are widely used modeling abstractions that enable rigorous convergence analysis, rather than exact descriptions of all practical architectures.
+
+Concretely:
+
+The Lipschitz gradient / smoothness assumption is imposed on the underlying loss 
+ as a function of the full parameter matrix. In many analyses of SGD, variance reduction, and FL algorithms, such assumptions are used as the baseline for understanding first-order methods, even though real networks may violate them pointwise. Our contribution is to show that under the same type of assumptions used for classical GD/SGD/PAGE/MARINA/EF21 analyses, one can obtain clean guarantees for Bernoulli-LoRA with low-rank structure and sketching.
+The positive expected projection assumption captures how much of the true gradient is preserved on average when we project onto the random low-rank subspace induced by the LoRA factors and sketches. In Appendix D we show that for natural Gaussian sketches this condition holds with
+ 
+yielding transparent spectral constants in the rates. Thus, the assumption is not arbitrary; it is satisfied exactly in canonical randomized settings.
+Regarding empirical checking of these assumptions: verifying smoothness or projection constants directly on large deep models is challenging and, to our knowledge, rarely done even in purely optimization-focused work. Instead, we follow the usual practice of (i) clearly stating the assumptions, (ii) giving explicit examples (Gaussian sketches) where they provably hold, and (iii) showing that under these assumptions Bernoulli-LoRA behaves as the theory predicts on controlled problems.
+
+In the revised version we will:
+
+highlight the Gaussian example (Lemma 2) earlier in the main text as concrete evidence that the projection assumption is satisfied in a meaningful random setting.
+ Replying to Rebuttal to Reviewer CiyU (Part 1)
+Rebuttal to Reviewer CiyU (Part 2)
+Official Commentby Authors21 Nov 2025, 18:18Everyone
+Comment:
+2. Limited scale of experiments
+Experiments are limited to small-scale tasks (linear regression, MNIST). No evaluation on modern large-scale or multimodal models is provided.
+
+Response.
+
+We would like to stress that our paper is primarily theoretical. The main contribution is a convergence framework for Bernoulli/RAC-style LoRA updates (GD, SGD, PAGE, MVR, and FL with compression and error feedback), not a new large-scale system with extensive benchmarks.
+
+For this reason, we intentionally focused on small, controlled tasks where we can carefully track the behavior predicted by the theory and verify that the empirical convergence curves match the theoretical rates. This practice is common in optimization papers, where experiments serve mainly as sanity checks for the analysis rather than as exhaustive empirical evaluations.
+
+That said, we agree that including at least one more realistic PEFT experiment would strengthen the paper from a practitioner＊s perspective. Within our computational budget we are:
+
+running additional experiments on a moderately sized transformer-based model (e.g., a RoBERTa-like architecture for text classification or a ViT-like model for vision), using Bernoulli-LoRA and RAC-LoRA as baselines;
+and, if feasible within the discussion timeline, testing one of our federated variants in a heterogeneous-client setting on a standard FL benchmark.
+In the revised manuscript we will:
+
+explicitly state that the work should be read first and foremost as a theoretical contribution;
+clearly list the absence of large-scale foundation-model experiments as a limitation of the current empirical section, with the new experiments added as complementary evidence rather than the main contribution.
+ Replying to Rebuttal to Reviewer CiyU (Part 2)
+Rebuttal to Reviewer CiyU (Part 3)
+Official Commentby Authors21 Nov 2025, 18:19Everyone
+Comment:
+3. Question (1): Behavior under non-i.i.d. data in Federated Learning
+Q1. How does Bernoulli-LoRA behave in the presence of non-i.i.d. data in Federated Learning?
+
+Response.
+
+Our FL analysis considers the standard global objective
+ 
+ 
+where each client loss 
+ satisfies the same smoothness (and P?, where used) assumptions as in classical analyses of federated methods with compression and error feedback.
+
+Crucially, we do not assume that the local data distributions are i.i.d. across clients. Heterogeneity is absorbed into the differences between the functions 
+, exactly as in existing analyses of QGD/MARINA/EF21-type FL algorithms. Non-i.i.d. data affects:
+
+the variance of local gradient estimators and
+the constants in the convergence bounds (variance terms, Lipschitz/P? parameters per client),
+but it does not invalidate the convergence results as long as each 
+ satisfies the assumed regularity conditions.
+
+We will make this explicit in the FL section by:
+
+stating clearly that client data can be arbitrarily heterogeneous,
+and adding a short discussion connecting our setting to standard non-i.i.d. FL analyses.
+ Replying to Rebuttal to Reviewer CiyU (Part 3)
+Rebuttal to Reviewer CiyU (Part 4)
+Official Commentby Authors21 Nov 2025, 18:19Everyone
+Comment:
+4. Question (2): Realism of smoothness assumptions for 
+Q2. Since 
+ loses Lipschitz smoothness, how realistic are the assumptions used in Theorems 1每8 for deep networks?
+
+Response.
+
+We agree that, strictly speaking, 
+ need not be globally smooth or Lipschitz when instantiated with realistic deep architectures and LoRA parameterizations. This is exactly why we carefully phrase our results as conditional on standard smoothness/P? assumptions on 
+ (and on the projection operators), rather than claiming they hold for every possible network.
+
+Our view is that these assumptions should be interpreted in the same way as in most modern non-convex optimization theory:
+
+They provide an analytically tractable model of the training dynamics.
+They are satisfied exactly in a number of useful special cases (e.g., convex or mildly non-convex smooth models; Gaussian sketch projections), and
+They often constitute a reasonable approximation to the behavior of deep networks in the regime of interest (small stepsizes, bounded iterates).
+Our main contribution is to demonstrate that, under the same type of assumptions commonly used for first-order methods, one can obtain clean convergence guarantees for a family of Bernoulli-LoRA methods with low-rank structure, random sketching, and FL extensions. We will clarify this positioning more strongly in the paper and emphasize that our results are not meant as a literal description of every practical deep network, but as a rigorous theoretical framework that can guide and justify the design of LoRA-style algorithms.
+
+We again thank Reviewer CiyU for the constructive feedback and for recognizing the originality and rigor of our framework. We believe that the clarifications above, together with the planned textual improvements and additional experiments, address the main concerns about assumptions, FL heterogeneity, and empirical scope.
+
+Re: rebuttal from the authors
+Official Commentby Reviewer CiyU21 Nov 2025, 19:05 (modified: 21 Nov 2025, 19:05)EveryoneRevisions
+Comment:
+Thanks for your detailed response. I carefully go through your comments. Most of my concerns have been addressed. I tend to keep my score.
+
+However, I would also like to state that there are some strategies to weaken those assumptions, though the Lipschitz conditions are commonly-used in learning theory community. For example, does the theoretical results still hold under local Lip condition?
+
+Re: rebuttal from the authors
+Official Commentby Reviewer CiyU21 Nov 2025, 19:14 (modified: 21 Nov 2025, 19:17)EveryoneRevisions
+Comment:
+By the way, have you resubmitted the updated manuscript? If so, it would be helpful to highlight your revised content in color.
+
+ Replying to Re: rebuttal from the authors
+Response to Reviewer CiyU＊s follow-up comment
+Official Commentby Authors23 Nov 2025, 21:03Everyone
+Comment:
+Thank you very much for your follow-up and for carefully reading our response.
+
+Regarding your question on weakening the smoothness assumptions: our current analysis is stated under a global Lipschitz gradient assumption for clarity, but the proofs only require Lipschitzness along the iterates and on the relevant sublevel set. In other words, the arguments extend to a standard local Lipschitz setting, where the gradient of the loss is Lipschitz on the set of points visited by the algorithm (or on a bounded sublevel set containing them), which is the usual relaxation considered in optimization and learning theory. We would also like to emphasize that this extension applies both to the results relying on Lipschitz gradients (Assumption 1) and to the parts of the analysis that use Lipschitz continuous objective functions (Assumption 9) in the non-smooth setting.
+
+Concerning the manuscript: we are currently implementing the textual clarifications and additional experiments discussed in the rebuttal and will upload an updated version. Following your suggestion, we will highlight the revised parts in color so that the changes are easy to identify.
+
+ Replying to Response to Reviewer CiyU＊s follow-up comment
+Re: Rebuttal
+Official Commentby Reviewer CiyU26 Nov 2025, 09:41Everyone
+Comment:
+Thanks for your follow up. Could the authors explain how could we ensure the gradient is Lipschitz along the iterates in practice? Does it always hold? Anyway, I believe the current assumption is standard in learning theory. This would be not a big issue of this manuscript.
+
+Official Review of Submission25467 by Reviewer TCPp
+Official Reviewby Reviewer TCPp22 Oct 2025, 23:41 (modified: 12 Nov 2025, 18:30)EveryoneRevisions
+Summary:
+This paper introduces Bernoulli LoRA, which is a novel theoretical framework for extending and understanding LoRA methods. Moreover, this paper derives convergence rates under different algorithm such as GD, SGD, and federated GD with variant assumptions. Finally, the authors support their theoretical findings with numerical results.
+
+Soundness: 2: fair
+Presentation: 1: poor
+Contribution: 2: fair
+Strengths:
+Comprehensive theoretical results This paper studied Bernoulli LoRA, and proved the convergence results under different assumptions and algorithms (see Table 1) which is solid.
+
+Framework to analyze LoRA Theoretical analysis of the optimization process of LoRA is difficult, and this paper proposes a novel idea to address this issue. It seems their framework can theoretically cover almost all fine-tuning problems under regular assumptions.
+
+Weaknesses:
+Poor writing quality Section 2: Problem Statement seems to be misplaced. The transition from Section 1 to Section 2 is non-smooth. Moreover, it seems to me that Section 1 and Section 3 are more coherent.
+
+Missing important features of fine-tuning Bernoulli LoRA makes the theoretical analysis of LoRA tractable but it also misses some important features of the fine-tuning problems, such as how does the pre-trained model, relation between pre-training data and fine-tuning data affects the convergence. The results of this work lacks such interpretation.
+
+Weak experimental results The experiment section (Section 7) contains two parts: linear regression and MLP for MNIST. The size of the dataset and network architecture are too toy. Moreover, the experiments do not show or support the superiority of Bernoulli LoRA, and it makes me wonder why we study it in the first place? If the only reason is that Bernoulli LoRA is theoretically tractable, then the results of the paper seem less interesting the lack practical relevance.
+
+Missing literature reviews This paper misses discussion of several studies on LoRA optimization, such as follows.
+
+[1] Jang, Uijeong, Jason D. Lee, and Ernest K. Ryu. "LoRA training in the NTK regime has no spurious local minima." arXiv preprint arXiv:2402.11867 (2024).
+
+[2] Xu, Ziqing, et al. "Understanding the Learning Dynamics of LoRA: A Gradient Flow Perspective on Low-Rank Adaptation in Matrix Factorization." arXiv preprint arXiv:2503.06982 (2025).
+
+[3] Kim, Junsu, Jaeyeon Kim, and Ernest K. Ryu. "LoRA Training Provably Converges to a Low-Rank Global Minimum or It Fails Loudly (But it Probably Won't Fail)." arXiv preprint arXiv:2502.09376 (2025).
+
+[4] Day?, Arif Kerem, and Sitan Chen. "Low-rank fine-tuning lies between lazy training and feature learning." Proceedings of Machine Learning Research vol 291 (2025): 1-57.
+
+Questions:
+Question 1 What is the motivation for Bernoulli LoRA (in Algorithm 1)? Section 5.1 suggest Bernoulli LoRA can be interpreted as projecting the gradient onto a random subspace (see equation 8). However, I don't see the intuition why such approach will make the algorithm work better. Besides, 
+ (in equation 8) misses definition.
+
+Question 2 How to interpret the dependency of 
+ in the bounds in Theorem 1 and Theorem 2? It seems as one sets 
+, the bounds get better, i.e., 
+ 
+. However, based on the interpretation in equation 8, 
+ suggests that one should only update 
+ and keep 
+ as fixed, which seems strange.
+
+Question 3 What is the definition of 
+ in Theorem 3, and 
+ in Theorem 4, 
+ in Theorem 5?
+
+Question 4 Why in Section 7.1, the fine-tuning loss is defined with the regularization 
+ 
+ instead of the standard 
+ regularization such as 
+?
+
+Flag For Ethics Review: No ethics review needed.
+Rating: 2: reject, not good enough
+Confidence: 4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.
+Code Of Conduct: Yes
+Rebuttal to Reviewer TCPp (Part 1)
+Official Commentby Authors21 Nov 2025, 18:22Everyone
+Comment:
+Dear Reviewer TCPp,
+
+Thank you for your thoughtful and detailed review. We are grateful that you:
+
+Recognized the comprehensive theoretical results and explicitly noted that the convergence guarantees across different algorithms (GD, SGD, FL variants) are solid.
+Highlighted that Bernoulli-LoRA provides a framework to analyze LoRA, making the optimization process more tractable and potentially covering a broad class of fine-tuning problems under regular assumptions.
+We now respond to your concerns point by point.
+
+1. Writing quality and structure of Section 2
+You noted that Section 2 (※Problem Statement§) feels misplaced and that the transition from Section 1 to Section 2 is non-smooth, while Sections 1 and 3 seem more coherent together.
+
+Response and planned changes.
+
+We appreciate this structural feedback. In a revised version we will:
+
+Reorganize Sections 1每3 so that:
+Section 1 briefly introduces LoRA/PEFT and clearly states our main contributions and high-level motivation.
+A streamlined ※Problem Setup and Notation§ section will appear early, clearly defining 
+, 
+, the objective 
+, and the finite-sum / expectation / FL settings.
+The current ※Motivation§ material will be condensed and integrated naturally into the introduction and related work, instead of being separated in a way that breaks the flow.
+Add forward references to the main results (e.g., pointing from the setup directly to Table 1 and the core theorems) to make the narrative smoother.
+We believe this restructuring will significantly improve readability and address the concern about the current placement of Section 2.
+
+ Replying to Rebuttal to Reviewer TCPp (Part 1)
+Rebuttal to Reviewer TCPp (Part 2)
+Official Commentby Authors21 Nov 2025, 18:23Everyone
+Comment:
+2. Missing discussion of pre-training and data distributions
+You mentioned that our analysis ※misses some important features of fine-tuning,§ such as how the pre-trained model and the relationship between pre-training and fine-tuning data affect convergence, and that the results lack interpretation along these lines.
+
+Clarification.
+
+Our work focuses on the optimization problem conditional on a fixed pre-trained model. We treat 
+ as fixed and study the dynamics of optimizing a loss 
+ over a low-rank subspace of updates 
+. In that sense, the data distribution (pre-training vs fine-tuning) is encapsulated in the choice of 
+ and its properties (e.g., smoothness, P?), and our results are conditional on these properties.
+
+We agree that understanding how the pre-training distribution and model architecture induce or violate these assumptions is an important and complementary research direction, but it is orthogonal to our main focus on convergence of LoRA-style optimization.
+
+Planned changes.
+
+We will:
+
+Add a short ※Discussion: Role of Pre-Training and Data Distributions§ subsection that:
+clarifies that we condition on the pre-trained model and treat 
+ as the fine-tuning loss,
+positions our work as complementary to recent analyses of LoRA dynamics (e.g., NTK/gradient-flow regimes, lazy vs feature learning).
+Explicitly acknowledge that we do not claim to explain representation learning or generalization effects of pre-training, but rather provide a rigorous optimization layer on top of whatever 
+ results from pre-training.
+ Replying to Rebuttal to Reviewer TCPp (Part 2)
+Rebuttal to Reviewer TCPp (Part 3)
+Official Commentby Authors21 Nov 2025, 18:23Everyone
+Comment:
+3. Weak experimental results and perceived practical relevance
+You noted that our experiments (linear regression and MNIST) are too toy, do not demonstrate superiority of Bernoulli-LoRA, and questioned why the method should be studied if its only advantage is theoretical tractability.
+
+Clarification of our goals.
+
+Our primary contribution is theoretical: to propose a framework that allows us to rigorously analyze LoRA-style updates (including stochastic, variance-reduced, and FL variants with compression and error feedback) in a unified way. The experiments are intentionally small and controlled, designed to:
+
+verify that the convergence behavior observed empirically is consistent with the theory, and
+demonstrate that Bernoulli-LoRA is at least competitive, not that it dominates all existing practical variants.
+We do not claim that Bernoulli-LoRA is empirically superior to RAC-LoRA or other LoRA variants on large-scale benchmarks.
+
+Planned experimental extensions.
+
+To better address the practical concerns, we are:
+
+Running additional experiments on more realistic setups, such as transformer-based models on text classification tasks or larger vision models, where PEFT is typically used.
+Considering FL-style experiments where the federated variants of Bernoulli-LoRA are actually applied in heterogeneous client settings.
+We will report any new results that are ready during the discussion phase and integrate them into the final version if the paper is accepted. At the same time, we will explicitly state in the paper that the experiments are meant as sanity checks for the theory, not as an exhaustive empirical benchmark.
+
+ Replying to Rebuttal to Reviewer TCPp (Part 3)
+Rebuttal to Reviewer TCPp (Part 4)
+Official Commentby Authors21 Nov 2025, 18:25Everyone
+Comment:
+4. Missing literature on LoRA optimization
+You pointed out that several recent studies on LoRA optimization (e.g., NTK regime, gradient flow, global minima / failure modes, lazy-training vs feature learning) are not discussed.
+
+Response and planned changes.
+
+We thank you for these valuable pointers. We will:
+
+Add a dedicated related work subsection on LoRA optimization theory, including:
+NTK-regime analyses,
+gradient-flow perspectives on low-rank adaptation,
+recent results on convergence to low-rank global minima or failure modes,
+analyses placing low-rank fine-tuning between lazy training and feature learning.
+Clearly position our work relative to these studies by emphasizing that:
+they typically analyze specific regimes (e.g., continuous-time limits, simplified matrix factorization models),
+while our focus is on discrete-time algorithmic convergence of stochastic / VR / FL LoRA-style methods under more general non-convex assumptions and with communication/compression aspects.
+We believe this will better situate our contribution in the growing body of LoRA theory.
+
+Rebuttal to Reviewer TCPp (Part 5)
+Official Commentby Authors21 Nov 2025, 18:25 (modified: 21 Nov 2025, 18:26)EveryoneRevisions
+Comment:
+Question 1. What is the motivation for Bernoulli LoRA (in Algorithm 1)? Section 5.1 suggests Bernoulli LoRA can be interpreted as projecting the gradient onto a random subspace (see equation (8)). However, I don't see the intuition why such an approach will make the algorithm work better. Besides, 
+, 
+ (in equation (8)) miss definition.
+
+Motivation and intuition.
+Our primary motivation for Bernoulli-LoRA is not to claim that it is universally better than existing LoRA variants, but to obtain a theoretically tractable and flexible framework that:
+
+Unifies several LoRA-style update strategies as special cases (e.g., always updating the ※left§ factor, always updating the ※right§ factor, or mixtures in between).
+Connects LoRA to the rich literature on projected/compressed gradient methods by viewing the LoRA step as a gradient step projected onto a low-rank subspace defined by the current factors.
+Allows us to extend the analysis to stochastic, variance-reduced, and federated settings (PAGE, MVR, QGD, MARINA, EF21) within a single framework (which was never done before!).
+The ※random subspace§ view in Section 5.1 is mainly a theoretical lens: at each iteration we do not update the full matrix 
+, but only the low-rank component 
+. Because of the Bernoulli choice (update 
+ or 
+), the effective update direction is a random linear transformation of the true gradient. This is analogous to randomized projection / sketching methods and to compressed-gradient methods, where one can obtain convergence guarantees even if the algorithm never uses the full gradient direction directly, but only its projected/approximated version.
+
+We do not claim that this necessarily makes the algorithm ※better§ than deterministic LoRA in all practical regimes. Rather, it makes the analysis of LoRA more systematic and connects it to existing theory on random projections and compressed gradients. The gains are thus conceptual and theoretical; empirically we aim to demonstrate that Bernoulli-LoRA is stable and competitive, not that it dominates.
+
+Definition of 
+ and 
+.
+In Equation (8), we write the projected gradient estimator as
+where 
+ is the base gradient estimator (e.g., full gradient, minibatch gradient, PAGE, etc.), and 
+ is the random projection operator induced by the Bernoulli choice of which factor is updated at iteration 
+:
+
+or
+
+In Appendix Section E we show that these operators admit explicit matrix forms. In the left-sketch (update-
+) branch, the Bernoulli-LoRA update can be written as
+with
+where 
+ is the sketched version of 
+ and 
+ denotes the Moore每Penrose pseudoinverse.
+Similarly, in the right-sketch (update-
+) branch we obtain
+with
+where 
+ is the sketched version of 
+.
+
+Thus 
+ and 
+ are projection-like matrices (self-adjoint, positive semidefinite) acting on 
+ whose spectra satisfy the ※positive expected projection§ condition (Assumption 1): they map the full gradient to the effective update direction on 
+ when we update 
+ or 
+, respectively.
+
+In the revised manuscript we will:
+
+Explicitly include these formulas for 
+ and 
+ in the main text when Equation (8) is introduced, and
+Add a brief intuitive description: ※
+ and 
+ represent the projection of the gradient onto the low-rank subspace associated with updating 
+ or 
+, respectively.§
+ Replying to Rebuttal to Reviewer TCPp (Part 5)
+Rebuttal to Reviewer TCPp (Part 6)
+Official Commentby Authors21 Nov 2025, 18:27Everyone
+Comment:
+Question 2. How to interpret the dependency of 
+ in the bounds in Theorem 1 and Theorem 2? It seems as one sets 
+, the bounds get better, i.e., 
+, 
+. However, based on the interpretation in equation (8), 
+ suggests that one should only update 
+ and keep 
+ as fixed, which seems strange.
+
+Thank you for this careful observation. Let us clarify how 
+ enters the bounds and why the theory does not recommend setting 
+ in general.
+
+In our analysis we define the 
+每weighted spectral quantities
+where 
+ (resp. 
+) are the extremal eigenvalues of the expected projection matrices 
+ and 
+. Thus 
+ appears only through a convex combination of the spectral properties of these two operators.
+
+The bounds in Theorems 1每2 are then expressed in terms of 
+ and 
+. The fact that the terms 
+ and 
+ become smaller as 
+ is true only under the additional inequality 
+ and suitable relations between 
+ and 
+. In general, depending on the spectra of 
+ and 
+, the best choice of 
+ might be closer to 
+, closer to 
+, or somewhere in between. Our rates therefore do not imply that 
+ (i.e., always updating 
+) is universally optimal.
+
+Moreover, as we discuss in the section ※Discussion on Positive Expected Projection (Assumption 1)§, for the canonical Gaussian choice of sketch distributions we prove in Lemma 2 that
+ 
+which immediately yields
+ 
+In this (arguably most natural) case we obtain
+ 
+ 
+for all 
+. Hence, for Gaussian sketches, the convergence rates in Theorems 1 and 2 are actually independent of 
+, and the theory does not favor 
+ over other values.
+
+In more general settings (non-Gaussian sketches, structured 
+ induced by architecture, etc.), 
+ simply parametrizes a trade-off between the two projection operators 
+ and 
+, and our bounds make this dependence explicit. They are meant to show how the constants change with 
+, not to prescribe that 
+ is always the best choice. We will clarify this point in the revised version and explicitly connect Theorems 1每2 to the discussion and the Gaussian example to avoid the impression that the theory recommends always updating only 
+.
+
+In the revised version, we will (i) expand the definition of 
+ and 
+ just before Theorem 1 to emphasize that they are convex combinations of the spectra of 
+ and 
+,
+
+(ii) add a short remark after Theorems 1每2 explicitly stating that our bounds do not claim 
+ to be universally optimal and that the optimal choice of 
+ depends on the spectra of these operators, and (iii) highlight, right after Lemma 2 in the discussion of Assumption 1, that in the Gaussian case the eigenvalues coincide and the rates become independent of 
+. We hope this will eliminate the impression that the theory always recommends updating only 
+.
+
+ Replying to Rebuttal to Reviewer TCPp (Part 6)
+Rebuttal to Reviewer TCPp (Part 7)
+Official Commentby Authors21 Nov 2025, 18:33Everyone
+Comment:
+Question 3. What is the definition of 
+ in Theorem 3, and 
+ in Theorem 4, 
+ in Theorem 5?
+
+These symbols come from the standard notation of the base algorithms we build on:
+
+In Theorem 3 (Bernoulli-LoRA-SGD),
+ denotes the mini-batch size, i.e., the number of data points sampled at each iteration to form the stochastic gradient estimate 
+.
+
+In Theorem 4 (Bernoulli-LoRA-PAGE),
+ denotes the probability parameter of the PAGE estimator. With probability 
+, we recompute a ※more accurate§ gradient estimate (e.g., a full gradient or a large-batch gradient), and with probability 
+ we perform a cheaper incremental correction. This is exactly the standard PAGE construction, and we follow its notation.
+
+In Theorem 5 (Fed-Bernoulli-LoRA-QGD / MARINA / EF21 variants),
+ denotes the variance parameter of the (possibly biased) compressor used for communication-efficient gradient transmission. Concretely, 
+ controls the second moment of the compression error:
+which is the standard assumption in the analysis of QGD/MARINA/EF21-type methods.
+
+These definitions are present in the assumptions and algorithm descriptions (Section 4 and the start of each theorem＊s setup), but we agree that the notation could be more clearly cross-referenced in the theorem statements themselves. In the revised version, we will:
+
+Explicitly restate the meanings of 
+, 
+, and 
+ in the statements of Theorems 3每5 or immediately before them.
+Add a small notation table in the appendix summarizing these parameters.
+Question 4. Why in Section 7.1, the fine-tuning loss is defined with the regularization 
+ 
+ instead of the standard 
+ regularization such as 
+?
+
+The purpose of Section 7.1 is to provide a simple but genuinely non-convex testbed where we can empirically illustrate the behavior predicted by our non-convex convergence theory. For this reason, we deliberately chose the regularizer
+ 
+ 
+which has the following properties:
+
+ is smooth but non-convex and saturates for large 
+. This creates a non-convex landscape while preserving smoothness, matching the assumptions of our non-convex analysis.
+The regularizer is bounded and its gradient remains well-behaved, which simplifies verifying (or at least approximating) the required smoothness constants in practice.
+Using a standard 
+ regularizer would lead to a strongly convex or nearly convex problem. While such a setting is also interesting, it would not stress-test the non-convex parts of our theory.
+In other words, this regularization is chosen specifically to test the non-convex setting in a controlled way, rather than to mimic a particular real-world fine-tuning loss. The overall philosophy of the experimental section is that the paper is primarily theoretical, and experiments are used as simple, controlled demonstrations that the algorithms behave as the theory predicts. We will add a brief explanation of this choice to Section 7.1 to avoid confusion.
+
+ Replying to Rebuttal to Reviewer TCPp (Part 2)
+Official Comment by Reviewer TCPp
+Official Commentby Reviewer TCPp25 Nov 2025, 06:13Everyone
+Comment:
+Dear Authors,
+
+Thank you very much for the detailed response. After seeing your response, I can understand the theoretical results in this paper better. However, my biggest concern is
+
+Lack distribution of pre-training data and pre-trained model I respectfully disagree with your statement understanding how the pre-training distribution and model architecture induce or violate these assumptions is an important and complementary research direction, but it is orthogonal to our main focus on convergence of LoRA-style optimization. The uniqueness of optimization in fine-tuning compared with pre-training is the existence of pre-trained model. Thus, to understand the fine-tuning algorithm, it is important to understand how does the pre-trained model adapt to the fine-tuning problems. However, the theoretical results derived in this paper lacks discussions on it.
+About OpenReview
+Hosting a Venue
+All Venues
+Contact
+Sponsors
+Donate
+FAQ
+Terms of Use / Privacy Policy
+News
+OpenReview is a long-term project to advance science through improved peer review with legal nonprofit status. We gratefully acknowledge the support of the OpenReview Sponsors. ? 2025 OpenReview
+
+Bernoulli-LoRA: A Theoretical Framework for Randomized Low-Rank Adaptation | OpenReview

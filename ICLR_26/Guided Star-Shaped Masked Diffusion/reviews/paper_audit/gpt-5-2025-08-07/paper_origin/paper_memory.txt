@@ -1,0 +1,163 @@
+# Global Summary
+The paper addresses a core limitation of masked diffusion language models (MDLMs) for discrete tokens: irreversible decisions that prevent iterative error correction. It introduces a star-shaped sampling paradigm that predicts a full clean sequence at each step and then remasks via the forward process, thereby allowing tokens to be revisited. To make remasking efficient, the method adds a lightweight, learnable error predictor that targets likely mistakes for revision. The approach works with pre-trained MDLMs and typically requires only fine-tuning a small classification head.
+
+Evaluation spans unconditional text generation on OpenWebText (OWT) with sequences of 128–512 tokens, few-step regimes (32–512 steps), an iterative “loop” refinement schedule, large-scale instruction-tuned evaluation on Dream-Instruct 7B across seven benchmarks, and conditional code generation on Conala. Metrics include Perplexity (PPL via GPT-2 Large), Diversity (DIV via n-gram uniqueness for n=2–4), and MAUVE for distributional alignment.
+
+Key findings:
+- Pure star-shaped sampling across the full trajectory degrades quality; a hybrid schedule that switches to star-shaped sampling late in generation yields strong refinement. Optimal activation time is t_on ≈ 0.3 on OWT.
+- Guided targeted remasking (G-Star) outperforms unguided star-shaped remasking (Star+) in few-step regimes, most notably for 64–256 steps.
+- In loop refinement schedules on OWT (α_t = 0.9), G-Star-loop achieves large gains at low step budgets (e.g., “Steps = 128”: MAUVE “57.3” and PPL as low as “17.2”), and reaches “PPL = 9.9” at 512 steps with MAUVE “58.6”.
+- On Conala code generation, G-Star variants obtain the best conditional perplexity: “20.4” (32 steps), “17.8” (64 steps), “16.4” (128 steps).
+- On Dream-Instruct 7B, integrating G-Star with 10% refinement steps improves across all seven benchmarks, e.g., MMLU from “69.9” (reproduced baseline) to “71.2”, GPQA “31.0” to “32.8”, IFEval “56.4” to “59.3”.
+
+Caveats explicitly stated:
+- Pure star-shaped sampling early in generation leads to degeneracy; the method relies on a hybrid two-phase schedule.
+- Refinement introduces a quality–diversity trade-off; excessive refinement can reduce MAUVE as diversity decreases (Appendix C.2, C.3).
+- The framework currently supports only in-place token substitutions (no insertions/deletions).
+- Error predictor requires a separate training stage.
+
+# Introduction
+- Problem: Masked diffusion models for discrete data (e.g., text/code) make irreversible token decisions; once a [MASK] is replaced, the token cannot be revisited. This undermines iterative refinement, impacting sample quality, speed, and controlled generation.
+- Prior approaches: 
+  - ReMDM randomly re-masks a fraction of generated tokens, enabling revision but using non-selective stochastic schedules that are inefficient and require tuning.
+  - GIDD combines masked diffusion with uniform diffusion for late refinement, but has not yet reached competitive quality.
+- Proposed approach: A star-shaped sampling framework that predicts a full clean sequence (x̂0) at every step and samples the next state via the forward process conditional on that prediction, inherently enabling remasking and refinement of previously set tokens.
+- Compatibility: The method works with pre-trained MDLMs, adding a reversible sampler and a learned masking scheduler targeting predicted errors.
+- Contributions:
+  - Star-shaped formulation for masked discrete diffusion enabling iterative refinement.
+  - Learned masking scheduler that adaptively identifies and remasks tokens likely to be erroneous.
+  - Empirical superiority across text and code generation, especially in few-step regimes.
+
+# Abstract
+- Claim: A novel star-shaped sampling algorithm compatible with pre-trained masked diffusion models, plus a lightweight fine-tuning of a single layer (error predictor head), improves sample quality and efficiency, especially in low-step generation regimes.
+- Mechanism: Predict full x̂0 at each step; enable error correction via a learnable re-masking scheduler that targets likely mistakes.
+- Evaluation: Extensive ablations and diverse scenarios (text and code); method outperforms or matches existing samplers.
+
+# Preliminaries
+- Masked diffusion setup:
+  - Tokens as one-hot vectors x ∈ {0,1}^{|V|}, [MASK] token m.
+  - Forward corruption over T timesteps via schedule α_t: q(x_t | x_0) = Cat(x_t; α_t x_0 + (1−α_t)m). (Eq. 1)
+  - Standard posterior: q(x_{t−1} | x_t, x_0) equals δ_{x_t} when x_t ≠ m (deterministically preserve unmasked tokens), else a categorical mixture (Eq. 2). This reveals irreversibility once tokens are generated.
+  - f_θ trained via weighted cross-entropy to predict p_θ(x_0 | x_t).
+- ReMDM remasking:
+  - Modified posterior allows remasking of already-unmasked tokens (Eq. 3).
+  - σ_t ∈ [0, min{1, (1−α_{t−1}) / α_t}] controls remasking probability; schedules governed by hyperparameter η require careful tuning (Appendix C.1).
+  - Limitation: Non-selective remasking necessitates per-schedule hyperparameter search.
+
+# Method
+- Star-shaped masked diffusion:
+  - Redefine forward process: q(x_{1:T} | x_0) = ∏_{t=1}^T q(x_t | x_0) (Eq. 4), making latents conditionally independent given x_0. Allows non-monotonic transitions (tokens can re-mask and unmask later).
+  - Generative transition: predict x̂0 ∼ Cat(·; f_θ(x_t, t)), then sample p_θ(x_{t−1} | x_t) = q(x_{t−1} | x̂0) (Eq. 5). Each step hypothesizes a full clean sequence and remasks to appropriate noise level, enabling revision.
+  - Equivalence: Mathematically equivalent to ReMDM when σ_t = 1 − α_s; avoids extensive schedule-specific tuning (Appendix C.1).
+  - Training objective: VLB simplifies to weighted cross-entropy (Eq. 6). Claim 1 proven in Appendix A; same functional form as standard MDLM with different timestep weights w′_t. Enables reuse of pre-trained MDLM weights; strong performance can be achieved without fine-tuning the backbone.
+- Learned error-targeted remasking:
+  - Error predictor g_φ trained to identify tokens the main model f_θ likely gets wrong.
+  - Training (Algorithm 1): 
+    - Sample x_0; corrupt via q(· | x_0); predict p̂0 = Softmax(f_θ(x_t)/τ_denoiser); sample x̂0 ∼ Cat(p̂0).
+    - Compute y_i = I(x̂0,i ≠ x_0,i).
+    - Train g_φ with logistic loss over token-wise predictions p = Softmax(g_φ(x̂0)).
+  - Inference (Algorithm 2):
+    - Generate x̂0 via nucleus-filtered Softmax(f_θ(x_t)/τ_denoiser).
+    - Score tokens with logits_err = g_φ(x̂0); sample a set M of N targeted positions using Gumbel-Top-K on logits_err/τ_remask, N = ⌈(1 − α_{t−1})·L⌉.
+    - Set x_{t−1,i} = m for i ∈ M; otherwise x̂0,i. Focuses corrections on probable errors.
+
+# Experiments
+- 4 Analysis:
+  - 4.1 Setup:
+    - Dataset: OpenWebText (OWT), GPT-2 tokenizer.
+    - Pre-trained MDLM (Sahoo et al., 2024a) fine-tuned for unconditional generation of 128- and 512-token sequences; pad as needed.
+    - Generate 5,000 samples per configuration.
+    - Metrics: PPL via GPT-2 Large; Diversity DIV = ∏_{n=2..4} [#unique n-grams / #n-grams]; MAUVE (distributional alignment).
+  - 4.2 When to use star-shaped sampler:
+    - Observation: Pure star-shaped sampling produces low step-to-step similarity and degenerate text; MDLM maintains coherence early.
+    - Two-phase hypothesis: Use MDLM early (structure-building), star-shaped late (error correction).
+    - Hybrid Star+ switching improves perplexity after step 90.
+    - Ablation on activation time t_on: MAUVE peaks at t_on ≈ 0.3; poor for pure MDLM (t_on = 0.0) and pure Star (t_on = 1.0).
+    - Recommendation: Use MDLM for initial 60–80% of generation; then star-shaped for final 20–40%.
+  - 4.3 Guided star-shaped sampler:
+    - Compare Star+ (unguided) vs G-Star+ (guided) at t_on = 0.2 for 512-token OWT across 32–512 steps.
+    - G-Star+ consistently outperforms Star+ and MDLM in MAUVE and PPL, with largest gains at 64–256 steps. Gap narrows as step budget increases.
+  - 4.4 Iterative refinement regime (loop schedule):
+    - Protocol: Initial MDLM draft; refinement loop at α_t = 0.9; final MDLM completion.
+    - Steps budgets: 128, 256, 512; compare unguided Star-loop, guided G-Star-loop, and ReMDM variants (including tuned η values).
+    - Table 1 (OWT 512 tokens):
+      - MDLM: MAUVE “5.4” (128), “2.7” (256), “5.1” (512); PPL “36.6”, “31.1”, “27.0”; DIV “44.7”, “40.5”, “37.8”.
+      - ReMDM-conf: MAUVE “5.8”, “12.2”, “13.2”; PPL “41.3”, “36.6”, “35.0”; DIV “47.9”, “45.5”, “45.1”.
+      - ReMDM-cap η=0.008: MAUVE “1.6”, “18.4”, “42.7”; PPL “41.1”, “34.4”, “29.0”; DIV “46.4”, “45.1”, “43.4”.
+      - ReMDM-cap η=0.08: MAUVE “23.4”, “46.1”, “46.5”; PPL “33.5”, “24.1”, “17.6”; DIV “43.8”, “40.0”, “35.7”.
+      - ReMDM-loop η=0.008: MAUVE “2.8”, “4.4”, “25.9”; PPL “45.1”, “38.1”, “31.9”; DIV “48.2”, “46.3”, “44.8”.
+      - ReMDM-loop η=0.1: MAUVE “18.1”, “44.7”, “67.7”; PPL “34.9”, “26.7”, “20.7”; DIV “44.7”, “42.1”, “39.3”.
+      - ReMDM-rescale η=0.015: MAUVE “2.0”, “10.3”, “22.7”; PPL “64.7”, “54.3”, “45.3”; DIV “45.1”, “43.6”, “41.7”.
+      - ReMDM-rescale η=0.08: MAUVE “16.1”, “34.7”, “46.9”; PPL “36.4”, “28.4”, “22.0”; DIV “44.8”, “41.7”, “38.5”.
+      - Star-loop: MAUVE “18.1”, “44.7”, “67.7”; PPL “34.9”, “26.7”, “20.7”; DIV “44.7”, “42.1”, “39.3”.
+      - Star+ t_on=0.2: MAUVE “32.4”, “34.3”, “45.5”; PPL “11.7”, “24.5”, “14.7”; DIV “41.5”, “38.3”, “31.3”.
+      - G-Star-loop 1B, F: MAUVE “44.8”, “65.0”, “56.3”; PPL “19.7”, “14.7”, “11.6”; DIV “35.3”, “31.4”, “27.5”.
+      - G-Star-loop 12B, H: MAUVE “57.3”, “63.8”, “50.1”; PPL “18.4”, “14.1”, “10.7”; DIV “36.2”, “32.4”, “27.9”.
+      - G-Star-loop 12B, F: MAUVE “57.3”, “60.9”, “58.6”; PPL “17.2”, “12.7”, “9.9”; DIV “35.4”, “30.9”, “26.4”.
+      - G-Star+ t_on=0.2, 12B: MAUVE “40.1”, “51.6”, “48.9”; PPL “19.5”, “14.4”, “10.7”; DIV “36.5”, “31.7”, “26.9”.
+    - Noted: Strong ReMDM performance requires extensive η tuning (Appendix C.1). Star-loop competitive without η tuning. Guided loop schedules (G-Star-loop) outperform simpler hybrid G-Star+, especially at low step counts; “PPL = 9.9” at 512 steps.
+    - Practical guidance: Allocate ~10% of total sampling steps to the refinement loop.
+  - 4.5 Error predictor capacity:
+    - Architectures: 1B,F (1 transformer block fully fine-tuned), 12B,F (full 12 blocks fine-tuned), 12B,H (12-block backbone frozen, head-only trained).
+    - Findings: Head-only training (12B,H) performs on par with full fine-tuning (12B,F). Lightweight 1B slightly worse at 128 steps but gap vanishes with more steps; confirms parameter efficiency.
+
+- 5 Empirical Evaluation:
+  - 5.1 Large-scale instruction-tuned model:
+    - Integrate G-Star into Dream-Instruct 7B with loop-based refinement; keep total steps equal to baseline; 10% refinement steps at α_on specified per benchmark.
+    - Error predictor: Freeze 7B backbone; train lightweight classification head on Tulu 3; head-only training.
+    - Benchmarks and results (Table 3):
+      - MMLU: “69.9” → “71.2”.
+      - MMLU-PRO: “46.9” → “47.9”.
+      - GSM8K: “81.5” → “81.6”.
+      - GPQA: “31.0” → “32.8”.
+      - HumanEval: “53.7” → “54.9”.
+      - MBPP: “58.0” → “59.4”.
+      - IFEval: “56.4” → “59.3”.
+  - 5.2 Code generation (Conala):
+    - Conditional MDLM baseline trained on Conala; error predictor trained on a hold-out split; both conditioned on prompts.
+    - Metric: Conditional perplexity via Qwen2.5B-Coder.
+    - Table 2:
+      - MDLM: “29.8” (32), “25.5” (64), “26.7” (128).
+      - ReMDM-loop η=0.02: “30.1”, “25.0”, “20.4”.
+      - ReMDM-cap η=0.04: “27.3”, “22.5”, “19.1”.
+      - G-Star-loop: “22.5”, “17.8”, “17.8”.
+      - G-Star+ α_on=0.3: “20.4”, “18.9”, “16.4”.
+    - G-Star variants achieve lowest (best) perplexities across steps.
+
+# Conclusion
+- G-Star enables efficient, targeted error correction for masked diffusion via a star-shaped sampler and a trained error predictor. It outperforms MDLM and stochastic correction methods like ReMDM in few-step regimes and enhances a state-of-the-art 7B instruction-tuned model. The work demonstrates that targeted refinement is a principled, sample-efficient strategy for discrete diffusion models.
+
+# References
+- Citations cover continuous diffusion (Sohl-Dickstein et al., 2015; Ho et al., 2020; Song & Ermon, 2019), discrete diffusion and masked modeling (Austin et al., 2021a; Shi et al., 2024; Sahoo et al., 2024a), guidance and remasking (Schiff et al., 2024; Wang et al.; Nisonoff et al., 2024), star-shaped diffusion (Okhotin et al., 2023), evaluation metrics (Pillutla et al., 2021), datasets and tokenizers (OpenWebText; GPT-2), and large diffusion LMs (Ye et al., 2025b).
+- Not specified in this section: exhaustive enumeration of all citations’ roles beyond those summarized.
+
+# Appendix
+- Proofs:
+  - Appendix A proves Claim 1: VLB for the star-shaped process reduces to a weighted cross-entropy loss with timestep-dependent weights w′_t (Eqs. 7–17).
+- Additional Results:
+  - C.1 ReMDM hyperparameter sensitivity: Performance highly sensitive to η across ‘cap’, ‘loop’, ‘rescale’ schedules; optimal η differs (e.g., ‘cap’/‘rescale’ η = 0.08, ‘loop’ η = 0.1). Suboptimal η often worse than baseline MDLM.
+  - C.2 Loop size ablation: Increasing refinement steps decreases PPL but reduces diversity; MAUVE peaks then declines. Guided G-Star-loop improves faster and reaches higher quality with fewer steps.
+  - C.3 Error predictor temperature T_remask: Lower T improves PPL but reduces diversity; higher T increases diversity but worsens PPL; MAUVE peaks for T ≈ 4–32.
+- Implementation Details:
+  - D.1 Conala:
+    - Splits: Train = 2,000 curated + 594,000 mined; hold-out = 380 curated; test = 500 samples; GPT-2 tokenizer; max length 128.
+    - MDLM baseline: 12-layer Transformer; pre-train 50,000 steps (batch 1024), fine-tune 10,000 steps (batch 512); AdamW lr 3e-4.
+    - Error predictor: 12-layer backbone frozen; single linear head; AdamW lr 3e-4; batch 380; 500 steps.
+  - D.2 Dream-Instruct 7B evaluation:
+    - Benchmarks: MMLU, MMLU-PRO, GSM8K, GPQA, HumanEval, MBPP, IFEval.
+    - Sequence lengths and α_on (Table 4): 
+      - MMLU 128, α_on 0.88; MMLU-PRO 128, α_on 0.88; GSM8K 256, α_on 0.95; GPQA 128, α_on 0.88; HumanEval 768, α_on 0.98; MBPP 1024, α_on 0.98; IFEval 1280, α_on 0.98.
+    - Baseline sampling: Steps = sequence length; diffusion temperature 0.1; entropy-based token selection (‘alg=entropy’).
+    - G-Star sampler: Same total steps; 10% reserved for refinement loop; at each refinement step remask N = 15 tokens identified by predictor; error predictor temperature T_remask = 0.
+    - Error predictor training: Frozen 7B backbone; classification head; 10 epochs; Adam lr 1e-4; batch 128 on Tulu 3.
+- Visualizations:
+  - Guided vs unguided remasking shows contiguous phrase-level edits in guided sampling, contrasted with scattered remasking in unguided.
+- Limitations (Appendix G):
+  - Only in-place token substitution (no insert/delete or shifts).
+  - Requires separate training stage for the error predictor.
+
+# Related Work
+- Discrete diffusion: Absorbing/structured corruption and categorical transitions (Austin et al., 2021a; Campbell et al., 2022); ratio-estimation and reparameterized objectives (Lou et al., 2024; Zheng et al., 2023; Zhao et al., 2024a); discrete flow matching/flows and guidance (Gat et al., 2024; Campbell et al., 2024; Nisonoff et al., 2024); correctors and practical samplers (Lezama et al., 2023; Zhao et al., 2024b); analyses of absorbing processes (Ou et al., 2024).
+- Text latent diffusion: Diffusion-LM in embedding space (Li et al., 2022); two-stage latent diffusion for quality/efficiency (Lovelace et al., 2024; Meshchaninov et al., 2025; Shabalin et al., 2025).
+- Masked diffusion: MaskGIT for images (Chang et al., 2022); simple absorbing-mask diffusion for language with strong baselines (Sahoo et al., 2024a); simplified continuous-time objectives (Shi et al., 2024); inference-time remasking and guidance (Wang et al.; Schiff et al., 2024; Nisonoff et al., 2024); informed correctors (Zhao et al., 2024b); hybrids (von Rütte et al., 2025); analyses of time-agnostic behavior (Zheng et al., 2024).
+- Large language diffusion models: Scaling masked diffusion narrows gap to autoregressive models (Sahoo et al., 2024a; Shi et al., 2024); inference-time scaling/steering (Ma et al., 2025; Singhal et al., 2025); domain-focused diffusion LMs (Nie et al., 2025; Zhao et al., 2025); systems like Dream 7B (Ye et al., 2025a/b), DiffuCoder (Gong et al., 2025).

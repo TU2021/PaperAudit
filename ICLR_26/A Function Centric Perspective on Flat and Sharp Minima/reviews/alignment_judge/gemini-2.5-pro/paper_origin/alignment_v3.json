@@ -1,0 +1,129 @@
+{
+  "paper": "A Function Centric Perspective on Flat and Sharp Minima",
+  "runs": [
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "deepreviewer",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "deep_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "55f39c3e353412551a5ae68e81fc4acc489b4edd",
+      "inputs": {
+        "human_review": "review_origin.txt",
+        "ai_review": "reviews/deepreviewer/gpt-5-2025-08-07/paper_origin/deep_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 1.0,
+        "weakness_coverage_recall": 0.5,
+        "ai_extra_major_points_rate": 0.43,
+        "symmetric_coverage_similarity": 0.47,
+        "note": "The AI review perfectly covered the paper's strengths but only moderately covered its weaknesses. It missed several key human concerns, such as the potential for Simpson's paradox and conceptual contradictions. However, the AI also identified multiple major methodological confounds not mentioned by the human reviewers, particularly regarding how sharpness metrics were measured."
+      },
+      "generated_at": "2025-12-27T23:47:57"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "baseline_review.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "b3137abdd5dd456ecfb029f7bed4151251d086e2",
+      "inputs": {
+        "human_review": "review_origin.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/baseline_review.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 0.9,
+        "weakness_coverage_recall": 0.5,
+        "ai_extra_major_points_rate": 0.38,
+        "symmetric_coverage_similarity": 0.49,
+        "note": "Review B shows very high coverage of the strengths from Review A, but only moderate coverage of the weaknesses. Key points missed by Review B include the violation of a metric's core assumption in the toy experiments, the potential for Simpson's paradox, and the lack of comparison to basic Hessian metrics. Review B also raises several valid, distinct weaknesses not mentioned in Review A."
+      },
+      "generated_at": "2025-12-27T23:53:24"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "final_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "0a71ca7d783136ba33fb6b5ec9aad08ece2f0c09",
+      "inputs": {
+        "human_review": "review_origin.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/final_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 0.75,
+        "weakness_coverage_recall": 0.38,
+        "ai_extra_major_points_rate": 0.5,
+        "symmetric_coverage_similarity": 0.32,
+        "note": "The AI aligns with humans on specific technical issues like undefined 'function complexity,' robustness conflation, and dataset dependence of sharpness metrics. However, there is a fundamental disagreement on the paper's core contribution: humans critique the main hypothesis as 'not new' and the toy experiments (Section 4) as 'misleading' or flawed, whereas the AI praises both as key strengths. Additionally, the AI misses major human concerns regarding Simpson's paradox in the results and the violation of the locally constant labels assumption."
+      },
+      "generated_at": "2025-12-28T00:04:50"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "deepreviewer",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "deep_review_merge.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "752f27bc09e656c7d041a880d0c174422eea6ca4",
+      "inputs": {
+        "human_review": "review_origin.txt",
+        "ai_review": "reviews/deepreviewer/gpt-5-2025-08-07/paper_origin/deep_review_merge.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 1.0,
+        "weakness_coverage_recall": 0.38,
+        "ai_extra_major_points_rate": 0.75,
+        "symmetric_coverage_similarity": 0.48,
+        "note": "The AI review perfectly captures the paper's strengths but shows low alignment on weaknesses. The AI misses key human concerns about novelty, violation of metric assumptions in the toy experiments, and potential Simpson's paradox, while introducing several unique and substantive criticisms regarding metric design and experimental rigor."
+      },
+      "generated_at": "2025-12-28T00:18:41"
+    }
+  ]
+}

@@ -1,0 +1,38 @@
+Based on a critical review of the manuscript, several significant integrity risks and clear internal inconsistencies have been identified. These issues materially affect the trustworthiness and scientific validity of the paper.
+
+### **1. Fabricated Claims in the LLM Usage Statement**
+
+**Issue:** The statement on the use of Large Language Models (LLMs) in Appendix E contains fabricated information.
+
+**Evidence:**
+-   In Section E, "Statement on the Use of Large Language Models (LLMs)" (Block #73), the authors state: "We used LLMs (specifically, OpenAI GPT-4.1, GPT-5, and Google Gemini 2.5) solely for checking grammar errors and improving the readability of the manuscript."
+-   As of the current date, "GPT-5" and "Google Gemini 2.5" are not publicly available or announced models.
+
+**Impact:**
+This is a clear fabrication. Claiming the use of non-existent tools represents a serious breach of academic integrity. This false statement undermines the credibility of the authors and casts doubt on the diligence and honesty with which the entire research was conducted.
+
+### **2. Inconsistent and Confusing Experimental Reporting in Tables**
+
+**Issue:** The structure and labeling of tables presenting experimental results are inconsistent and confusing, making it difficult to interpret the comparisons being made.
+
+**Evidence:**
+-   **Table 8 (Block #69):** This table, intended to show performance with varying input sequence lengths, contains columns for "TQNet MSE", "PatchTST MSE", and a separate, unexplained column titled "DF MSE". The standard methodology (Direct Forecast, or DF) is the baseline training approach (using MSE loss), which TQNet and PatchTST would use. The presence of a separate "DF MSE" column is unexplained and suggests either a significant methodological omission in the description or a copy-paste error from another source.
+-   **Table 3 (Block #29):** The note for this table states, "Bold and underlined denote best and second-best results, respectively." However, no results in the table are underlined. Furthermore, the best results for the ECL dataset are marked with `***` in addition to bold/italics, a formatting convention not used for any other dataset in the same table and not explained in the caption.
+
+**Impact:**
+These inconsistencies suggest a lack of care in data presentation. The ambiguity in Table 8 is particularly problematic as it prevents a clear understanding of the experimental comparisons, which is fundamental to validating the paper's claims.
+
+### **3. Mismatched Figure Captions and Labels**
+
+**Issue:** There is a clear mismatch between the consolidated caption provided for a figure and the labels of the sub-figures as they appear in the manuscript.
+
+**Evidence:**
+-   The caption for Figure 3 is provided in the text of Section 4.4 (Block #29) as: "(a) ECL with MSE | (b) ECL with MAE | (c) Weather with MSE | (d) Weather with MAE".
+-   However, the actual sub-figures are presented separately and are labeled differently: Block #33 is labeled "(a) ECL with MSE", Block #35 is labeled "(b) ECL with MAE", Block #34 is labeled "(c) Weather with MSE", and Block #32 is labeled "(d) Weather with MAE". The ordering in the text does not match the ordering or labeling of the figures presented.
+
+**Impact:**
+This discrepancy makes the results difficult to follow and points to a significant lack of attention to detail in the manuscript's preparation.
+
+### **Summary**
+
+The manuscript contains a clear and serious integrity violation in the form of a fabricated LLM usage statement. This issue alone is sufficient to question the trustworthiness of the entire paper. This primary concern is compounded by multiple instances of internal inconsistency, including a confusingly structured experimental table and mismatched figure captions, which suggest a general lack of rigor and care. These problems collectively undermine the scientific validity and credibility of the research presented.

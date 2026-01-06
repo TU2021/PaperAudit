@@ -1,0 +1,129 @@
+{
+  "paper": "Training-Free Spectral Fingerprints of Voice Processing in Transformers",
+  "runs": [
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "final_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "0a71ca7d783136ba33fb6b5ec9aad08ece2f0c09",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/final_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 0.67,
+        "weakness_coverage_recall": 1.0,
+        "ai_extra_major_points_rate": 0.25,
+        "symmetric_coverage_similarity": 0.64,
+        "note": "The AI review provides excellent coverage of the human's weaknesses but is less aligned on strengths, framing the paper's practical utility as a preliminary weakness rather than a core strength. The AI also introduces more granular technical points not raised by the human, such as a detailed tokenizer-stress analysis and potential confounds from morphology and length."
+      },
+      "generated_at": "2025-12-27T20:41:06"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "baseline_review.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "b3137abdd5dd456ecfb029f7bed4151251d086e2",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/baseline_review.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 0.8,
+        "weakness_coverage_recall": 0.83,
+        "ai_extra_major_points_rate": 0.33,
+        "symmetric_coverage_similarity": 0.38,
+        "note": "The AI review shows high recall, covering most of the human's points. However, it is significantly more detailed, adding several major new points regarding tokenizer-related confounds, statistical issues like outliers, and incomplete reproducibility artifacts. The main point missed by the AI was the human's concern about the motivation for choosing voice alternation as the test case."
+      },
+      "generated_at": "2025-12-27T20:45:13"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "deepreviewer",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "deep_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "55f39c3e353412551a5ae68e81fc4acc489b4edd",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/deepreviewer/gpt-5-2025-08-07/paper_origin/deep_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 1.0,
+        "weakness_coverage_recall": 0.8,
+        "ai_extra_major_points_rate": 0.38,
+        "symmetric_coverage_similarity": 0.64,
+        "note": "The AI review covers all human-identified strengths and most weaknesses. The main point missed is the human's concern about the weak motivation for using the Fiedler value. The AI review adds several specific, major technical concerns not raised by the human, including a potential flaw in head aggregation and inconsistent sample sizes."
+      },
+      "generated_at": "2025-12-27T20:51:05"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "deepreviewer",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "deep_review_merge.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "752f27bc09e656c7d041a880d0c174422eea6ca4",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/deepreviewer/gpt-5-2025-08-07/paper_origin/deep_review_merge.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 1.0,
+        "weakness_coverage_recall": 0.44,
+        "ai_extra_major_points_rate": 0.5,
+        "symmetric_coverage_similarity": 0.41,
+        "note": "The AI review completely aligns with the human review on strengths but diverges significantly on weaknesses. While both identify issues with the Qwen results, ablation methodology, and figures, the AI praises the theoretical grounding and correlations that the human explicitly criticizes as 'hand-wavy' and 'inconsistent.' The AI also introduces distinct technical concerns regarding head aggregation and sample size reporting not mentioned by the human."
+      },
+      "generated_at": "2025-12-27T21:21:24"
+    }
+  ]
+}

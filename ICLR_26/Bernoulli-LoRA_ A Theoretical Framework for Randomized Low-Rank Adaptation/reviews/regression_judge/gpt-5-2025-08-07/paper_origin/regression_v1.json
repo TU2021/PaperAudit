@@ -1,0 +1,100 @@
+{
+  "paper": "Bernoulli-LoRA_ A Theoretical Framework for Randomized Low-Rank Adaptation",
+  "runs": [
+    {
+      "config": {
+        "judge_model": "gpt-5-2025-08-07",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "baseline_file": "baseline_review.txt",
+        "final_file": "final_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 600,
+        "metric": "regression_v2_minimal",
+        "prompt_hash": "2142c04332"
+      },
+      "config_key": "1a46f14f5902ebb0fc2c14773cec6644d2fa5338",
+      "inputs": {
+        "baseline_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/baseline_review.txt",
+        "final_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/final_review_all.txt"
+      },
+      "regression": {
+        "score_delta": {
+          "baseline_score": 7.0,
+          "final_score": 6.0,
+          "delta": -1.0,
+          "scale_hint": "1-10"
+        },
+        "differences": [
+          {
+            "diff_type": "new_critique",
+            "summary": "Main text vs appendix stepsize/rate inconsistencies (SGD, QGD, MARINA, EF21; Table 1 omissions)",
+            "paperaudit_types": [
+              "METHOD_LOGIC_CONSISTENCY",
+              "CLAIM_RESULT_DISTORTION"
+            ],
+            "why_impacts_score": "undermines rigor and validity of theoretical claims",
+            "evidence": {
+              "baseline_quote": "Convergence is provided under smooth non-convex and PŁ conditions for all core variants, evidencing technical completeness.",
+              "final_quote": "Internal inconsistencies in stepsize bounds and summary rates ..."
+            }
+          },
+          {
+            "diff_type": "new_critique",
+            "summary": "Algorithmic contradictions and specification errors (branch flip, index mismatch, missing equation)",
+            "paperaudit_types": [
+              "METHOD_LOGIC_CONSISTENCY",
+              "CONTEXT_MISALIGNMENT_INCOHERENCE"
+            ],
+            "why_impacts_score": "casts doubt on algorithm correctness and proof traceability",
+            "evidence": {
+              "baseline_quote": "Appendix C.1 contains a residual mention of “RAC-LoRA” ... seems unintended.",
+              "final_quote": "Algorithm 3 ... flips the branch semantics (“If c^t = 1 then Right sketch”) ..."
+            }
+          },
+          {
+            "diff_type": "new_critique",
+            "summary": "MNIST configuration details missing despite being promised in Appendix E",
+            "paperaudit_types": [
+              "EXPERIMENTAL_DESIGN_PROTOCOL",
+              "RHETORICAL_PRESENTATION_MANIPULATION"
+            ],
+            "why_impacts_score": "hurts reproducibility and credibility of empirical validation",
+            "evidence": {
+              "baseline_quote": "Appendix E provides implementation and dataset details ... contributing to reproducibility and clarity.",
+              "final_quote": "Appendix E includes details only for the linear regression experiments ..., not MNIST, impeding reproducibility"
+            }
+          },
+          {
+            "diff_type": "new_critique",
+            "summary": "Presentation/citation errors (Figure p-values mismatch; incorrect Schur citation)",
+            "paperaudit_types": [
+              "RHETORICAL_PRESENTATION_MANIPULATION",
+              "REFERENCE_BACKGROUND_FABRICATION"
+            ],
+            "why_impacts_score": "reduces trustworthiness and editorial reliability",
+            "evidence": {
+              "baseline_quote": "Clear notation and organization ... aid navigability and comprehension.",
+              "final_quote": "Figure 1 caption mentions multiple p values while the legend exemplifies p=0.5 ..."
+            }
+          },
+          {
+            "diff_type": "score_rationale_shift",
+            "summary": "Lower overall score tied to inconsistencies and missing MNIST details",
+            "paperaudit_types": [
+              "METHOD_LOGIC_CONSISTENCY",
+              "EXPERIMENTAL_DESIGN_PROTOCOL"
+            ],
+            "why_impacts_score": "adds concrete shortcomings beyond earlier scope limitations",
+            "evidence": {
+              "baseline_quote": "Overall (10): 7 — ... limited empirical scope ... No direct federated experiments.",
+              "final_quote": "Overall (10): 6 — ... multiple internal inconsistencies ... and missing MNIST details ..."
+            }
+          }
+        ]
+      },
+      "generated_at": "2026-01-05T20:42:55"
+    }
+  ]
+}

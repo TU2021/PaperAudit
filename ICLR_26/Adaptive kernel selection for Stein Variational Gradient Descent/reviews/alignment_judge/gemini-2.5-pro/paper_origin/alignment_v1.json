@@ -1,0 +1,104 @@
+{
+  "paper": "Adaptive kernel selection for Stein Variational Gradient Descent",
+  "runs": [
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "deepreviewer",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "deep_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180
+      },
+      "config_key": "24b66d75b94c155df325f4e5f2603b40312e4469",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/deepreviewer/gpt-5-2025-08-07/paper_origin/deep_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "motivation_strength_alignment": 0.95,
+        "weakness_error_alignment": 0.7,
+        "overall_alignment": 0.75,
+        "explanation": {
+          "strength": "Both reviews identify the same core strengths: the well-motivated and principled approach of maximizing KSD, the theoretical extension of convergence analysis to an adaptive setting, and the positive empirical results showing improved variance capture. The alignment is very high, with differences only in the level of technical detail.",
+          "weakness": "There is strong overlap on several key weaknesses, including the limited scope of experiments, the lack of comparisons to other adaptive SVGD methods, and the reliance on strong, unverified theoretical assumptions. However, Review B introduces a major technical critique about a theory-practice gap regarding kernel smoothness which is entirely absent from Review A.",
+          "overall": "Overall, the reviews are highly aligned in their judgment, viewing the paper as a strong contribution with a promising method but requiring more robust theoretical justification and broader empirical validation. The main divergence is Review B's more technically precise critique of the theory's assumptions, but the final assessment of the paper's merits and flaws is largely consistent."
+        }
+      },
+      "generated_at": "2025-12-27T20:05:01"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "baseline_review.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180
+      },
+      "config_key": "a14d937ebf873b90a820c8cb44da768956431bd4",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/baseline_review.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "motivation_strength_alignment": 0.9,
+        "weakness_error_alignment": 0.75,
+        "overall_alignment": 0.8,
+        "explanation": {
+          "strength": "Both reviews identify the same core strengths: a well-motivated and simple method, a novel theoretical extension, and positive empirical signals, with Review B providing more technical detail on the same points.",
+          "weakness": "Both reviews highlight the same primary weaknesses, including limited empirical evaluation, incomplete comparison to baselines, and strong/unverified theoretical assumptions, though Review B adds a distinct critique about the theory being confined to the mean-field limit.",
+          "overall": "The reviews are highly aligned in their overall judgment, concluding that the paper presents a promising idea that requires more rigorous validation; their focus on the gap between the proposed method and its empirical/theoretical support is nearly identical."
+        }
+      },
+      "generated_at": "2025-12-27T20:09:05"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "final_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180
+      },
+      "config_key": "565dcfbed8e348ba365acb8ebe44bf867f3cd0c2",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/final_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "motivation_strength_alignment": 0.55,
+        "weakness_error_alignment": 0.6,
+        "overall_alignment": 0.6,
+        "explanation": {
+          "strength": "Both reviews identify the core motivation (adapting SVGD kernels by maximizing KSD) and the theoretical contribution as key strengths. However, they diverge on the empirical evidence: Review A frames it as limited and a weakness, while Review B presents it as a strength covering diverse tasks.",
+          "weakness": "There is strong overlap on major weaknesses like incomplete baselines, unverified theoretical assumptions, and lack of computational cost analysis. However, Review B identifies several additional, significant technical flaws (e.g., mean-field theory gap, a specific mathematical inconsistency) that are entirely absent from Review A.",
+          "overall": "The reviews share a similar overall judgment that the paper is a promising but flawed contribution, agreeing on the main conceptual trade-offs. The alignment is only moderate because they differ in their assessment of the experiments and Review B provides a much deeper, more critical analysis that uncovers major technical issues missed by Review A."
+        }
+      },
+      "generated_at": "2025-12-27T20:12:52"
+    }
+  ]
+}

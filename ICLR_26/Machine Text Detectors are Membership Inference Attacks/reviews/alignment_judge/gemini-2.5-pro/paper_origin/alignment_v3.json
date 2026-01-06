@@ -1,0 +1,129 @@
+{
+  "paper": "Machine Text Detectors are Membership Inference Attacks",
+  "runs": [
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "deepreviewer",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "deep_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "55f39c3e353412551a5ae68e81fc4acc489b4edd",
+      "inputs": {
+        "human_review": "review_origin.txt",
+        "ai_review": "reviews/deepreviewer/gpt-5-2025-08-07/paper_origin/deep_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 0.5,
+        "weakness_coverage_recall": 0.17,
+        "ai_extra_major_points_rate": 0.8,
+        "symmetric_coverage_similarity": 0.18,
+        "note": "The AI review missed many specific experimental critiques from the human review, such as the unaligned experimental setup, lack of evasion attacks, and use of a biased dataset. Conversely, the AI provided a more rigorous critique of the paper's theoretical contribution, identifying specific mathematical flaws (e.g., LRT mismatch) and a lack of uncertainty quantification not mentioned by the human reviewers."
+      },
+      "generated_at": "2025-12-27T23:45:43"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "baseline_review.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "b3137abdd5dd456ecfb029f7bed4151251d086e2",
+      "inputs": {
+        "human_review": "review_origin.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/baseline_review.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 0.67,
+        "weakness_coverage_recall": 0.5,
+        "ai_extra_major_points_rate": 0.3,
+        "symmetric_coverage_similarity": 0.42,
+        "note": "The AI review captures most strengths but misses about half of the human reviewers' weaknesses. Key points missed by the AI include the unaligned experimental setups, the questionable use of rank correlation, and the incomplete set of baselines. The AI also introduced several valid new concerns, such as a critique of the theoretical advantage bound and the potential for data leakage."
+      },
+      "generated_at": "2025-12-27T23:50:53"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "final_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "0a71ca7d783136ba33fb6b5ec9aad08ece2f0c09",
+      "inputs": {
+        "human_review": "review_origin.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/final_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 0.5,
+        "weakness_coverage_recall": 0.33,
+        "ai_extra_major_points_rate": 0.79,
+        "symmetric_coverage_similarity": 0.16,
+        "note": "The reviews diverge significantly in focus. The human reviewer critiques the paper based on external literature (Wuhrmann, Meeus) regarding data assumptions and benchmark bias, and notes the repository is broken. The AI reviewer focuses heavily on internal mathematical rigor (e.g., hypothesis formulation, statistic definition) and experimental details (saturation, implementation sensitivity), missing the external validity concerns entirely."
+      },
+      "generated_at": "2025-12-28T00:00:49"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "deepreviewer",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "deep_review_merge.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "752f27bc09e656c7d041a880d0c174422eea6ca4",
+      "inputs": {
+        "human_review": "review_origin.txt",
+        "ai_review": "reviews/deepreviewer/gpt-5-2025-08-07/paper_origin/deep_review_merge.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 0.8,
+        "weakness_coverage_recall": 0.33,
+        "ai_extra_major_points_rate": 0.36,
+        "symmetric_coverage_similarity": 0.29,
+        "note": "The AI review shows high coverage of the paper's strengths but misses many specific weaknesses raised by the human reviewers, such as the unaligned experimental setup and the lack of evasion attack analysis. The AI also introduces several distinct major points, including a more detailed critique of the theoretical claims and concerns about missing uncertainty quantification."
+      },
+      "generated_at": "2025-12-28T00:16:49"
+    }
+  ]
+}

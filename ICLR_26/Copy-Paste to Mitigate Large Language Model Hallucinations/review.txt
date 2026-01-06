@@ -1,0 +1,23 @@
+### Summary
+
+This paper introduces **CopyPasteLLM**, a **two-stage training framework** designed to reduce **context-unfaithful hallucinations** in retrieval-augmented generation (RAG) systems. The core idea is that **lexical copying**—reusing tokens directly from retrieved context—acts as an implicit proxy for **contextual faithfulness**, helping models resist hallucinations caused by reliance on parametric priors.
+Stage 1 employs three complementary **CopyPaste-Prompting** paradigms (**CP-Order**, **CP-Link**, **CP-Refine**) to create high-copying responses under hard-to-soft constraints. Stage 2 then builds a **multi-criteria preference dataset** (using metrics like AlignScore, MiniCheck, and embedding similarity) and applies **Direct Preference Optimization (DPO)** on only **365 samples (≈ 1/50 of baseline data)**. The authors also propose a **Context-Parameter Copying Capturing** probe that quantifies model reliance on contextual versus internal knowledge.
+Experiments on **FaithEval**, **ConFiQA**, **PubMedQA**, and **RAGTruth** show large gains—**12.2–24.5 % accuracy improvements** on FaithEval and strong robustness under counterfactual settings.
+
+### Strengths
+
+* **Novel and clear insight:** identifies an inverse correlation between copying degree and hallucination density, offering an intuitive yet under-explored handle on contextual faithfulness.
+* **Effective and data-efficient:** achieves SoTA or near-SoTA results across benchmarks using only 365 preference pairs—far fewer than the 18 000 + needed by existing DPO baselines.
+* **Comprehensive evaluation:** results span multiple datasets, counterfactual and non-counterfactual regimes, and base models (LLaMA-3, Mistral, GPT-4o).
+* **Strong rebuttal additions:** authors supplied detailed ablations (copying vs stamping), multi-knowledge-type analysis, human-metric consistency checks (ρ ≈ 0.5), and confidence-interval results across 8 seeds.
+* **Interpretability and theory:** provides mechanistic explanations via **attention anchoring** and **entropy-reduction theory**, showing how enforced copying collapses attention onto context and lowers hallucination entropy.
+* **Practical implications:** transparent lexical reuse allows users to verify sources quickly, a desirable property in safety-critical domains such as medicine or law.
+
+### Weaknesses
+
+* **Idealized context assumption:** assumes retrieved documents are accurate and complete; unconditional trust in context could fail when retrieval is noisy or adversarial.
+* **Lexical proxy limits:** copy-coverage and copy-density emphasize surface overlap and may not fully capture **semantic faithfulness** (e.g., negation errors).
+* **Partial theoretical depth:** although the rebuttal introduces mechanistic and information-theoretic perspectives, formal causal justification remains limited.
+* **Component coupling:** early drafts lacked clear separation of gains from copying vs. stamping; ablations help but suggest interactions that deserve deeper exploration.
+* **Limited human validation:** automated filtering metrics (AlignScore, MiniCheck, Qwen-32B) show moderate correlation (ρ≈0.5) with human judgment; stronger human alignment would further validate claims.
+* **Generality and robustness:** performance on ambiguous or conflicting contexts remains less explored, and real-world retrieval noise or multilingual settings are not tested.

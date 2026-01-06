@@ -1,0 +1,134 @@
+# Global Summary
+- Problem: Large language models (LLMs) have high memory and inference costs. The paper revisits post-training pruning as an alternative/complement to quantization and introduces Thanos, a block-wise pruning algorithm that prunes weights without retraining.
+- Core approach: Thanos formulates pruning as minimizing the output difference of linear layers before/after pruning. It updates multiple weights at once within blocks using a global residual mask and adaptive selection (Wanda-style metric) and solves small linear systems to optimally adjust remaining weights. It supports unstructured, structured (column removal), and semi-structured n:m sparsity, and introduces outlier-row preservation via parameter α.
+- Key methodological details:
+  - Objective: minimize ||(Ẇ − W) X||_F^2 under a discrete mask M with sparsity ratio p.
+  - Update rule for s simultaneous removals in a row: ẐΔ_{k:} = −u Ṙ^{-1} R, with definitions of R, Ṙ, and u; structured case simplifies to ẐΔ_{k:} = −W_{:,1:s} (H_{1:s,1:s}^{−1})^{-1} H_{1:s,:}^{−1}.
+  - Mask selection uses ψ_X(W, r) = mask of r weights with smallest |W_{ij}| ||X_{j:}||_2; indices via φ(·).
+  - Outlier rows: retain ⌈α c⌉ rows; to reach total sparsity p, remove s = ⌈pb/(1−α)⌉ columns.
+  - Complexity: Magnitude O(c^2 log c), Wanda O(c^2 log c), SparseGPT O(c^3), Thanos unstructured/semi-structured O(c^4/B + c^2 B^2), Thanos structured O(c^3) (assuming c=b).
+- Evaluation scope: OPT models (e.g., 125M; broader sizes), TinyLlama 1.3B/1.1B, LLaMA-2 (1.1B/7B/13B/70B), LLaMA-3 (1B/3B/8B/70B). Metrics: WikiText-2 validation perplexity; average zero-shot accuracy across seven LM Harness tasks (WinoGrande, OBQA, BoolQ, PiQA, HellaSwag, ARC-easy, ARC-challenge). Calibration data: 128 sequences from C4 training set; B=128 for unstructured, B=512 for 4:8 and 2:4 structured/semi-structured. Default α=0.1.
+- Key findings (quantitative highlights):
+  - Unstructured 50% sparsity: On LLaMA-3 8B, Thanos PPL 9.32 vs SparseGPT 9.36 and Wanda 9.83; on LLaMA-2 70B, Thanos zero-shot average 67.64 vs SparseGPT 67.15 and Wanda 66.75.
+  - Structured 30%: Strong improvements with outlier rows. LLaMA-2 70B PPL: Thanos (α=0.1) 9.82 vs SparseGPT 15.56 and Wanda 468.96; zero-shot average: Thanos (α=0.1) 57.58 vs SparseGPT 52.00 and Wanda 42.25. LLaMA-3 70B zero-shot average: Thanos (α=0.1) 55.26 vs SparseGPT 47.12 and Wanda 43.09.
+  - Semi-structured 4:8: LLaMA-3 70B zero-shot average: Thanos (α=0.1) 68.76 vs SparseGPT 67.67 and Wanda 65.98; LLaMA-3 8B PPL: Thanos (α=0.1) 10.97 vs Wanda 14.51 and SparseGPT 12.13.
+  - Semi-structured 2:4: LLaMA-3 70B PPL: Thanos (α=0.1) 7.39 vs SparseGPT 9.44 and Wanda 9.22; LLaMA-2 13B zero-shot average: Thanos (α=0.1) 58.93 vs SparseGPT 57.86 and Wanda 56.11.
+  - Block size sensitivity (TinyLlama-1.1B): at 50% unstructured, PPL ~11.00–11.03 across B ∈ {8,…,4096}; at 4:8, PPL decreases from 14.44 (B=8) to 13.83 (B=2048); at 2:4, from 19.83 (B=8) to 18.60 (B=2048).
+- Efficiency: Thanos is reported faster than SparseGPT for structured pruning (Appendix H, Fig. 9), and more efficient for model sizes up to 3B in structured settings.
+- Caveats explicitly stated:
+  - Computational complexity is high in unstructured and semi-structured settings due to solving many linear systems; GPU memory limits require vertical blocking.
+  - In unstructured sparsity, SparseGPT often surpasses Thanos on zero-shot tasks; Wanda shows robustness on LLaMA-2/3 at some settings.
+  - Thanos may face scalability challenges at very large scale or fine-grained sparsity.
+
+# Abstract
+- Proposes Thanos, a block-wise pruning algorithm for LLMs that removes redundant weights while maintaining accuracy.
+- Introduces adaptive masks enabling flexible sparsity (including n:m) optimized for hardware acceleration.
+- Claims state-of-the-art performance in structured pruning and outperforming existing methods in unstructured pruning.
+- Targeted for efficient deployment in resource-constrained environments.
+
+# Introduction
+- Motivation: LLM deployment is limited by memory and computational demands. Compression via quantization or pruning reduces cost.
+- Focus: Post-training pruning of linear layer weights (majority of LLM parameters). Uses calibration data; aims for compressed weights via sparsity and/or quantization.
+- Generic pruning paradigm: sequential, block-by-block pruning; forward pass to compute inputs X per block; prune each linear layer independently to target sparsity; second forward pass through pruned block for next block; repeat until the whole model is pruned.
+- Contribution summary:
+  1) Thanos: novel block-wise pruning algorithm; addresses optimal/fast updates of weight blocks; complexity comparison in Table 1.
+  2) New structured pruning approach with detection/preservation of outlier rows (parameter α) to improve perplexity and zero-shot results.
+  3) Extension to semi-structured n:m sparsity (e.g., 2:4 on NVIDIA Ampere).
+  4) Comprehensive evaluation on language modeling tasks; Thanos significantly outperforms existing methods for structured pruning at various sparsity levels (Fig. 1; Tables 2–3).
+  5) Public implementation: https://github.com/vectozavr/thanos.
+
+# Experiments
+- Setup overview:
+  - Models: OPT family (e.g., OPT-125M shown in Fig. 1a), TinyLlama 1.3B (and TinyLlama-1.1B in Appendix C), LLaMA-2 (1.1B/7B/13B/70B), LLaMA-3 (1B/3B/8B/70B).
+  - Metrics: WikiText-2 validation perplexity; average zero-shot accuracy across seven LM Harness tasks (WinoGrande, OBQA, BoolQ, PiQA, HellaSwag, ARC-easy, ARC-challenge).
+  - Baselines: Magnitude pruning, SparseGPT, Wanda.
+  - Calibration data: 128 sequences with context lengths sampled from C4 training set. Same calibration data for Thanos, SparseGPT, Wanda.
+  - Block sizes: B=128 for unstructured; B=512 for 4:8 and 2:4 structured/semi-structured. Appendix C presents experiments for B ∈ {8,…,4096}.
+  - Outliers: default α=0.1; in semi-structured sparsity with α=0.1, total sparsity p drops from 0.5 to 0.45; in structured sparsity p unchanged because s = ⌈pb/(1−α)⌉.
+- Perplexity (Table 2 highlights):
+  - Dense PPLs: LLaMA-2 7B 5.47; 13B 4.88; 70B 3.32. LLaMA-3 1B 9.75; 3B 7.81; 8B 6.14; 70B 2.85.
+  - Unstructured 50%: Thanos often competitive vs SparseGPT and Wanda; examples: LLaMA-3 8B Thanos 9.32 vs SparseGPT 9.36 vs Wanda 9.83; LLaMA-2 7B Thanos 6.96 vs Wanda 6.92 vs SparseGPT 7.02.
+  - Structured 30%: Thanos (α=0.1) substantially lower PPL than SparseGPT/Wanda across models; e.g., LLaMA-2 70B Thanos 9.82 vs SparseGPT 15.56 vs Wanda 468.96; LLaMA-3 70B Thanos 16.62 vs SparseGPT 36.75 vs Wanda 36.47.
+  - Semi-structured 4:8: Thanos (α=0.1) improves PPL; e.g., LLaMA-3 8B Thanos 10.97 vs Wanda 14.51 vs SparseGPT 12.13; LLaMA-3 70B Thanos 6.29 vs SparseGPT 7.20 vs Wanda 7.10.
+  - Semi-structured 2:4: Thanos (α=0.1) best across sizes; e.g., LLaMA-3 70B Thanos 7.39 vs SparseGPT 9.44 vs Wanda 9.22; LLaMA-2 7B Thanos 9.68 vs SparseGPT 10.82 vs Wanda 12.13.
+- Zero-shot (Table 3 highlights; averages over seven tasks):
+  - Dense averages: LLaMA-2 70B 67.72; LLaMA-3 70B 71.40.
+  - Unstructured 50%: Thanos competitive; best on LLaMA-2 70B (67.64 vs SparseGPT 67.15 vs Wanda 66.75) and LLaMA-3 1B (46.86 vs 46.79 vs 44.72) and 3B (54.78 vs 54.71 vs 53.28).
+  - Structured 30%: Thanos (α=0.1) consistently higher than baselines; LLaMA-2 70B Thanos 57.58 vs SparseGPT 52.00 vs Wanda 42.25; LLaMA-3 70B Thanos 55.26 vs SparseGPT 47.12 vs Wanda 43.09.
+  - Semi-structured 4:8: Thanos (α=0.1) strong; LLaMA-3 70B Thanos 68.76 vs SparseGPT 67.67 vs Wanda 65.98; LLaMA-2 13B Thanos 61.05 vs 60.40 vs 60.13.
+  - Semi-structured 2:4: Thanos (α=0.1) strong; LLaMA-2 13B Thanos 58.93 vs 57.86 vs 56.11; LLaMA-3 8B Thanos 54.39 vs 52.75 vs 47.40; LLaMA-3 70B Thanos 66.36 vs 64.61 vs 62.84.
+- Block size experiments (Appendix C, TinyLlama-1.1B):
+  - Unstructured 50% PPL: 11.00 (B=8/64), 11.03 (B=128/256), 10.99 (B=1024/2048/4096).
+  - 4:8 PPL: 14.44 (B=8) to 13.83 (B=2048), 13.85 (B=4096).
+  - 2:4 PPL: 19.83 (B=8) to 18.60 (B=2048), 18.61 (B=4096).
+- Efficiency notes: Thanos shows higher efficiency than SparseGPT in structured pruning (Appendix H, pruning time comparisons). GPU memory constraints addressed via vertical blocking of columns.
+
+# Preliminaries
+- Notation summary deferred to Appendix B (Table 4). Not specified in this section.
+
+# Method
+- Problem formulation: For a weight matrix W ∈ ℝ^{c×b} and input/calibration X ∈ ℝ^{b×a}, prune to Ẇ under mask M ∈ {0,1}^{c×b} with sparsity ratio p = ||M||_F^2/(cb), minimizing f(Ẇ) = ||(Ẇ − W) X||_F^2 subject to masked entries being zero and ||M||_F^2 = ⌊pcb⌋. NP-hard due to discrete constraints.
+- Two-step strategy: choose a pruning mask (metric-based) and reconstruct remaining weights via least squares.
+- Single-weight removal (OBS/OBD derivation):
+  - Row update for removing W_{kq}: Δ_{k:}⋆ = −(W_{kq}/H_{qq}^{−1}) H_{q:}^{−1}; saliency S_{kq}^{OBS} = ½ W_{kq}^2 / H_{qq}^{−1}, with H = 2XX^⊤. OBD diagonal approximation yields S_{kq}^{OBD} = (|W_{kq}| ||X_{q:}||_2)^2.
+- Updating several weights at a time:
+  - For s constraints, define R (stacking H^{-1}_{q_j:}), Ṙ = (R_{:q_1}…R_{:q_s}), and u = (W_{kq_1}…W_{kq_s}). Optimal row update: ẐΔ_{k:} = −u Ṙ^{-1} R; optimal loss S_k = ½ u Ṙ^{-1} R H R^⊤ (Ṙ^{-1})^⊤ u^⊤. Brute force selection over q_1,…,q_s is combinatorially intractable (O((b choose s)(s^3 + c^2 + cs))).
+  - Practical approach: predefine mask via metric and optimize weight adjustments for selected parameters.
+- Thanos pruning (algorithms and design):
+  - Unstructured (Algorithm 1): iterate blocks of size B; construct global residual mask Ṁ = ψ_X(W_{:, j_1:b}, r) to reflect remaining pruning budget r; select local block mask M = Ṁ_{:,1:B}; for each row, compute indices q via φ(M_i), build R/Ṙ/u, and apply w − u Ṙ^{-1} R; update H to the trailing submatrix to handle off-block updates.
+  - Block-wise rationale: divide W into ⌈b/B⌉ blocks; in-block communication via solving systems for first B columns; off-block communication via updating weights to the right.
+  - Unstructured mask ψ_X(W, r): selects r smallest |W_{ij}| ||X_{j:}||_2 (Eq. 11).
+  - Indices mapping φ(x): returns indices of nonzeros in x ∈ {0,1}^B (Eq. 12).
+  - Complexity and efficient implementation: Table 1 compares method complexities; Thanos unstructured/semi-structured O(c^4/B + c^2 B^2); structured O(c^3).
+- Structured sparsity (Algorithm 2):
+  - Remove entire columns; apply row and column permutations (Q, P) to group outlier rows (α fraction) and to order columns by partial loss v_j; remove s = ⌈pb/(1−α)⌉ columns; structured update simplifies (Eq. 13); inverse permutations restore original ordering.
+  - Outlier rows: define h_i = ||W_i X||_2^2 (Eq. 14); select ⌈α c⌉ rows to preserve; v_j = ||W_{1:c−⌈α c⌉, j} ⊗ X_j||_F^2 (Eq. 15) to choose columns to remove.
+- Semi-structured n:m sparsity (Algorithm 8): extend Thanos to enforce exactly n zeros per m consecutive weights per row; exploit uniform per-row removal to streamline batched operations; note speedups on Ampere 2:4.
+- Efficiency and practicality: Appendix H describes batched solvers, padding strategy for non-uniform row sizes, vertical blocking for GPU memory, and pruning-time comparisons (Thanos faster than SparseGPT in structured pruning; up to ~3B parameters).
+
+# Related Work
+- Magnitude pruning: data-free thresholding of small weights; simple and efficient, complexity O(cb log cb). Performance degrades at high sparsity for LLMs.
+- OBD/OBS: classical second-order pruning; OBS update rule Δ_{k:}⋆ and saliency S_{kq}^{OBS}; OBD diagonal approximation leads to metric (|W_{kq}| ||X_{q:}||_2)^2.
+- SparseGPT: sequential, column-wise pruning with dynamic masks; updates remaining weights via inverse Hessian; ensures consistent Hessian across rows by pruning left-to-right; supports structured and semi-structured masks; complexity estimated O(ab^2 + b^3 + cb^2 + cb log c).
+- Wanda: diagonal Hessian assumption; pruning metric equals OBD (|W_{kq}| ||X_{q:}||_2)^2; selects per-row masks at once; no weight updates; complexity O(ab + cb log b).
+
+# Conclusion
+- Conclusions and limitations are elaborated in Appendix A. The paper summarizes that Thanos’ multi-weight, block-wise updates yield strong performance, especially in structured and semi-structured settings, and that incorporating outlier-row preservation (α) significantly improves perplexity and zero-shot results. Impact Statement provided (no specific societal risks highlighted).
+
+# References
+- References include foundational and recent works on LLMs (GPT-4, OPT, LLaMA-2/3), pruning (Magnitude, OBD/OBS, SparseGPT, Wanda), quantization (GPTQ, SmoothQuant, AWQ), datasets (WikiText-2, C4; LM Harness tasks), and hardware/efficiency (Ampere 2:4). Quantitative details are provided in the main text; no additional numeric data in this section.
+
+# Appendix
+- A. Conclusion & Limitations:
+  - Conclusion reiterates contributions: adaptive mask, block-wise multi-weight updates, outlier rows, semi-structured extension; strong results in structured/semi-structured; open-source implementation.
+  - Limitations: computational complexity in unstructured/semi-structured pruning due to solving many linear systems; SparseGPT often better on unstructured zero-shot; Wanda robust at lower sparsity; GPU memory constraints addressed via vertical blocking.
+- B. Notation: Table 4 summarizes indices, vectors, norms, masks, mappings ψ_X and φ, Hessian, and objective functions.
+- C. Block size experiments (TinyLlama-1.1B):
+  - Unstructured 50% PPL: 8→11.00, 64→11.00, 128→11.03, 256→11.03, 1024→10.99, 2048→10.99, 4096→10.99.
+  - 4:8 PPL: 8→14.44, 64→14.33, 128→14.26, 256→14.22, 1024→14.17, 2048→13.83, 4096→13.85.
+  - 2:4 PPL: 8→19.83, 64→19.88, 128→19.68, 256→19.37, 1024→18.97, 2048→18.60, 4096→18.61.
+- D. Full zero-shot tables:
+  - Unstructured 50% sparsity:
+    - OPT-125M average: Thanos 39.98 vs SparseGPT 39.94 vs Wanda 39.51 vs Magnitude 37.88.
+    - LLaMA-2 70B: Thanos 67.64 vs SparseGPT 67.15 vs Wanda 66.75 vs Magnitude 62.50.
+    - LLaMA-3 1B: Thanos 46.86 vs SparseGPT 46.79 vs Wanda 44.72.
+    - LLaMA-3 8B: Thanos 60.48 vs SparseGPT 61.21 vs Wanda 59.48.
+  - Structured 30% sparsity:
+    - OPT-125M average: Thanos (α=0.1) 34.65 vs SparseGPT 33.57 vs Wanda 33.43.
+    - LLaMA-2 13B: Thanos (α=0.1) 43.46 vs Thanos (α=0) 42.19 vs SparseGPT 38.90 vs Wanda 36.83.
+    - LLaMA-2 70B: Thanos (α=0.1) 57.58 vs SparseGPT 52.00 vs Wanda 42.25.
+    - LLaMA-3 70B: Thanos (α=0.1) 55.26 vs SparseGPT 47.12 vs Wanda 43.09.
+  - Semi-structured 4:8 sparsity:
+    - LLaMA-2 7B: Thanos (α=0.1) 57.11 vs SparseGPT 55.95 vs Wanda 55.53.
+    - LLaMA-3 70B: Thanos (α=0.1) 68.76 vs SparseGPT 67.67 vs Wanda 65.98.
+  - Semi-structured 2:4 sparsity:
+    - LLaMA-2 13B: Thanos (α=0.1) 58.93 vs SparseGPT 57.86 vs Wanda 56.11.
+    - LLaMA-3 8B: Thanos (α=0.1) 54.39 vs SparseGPT 52.75 vs Wanda 47.40.
+    - LLaMA-3 70B: Thanos (α=0.1) 66.36 vs SparseGPT 64.61 vs Wanda 62.84.
+- E. Detailed formulation: General pruning algorithm; objective function variants for single/multiple calibration samples; constrained optimization; derivations for OBS/OBD; sequential pruning; SparseGPT algorithm and complexity; Wanda algorithm and complexity.
+- G. Thanos derivations: Multi-constraint Lagrangian, block-wise scheme, mask construction with global residual masks M̂^{j}, local masks M^{j}, updates Ŵ^{j+1} = (Ŵ^j + Δ̂^j)_{:,B+1:}; structured/n:m variants; permutation matrices P, Q; index extraction via φ.
+- H. Implementation details:
+  - Batched operations and padding method to unify row-wise system sizes (define r_max; modify u and Ṙ).
+  - GPU memory mitigation via vertical blocking.
+  - Pruning time comparisons (Fig. 9): Thanos more efficient than SparseGPT, especially in structured sparsity; for models up to 3B, Thanos faster under structured n:m patterns.
+- Code availability: https://github.com/vectozavr/thanos.

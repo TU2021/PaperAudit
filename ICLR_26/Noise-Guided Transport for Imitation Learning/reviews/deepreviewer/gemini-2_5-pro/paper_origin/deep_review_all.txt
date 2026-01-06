@@ -1,0 +1,149 @@
+Here are four separate reviews of the paper, each from a different simulated reviewer.
+
+***
+
+### **Review 1**
+
+**Summary**
+This paper introduces Noise-Guided Transport (NGT), a novel off-policy imitation learning (IL) method designed for the low-data regime. NGT formulates the IL problem as an optimal transport (OT) problem, where the reward function is learned adversarially. The core idea is to train a "predictor" network to match the outputs of a fixed, randomly initialized "prior" network on expert data, while being dissimilar on agent-generated data. The authors show this objective is equivalent to maximizing the Earth-Mover Distance. A key component for handling high-dimensional tasks like Humanoid is the use of a distributional histogram loss. The method is shown to achieve state-of-the-art performance on challenging continuous control tasks with extremely few expert demonstrations.
+
+**Soundness**
+The methodology is sound and well-motivated. The derivation of the reward learning objective from the principle of pseudo-density estimation (Section 4.1) is clear and logical. The subsequent connection to the dual form of the Earth-Mover Distance (Section 4.2) provides a strong theoretical foundation for the adversarial objective. The practical steps taken to enforce the 1-Lipschitz constraint, such as using spectral normalization and specific loss functions, are well-justified. The experimental methodology is rigorous, featuring a fair comparison against a wide range of baselines on a shared actor-critic backbone and extensive ablation studies in Appendix N that validate the key design choices.
+
+**Presentation**
+The paper is exceptionally well-written, clear, and organized. The progression from the high-level motivation to the detailed method, theoretical grounding, and practical implementation is easy to follow. Figures 1 and 2 effectively summarize the method's superior performance, and the detailed plots in Figure 3 and the appendices provide convincing evidence for the claims. The inclusion of comprehensive appendices covering proofs (F, G, H), implementation details (L, I), and ablation studies (N) significantly enhances the paper's clarity and reproducibility.
+
+**Contribution**
+The paper makes a significant contribution to imitation learning, particularly for data-scarce scenarios. The primary contribution is the NGT method itself: a simple, lightweight, yet highly effective algorithm that elegantly combines ideas from random network distillation and optimal transport. Achieving expert-level performance on the high-dimensional Humanoid task with as few as 20 transitions (Figure 3) is a remarkable result and pushes the boundary of what is considered possible in low-data IL. The successful application and analysis of distributional losses for reward learning is also a valuable contribution.
+
+**Strengths**
+1.  **Exceptional Sample Efficiency:** The method demonstrates outstanding performance in ultra-low data regimes, successfully solving complex tasks like Humanoid locomotion where most baselines fail (Figure 2).
+2.  **Simplicity and Stability:** NGT's design avoids the need for gradient penalization, which is often required for stabilizing adversarial IL methods, making it computationally cheaper and simpler to tune (Block 15).
+3.  **Strong Theoretical Grounding:** The connection to optimal transport theory provides a solid mathematical basis for the method's objective function (Section 4.2).
+4.  **Thorough Empirical Validation:** The paper includes a comprehensive suite of experiments, including strong baselines, extensive ablations (Appendix N), and tests on additional challenging environments (Appendix O), which strongly support the claims.
+
+**Weaknesses**
+1.  **Reliance on `ℓ_HLG` for Humanoid:** The success on the most challenging task (Humanoid) appears heavily dependent on the specific choice of the histogram loss (`ℓ_HLG`), as shown in the ablation in Figure 4. While effective, this feels somewhat like a specific "trick" and could be integrated more smoothly into the main narrative, with a deeper intuition for why standard losses fail in this high-dimensional setting.
+2.  **"Easy to Tune" Claim:** The paper claims the method is "easy to implement and tune" (Block 2), but Appendix N notes that `ℓ_HLG` hyperparameters need to be adapted for different environments. This slightly weakens the "easy to tune" claim, as it suggests some degree of task-specific tuning is still necessary for optimal performance.
+
+**Questions**
+1.  The paper demonstrates that the histogram loss (`ℓ_HLG`) is critical for the Humanoid task (Figure 4). Could the authors provide more intuition on why standard regression losses like Huber fail so dramatically in this high-dimensional setting, and why recasting the problem as classification is the key to success?
+2.  In Appendix N, it is mentioned that `ℓ_HLG` hyperparameters should be adapted to the environment. How sensitive is NGT's performance to the choice of these hyperparameters (`a`, `b`, `N`, `σ`), and what is the recommended heuristic for setting them?
+3.  The paper mentions the option of using different `σ` values for the expert and agent sides of the `ℓ_HLG` loss to emulate one-sided label smoothing (Block 22). Was this technique critical for achieving the reported performance on Humanoid, and is there a deeper justification for it beyond the analogy to GANs?
+
+**Rating**
+- Overall (10): 9 — The paper presents a simple, well-grounded, and highly effective method for low-data IL with impressive empirical results (Figure 2).
+- Novelty (10): 8 — The work provides a novel and elegant synthesis of random prior prediction and adversarial optimal transport for imitation learning (Section 4).
+- Technical Quality (10): 9 — The theoretical analysis is solid and the experimental evaluation is exceptionally thorough, with strong baselines and ablations (Section 5, Appendix N).
+- Clarity (10): 10 — The paper is extremely well-written and organized, with clear explanations and informative figures and appendices (Sections 4, 5).
+- Confidence (5): 5 — I am an expert in this area and have carefully reviewed the paper and its appendices.
+
+***
+
+### **Review 2**
+
+**Summary**
+This paper proposes Noise-Guided Transport (NGT), a method for imitation learning from a small number of expert demonstrations. The method learns a reward function by training a predictor network to match the outputs of a frozen random network. This prediction error is used within an adversarial objective that minimizes the error for expert data and maximizes it for agent data. The authors claim this objective is equivalent to maximizing the Wasserstein-1 distance between the expert and agent distributions. The method is evaluated on several continuous control tasks, showing strong performance, particularly on the Humanoid environment when using a specialized histogram loss.
+
+**Soundness**
+The soundness of the paper's theoretical claims requires more rigorous justification. The core claim that the objective in Eq. 2 minimizes the negative EMD relies on the Kantorovich-Rubinstein duality, which requires optimizing over the space of *all* 1-Lipschitz functions (Eq. 3). However, the paper restricts its optimization to a specific parametric family of functions, `h_ξ(x) = ℓ(f_ξ(x), f_ξ^†(x))`. It is not proven or argued that this family is sufficiently expressive to approximate the true Kantorovich potential, making the equivalence to EMD maximization an unverified assumption rather than a guarantee. Furthermore, the claim that NGT avoids the need for a gradient penalty (GP) (Block 15) is not fully substantiated; the ablation in Figure 7 shows spectral normalization (SN) is necessary, but a direct comparison showing NGT with GP is not better would be needed to prove GP is *unnecessary*. The stability might stem from the RND-like objective itself, but this is not demonstrated conclusively.
+
+**Presentation**
+The paper is generally well-written. However, some of the theoretical connections are presented with more certainty than is warranted by the proofs. For instance, the link between the practical objective and the true EMD is a crucial point that is somewhat glossed over. The structure is logical, but the key "trick" for Humanoid (`ℓ_HLG`) is introduced late and its necessity makes the overall method feel less general than initially presented. The appendices are detailed, but the main text should be more self-contained regarding the limitations of its theoretical claims.
+
+**Contribution**
+The contribution is an interesting combination of existing ideas—namely, pseudo-density estimation via random priors (like RND/RED) and an adversarial objective reminiscent of WGAN. The novelty lies in this specific synthesis for the IL problem. While the empirical results are strong, the conceptual contribution feels more incremental than transformative, as it builds heavily on well-established components. The main practical contribution appears to be a recipe that works well for low-data Humanoid imitation, but its generality is questionable given the reliance on `ℓ_HLG`.
+
+**Weaknesses**
+1.  **Theoretical Rigor:** The claimed equivalence to EMD optimization (Eq. 3) is not strictly correct, as the optimization is performed over a constrained parametric function class `H_ξ^1`, not the full space of 1-Lipschitz functions. This gap should be acknowledged and discussed.
+2.  **Unsubstantiated Claims:** The assertion that gradient penalty is not needed (Block 15) is a strong claim that lacks a direct ablative comparison (e.g., NGT vs. NGT+GP) to be fully convincing.
+3.  **Over-reliance on a Specific Loss:** The method's success on the most challenging benchmark (Humanoid) is entirely contingent on the `ℓ_HLG` loss (Figure 4), which requires careful hyperparameter tuning (Appendix N). This undermines the claims of generality and ease of tuning.
+4.  **Approximations in Theory:** The derivation of the Lipschitz bound for `ℓ_HLG` (Theorem 4.2) depends on an approximation in Lemma H.3. The conditions under which this approximation is valid should be more clearly stated and verified against the hyperparameters used in the experiments.
+
+**Questions**
+1.  Could the authors comment on the potential gap between optimizing the objective over the specific parametric family `H_ξ^1` and optimizing over the full space of 1-Lipschitz functions as required by the EMD duality in Equation 3? How does this affect the interpretation of the method as performing transport?
+2.  The paper claims that NGT does not require a gradient penalty (GP). Was an ablation performed where GP was added to NGT? This would clarify whether GP is truly redundant or if it could offer further stability or performance gains.
+3.  The `ℓ_HLG` loss is shown to be essential for high-dimensional tasks. How were its hyperparameters (`a`, `b`, `N`, `σ`) selected for the Humanoid experiments? A discussion of the tuning process and sensitivity would be valuable, as this seems to contradict the "easy to tune" claim.
+
+**Rating**
+- Overall (10): 6 — The method has impressive results but rests on shaky theoretical claims and a crucial implementation "trick" (`ℓ_HLG`) for its headline result.
+- Novelty (10): 6 — The work is a clever synthesis of existing ideas (RND, WGAN), but does not introduce a fundamentally new concept.
+- Technical Quality (10): 5 — The theoretical claims are not fully rigorous, and key empirical claims about stability lack definitive ablative support.
+- Clarity (10): 7 — The paper is well-written, but overstates the certainty of its theoretical connections and buries the crucial role of `ℓ_HLG`.
+- Confidence (5): 4 — I have a strong background in this area and feel confident in my assessment of the technical and theoretical aspects.
+
+***
+
+### **Review 3**
+
+**Summary**
+The paper presents Noise-Guided Transport (NGT), an off-policy imitation learning algorithm designed to be highly sample-efficient in low-data settings. The method learns a reward function by adversarially training a model to distinguish between expert and agent data. This is achieved not through simple classification, but by training a predictor network to match the outputs of a fixed random network. The authors show this corresponds to an optimal transport objective and demonstrate strong empirical performance on continuous control tasks, including the challenging Humanoid environment, using as few as 20 expert transitions.
+
+**Soundness**
+From a practical standpoint, the method is very sound. The experimental design is excellent and inspires confidence in the results. The authors' decision to re-implement all baselines on a common SAC backbone (Block 18) is commendable and ensures a fair and direct comparison of the reward learning schemes, which is the core contribution. The ablation studies provided in Appendix N are thorough and systematically justify the key components of NGT, such as the choice of initialization (Figure 6), the necessity of spectral normalization (Figure 7), and the use of the histogram loss for Humanoid (Figure 4). The provided code further strengthens the soundness by enabling verification and reproduction.
+
+**Presentation**
+The paper is very well-presented and easy for a practitioner to understand. The method is described clearly, and the algorithm is laid out in Algorithm 1. The figures are clean, well-labeled, and effectively convey the main results (Figure 2). I particularly appreciate the extensive appendices that provide crucial implementation details, including network architectures (Appendix I), hyperparameter tables (Table 1), and notes on performance engineering like CUDA Graphs (Appendix K). This level of detail is exemplary and essential for reproducibility.
+
+**Contribution**
+The main contribution is a practical and high-performing algorithm for the important problem of low-data imitation learning. While other methods struggle or fail, NGT demonstrates robust, expert-level performance across a range of tasks, most notably on Humanoid (Figure 2). The paper provides a strong new baseline for sample-efficient IL. The release of a clean, unified codebase for multiple AIL algorithms is also a valuable, if secondary, contribution to the community.
+
+**Strengths**
+1.  **State-of-the-Art Empirical Performance:** NGT consistently and significantly outperforms a wide range of strong baselines in the targeted low-data regime (Figures 1, 2).
+2.  **Rigorous and Fair Experiments:** The use of a shared backbone for all methods, extensive ablation studies, and testing across multiple environments and data regimes makes the empirical evaluation highly credible.
+3.  **Excellent Reproducibility:** The paper is accompanied by code and extremely detailed appendices covering hyperparameters and implementation, setting a high standard for reproducible research.
+4.  **Practicality:** The method is shown to be computationally competitive with other AIL methods (Appendix P) and avoids complex regularizers like gradient penalty, which simplifies implementation.
+
+**Weaknesses**
+1.  **Baseline Performance:** The performance of some baselines, particularly DiffAIL on non-Humanoid tasks and W-DAC/SAM in general, seems lower than one might expect. While the shared backbone ensures fairness, it's possible that the general hyperparameter settings were not optimal for every single baseline method, potentially making NGT's relative performance appear stronger than it would be if all methods were individually tuned to their maximum potential.
+2.  **Computational Speed:** The speed comparison in Appendix P is useful, but it shows NGT is not the fastest method; W-DAC/SAM and MMD-DAC/SAM are slightly faster. The text should frame this more neutrally, stating it is "competitive" rather than implying it is among the fastest.
+
+**Questions**
+1.  The paper states that all baselines were re-implemented on a shared backbone (Block 18). How were the hyperparameters for these baselines, such as the GP coefficient for W-DAC/SAM or the diffusion model for DiffAIL, chosen? The poor performance of DiffAIL on simpler tasks is particularly surprising and raises questions about whether the setup was optimal for it.
+2.  The adaptive reward numerics scheme described in Appendix J seems like a very important practical detail for normalizing the reward signal. How robust is the method to this specific percentile-based normalization scheme? Have you experimented with other schemes, like the running mean/std used in RND?
+3.  Could you provide more details on the memory footprint of NGT, especially when using the `ℓ_HLG` loss? The predictor's output size increases from `m` to `N x m`, which could be significant. The note about DiffAIL's memory usage (Block 20) is helpful, and a similar comment for NGT would be welcome.
+
+**Rating**
+- Overall (10): 9 — This is a practical, well-engineered, and high-performing method backed by an exceptionally strong and fair empirical study.
+- Novelty (10): 7 — The method is a novel combination of existing parts, but its value lies more in its effectiveness than in conceptual breakthrough.
+- Technical Quality (10): 10 — The experimental methodology is of the highest quality, with fair comparisons, extensive ablations, and a focus on reproducibility.
+- Clarity (10): 9 — The paper is clearly written, and the detailed appendices are a major asset for any practitioner wanting to use or build upon this work.
+- Confidence (5): 5 — I am an expert in applied RL and IL, and I am highly confident in my evaluation of the paper's practical contributions.
+
+***
+
+### **Review 4**
+
+**Summary**
+This paper introduces Noise-Guided Transport (NGT), an imitation learning (IL) algorithm for settings with scarce expert data. The method's core is a novel reward function derived from an adversarial learning process. This process involves a predictor network that learns to match the outputs of a fixed, random "prior" network. The objective function is framed as minimizing prediction error on expert data while maximizing it on agent data, which the authors connect to the dual formulation of the optimal transport (OT) problem. The method is shown to be highly sample-efficient and stable, outperforming prior work on challenging continuous control tasks.
+
+**Soundness**
+The methodological approach is sound, weaving together several powerful concepts from recent machine learning research. The synthesis of a Random Network Distillation (RND)-style prediction task with a Wasserstein GAN-style adversarial objective is coherent and well-motivated. The paper correctly identifies the weaknesses of prior methods (e.g., instability of JS-divergence GANs, offline nature of RED) and proposes a solution that addresses them. The theoretical analysis, while perhaps not perfectly rigorous in its equivalence claims (as the function class is restricted), provides a strong conceptual framework that justifies the algorithmic design. The empirical results strongly back the soundness of the overall approach.
+
+**Presentation**
+The paper is well-structured and effectively situates the work within the broader context of IL, generative modeling, and reinforcement learning. The narrative of deriving the objective from "first principles" (Section 4.1) before connecting it to the established OT framework is an effective way to build intuition. The related work section (and its expansion in Appendix D) is comprehensive and correctly positions NGT relative to key prior art like DAC, PWIL, RED, and WGAN. The abstract's claim of "uncertainty estimation by design" is, however, not fully developed in the main text, which is a minor weakness in the presentation.
+
+**Contribution**
+The primary contribution of this work is a novel and elegant formulation for the reward function in adversarial imitation learning. By replacing the standard binary discriminator of GAIL/DAC with a potential function based on a random-prior prediction task, the authors propose a new path for adversarial IL that appears more stable and sample-efficient. This moves beyond simple expert-vs-agent classification and introduces a structured, scalable task (m-dimensional regression/classification) at the heart of the reward signal. This conceptual shift, which leads to a simple and powerful algorithm, is a significant contribution to the field.
+
+**Strengths**
+1.  **Novel Synthesis of Ideas:** The paper's main strength is its creative and effective combination of concepts from pseudo-density estimation (RND), optimal transport (WGAN), and adversarial IL (GAIL/DAC) into a single, coherent framework (Section 4).
+2.  **A New Perspective on AIL Reward:** The work offers a new and compelling way to design the potential function in adversarial IL, moving beyond a simple discriminator and towards a more structured prediction task.
+3.  **Strong Conceptual Framing:** The connection to optimal transport provides a solid theoretical motivation, and the method is well-positioned within the literature, drawing clear parallels and distinctions with related work.
+4.  **High Potential for Impact:** The simplicity and strong performance of NGT could make it a go-to method for low-data IL, and the core objective may have applications beyond IL, as suggested in the conclusion.
+
+**Weaknesses**
+1.  **Underdeveloped "Uncertainty" Claim:** The abstract claims NGT "incorporates uncertainty estimation by design" (Block 2), and Section 4.1 mentions epistemic uncertainty. However, this concept is not explored, analyzed, or utilized anywhere in the paper. This makes the claim feel unsubstantiated and like a missed opportunity.
+2.  **Insufficient Comparison to RED:** The paper positions NGT as an improvement over methods like RED [61] by adding an adversarial component (Block 9). The RED* baseline implements the "positive-only" part of the NGT loss. However, the paper would be stronger if it included a more direct discussion of *why* the adversarial term (i.e., ascending gradients on agent data) is so critical for performance, as this is a key design choice separating NGT from RED.
+
+**Questions**
+1.  The abstract and introduction claim that NGT "incorporates uncertainty estimation by design" (Block 2). Could the authors elaborate on this point? Is the prediction error `h_ξ(x)` a principled measure of epistemic uncertainty, and could it be leveraged for other applications, such as active learning or out-of-distribution detection for safety?
+2.  Conceptually, how does NGT's adversarial objective differ from an alternative approach where one might use the RND prediction error as an intrinsic reward to encourage the agent to visit the same states as the expert (i.e., state-matching without an explicit adversarial loss)?
+3.  The conclusion suggests that the NGT objective could be applied to general generative modeling (Block 23). Have the authors considered or performed any preliminary experiments in other domains, such as image generation, to validate if the stability and performance benefits of the NGT objective generalize beyond imitation learning?
+
+**Rating**
+- Overall (10): 8 — A strong paper with a novel conceptual contribution and excellent results, slightly held back by a few underdeveloped claims.
+- Novelty (10): 9 — The synthesis of RND-style prediction and an OT-based adversarial objective for IL is highly novel and insightful.
+- Technical Quality (10): 8 — The method is well-designed and the experiments are strong, though the theoretical claims could be more nuanced.
+- Clarity (10): 8 — The paper is clearly written and well-contextualized, but the claim about uncertainty is not well-supported by the text.
+- Confidence (5): 5 — I am highly familiar with the literature on imitation learning, generative models, and reinforcement learning.

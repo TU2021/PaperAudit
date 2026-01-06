@@ -1,0 +1,148 @@
+### Reviewer 1
+
+#### Summary
+This paper introduces Text-to-Talk (TtT), a novel framework for audio-language models that generate interleaved text and speech. The core idea is to address the different dependency structures of text and audio by using a hybrid generative model: autoregressive (AR) for text and non-autoregressive (NAR) discrete diffusion for audio. The authors formalize this by proposing a unified training objective based on a partial-order factorization, where the practical loss function is an upper bound on the true negative log-likelihood. To bridge the train-test gap inherent in this hybrid approach, three specific training strategies (BANOM, PPM, SST) are introduced. Experiments on Audio-QA and ASR tasks show that TtT significantly outperforms purely AR and NAR baselines.
+
+#### Soundness
+The methodology is sound and well-motivated. The central premise—that text generation relies on target-target dependencies while audio generation is primarily driven by source-target dependencies (Section 1)—is intuitive and provides a strong rationale for the hybrid AR-NAR approach. The theoretical justification in Section 3.3, which frames the problem using partial orders and proves that the training objective is an upper bound on the NLL (Eq. 20), is a significant strength, lending mathematical rigor to the proposed method. The experimental design is thorough, including comparisons against strong AR and NAR baselines at two model scales (Table 1), as well as comprehensive ablation studies that validate the contribution of each proposed training strategy (Section 4.3). The evaluation protocol, while relying on an external ASR-LLM pipeline for Audio-QA (Section 4.1.2), is a pragmatic approach to assessing the semantic quality of spoken responses.
+
+#### Presentation
+The paper is exceptionally well-written and organized. The introduction clearly articulates the problem and the proposed solution, aided by the effective visual in Figure 1. The theoretical concepts, particularly the connection between absorbing discrete diffusion and any-order autoregressive models (Section 2.2), are explained with remarkable clarity. The method section is logically structured, moving from the individual components (AR for text, NAR for audio) to the unified objective (Section 3.3) and practical training considerations. Figures 2 and 3 provide excellent visual summaries of the training pipeline, attention mechanism, and inference process. The appendix is also comprehensive, providing necessary derivations and implementation details.
+
+#### Contribution
+The paper makes a significant and novel contribution to the field of multimodal audio-language modeling. The primary contribution is the identification and formalization of the asymmetric dependency structures in interleaved audio-text generation. While hybrid models exist, the authors are among the first to provide a principled, theoretically-grounded framework for jointly training AR and NAR components within a single Transformer for this task. The proposed TtT model, along with the specialized training strategies (BANOM, PPM, SST), represents a substantial advance over existing methods that treat both modalities with a uniform AR objective. The strong empirical results, which show dramatic improvements especially on ASR tasks (Table 1), underscore the real-world impact of this contribution.
+
+#### Strengths
+1.  **Novel Theoretical Framing:** The paper's key strength is its elegant theoretical justification for the hybrid AR-NAR model. The use of partial-order factorization (Section 3.3) to unify the different generative processes is novel and provides a solid mathematical foundation for the approach.
+2.  **Strong Empirical Performance:** TtT demonstrates substantial improvements over both AR and NAR baselines across multiple Audio-QA and ASR benchmarks (Table 1). The gains in ASR WER are particularly impressive (e.g., reducing WER from 54.94 to 12.53 on AISHELL-2 for the 3B model), validating the core hypothesis about dependency structures.
+3.  **Clarity and Presentation:** The paper is written with exceptional clarity. Complex ideas like discrete diffusion and the unified objective are made accessible through clear explanations and well-designed figures (Figure 1, 2, 3).
+4.  **Thorough Ablation Studies:** The contribution of each proposed training strategy (BANOM, PPM, SST) is rigorously validated through ablation experiments (Section 4.3), which clearly demonstrate their necessity and effectiveness.
+
+#### Weaknesses
+1.  **Lack of Latency Analysis:** The paper claims that NAR audio generation enables low latency and parallel synthesis (Section 3.5), which is a key motivation for using diffusion models. However, no empirical results (e.g., real-time factor, first-token latency) are provided to quantify this advantage over the AR baseline.
+2.  **Complexity of Training Strategies:** While effective, the three proposed training strategies (BANOM, PPM, SST) add considerable complexity to the training pipeline. This might pose a barrier for reproduction and adoption compared to a simpler, unified AR objective.
+
+#### Questions
+1.  Could you provide empirical data on inference latency? Specifically, how does the wall-clock time for generating an audio response with TtT compare to the AR baseline, and what is the first-token latency for audio?
+2.  In Section 3.3, you introduce three training strategies (BANOM, PPM, SST) with associated probabilities (p_mix, p_prefix, p_trunc). How sensitive is the model's performance to the specific values chosen for these hyperparameters (0.3, 0.3, 0.5)?
+3.  The theoretical framework in Section 3.3 is based on the idea that audio tokens within a span form an antichain. Have you considered or explored alternative partial orderings, for example, ones that might enforce some weak local ordering within audio spans?
+
+#### Rating
+- Overall (10): 9 — The paper presents a novel, theoretically-grounded, and empirically powerful framework that addresses a fundamental problem in audio-language modeling (Section 1, 3.3).
+- Novelty (10): 9 — The core idea of using a hybrid AR-NAR model justified by a partial-order factorization to handle asymmetric dependencies is highly novel (Section 3.3).
+- Technical Quality (10): 9 — The technical execution is excellent, with strong theoretical backing (Eq. 20), rigorous experiments, and thorough ablations (Table 1).
+- Clarity (10): 10 — The paper is exceptionally clear, with well-structured arguments and excellent figures that make complex concepts easy to understand (Figure 1, 2).
+- Confidence (5): 5 — I am highly confident in my assessment as I am an expert in this area and the paper provides sufficient detail for a thorough evaluation.
+
+---
+### Reviewer 2
+
+#### Summary
+The authors propose "Text-to-Talk" (TtT), a multimodal large language model that combines autoregressive (AR) generation for text segments with non-autoregressive (NAR) discrete diffusion for audio segments. The motivation is a claimed mismatch in the dependency structures of the two modalities. The paper presents a theoretical justification for this hybrid approach using a partial-order factorization and introduces three ad-hoc training strategies (BANOM, PPM, SST) to mitigate train-test discrepancies. Experimental results on ASR and Audio-QA tasks are presented to show the superiority of the proposed method over pure AR and NAR models.
+
+#### Soundness
+The paper's soundness has some strong points but also raises concerns. The core premise that text and audio have different dependency structures (Section 1) is plausible. However, the theoretical justification in Section 3.3, while mathematically elaborate, feels somewhat post-hoc. The claim that minimizing the proposed objective `L_Unified` optimizes an upper bound on the true NLL (Eq. 20) is standard for variational methods, but its practical tightness and impact are not analyzed. More critically, the necessity of three separate, complex training heuristics (BANOM, PPM, SST in Section 3.3) suggests that the core hybrid model is not inherently stable or robust. These strategies seem to patch over fundamental train-test discrepancies rather than the model learning to handle them directly. For example, BANOM is needed because the model can't handle the context shift, and SST is needed to fix a positional bias issue. This reduces the elegance of the proposed solution. The evaluation for Audio-QA (Section 4.1.2) is also questionable, as it relies on a cascade of an ASR model and an LLM-as-a-judge, introducing significant potential for noise and confounding variables. The reported scores are thus a function of three models, not just the one being evaluated.
+
+#### Presentation
+The paper is generally well-structured, but certain sections are difficult to parse. The introduction and preliminaries are clear. However, Section 3.3 ("Multimodal Factorization and a Unified Objective") is dense and the connection between the abstract partial-order formalism and the practical implementation is not immediately obvious. The introduction of BANOM, PPM, and SST feels abrupt and less integrated into the main theoretical narrative. Figure 2(b) is confusing; the depiction of the attention mask for the "Audio Span" shows full bidirectional attention, but the text describes it as "bidirectional attention within each span... but causal attention across spans." The diagram does not clearly show this cross-span causality, as the audio span block appears to attend to all previous blocks fully. The distinction between Figure 2(a) and Figure 3(a) is also minimal, and they could likely be combined.
+
+#### Contribution
+The paper's contribution is mixed. On one hand, it explicitly tackles an important and under-explored problem: the asymmetry of generative processes in interleaved audio-text models. On the other hand, the solution feels more like a complex engineering effort than a fundamental breakthrough. The core idea of combining AR and NAR is not new, and the application of discrete diffusion to audio tokens is an extension of existing work. The main novelty lies in the specific joint training framework, but its reliance on a suite of corrective training strategies (BANOM, PPM, SST) diminishes its perceived elegance and fundamental nature. The empirical gains are significant, but it's unclear how much is due to the core AR-NAR idea versus the extensive tuning and heuristics applied during training.
+
+#### Strengths
+1.  **Addresses an Important Problem:** The paper correctly identifies a key challenge in unified audio-language modeling—the differing dependency structures of text and audio (Section 1).
+2.  **Strong Empirical Results:** Despite methodological concerns, the performance improvements shown in Table 1, especially for the ASR task, are substantial and cannot be ignored.
+3.  **Good Ablation Study:** The ablation study in Section 4.3 effectively demonstrates that the proposed training strategies (BANOM, PPM, SST) are indeed crucial for achieving the reported performance, which is an honest and valuable finding.
+
+#### Weaknesses
+1.  **Over-reliance on Heuristics:** The model's success seems heavily dependent on three complex training strategies (BANOM, PPM, SST in Section 3.3). This suggests the underlying hybrid model is brittle and suffers from significant train-test mismatch, making the solution less general and elegant.
+2.  **Questionable Evaluation Protocol:** The Audio-QA evaluation (Section 4.1.2) uses a noisy ASR-LLM pipeline. This makes it difficult to isolate the performance of the TtT model itself, as errors from the ASR system or biases in the LLM judge can skew the results. Direct human evaluation or simpler metrics would be more convincing.
+3.  **Unclear Theoretical Impact:** The practical implication of the NLL upper bound (Eq. 20) is not discussed. It is unclear how tight this bound is or how it guided the model design beyond providing a high-level justification.
+4.  **Confusing Visuals:** Some figures, particularly the attention mask in Figure 2(b), are ambiguous and do not perfectly align with their textual descriptions, causing potential confusion.
+
+#### Questions
+1.  Can you provide an intuition for why the base hybrid AR-NAR model is so susceptible to train-test discrepancies that it requires three distinct correction strategies (BANOM, PPM, SST)? Does this point to a more fundamental issue with combining these two training objectives?
+2.  Regarding the Audio-QA evaluation, have you measured the error rate of the ASR systems (Whisper, Paraformer) on your model's generated audio? How can you be sure that the performance differences in Table 1 are not partially artifacts of the ASR model performing better or worse on audio from different generative models?
+3.  The paper claims the NAR approach is more faithful to source-target dependencies. However, the diffusion objective (Eq. 10) still conditions on previously generated audio tokens within the same span (`a_{m,π_m(<j)}`). Doesn't this re-introduce the target-target dependencies you aimed to avoid?
+
+#### Rating
+- Overall (10): 6 — The paper has a good idea and strong results, but the methodology is convoluted with heuristics and the evaluation is not entirely convincing (Section 3.3, 4.1.2).
+- Novelty (10): 7 — The specific formulation of a joint AR-NAR objective for audio-text is novel, but the use of hybrid models and diffusion is not (Section 3.3).
+- Technical Quality (10): 5 — The technical contribution is undermined by the reliance on complex, ad-hoc training strategies and a noisy evaluation pipeline (Section 3.3, 4.1.2).
+- Clarity (10): 6 — While mostly well-written, key sections are dense and some figures are ambiguous, hindering full comprehension (Section 3.3, Figure 2b).
+- Confidence (5): 4 — I am confident in my assessment, though some of my criticisms relate to complex interactions that are difficult to fully disentangle without running experiments.
+
+---
+### Reviewer 3
+
+#### Summary
+This paper proposes Text-to-Talk (TtT), a unified Transformer model for generating interleaved speech and text. The key innovation is a hybrid generation strategy: it uses standard autoregressive (AR) decoding for text and a non-autoregressive (NAR) discrete diffusion process for audio. This design is motivated by the argument that text generation is sequential (target-dependent) while audio synthesis is more parallelizable (source-dependent). The authors develop a unified training objective and introduce three techniques—BANOM, PPM, and SST—to improve training stability and performance. Experiments on ASR and Audio-QA tasks show that TtT outperforms AR-only and NAR-only baselines. The authors promise to release their code and models.
+
+#### Soundness
+The paper's methodology appears sound and is backed by solid empirical evidence. The motivation to treat text and audio generation differently is well-argued and logical. The choice of absorbing discrete diffusion for audio is justified by its connection to any-order AR models (Section 2.2), which naturally allows for parallel generation. The three proposed training strategies (BANOM, PPM, SST in Section 3.3) are presented as solutions to specific, practical problems (context shift, cross-span inconsistency, positional bias), and the ablation study in Table 1 convincingly demonstrates their effectiveness. The experimental setup is reasonable, comparing against appropriate baselines (AR and NAR versions of the same backbone). The decision to open-source the code, data, and models (Section 2) is a major plus for reproducibility and community adoption.
+
+#### Presentation
+The paper is well-organized and clearly written. The structure flows logically from the problem statement to the proposed solution and experimental validation. The figures are particularly helpful; Figure 1 clearly illustrates the core problem, Figure 2 explains the training pipeline and attention mechanism, and Figure 3/Algorithm 1 details the inference process. The inclusion of data format examples in the appendix (Figures 4-9) is very useful for anyone looking to replicate or build upon this work. The paper does a good job of explaining complex topics like discrete diffusion in an accessible manner.
+
+#### Contribution
+The main contribution is a practical and effective framework (TtT) for building high-quality speech-in/speech-out conversational agents. By successfully integrating AR and NAR generation in a single model, the authors provide a blueprint for leveraging the strengths of both paradigms. The paper's contribution is not just the model architecture but also the set of practical training techniques (BANOM, PPM, SST) that make the hybrid approach work well in practice. The significant performance gains shown in Table 1, particularly in reducing ASR WER, highlight the practical value of this contribution. The promise to open-source everything further enhances the paper's impact.
+
+#### Strengths
+1.  **Practical and Effective Solution:** The TtT framework provides a concrete and high-performing solution to a challenging problem. The impressive results on both ASR and Audio-QA (Table 1) show its practical utility.
+2.  **Excellent Ablation Studies:** The paper provides a clear and convincing ablation study (Section 4.3) that dissects the contribution of each of the three training strategies, adding credibility to the overall design.
+3.  **Reproducibility:** The authors' commitment to open-sourcing models, data, and code is commendable and will be a great asset to the research community.
+4.  **Clear Explanation of Inference:** The description of the block-wise diffusion inference process (Section 3.5, Algorithm 1) is clear and provides a good understanding of how the model generates audio in practice.
+
+#### Weaknesses
+1.  **No Latency/Throughput Metrics:** A major motivation for using NAR models is faster inference. The paper mentions low latency (Section 3.5) but provides no quantitative comparison of inference speed (e.g., Real-Time Factor) between TtT and the AR baseline. This is a missed opportunity to fully demonstrate the practical benefits of the NAR component.
+2.  **Evaluation of Audio-QA:** The evaluation of Audio-QA relies on an ASR model to transcribe the output before an LLM judges it (Section 4.1.2). This is an indirect and potentially noisy measure of audio quality and semantic correctness. It would be beneficial to include human evaluations or objective audio quality metrics (e.g., MOS, PESQ) to complement this.
+3.  **Training Complexity:** The training setup with three probabilistic strategies (BANOM, PPM, SST) seems quite complex to implement and tune correctly. While the authors provide the probabilities used, more details on the sensitivity to these hyperparameters would be useful for practitioners.
+
+#### Questions
+1.  Can you provide any metrics on inference speed? For a typical response, what is the end-to-end generation time for TtT compared to the AR baseline, and what is the Real-Time Factor (RTF) of the generated audio?
+2.  The block-wise diffusion for inference (Algorithm 1) has several hyperparameters (block length B, sampling steps T). How were these values (B=32, T=200) chosen, and how sensitive is the final audio quality and generation speed to them?
+3.  For the Audio-QA evaluation, the TtT model shows large gains over the AR baseline (e.g., +24.68 on LLaMAQuestions). Do you have a qualitative analysis or examples that show *why* TtT is so much better? Does it generate more semantically correct content, or is the audio just clearer, leading to better ASR transcription and thus a higher score from the LLM judge?
+
+#### Rating
+- Overall (10): 8 — A strong paper with a practical and effective method, backed by solid experiments, though it lacks key latency benchmarks (Section 3.5).
+- Novelty (10): 8 — The principled integration of AR and NAR generation for audio-text, along with the supporting training strategies, is a novel and valuable contribution (Section 3.3).
+- Technical Quality (10): 8 — The technical work is solid, with strong empirical validation, but the evaluation of Audio-QA could be strengthened with direct metrics (Section 4.1.2).
+- Clarity (10): 9 — The paper is very well-written and organized, with clear figures and a commitment to reproducibility that enhances clarity (Figures 1-3, Appendix A.6).
+- Confidence (5): 5 — I am very confident in my review. The paper is well-written and my expertise aligns well with the topic.
+
+---
+### Reviewer 4
+
+#### Summary
+This work presents a hybrid generative model, Text-to-Talk (TtT), for interleaved audio-text sequences. The model is founded on the observation that text and audio modalities exhibit different dependency structures: text is characterized by target-target dependencies, while audio is primarily governed by source-target dependencies. Consequently, the authors propose a single Transformer model that employs an autoregressive (AR) objective for text and a non-autoregressive (NAR) objective, based on absorbing discrete diffusion, for audio. A central theoretical contribution is the formulation of a unified joint distribution via a partial-order factorization, for which the practical training loss serves as an upper bound on the negative log-likelihood. The framework is empirically validated on ASR and Audio-QA tasks, demonstrating significant improvements over uniform-objective baselines.
+
+#### Soundness
+The paper is theoretically sound and methodologically rigorous. The core theoretical argument, presented in Section 3.3, is the highlight. By defining a partial order over the token sequence—where text tokens are totally ordered and audio tokens within a span form an antichain—the authors derive a principled factorization of the joint probability distribution (Eq. 14). This elegantly formalizes the intuition about different dependency structures. The subsequent proof that the practical training objective (a sum of AR cross-entropy and any-order AR loss) is an upper bound on the NLL of this target distribution (Eq. 20, Appendix A.1.1) provides strong theoretical justification for the hybrid training scheme. The connection between the λ-denoising cross-entropy loss for diffusion and the any-order autoregressive objective (Section 2.2, citing Ou et al., 2024) is correctly identified and leveraged as the cornerstone of the NAR component. The experimental methodology, including the use of AR and NAR baselines and extensive ablations, is robust and supports the paper's claims.
+
+#### Presentation
+The presentation is of high quality. The paper follows a logical progression, starting with a clear motivation (Section 1), reviewing necessary background on generative models (Section 2), detailing the proposed method's theoretical and practical aspects (Section 3), and finally presenting empirical results (Section 4). The mathematical notation is consistent and well-defined. The derivation of the unified objective in Section 3.3 is particularly well-articulated, guiding the reader from the high-level concept of partial orders to the final loss function. The appendix provides a clear derivation of the upper bound (A.1.1), which reinforces the main claims. The related work section (A.2) is comprehensive and correctly positions the work within the literature on audio-language models and discrete diffusion.
+
+#### Contribution
+The primary contribution of this paper is the formalization and validation of a hybrid AR-NAR generative model for audio-text sequences, grounded in the distinct dependency structures of each modality. While the idea of hybrid models is not entirely new, the specific application to interleaved audio-text generation, supported by a coherent theoretical framework based on partial orders and any-order AR models, is a significant and novel contribution. The paper successfully bridges the gap between the theoretical properties of discrete diffusion models and the practical challenge of multimodal sequence generation. The demonstration that this principled approach leads to substantial empirical gains (Table 1) elevates the work beyond a purely theoretical exercise. The three training strategies (BANOM, PPM, SST), while seemingly heuristic, are presented as principled solutions to discrepancies arising from the hybrid objective, making them part of the overall contribution to making such models practical.
+
+#### Strengths
+1.  **Strong Theoretical Foundation:** The paper's main strength is the rigorous theoretical framework developed in Section 3.3. The use of partial orders to define a hybrid joint distribution (Eq. 14) and the proof that the training loss is a valid upper bound (Eq. 20) provide a solid justification for the entire approach.
+2.  **Principled Unification of AR and NAR:** The work elegantly unifies AR modeling and discrete diffusion within a single Transformer by leveraging the interpretation of diffusion as an any-order AR model. This provides a coherent view of how both paradigms can coexist.
+3.  **Clear Connection to Prior Theory:** The paper effectively builds upon recent theoretical insights into discrete diffusion models, particularly the work of Ou et al. (2024), and applies them to a new and challenging multimodal problem.
+4.  **Convincing Empirical Validation:** The theoretical claims are backed by strong empirical results that show clear benefits of the hybrid approach over simpler baselines, confirming that the theoretical motivation translates into practical performance gains.
+
+#### Weaknesses
+1.  **Limited Discussion on the Tightness of the Bound:** While the paper proves that the training objective is an upper bound on the NLL (Eq. 20), there is no discussion or analysis of how tight this bound is in practice. The gap in Jensen's inequality (Eq. 17) could be large, and understanding its behavior could provide further insights.
+2.  **Novelty is in Unification, Not Core Theory:** The paper heavily relies on existing theory for discrete diffusion (e.g., from Ou et al., 2024). The theoretical novelty is in the application and unification of these concepts for a hybrid modality setting, not in developing new core principles for diffusion models themselves. This is a minor point but worth noting for context.
+
+#### Questions
+1.  The theoretical framework hinges on Jensen's inequality in Eq. 17. Do you have any intuition or empirical measurement of the gap in this inequality for your task? How does the tightness of this upper bound correlate with model performance or training stability?
+2.  The partial order defined in Section 3.3 treats all tokens within an audio span as an antichain (fully unordered). This seems to be a strong assumption, as prosody and coarticulation effects might introduce local sequential dependencies. Did you consider or would it be possible to define a "weaker" partial order that allows for some local structure within audio spans while still enabling NAR-style generation?
+3.  The paper argues that audio generation is driven by source-target dependencies. How does the model handle cases where audio content *does* have strong internal dependencies, such as generating a piece of music or a long, structured non-speech sound? Would the NAR assumption still hold?
+
+#### Rating
+- Overall (10): 9 — An excellent paper that provides a theoretically rigorous and empirically successful solution to a key problem in multimodal generation (Section 3.3, Table 1).
+- Novelty (10): 9 — The formalization of hybrid AR-NAR generation via partial orders is a highly novel and insightful contribution to the field (Section 3.3).
+- Technical Quality (10): 10 — The technical quality is outstanding, with a clear and correct theoretical derivation backing a well-executed empirical study (Section 3.3, Eq. 20, Appendix A.1.1).
+- Clarity (10): 9 — The paper is very clearly written, especially the theoretical sections, though the density of Section 3.3 may require careful reading.
+- Confidence (5): 5 — I am an expert in generative models and their theoretical underpinnings, and I am highly confident in my evaluation of this work.

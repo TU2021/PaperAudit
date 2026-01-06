@@ -1,0 +1,180 @@
+Review 1
+
+Summary
+The paper proposes a principled taxonomy and evaluation methodology for “memory” in reinforcement learning (RL). Drawing from cognitive science, it formalizes declarative vs. procedural memory (Definitions 3–4) and distinguishes Memory Decision-Making (Memory DM) from Meta-RL (Sec. 5). For Memory DM, it defines agent context length K (Def. 1) and correlation horizon ξ (Def. 4) to disambiguate short-term memory (STM; ξ ≤ K) from long-term memory (LTM; ξ > K). It introduces memory-intensive environments (Def. 5), a simple theorem about the “context memory border” K̄ = min Ξ − 1 (Theorem 1; Eq. 4), and an experiment-design procedure (Algorithm 1) that allows explicit testing of STM vs. LTM. Empirically, experiments on Passive T-Maze and MiniGrid-Memory (Sec. 6) show how misconfigurations (e.g., variable ξ) can falsely suggest LTM when agents only exploit STM (Fig. 4), and how varying K or ξ cleanly toggles STM⇄LTM (Fig. 5).
+
+Soundness
+- The formalism is coherent and self-consistent. The definitions of K, ξ, K̄, K_eff (Defs. 1, 4, 5, 6) and the STM/LTM criterion (ξ ≤ K vs. ξ > K) are precise and operationalizable. Theorem 1 is straightforward but correct and useful for experimental design (Sec. 5.1, Eq. 4).
+- Treating memory and credit assignment together (Sec. 4, “Memory and Credit Assignment”) is defensible for the purpose of measuring temporal dependency length, though it departs from prior distinctions (Ni et al., 2023). The paper is explicit about this choice.
+- The empirical illustrations match the formalism: In MiniGrid-Memory with L = 21, fixed ξ = L + 1 = 22 and K = 14 ensures K ≤ K̄ (LTM-only), while variable ξ ∈ [7, 22] mixes STM and LTM, explaining the misleading green curves in Fig. 4. In Passive T-Maze, the controlled transitions K = ξ = 15 (STM), K = 5, ξ = 15 (LTM), and K = 5, ξ = 5 (STM) (Fig. 5 and captions) demonstrate the method’s leverage.
+- One conceptual assumption is that “base model” context K is separate from “memory mechanisms” μ(K) (Def. 6) which increase effective context K_eff; this abstraction maps well to RNN/Transformer practice, but the paper does not empirically measure K_eff. The conclusions in Sec. 6 rely on assumed K_eff = K for GPT-2-based agents, which is plausible but not verified.
+
+Presentation
+- The paper is clearly written and well structured. Key terms are defined precisely and summarized in a helpful glossary (Appx. A). The taxonomy diagrams (Figs. 1–2, 19) and Table 1 aid understanding, though Table 1 is dense.
+- Notation is consistent overall, but K̄/overline K is written with both notations (Sec. 5.1–5.2); unifying notation would improve readability. Minor typos (e.g., subsection numbering around Sec. 5.2) can be polished.
+- Figures 4–5 effectively expose the central pitfall; captions could more explicitly restate K̄ for each configuration to connect back to Eq. (4).
+
+Contribution
+- The main contributions are conceptual clarity (formalizing declarative/procedural and STM/LTM in RL with measurable quantities), a general-purpose experiment-design procedure (Algorithm 1), and evidence that common misconfigurations can yield incorrect claims about LTM (Sec. 6.1).
+- While prior works discuss memory length and credit assignment, the paper operationalizes them with K, ξ, and K̄, providing a reproducible recipe to separate STM vs. LTM. This normalization can materially improve comparability across papers.
+
+Strengths
+- Clear, actionable definitions and a simple theorem that translate into a practical testing algorithm (Defs. 1–6; Theorem 1; Algorithm 1).
+- Convincing empirical demonstration of a common evaluation pitfall (Fig. 4, Sec. 6.1).
+- Useful guidance to configure existing environments (Passive T-Maze, MiniGrid-Memory) to isolate STM vs. LTM (Sec. 5.3, 6.2).
+- Comprehensive related work and glossary; careful positioning relative to cognitive science (Sec. 4.1; Appx. B.1).
+
+Weaknesses
+- Limited empirical scope: only two environments and a small set of baselines (Sec. 6). A positive control with an explicit LTM mechanism (e.g., external memory) is missing to validate that the protocol can detect true LTM.
+- K_eff is not measured; claims such as “SAC-GPT-2 lacks LTM mechanisms” (Sec. 6.1) are inferred rather than demonstrated (e.g., via probing or ablation that alters μ(K)).
+- The procedural vs. declarative split via n_envs × n_eps (Defs. 3–4; Table 1) may be too rigid: declarative memory could be probed across resets within the same environment, and “procedural” might not always map to Meta-RL outer loops.
+- Conflating “memory” and “credit assignment” (Sec. 4, Memory and Credit Assignment) simplifies exposition but may obscure algorithmic differences in training vs. inference-time memory.
+
+Questions
+- Can you include a positive control with a known LTM mechanism (e.g., a read-write external memory per Sec. Appx. C) to show Algorithm 1 detects LTM when present?
+- How is K enforced for GPT-2/DTQN in practice? Is there any recurrence or replay leakage that could increase K_eff beyond K (contradicting assumptions in Sec. 6.1)?
+- Can you report K̄ and (min Ξ, max Ξ) explicitly for each experimental condition (Figs. 4–5) to link back to Eq. (4) and the three regimes listed in Sec. 5.1?
+- Would you consider a lightweight probe to estimate K_eff (e.g., delayed XOR or synthetic counter tasks) to empirically verify μ(K) in your agents?
+- How robust is Algorithm 1 in multi-event settings where events overlap and ξ has a multimodal distribution (Def. 5)? Any guidance beyond min Ξ?
+
+Rating
+- Overall (10): 7 — Solid formalization with a practical evaluation recipe and illustrative experiments, but empirical validation lacks a positive LTM control and K_eff measurement (Sec. 6.1, Def. 6, Algorithm 1).
+- Novelty (10): 7 — The K/ξ/K̄ formalization and Memory DM vs. Meta-RL split are clear and helpful, though conceptually adjacent to prior discussions of temporal dependencies (Sec. 5; Table 1; Ni et al., 2023).
+- Technical Quality (10): 7 — Definitions and theorem are sound; experiments support claims about evaluation pitfalls but are limited in scope and controls (Theorem 1; Sec. 6; Fig. 4–5).
+- Clarity (10): 8 — Generally very clear with good figures; tighten notation for K̄ and enrich captions with explicit ξ/K̄ (Sec. 5.1–5.3; Figs. 4–5).
+- Confidence (5): 4 — High confidence in reading and assessment; some uncertainty remains due to missing positive LTM baseline and unmeasured K_eff.
+
+
+Review 2
+
+Summary
+This work proposes a precise, operational definition of memory in RL tied to temporal dependencies between “events” and “recalls.” It distinguishes Memory DM (single environment/episode declarative memory) from Meta-RL (skill transfer/procedural memory) and defines STM vs. LTM via a context length K and correlation horizons ξ (Def. 4). A theorem gives a context-memory border K̄ (Theorem 1; Eq. 4), and Algorithm 1 prescribes how to configure environments to test LTM or STM exclusively. Experiments on MiniGrid-Memory and Passive T-Maze show that naively mixing ξ values can yield falsely optimistic conclusions about LTM (Fig. 4) and that manipulating K or ξ toggles memory regime (Fig. 5).
+
+Soundness
+- The theoretical machinery is simple and correct; Theorem 1 is essentially an inequality boundary result but provides concrete guidance (Sec. 5.1).
+- The identification of “memory-intensive environments” by min Ξ > 1 (Def. 5) aligns with the operational notion of requiring dependence beyond the immediate step (and is consistent with the MDP corollary).
+- The reduction of LTM validation to validating memory mechanisms μ(K) that expand effective context K_eff (Def. 6; Eq. 5) is appropriate. However, the paper does not empirically measure K_eff nor perform ablations on μ(K), and thus LTM claims remain negative (lack of LTM) rather than positive demonstrations.
+
+Presentation
+- Very readable with crisp definitions and a logical progression from preliminaries to method and experiments. Figures 1–2 and Table 1 communicate the taxonomy but Table 1 could be simplified—blue/green coding requires careful reading.
+- A minor inconsistency: the notations K̄ and overline K are both used (Sec. 5.1–5.2). Also, “Subsection 5.2 Long-term memory in Memory DM” first discusses STM; consider re-ordering the exposition for smoother flow.
+
+Contribution
+- Primary contribution is a standardized, quantitative lens for what “memory” means in RL experiments, along with a concrete procedure to avoid mixing STM and LTM.
+- The empirical section is not about SOTA performance but about evaluation integrity; the demonstration that variable ξ can mask LTM deficits (Fig. 4) is an important practical insight.
+
+Strengths
+- Clear definitions with immediate experimental implications (Defs. 1–6; Theorem 1; Algorithm 1).
+- Demonstrates a realistic evaluation pitfall and how to avoid it (Sec. 6.1).
+- Provides environment-specific guidance, including how to compute ξ and K̄ (Sec. 5.3 for Passive T-Maze).
+
+Weaknesses
+- No positive LTM agent is included; we only see failures under LTM regimes. This weakens the empirical validation that Algorithm 1 can detect true LTM when present (Sec. 6.1–6.2).
+- The declarative/procedural boundary defined as n_envs × n_eps = 1 vs. > 1 (Defs. 3; Table 1) is somewhat arbitrary and protocol-dependent; episodic declarative memory across episode boundaries within the same environment is excluded by definition.
+- The decision to treat credit assignment and memory as one (Sec. 4, Memory and Credit Assignment) simplifies evaluation but may blur differences in algorithmic mechanisms (e.g., policy-gradient attribution vs. inference-time recall).
+- Statistical reporting is minimal: three runs and SEM (Appx. E.2). Given the evaluation focus, stronger statistical tests (e.g., confidence intervals with multiple seeds per configuration) would help.
+
+Questions
+- Could you add a positive-control agent with explicit external memory (read/write) to validate that the LTM-only regime (K ≤ K̄) indeed yields strong performance when μ(K) is present?
+- In MiniGrid-Memory variable mode (Sec. 6.1), what is the exact distribution of ξ ∈ [7, 22], and how often does ξ ≤ K for K = 14? A histogram would make the mixing argument quantitative.
+- How do you enforce and verify K at runtime for SAC-GPT-2 and DTQN? Is there any implicit recurrence via replay or target networks that could increase K_eff?
+- Can you report sensitivity to the noise channel in Passive T-Maze (Appx. E.1)? Does the noise ever act as a confound that favors STM heuristics?
+
+Rating
+- Overall (10): 6 — Valuable evaluation framework with clean formalization, but empirics lack a positive LTM control and deeper statistical treatment (Defs. 3–6; Theorem 1; Sec. 6.1).
+- Novelty (10): 6 — Conceptually incremental but practically important; formalization via K/ξ/K̄ and Algorithm 1 is new in this explicit form (Sec. 5; Algorithm 1; Table 1).
+- Technical Quality (10): 6 — Sound definitions and reasoning; limited empirical scope and missing K_eff ablations (Sec. 6; Def. 6).
+- Clarity (10): 8 — Generally clear with helpful figures; minor notation inconsistencies (Sec. 5.1–5.2; Figs. 1–2, 4–5).
+- Confidence (5): 4 — Confident in assessment; some uncertainty due to missing positive control and internal K enforcement details.
+
+
+Review 3
+
+Summary
+The paper tackles ambiguity in what constitutes “memory” for RL agents. It formalizes:
+- Memory DM (single POMDP, within-episode declarative memory) vs. Meta-RL (across episodes/tasks procedural memory) (Sec. 5; Defs. 2–3).
+- STM vs. LTM using an agent context length K and correlation horizon ξ (Def. 4), with memory-intensive environments defined by min Ξ > 1 (Def. 5).
+- A theorem identifying a context memory border K̄ = min Ξ − 1 (Theorem 1; Eq. 4), and an experiment-design Algorithm 1 to isolate STM-only, LTM-only, or mixed regimes.
+Empirical demonstrations on Passive T-Maze and MiniGrid-Memory show how incorrect settings (variable ξ) can mask LTM deficiencies (Fig. 4), and how changing K or ξ flips the regime (Fig. 5).
+
+Soundness
+- The formal definitions are mathematically crisp and map to implementation knobs available in practice (attention window size, recurrent updates, sequence truncation).
+- The equivalence “MDP ⇔ max Ξ = 1” (Def. 5, corollary) is reasonable if events are defined as (o, a, r) dependencies requiring more than one step history, consistent with the chosen abstraction.
+- The claim that LTM-capable mechanisms solve STM “but not vice versa” (Eq. 6 and surrounding text) is plausible under the K_eff ≥ K assumption (Def. 6); however, some mechanisms may trade off short-range precision for long-range recall in finite capacity models, suggesting a caveat worth stating.
+
+Presentation
+- The paper provides a helpful taxonomy diagram (Fig. 19) and succinct algorithm (Algorithm 1). The Appendix glossary (Appx. A) improves readability for newcomers.
+- Some figures (Fig. 4–5) use color and linestyle to encode configurations; captions could tabulate K, min Ξ, max Ξ, and K̄ numerically to anchor Eq. (4) and the three intervals in Sec. 5.1.
+
+Contribution
+- The key contribution is a unifying, measurable view of memory in RL with a protocol to avoid common evaluation errors. This will be useful for future benchmark design and for fairer comparisons between memory mechanisms (RNNs, SSMs, external memory, etc.; Appx. C).
+- The empirical analysis is illustrative rather than exhaustive; its value lies in surfacing the danger of mixed ξ settings and providing a recipe to avoid it.
+
+Strengths
+- Actionable formalism: researchers can compute ξ, K̄, choose K, and know whether they are testing STM, LTM, or both (Defs. 4–5; Eq. 4; Algorithm 1).
+- Clear separation of Memory DM vs. Meta-RL and mapping to declarative/procedural memory (Defs. 2–3; Table 1; Fig. 1).
+- Insightful negative result: variable ξ can accidentally inflate perceived LTM (Sec. 6.1; Fig. 4).
+
+Weaknesses
+- Procedural vs. declarative defined via n_envs and n_eps (Def. 3; Table 1) may conflate evaluation protocol with cognitive category; some inner-loop POMDPs across multiple episodes can still reflect declarative recall.
+- No experiments with an explicit LTM model (e.g., Neural Turing Machine or retrieval-augmented agent) that should succeed under LTM-only regimes (K ≤ K̄) (Sec. 6).
+- Lack of probing or estimation of K_eff for the baselines (Def. 6); the assumption K_eff = K for GPT-2-like agents is reasonable but untested.
+
+Questions
+- Can you report concrete values of (min Ξ, max Ξ) and K̄ per setting in Sec. 6.1–6.2? This would help readers replicate Algorithm 1 precisely.
+- Would an SSM/RNN baseline configured to accumulate information via hidden state (μ(K) > K) demonstrate LTM success in fixed-ξ settings? If tried and failed, please discuss.
+- How would you extend Algorithm 1 to environments with multiple overlapping event–recall pairs with different Δt and ξ (Def. 4), where optimizing for min Ξ may hide failures at larger ξ?
+
+Rating
+- Overall (10): 7 — Useful, well-argued framework with clear experimental illustrations; empirical section could be stronger with a positive LTM control (Theorem 1; Algorithm 1; Sec. 6).
+- Novelty (10): 7 — The K/ξ/K̄ formalization and Memory DM vs. Meta-RL split offers a new, practical standardization beyond prior qualitative distinctions (Sec. 5; Table 1).
+- Technical Quality (10): 7 — Sound definitions and logic; experiments support claims but are limited in breadth and controls (Fig. 4–5; Sec. 6).
+- Clarity (10): 8 — Well written with helpful figures and glossary; minor notation and caption enhancements suggested (Secs. 5–6; Appx. A).
+- Confidence (5): 4 — High confidence in evaluation; reservations due to missing LTM-positive baseline and K_eff measurement.
+
+
+Review 4
+
+Summary
+The paper seeks to “standardize” what memory means for RL agents. It introduces:
+- A separation of Memory DM (within-episode declarative memory) vs. Meta-RL (across-episode/task procedural memory) (Sec. 5; Defs. 2–3).
+- A quantitative STM/LTM criterion using agent context length K and correlation horizon ξ (Def. 4), plus the notion of memory-intensive environments (Def. 5).
+- Theorem 1 establishes a context memory border K̄ = min Ξ − 1 (Eq. 4) and Algorithm 1 prescribes how to choose K and environment parameters so that experiments test LTM-only, STM-only, or both.
+Experiments with DTQN, DQN-GPT-2, and SAC-GPT-2 on Passive T-Maze and MiniGrid-Memory demonstrate how violating the protocol (mixing ξ) overestimates LTM (Fig. 4) and how proper configuration isolates memory types (Fig. 5).
+
+Soundness
+- The formalization is internally consistent, mapping cognitive distinctions to variables measurable in RL experiments (Secs. 4–5). The event/recall abstraction α and β (Def. 4) and correlation horizon ξ are clear and match the testbeds used.
+- The main empirical claim—that variable ξ leads to ambiguous conclusions—is well supported (Sec. 6.1; Fig. 4). The toggling of STM⇄LTM via K and ξ in Passive T-Maze (Sec. 6.2; Fig. 5) is a strong demonstration of the “relative nature” of memory.
+- However, the evidence remains largely negative: we see that putative LTM agents fail under LTM-only settings; we do not see a successful LTM agent that passes the K ≤ K̄ test (Eq. 6). This leaves open whether Algorithm 1 can cleanly register LTM success.
+
+Presentation
+- Generally polished with helpful figures and a thorough glossary (Appx. A). The taxonomy (Fig. 1; Fig. 2; Table 1) is informative, though Table 1’s green/blue coding could be simplified. Some minor formatting and notation inconsistencies (K̄ vs. overline K).
+- The environment descriptions are clear and detailed (Appx. E.1), including differences from prior formulations.
+
+Contribution
+- A practical framework to remove ambiguity in memory evaluations and prevent misinterpretations. The “context memory border” K̄ and Algorithm 1 could become standard tools for new memory benchmarks.
+- The paper also clarifies how inner-loop POMDPs within Meta-RL relate back to declarative memory (Fig. 3 text around Sec. 5), which is useful for cross-paper comparisons.
+
+Strengths
+- Actionable, testable definitions and a compact theorem that immediately guides experiment design (Defs. 4–6; Theorem 1; Eq. 4; Algorithm 1).
+- Clear empirical example of a common failure mode in evaluation (Sec. 6.1; Fig. 4).
+- Careful positioning relative to neuroscience concepts without over-claiming biological fidelity (Sec. 4.1; Appx. B.1).
+
+Weaknesses
+- Limited empirical breadth: two environments, three baselines, and no positive LTM model with explicit μ(K) > K (Sec. 6). This weakens the claim that the protocol can detect LTM success.
+- The declarative/procedural split based solely on n_envs × n_eps (Defs. 3; Table 1) may be too coarse; some experimental designs could exercise declarative memory across episodes in one environment.
+- The decision to merge memory and credit assignment (Sec. 4, Memory and Credit Assignment) helps with temporal horizons but may conflate training-time attribution with inference-time recall.
+- Statistical rigor could be improved: three training runs, and SEM over 100 validation seeds (Appx. E.2) may not fully capture training variance.
+
+Questions
+- Could you add a baseline with an explicit writeable external memory (e.g., NTM/DNC) or retrieval-augmented module to demonstrate LTM success under K ≤ K̄ (Eq. 6)?
+- How is K enforced for transformer baselines? Are sequences strictly truncated to K steps of (o, a, r) at each decision, and is any lookahead or bootstrapping leakage possible?
+- For MiniGrid-Memory variable mode, can you provide a ξ histogram and the proportion of episodes for which ξ ≤ 14, to quantify the mixing shown in Fig. 4?
+- Would you consider reporting power analyses or additional seeds to reflect training instability in POMDPs?
+
+Rating
+- Overall (10): 7 — Practical and well-argued framework with clear empirical illustrations; more compelling with a positive LTM control and stronger statistics (Algorithm 1; Sec. 6; Fig. 4–5).
+- Novelty (10): 7 — Brings a crisp, quantitative standard to a muddled area; the K/ξ/K̄ split and Memory DM vs. Meta-RL mapping are useful (Sec. 5; Defs. 2–5; Eq. 4).
+- Technical Quality (10): 6 — Sound formalism; empirical validation limited and lacks an LTM-positive baseline and K_eff probes (Sec. 6; Def. 6).
+- Clarity (10): 8 — Clear writing and figures; some table/notation polishing needed (Table 1; Sec. 5.1–5.2).
+- Confidence (5): 4 — Comfortable with assessment; some uncertainty due to limited baselines and lack of LTM-positive evidence.

@@ -1,0 +1,42 @@
+Based on a critical review of the manuscript, several significant internal inconsistencies and contradictions have been identified that affect the paper's scientific validity and reproducibility. These issues span the description of the methodology, the presentation of results, and the reporting of experimental parameters.
+
+### Summary of Key Issues:
+
+1.  **Fundamental Contradiction in the Definition and Reporting of the "Temporal Consistency" Metric:** A core claim of the paper is that PredNext improves temporal feature consistency. However, the reporting of this metric is critically inconsistent.
+    *   **Evidence (Definition):** In Section 3.3 (Block #25), the metric `E_consistency` is defined as an average distance (`1 - cos(...)`), where the text explicitly states: "Lower values indicate higher temporal feature consistency."
+    *   **Evidence (Contradictory Results in Table):** Table 4 (Block #28) reports "consistency" values. The baseline `SimSiam (ImageNet)` has a score of `0.773`, while the proposed `SimSiamPredNext (ImageNet)` has a score of `0.819`. According to the paper's definition, this indicates that PredNext *worsens* temporal consistency (error increases from 0.773 to 0.819). This directly contradicts the paper's narrative.
+    *   **Evidence (Contradictory Figure Labeling):** Figure 4's caption (Block #26) refers to the "evolution of temporal consistency error," yet the y-axis in the corresponding plots (Block #29) is labeled "similarity." The plots show that PredNext achieves higher values, which would be an improvement for similarity but a degradation for error.
+    *   **Impact:** This fundamental contradiction makes it impossible to validate the central claim that PredNext improves temporal consistency. The metric is either misdefined, misreported, or the results contradict the claims.
+
+2.  **Contradictory Hyperparameter Specifications for the Proposed Method:** Key parameters of the PredNext module are described with conflicting values across different sections, raising serious concerns about which configuration was used to generate the results.
+    *   **Evidence (Prediction Head Dimensionality):**
+        *   The Methods section (Block #17) states the prediction heads use a "**128-dimensional hidden layer**".
+        *   The Ablation Studies section (Block #36) states: "We selected **512 dimensions as the optimal configuration**".
+        *   The Appendix (Block #58) also states the hidden layer dimension is **512**.
+    *   **Impact:** The dimensionality of the prediction head is a critical design choice for the proposed method. This discrepancy makes the core experimental setup ambiguous and irreproducible.
+
+3.  **Inconsistent Experimental Hyperparameters:** Multiple key hyperparameters for the training process are reported with conflicting values, undermining the reproducibility of the baseline and proposed models.
+    *   **Evidence (Weight Decay):**
+        *   The Methods section (Block #13) specifies a weight decay of "**1e-4**" for the AdamW optimizer during pre-training.
+        *   The Appendix (Block #57) specifies a weight decay of "**1e-6**" for the same pre-training process.
+    *   **Evidence (Crop Size for MiniKinetics):**
+        *   The Methods section (Block #13) states a crop size of "**114 x 114**" for MiniKinetics.
+        *   The Experiments section (Block #22) and the Appendix (Block #57) state a crop size of "**112 x 112**".
+    *   **Impact:** These inconsistencies in fundamental training parameters make it difficult for others to replicate the reported results.
+
+4.  **Ambiguous or Contradictory Loss Function Formulation:** The mathematical definition of the core `L_pred` loss function is inconsistent between the formal equation and the provided algorithm.
+    *   **Evidence (Equation):** The equation in Section 2.2 (Block #16) defines the loss with weights of `1/2` applied to each of the four components (two `Q` terms and two `M` terms).
+    *   **Evidence (Algorithm):** Algorithm 1 (Block #14, line 11) defines the loss with a single coefficient of `0.25` applied to the sum of all four components.
+    *   **Impact:** These two formulations are not mathematically equivalent, leading to ambiguity in how the proposed loss is actually calculated and optimized.
+
+5.  **Mislabeled and Disorganized Figures and Tables:** The manuscript contains clear copy-paste errors in captions and refers to figures that are not properly labeled, hindering clarity and readability.
+    *   **Evidence (Mislabeled Table):** The caption for Table 2 (Block #18) is an exact copy of the caption for Table 1 ("Summary of commonly used DVS and video datasets."), while the table's content is a comparison of predictive coding methods.
+    *   **Evidence (Disorganized Figures):** The text in Section 4 (Block #34, #36, #37) refers to Figure 6(a), 6(b), and 6(c). However, the corresponding plots are scattered across Blocks #39, #40, and #41, are not grouped into a single figure, and lack the (a), (b), (c) sub-labels.
+
+6.  **Numerical Discrepancies in Reported Results:** The same experimental result is reported with slightly different numerical values in different tables.
+    *   **Evidence:** The performance of the full `PredNext-SimCLR` model is reported in both Table 3 (Block #23) and Table 6 (Block #34). The reported HMDB51 Top-5 accuracy is **66.19** in Table 3 but **66.34** in Table 6. Minor discrepancies also exist for other metrics.
+    *   **Impact:** While small, such mismatches suggest a lack of rigor in reporting and raise questions about the reliability of the presented data.
+
+### Conclusion:
+
+The manuscript in its current form contains numerous high-impact, evidence-based inconsistencies. The contradiction surrounding the core "temporal consistency" metric is a critical flaw that undermines one of the paper's central claims. Furthermore, the conflicting descriptions of key model and training hyperparameters severely compromise the work's reproducibility. These issues must be thoroughly addressed and corrected to ensure the scientific validity and trustworthiness of the research.

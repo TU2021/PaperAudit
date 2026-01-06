@@ -1,0 +1,97 @@
+{
+  "paper": "Revisiting Multilingual Data Mixtures in Language Model Pretraining",
+  "judge_model": "gpt-5.1",
+  "review_agent": "deepreviewer",
+  "ai_model": "gpt-5-2025-08-07",
+  "ai_review_file": "deep_review_all.txt",
+  "inputs": {
+    "human_review": "review.txt",
+    "ai_review": "reviews/deepreviewer/gpt-5-2025-08-07/paper_origin/deep_review_all.txt"
+  },
+  "multi_review": {
+    "detected": false,
+    "num_reviews": 1,
+    "summarize_used": false,
+    "summary_note": null
+  },
+  "ai_review_consolidated": null,
+  "alignment": {
+    "motivation_strength_alignment": 0.9,
+    "weakness_error_alignment": 0.7,
+    "overall_alignment": 0.8,
+    "explanation": {
+      "strength": "Both reviews describe essentially the same core goals and contributions. They agree that the paper: (1) studies how multilingual data mixtures affect LLM pretraining; (2) explicitly revisits the four assumptions about more English hurting other languages, pivot-language choice, curriculum learning, and the curse of multilinguality; (3) uses 1B/3B-scale models and varies English share, pivot languages, curriculum, and number of languages; and (4) finds that adding English does not hurt other languages if they have enough data, English is an effective pivot, curriculum ordering does not significantly change final multilingual performance, and the curse of multilinguality is largely about capacity/data distribution rather than language count. Both highlight the breadth and rigor of experiments, the practical relevance of guidance on data mixtures, and generally clear presentation with useful figures/tables and ablations. The AI review adds more granular methodological praise, but this refines rather than contradicts Review A, so alignment on motivations/strengths is very high.",
+      "weakness": "There is partial but not complete overlap in weaknesses. Clear alignment: both mention limitations of the pivot-language experiments (Human: only Slavic/Cyrillic families; AI: restricted to Slavic/Cyrillic, taxonomy error with Mongolian, family vs script confound, limited pivot breadth and only at 1.1B). Both also converge on tokenizer-related concerns: Review A explicitly flags Mistral-Nemo tokenizer bias for non-Latin scripts; the AI reviews note tokenizer/script coverage only being acknowledged in Limitations and request tokenizer-coverage statistics. On broader scope, both suggest additional experiments to strengthen claims (Human: larger models 20–40B, more language families; AI: more pivots, generative tasks, per-language trends, better sensitivity of downstream metrics, and LR schedule clarification). However, several AI-raised weaknesses are absent from the human review: missing clarity on LR schedule beyond 100B tokens, undefined weighting scheme for multilingual loss, contradictory figure captions, figure readability, limited sensitivity of non-English benchmarks near chance, lack of validation-set construction details, and some over-generalization of ‘no curse’ under temperature sampling. Conversely, the human review’s specific request for a 100% English baseline comparison and for more grounding in prior work is not echoed in the AI reviews. Overall, they agree on some important limitations (pivot scope/validity, tokenizer issues, need for broader experiments) but the AI reviews include a wider set of methodological and presentation concerns, so alignment on weaknesses is moderate.",
+      "overall": "In aggregate, the two reviews are substantively consistent in their view of the paper. They describe the same experimental axes and headline takeaways, attribute similar practical significance, and both regard the work as a careful, useful empirical study that challenges standard assumptions about multilingual mixtures. The human review takes a higher-level perspective with a small set of broad strengths and weaknesses, while the AI review is more exhaustive and more critical on fine-grained methodological details and presentation quirks. Where they overlap (key findings, importance of the questions, pivot limitations, tokenizer concerns, desire for broader experiments), they are well-aligned; the discrepancies mainly reflect additional issues surfaced by the AI review rather than contradictions. This yields a high, but not perfect, overall alignment in content and judgment."
+    }
+  },
+  "generated_at": "2025-12-27T19:28:02",
+  "runs": [
+    {
+      "config": {
+        "judge_model": "gpt-5.1",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "baseline_review.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180
+      },
+      "config_key": "3b28d70d5731760031a4514ebc98b0afd78edf6d",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/baseline_review.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "motivation_strength_alignment": 0.86,
+        "weakness_error_alignment": 0.76,
+        "overall_alignment": 0.82,
+        "explanation": {
+          "strength": "Both reviews describe the same core goals and contributions: probing assumptions about multilingual mixtures (English share, pivot languages, curriculum learning, and the curse of multilinguality) using 1B–3B LLMs over many languages, and they both emphasize that adding English need not harm other languages, English as a broadly effective pivot, limited impact of curriculum, and that more languages do not inherently hurt when data are balanced. The AI review adds more detail on experimental design and benchmarking, but this mainly elaborates, rather than changing, the strengths identified by the human review (novelty, empirical breadth, clear takeaways).",
+          "weakness": "There is clear overlap on key weaknesses: both point to limited pivot experiments (mainly Slavic/Cyrillic), tokenizer/script imbalance and potential tokenization bias (Mistral-Nemo-Base-2407, Latin dominance), and the need to scale to larger models and better ground conclusions in prior work and broader evaluations. The AI review introduces additional, more granular concerns (per-language metrics, causal attribution to data quality/capacity, reporting inconsistencies, curriculum confounds) that do not contradict the human review but go beyond its scope, so not all of its major weaknesses are mirrored in Review A.",
+          "overall": "In substance, both reviews agree on what the paper is about, what it does well (large-scale, careful empirical study that challenges the curse of multilinguality and related assumptions), and the broad shape of its limitations (scope of pivot analysis, tokenizer/script issues, need for broader comparisons and scaling). The AI review is substantially more detailed and methodologically focused, but its additional points are largely refinements rather than shifts in judgment, leading to a high, though not perfect, overall alignment."
+        }
+      },
+      "generated_at": "2025-12-27T19:50:31"
+    },
+    {
+      "config": {
+        "judge_model": "gpt-5.1",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "final_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180
+      },
+      "config_key": "4569a6a97a67c8e2b360606eb74d6eb53b892d06",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/final_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "motivation_strength_alignment": 0.62,
+        "weakness_error_alignment": 0.46,
+        "overall_alignment": 0.55,
+        "explanation": {
+          "strength": "Both reviews recognize that the paper provides a large‑scale empirical re‑evaluation of assumptions in multilingual pretraining, highlighting the broad scope of experiments and the value of challenging established beliefs. Review B adds much more detail, but the core strengths—rigorous experimentation, relevance, and clarity of findings—overlap with Review A.",
+          "weakness": "There is some overlap on tokenizer/script bias and limited generality of pivot‑language experiments. However, Review B introduces many additional, more granular methodological critiques not present in Review A, while Review A raises issues like insufficient grounding in prior work and missing English‑only baselines that Review B does not mention.",
+          "overall": "The two reviews share a broadly consistent judgment of the paper’s contributions and some overlapping concerns, but Review B is far more detailed and raises many critiques not found in Review A. Alignment is therefore moderate: substantively similar in big‑picture evaluation but divergent in the breadth and specificity of weaknesses."
+        }
+      },
+      "generated_at": "2025-12-27T19:52:40"
+    }
+  ]
+}

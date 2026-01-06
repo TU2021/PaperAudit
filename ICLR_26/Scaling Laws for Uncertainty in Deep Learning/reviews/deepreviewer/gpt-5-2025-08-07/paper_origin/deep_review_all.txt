@@ -1,0 +1,180 @@
+Summary
+The paper investigates whether predictive uncertainties in deep learning obey empirical scaling laws akin to those established for performance. Across image (CIFAR-10/100, ImageNet-32) and text (GPT-2 on algorithmic data; fine-tuned Phi-2) tasks, the authors measure Total Uncertainty (TU), Aleatoric Uncertainty (AU), and Epistemic Uncertainty (EU) and fit power laws versus training set size N for multiple uncertainty quantification (UQ) methods: MC Dropout, Deep Ensembles, and MCMC (including partially stochastic networks). They report consistent power-law trends (e.g., ResNet-18 EU γ ≈ −0.39, Fig. 2; WideResNet EU γ ≈ −0.61, Fig. 2b; ImageNet-32 EU γ ≈ −0.28 to −0.08, Fig. 8). Theoretically, they derive TU scaling for Bayesian linear models (EU ∼ O(1/N), Sec. 5.1; App. A.1.1, Eq. 22) and connect TU to Watanabe’s generalization error (Sec. 5.2; App. A.2), proposing SLT as a lens on uncertainty scaling in overparameterized regimes.
+
+Soundness
+- Empirics: The study spans diverse architectures and UQ methods, often averaging across folds (e.g., 10-folds in Fig. 2a; Appendix Fig. 10), using fixed test sets and log-log linear regression to estimate exponents. However, formal statistical validation of “power-law” fits (R², residual analysis, confidence intervals for γ, goodness-of-fit against alternative functional forms) is largely absent. Some panels rely on single folds (WideResNet ensembles, Fig. 2b), potentially underestimating variance. The N ranges are modest in some settings (10K–50K; 1K–50K), raising questions about asymptotic claims.
+- Metrics: TU/AU/EU follow the entropy-based decomposition (Sec. 2.1, Eqs. 1–3). The paper acknowledges known issues (Wimmer et al., 2023; de Jong et al., 2024) but proceeds without sensitivity checks to alternative uncertainty metrics (e.g., variance of logits, mutual information variants, calibration metrics).
+- Controls: There is limited control for confounders (optimizer, scheduler, dropout placement), though the ViT ablation (Fig. 5) and SAM experiment (Fig. 3) show optimization-induced variability. The OOD analysis (CIFAR-10-C, Fig. 6) is useful but aggregates all corruption levels without stratified analysis.
+- Theory: The linear-model derivations are correct and well-grounded (Sec. 5.1; App. A.1–A.1.1), supporting EU ∼ O(1/N). The SLT link is speculative but plausible; however, there is an inconsistency in the sign of the decomposition of G_N in Sec. 5.2 Eq. (10) (negative AU and KL) versus App. Eq. (31) (G_N = AU + KL); the latter is correct. This sign discrepancy should be fixed. The extension from identifiable linear models to deep, singular regimes remains qualitative.
+
+Presentation
+The manuscript is clear and well-organized: background (Sec. 2), methods (Sec. 3), experiments (Sec. 4) with numerous figures, and theory (Sec. 5). Figures use consistent log-log axes and report γ values; appendices provide architecture and training details (App. C). Some panels rely on single runs (Fig. 2b); reporting error bars and fit diagnostics would strengthen clarity. Minor notation inconsistencies exist (e.g., Eq. (25) phrasing) and the sign error in Sec. 5.2 Eq. (10) is material.
+
+Contribution
+The paper claims to be the first systematic study of scaling laws for predictive uncertainty in deep learning (Sec. 1, Sec. 6), spanning modalities and UQ methods, with both ID and OOD settings. The breadth and consistent observation of approximate power-law behavior across setups are valuable. The theoretical connection between TU and SLT generalization (Sec. 5.2; App. A.2) is an insightful step, though mostly for linear models. Practical extrapolation demonstrations (App. Fig. 12) suggest utility in planning data requirements for ensemble-collapse tolerances.
+
+Strengths
+- Breadth of empirical evidence across architectures and UQ methods: ResNets/WideResNets/ViT; MC Dropout, Deep Ensembles, MCMC; ID and OOD (Sec. 4.1; Figs. 2, 6–8; App. Figs. 10–14).
+- Theoretical grounding for linear models (Sec. 5.1; App. A.1.1) and connection to SLT (Sec. 5.2; App. A.2), including explicit TU = AU + EU asymptotics (Eq. 12, Eq. 22, Eq. 34).
+- Useful ablations demonstrating sensitivity to optimization (ViT, Fig. 5) and SAM effects on EU (Fig. 3).
+- Transparent acknowledgment of limitations (Sec. 6: weak model-size scaling; compute scaling not studied; resource constraints).
+
+Weaknesses
+- Fit validity: No statistical assessment of power-law fits (R², CI for γ, competing trend models), especially where γ is small or positive (e.g., ViT EU γ ≈ 0.01 in Fig. 5a; CIFAR-10-C TU/EU near-flat trends in Fig. 6a).
+- Single-fold results and narrow N ranges in places (Fig. 2b; 10K–50K ranges), limiting robustness and asymptotic interpretation.
+- Metrics reliance: TU/AU/EU entropy-based decomposition is known to have interpretability limitations (Sec. 2.1), yet alternative metrics or sensitivity analyses are absent.
+- Theory discrepancy: Sign inconsistency in Sec. 5.2 Eq. (10) versus App. Eq. (31) for G_N decomposition.
+- Limited model-size and compute scaling analyses (Sec. 6; Fig. 7 shows minimal dependence on P without deeper investigation).
+- Practical extrapolation (App. Fig. 12) extends many orders of magnitude beyond observed N without uncertainty bands or validation at larger N.
+
+Questions
+1. Can you report fit diagnostics (R², residual plots, confidence intervals for γ) for the power-law regressions across all panels, and compare against alternative functional forms (log-linear, stretched exponential)?
+2. How sensitive are γ estimates to test-set composition and label imbalance? Would stratifying CIFAR-10-C by corruption type/severity change OOD γ (Fig. 6)?
+3. For Deep Ensembles (Fig. 2b; App. Fig. 13), do γ_EU values stabilize as ensemble size grows (M = 5 vs 10)? Any evidence of epistemic collapse at larger M?
+4. Could you include calibration metrics (ECE, NLL) alongside TU/AU/EU to assess whether uncertainty scaling correlates with calibration improvements?
+5. In SAM experiments (Fig. 3), is the EU increase with N robust across optimizer and SAM hyperparameters? Could Hessian-spectrum measurements corroborate the proposed mechanism?
+6. Please resolve the sign inconsistency for G_N in Sec. 5.2 Eq. (10) and align derivations with App. Eq. (31).
+7. For ImageNet-32 results (Fig. 8; App. Fig. 9), can you provide multi-fold averages and error bars, and discuss why γ values are much closer to zero than for CIFAR?
+8. Can you extend model-size scaling with stronger controls (matched training budgets, parameter-count sweeps beyond Fig. 7) and report γ as a function of P?
+
+Rating
+- Overall (10): 7 — Broad empirical evidence for uncertainty scaling with N across UQ methods and modalities, plus linear-model theory; missing statistical fit validation and a sign inconsistency in Sec. 5.2 Eq. (10) (Figs. 2–6; Sec. 5.1–5.2; App. A.1–A.2).
+- Novelty (10): 8 — First systematic study of uncertainty scaling laws in deep learning with ID/OOD coverage and multiple UQ approaches (Sec. 1, Sec. 6; Figs. 2, 6, 8).
+- Technical Quality (10): 6 — Solid experimental breadth and correct linear-model derivations, but limited fit diagnostics, some single-fold results, and a theoretical sign error (Fig. 2b; Sec. 5.2 Eq. 10; App. A.1.1).
+- Clarity (10): 8 — Clear structure and informative figures; appendices provide details; minor notation issues and the G_N sign mismatch (Sec. 5.2; App. C; Figs. 2, 5).
+- Confidence (5): 4 — High-level conclusions are plausible across many settings, but absence of statistical tests and some single-fold panels temper certainty; basis includes thorough reading and cross-checks of equations.
+
+
+Summary
+This paper explores whether predictive uncertainties in deep models follow power-law scaling with dataset size. It measures TU, AU, EU under MC Dropout, Deep Ensembles, and MCMC across ResNets, WideResNets, ViT, and GPT-2, including OOD evaluation via CIFAR-10-C. The authors find consistent decay trends (e.g., Deep Ensembles EU γ ≈ −0.55 to −0.61, Fig. 2b; MC Dropout EU γ ≈ −0.36 to −0.60, Fig. 2a) and show exceptions (EU ≈ flat or positive under certain ViT training, Fig. 5a; SAM increases EU with N, Fig. 3). Theory for identifiable linear models yields EU ∼ O(1/N) (Sec. 5.1; App. A.1.1) and connects TU to generalization error in SLT (Sec. 5.2; App. A.2).
+
+Soundness
+- The experimental matrix is extensive and uses fixed test sets, multiple seeds in some cases (10 folds, Fig. 2a; App. Fig. 10), and multiple UQ methods. However, relying on linear regression in log-log space without reporting fit quality or uncertainty undermines claims of “power-law” behavior, particularly where γ is close to zero (e.g., ViT EU γ = 0.01, Fig. 5a; ImageNet-32 MC Dropout TU γ ≈ −0.03, Fig. 8).
+- The SAM experiment (Fig. 3) suggests EU increasing with N; while intriguing, the explanation is qualitative, and no direct curvature/Hessian spectra are measured to support the mechanism.
+- Partial stochastic MCMC (Sec. 3; App. Fig. 14) is practical but deviates from fully Bayesian inference; conclusions about “Bayesian scaling” should reflect this approximation explicitly.
+- The theoretical derivations for linear models are rigorous; the SLT connection is suggestive. Notably, Sec. 5.2 Eq. (10) has a sign error relative to App. Eq. (31), where G_N = AU + KL is correct.
+
+Presentation
+Well-written and easy to follow. Figures consistently show γ, log-log axes, and method differences (Figs. 2–7). Appendices include architecture and training details (App. C). Clarity would improve with fit diagnostics, consistent fold averaging across panels, and correction of the sign error in Sec. 5.2 Eq. (10). Some labels could better emphasize ranges and variability (e.g., single-fold in Fig. 2b).
+
+Contribution
+The work provides the first comprehensive evidence that predictive uncertainties scale with dataset size, across multiple architectures and UQ methods, and relates these behaviors to identifiable-model theory and SLT. The practical idea of extrapolating uncertainty to large N (App. Fig. 12) is useful for planning data requirements. The lack of compute/model-size scaling (Sec. 6; Fig. 7) is a limitation but transparently acknowledged.
+
+Strengths
+- Comprehensive empirical coverage (ResNet/WideResNet/ViT/GPT-2) and UQ methods (MC Dropout, Deep Ensembles, MCMC), with ID and OOD (Figs. 2, 6–8; App. Figs. 10–14).
+- Careful theoretical treatment for linear models (EU ∼ O(1/N); Sec. 5.1; App. A.1.1) and a principled bridge to SLT (Sec. 5.2; App. A.2).
+- Insightful ablations: optimizer/schedule sensitivity (ViT, Fig. 5) and SAM-induced EU trend (Fig. 3).
+- Honest limitations and practical extrapolation examples (Sec. 6; App. Fig. 12).
+
+Weaknesses
+- Lack of statistical validation of the fitted scaling laws (no CIs/R²/residuals; no alternative models), making “power-law” claims less conclusive.
+- Some analyses rely on single folds (Fig. 2b), underreporting variability.
+- Entropy-based TU/AU/EU have known interpretation issues; no sensitivity checks to alternative uncertainty metrics or calibration measures.
+- Theoretical sign mismatch in Sec. 5.2 Eq. (10), and SLT link remains speculative without quantitative results for deep nets.
+- Model-size scaling (Fig. 7) and compute scaling not explored in depth.
+
+Questions
+1. Please add fit diagnostics (R², CI on γ, residual plots) and compare to non-power-law alternatives (e.g., log-linear, stretched-exponential).
+2. Can you disaggregate CIFAR-10-C OOD scaling by corruption type/severity to assess robustness of γ (Fig. 6)?
+3. How do γ estimates change with temperature scaling or label smoothing, and do they correlate with calibration (ECE/NLL)?
+4. For MCMC with stochastic first/first+second layers (App. Fig. 14), how close are the posterior predictive entropies to fully stochastic nets; any diagnostics on mixing/ESS?
+5. Could you provide Hessian spectrum or sharpness measures to substantiate the SAM-driven EU increase (Fig. 3)?
+6. Please correct Sec. 5.2 Eq. (10) to match App. Eq. (31) and clarify the expected sign in the decomposition.
+7. Can you extend model-size scaling with matched training budgets or normalization to isolate P effects (Fig. 7)?
+
+Rating
+- Overall (10): 6 — Strong evidence and breadth but limited statistical validation and a theory sign error undermine conclusiveness (Figs. 2, 5–6; Sec. 5.2; App. A.2).
+- Novelty (10): 7 — First systematic exploration of uncertainty scaling across methods and modalities, with an SLT connection (Sec. 1, 5.2; Figs. 2, 6).
+- Technical Quality (10): 5 — Good experimental coverage and correct linear-model derivations; missing fit diagnostics, some single-fold panels, and theoretical sign inconsistency (Fig. 2b; Sec. 5.2 Eq. 10).
+- Clarity (10): 7 — Generally clear with extensive figures and appendices; would benefit from fit statistics and correcting Eq. (10) (Figs. 2, 5; App. C).
+- Confidence (5): 3 — Conclusions seem plausible but need stronger statistical support; based on detailed reading and cross-check of derivations.
+
+
+Summary
+The authors empirically demonstrate that predictive uncertainty (TU/AU/EU) in deep models often follows power-law scaling with dataset size N, across multiple architectures (ResNet, WideResNet, ViT) and UQ methods (MC Dropout, Deep Ensembles, MCMC), including OOD tests on CIFAR-10-C. They further derive EU ∼ O(1/N) for Bayesian linear regression and relate TU to SLT generalization error, proposing SLT to explain uncertainty scaling in overparameterized regimes.
+
+Soundness
+- Experimental soundness is solid in breadth but limited in statistical rigor. Many results show consistent decay (e.g., EU γ ≈ −0.61 for WideResNet, Fig. 2b; Deep Ensembles EU γ ≈ −0.72 to −0.74 on CIFAR-100, App. Fig. 13), but some γ are near zero or even positive (ViT EU γ ≈ 0.01, Fig. 5a; OOD EU small or slightly positive in Fig. 6a). Without fit statistics, it is difficult to assert true power-law behavior.
+- The OOD analysis aggregates corruptions (Fig. 6), which might mask differing scaling behavior across types/severities.
+- The linear-model theory is correct and useful; however, extending it to singular deep-net regimes remains speculative. An inconsistency exists in Sec. 5.2 Eq. (10), which presents G_N with negative AU and KL, while App. Eq. (31) gives the standard non-negative decomposition (AU + KL); the appendix is correct.
+- The partial stochastic networks and prior choices (Sec. 3; App. Fig. 14) are reasonable but mean that claims about “Bayesian” scaling are for approximations, not exact posteriors.
+
+Presentation
+The paper is well-structured and readable. Figures consistently present γ with log-log axes and method comparisons (Figs. 2–3, 5–8). Appendices offer additional plots and setup details (App. C). Clarity would improve by adding fit quality metrics, addressing single-fold panels (Fig. 2b), and correcting the sign in Sec. 5.2 Eq. (10).
+
+Contribution
+The work advances the field by empirically establishing uncertainty scaling laws across models and UQ methods, adding OOD analysis, and giving theoretical support in identifiable models. The extrapolation concept (App. Fig. 12) provides practical guidance. The lack of model-size and compute scaling analysis (Sec. 6; Fig. 7) is a limitation but is acknowledged.
+
+Strengths
+- Cross-modal, cross-method empirical validation (Figs. 2, 6–8; App. Figs. 10–14).
+- Theoretical derivations for linear models and linkage to SLT generalization error (Sec. 5.1–5.2; App. A.1–A.2).
+- Insightful optimization ablations (ViT training schedule, Fig. 5; SAM effect, Fig. 3).
+- Transparent limitations and practical extrapolation demonstration (Sec. 6; App. Fig. 12).
+
+Weaknesses
+- No statistical fit diagnostics for γ; conclusions on “power-law” remain qualitative in panels with near-flat trends.
+- Some single-fold results (Fig. 2b) reduce robustness; narrow N ranges in some experiments constrain asymptotic interpretation.
+- Reliance on entropy-based TU/AU/EU without sensitivity to alternative metrics or calibration (Sec. 2.1).
+- Theory discrepancy in Sec. 5.2 Eq. (10) and no quantitative SLT predictions for deep nets.
+- Sparse analysis of model-size scaling (Fig. 7), and no compute scaling.
+
+Questions
+1. Could you include CIs and R² for γ across figures and compare against alternative scaling forms to confirm power-law preference?
+2. How do the scaling exponents change under temperature scaling or label smoothing, and do they correlate with calibration metrics (ECE/NLL)?
+3. For OOD scaling (Fig. 6), can you provide per-corruption analyses and discuss whether certain corruptions yield different γ patterns?
+4. In Deep Ensembles, does increasing M beyond 10 further reduce EU or induce collapse, and how does γ_EU change with M (App. Fig. 13)?
+5. Please correct the sign in Sec. 5.2 Eq. (10) and reconcile it with App. Eq. (31).
+6. Could you extend model-size scaling experiments with matched training budgets and report whether γ depends on P (Fig. 7)?
+7. For the extrapolations (App. Fig. 12), can you validate predictions by training at larger N where feasible and include uncertainty bands?
+
+Rating
+- Overall (10): 6 — Valuable empirical and theoretical insights, but lacking statistical validation and with a key sign inconsistency in theory (Figs. 2, 5–6; Sec. 5.2; App. A.2).
+- Novelty (10): 7 — Pioneering systematic study of uncertainty scaling across methods/modalities and linking to SLT (Sec. 1, Sec. 5.2; Figs. 2, 6).
+- Technical Quality (10): 5 — Good breadth and correct linear-model theory; insufficient fit diagnostics, some single-fold panels, and theoretical inconsistency (Fig. 2b; Sec. 5.2 Eq. 10).
+- Clarity (10): 7 — Clear narrative and visuals with thorough appendices; would benefit from fit statistics and theory correction (Figs. 2, 5; App. C).
+- Confidence (5): 3 — Moderate confidence given strong empirical coverage but limited statistical rigor; based on careful reading and verification of derivations.
+
+
+Summary
+The paper presents evidence that predictive uncertainty metrics (TU/AU/EU) scale with dataset size N in deep learning, using MC Dropout, Deep Ensembles, and MCMC across ResNet/WideResNet/ViT, and examines both ID and OOD settings. Linear-model analysis shows EU ∼ O(1/N), and SLT generalization error is related to TU. The authors argue these scaling laws make Bayesian UQ relevant even at large N and demonstrate extrapolation to predict regimes where EU is negligible.
+
+Soundness
+- Empirical setup: Training protocols are standard (SGD/Adam, cosine annealing), with clear dropout placements (Sec. 4.1.1), and fold averaging is used in many cases (10 folds, Fig. 2a; App. Fig. 10). However, some critical panels use single folds (Fig. 2b), and γ-fitting lacks uncertainty quantification.
+- Robustness: The results are broadly consistent (e.g., Deep Ensembles EU γ ≈ −0.55 to −0.61, Fig. 2b; MCMC EU γ ≈ −0.31 to −0.53 across datasets, App. Fig. 14), but ViT EU sometimes flat or positive (Fig. 5a), indicating strong dependence on optimization. This is discussed but not deeply analyzed (no Hessian/curvature data).
+- OOD: CIFAR-10-C evaluation (Fig. 6) shows shallower decay of uncertainty; aggregation may obscure heterogeneous behaviors across corruptions.
+- Theory: The linear Gaussian derivations are sound, and the asymptotic expansion is correct (Sec. 5.1; App. A.1.1). The SLT framing is reasonable but speculative; importantly, Sec. 5.2 Eq. (10) has a sign error compared to App. Eq. (31).
+
+Presentation
+Overall clear and well-organized. Figures are informative, consistently labeled with γ, and axes are log-log. Appendices offer comprehensive additional plots and experimental details (App. C). The sign mistake in Sec. 5.2 Eq. (10) needs correction. Adding fit diagnostics and error bars would enhance interpretability. Minor typographical issues exist (e.g., Eq. (25) phrasing).
+
+Contribution
+The paper makes a notable empirical contribution: uncertainty scaling laws across methods and architectures, including OOD. It adds theoretical underpinning for linear models and proposes SLT-based interpretation for deep nets. The extrapolation idea (App. Fig. 12) is practically useful for planning data needs to reduce EU. The limitations (model-size and compute scaling) are transparent (Sec. 6).
+
+Strengths
+- Extensive empirical coverage with multiple UQ methods and architectures (Figs. 2–5, 6–8; App. 9–14).
+- Clear theoretical derivations for linear models and connection to SLT (Sec. 5.1–5.2; App. A.1–A.2).
+- Insight into optimization effects on uncertainty (ViT schedule, Fig. 5; SAM trend, Fig. 3).
+- Practical extrapolation demonstration (App. Fig. 12).
+
+Weaknesses
+- Power-law claims lack statistical backing (no R²/CIs; small γ values in some panels like Fig. 5a, Fig. 8).
+- Single-fold panels (Fig. 2b) and restricted N ranges diminish robustness.
+- No sensitivity analysis to alternative uncertainty metrics or calibration; heavy reliance on entropy-based TU/AU/EU (Sec. 2.1).
+- Theory sign inconsistency in Sec. 5.2 Eq. (10); SLT link is qualitative.
+- Model-size scaling not observed (Fig. 7) and compute scaling omitted (Sec. 6).
+
+Questions
+1. Please provide statistical fit diagnostics (R², CI on γ, residuals) and compare to alternative models to confirm power-law preference.
+2. Can you report per-corruption OOD γ values and discuss differences across corruption types/severities (Fig. 6)?
+3. How do γ values relate to accuracy or calibration improvements (ECE/NLL) across N; are uncertainty and performance scaling aligned?
+4. For ViT (Fig. 5), can you include optimizer/learning-rate sweeps and, if possible, Hessian/curvature proxies to substantiate optimization-driven EU dynamics?
+5. Please correct Sec. 5.2 Eq. (10) to match App. Eq. (31) and clarify the decomposition.
+6. Can you extend model-size scaling experiments with tighter controls (same training budget, regularization) and report γ vs P (Fig. 7)?
+7. For extrapolation (App. Fig. 12), could you quantify extrapolation uncertainty and validate with larger-N training where feasible?
+
+Rating
+- Overall (10): 7 — Compelling empirical breadth and useful theory for linear models; needs statistical fit validation and theory correction (Figs. 2–5; Sec. 5.1–5.2; App. A.1–A.2).
+- Novelty (10): 7 — First systematic demonstration of uncertainty scaling across UQ methods and modalities with SLT linkage (Sec. 1, Sec. 5.2; Figs. 2, 6).
+- Technical Quality (10): 6 — Solid experiments and derivations; missing fit diagnostics and minor theoretical inconsistency (Fig. 2b; Sec. 5.2 Eq. 10).
+- Clarity (10): 8 — Clear writing and figures; appendices detailed; would benefit from fit statistics and correcting Eq. (10) (Figs. 2, 5; App. C).
+- Confidence (5): 4 — High-level conclusions supported across many configurations, but lack of statistical rigor moderates confidence; based on thorough reading and verification.

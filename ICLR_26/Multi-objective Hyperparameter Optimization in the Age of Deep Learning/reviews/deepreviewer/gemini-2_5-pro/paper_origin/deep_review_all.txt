@@ -1,0 +1,178 @@
+Here are four distinct reviews of the paper.
+
+***
+
+### **Review 1**
+
+**Summary**
+This paper introduces PriMO, a novel Hyperparameter Optimization (HPO) algorithm designed for multi-objective problems, which are common in Deep Learning. The key innovation of PriMO is its ability to incorporate user-provided prior beliefs about the optimal regions for each objective, a feature missing in existing multi-objective HPO methods. PriMO is a hybrid algorithm that uses a multi-fidelity method (MOASHA) for an initial design phase to leverage cheap approximations, followed by a Bayesian Optimization (BO) phase that uses a prior-augmented acquisition function. The authors conduct an extensive empirical evaluation on 8 DL benchmarks, demonstrating that PriMO achieves state-of-the-art performance in both multi-objective and single-objective settings, is robust to misleading priors, and offers significant speedups.
+
+**Soundness**
+The paper's methodology is sound and rigorous. The authors clearly motivate the need for their algorithm by first identifying a set of desiderata for modern HPO (Table 1) and then demonstrating that a naive adaptation of existing methods is insufficient (Section 3, Figure 2). The proposed PriMO algorithm is a well-reasoned combination of an initial multi-fidelity design and a prior-informed BO phase. The experimental evaluation is comprehensive, covering multiple benchmarks, a wide range of strong baselines (including specially constructed prior-aware ones), and different prior quality scenarios (good, bad, mixed). The inclusion of a detailed ablation study (Section 5.5) effectively validates the contribution of each component of PriMO. The statistical significance of the results is confirmed in the appendix using LMEMs (Appendix I), which adds to the credibility of the claims.
+
+**Presentation**
+The paper is exceptionally well-written, clearly structured, and easy to follow. The introduction effectively frames the problem and lists the paper's contributions (Block 6). The algorithm is described clearly with pseudocode for each component (Algorithms 1-3). The experimental section is organized around specific research questions (Block 19), which makes the results easy to digest. The figures are generally clear and effectively support the paper's claims, particularly the relative rank plots (Figure 3, 5, 6) which provide a concise summary of performance across many settings. The extensive appendix provides a wealth of supplementary information, including background, implementation details, and additional results, which is commendable.
+
+**Contribution**
+The paper makes a significant and novel contribution to the field of HPO. It is the first to formally define and tackle the problem of multi-objective HPO with expert priors (Section 2). The proposed algorithm, PriMO, is the first to address this problem and, by doing so, satisfies a complete set of practical desiderata for HPO in the context of modern DL (Table 1). The empirical results, showing state-of-the-art performance and up to 10x speedups (Figure 1), highlight the practical value of this contribution. The work opens up a new and important direction for research in user-centric and efficient HPO.
+
+**Strengths**
+- **Novelty:** First work to incorporate expert priors into multi-objective HPO.
+- **Strong Empirical Results:** Demonstrates state-of-the-art performance across a comprehensive set of 8 benchmarks against numerous strong baselines in both multi-objective and single-objective settings (Section 5.3).
+- **Robustness:** The algorithm is shown to be robust, effectively leveraging good priors while also recovering quickly from misleading ones (Section 5.4, Figure 3).
+- **Thoroughness:** The paper includes a motivation for the design via a naive baseline study (Section 3), a detailed ablation study (Section 5.5), and a statistical significance analysis (Appendix I).
+- **Practical Relevance:** Addresses a real-world need for DL practitioners who often have prior knowledge and need to balance multiple objectives like performance and computational cost.
+
+**Weaknesses**
+- The process for eliciting priors from human experts is not discussed in detail. While the paper follows established protocols for generating synthetic priors (Appendix D), a brief discussion on how these priors could be obtained in practice would strengthen the paper's practical framing.
+- The paper relies on linear scalarization in the BO phase, and while the limitations are acknowledged (Section 7), the potential impact on problems with highly non-convex Pareto fronts could be briefly elaborated upon.
+
+**Questions**
+1. The prior decay schedule `γ = exp(−n^2_{BO}/n_d)` (Section 4.1) is quite aggressive. Could you comment on the sensitivity of PriMO's performance to this schedule? Have you experimented with other decay functions, such as the `β/n` schedule from πBO?
+2. The exploration parameter ε is fixed at 0.25. How was this value chosen, and is the algorithm's performance sensitive to it? Could ε be adapted dynamically during the optimization process?
+3. The paper demonstrates impressive results on tabular benchmarks. Do you foresee any specific challenges in applying PriMO to "live" HPO tasks where function evaluations are much more expensive and potentially noisier?
+
+**Rating**
+- Overall (10): 9 — The paper introduces a novel and practical algorithm, PriMO, supported by exceptionally thorough experiments and analysis that validate its state-of-the-art performance.
+- Novelty (10): 10 — This is the first work to address the important and unexplored problem of incorporating expert priors in multi-objective HPO (Section 2).
+- Technical Quality (10): 9 — The algorithm is well-designed and the experimental validation is rigorous, including strong baselines, ablations, and statistical tests (Section 5, Appendix I).
+- Clarity (10): 10 — The paper is extremely well-written and organized, with clear explanations, figures, and a logical flow from motivation to conclusion (e.g., Section 1, 4, 5).
+- Confidence (5): 5 — I am highly confident in my assessment, as I am an expert in this area and the paper provides extensive evidence and details.
+
+***
+
+### **Review 2**
+
+**Summary**
+This paper proposes PriMO, a hyperparameter optimization (HPO) algorithm that aims to be the first to incorporate user priors in a multi-objective setting. The method combines a multi-fidelity initial design phase using MOASHA with a Bayesian Optimization (BO) phase that modifies the acquisition function based on priors. The authors claim that PriMO achieves state-of-the-art performance on a suite of deep learning benchmarks and positions it as the "new go-to HPO algorithm for DL practitioners."
+
+**Soundness**
+The paper's technical approach is a plausible combination of existing techniques. However, several aspects of the methodology and the interpretation of results raise concerns.
+1.  **Overstated Claims:** The abstract's claim that PriMO is the "new go-to HPO algorithm" (Block 2) is an overstatement not suitable for a scientific publication. Similarly, the "10x speedup" highlighted in Figure 1 is based on a single benchmark with a good prior, which is not representative of general performance and could be misleading.
+2.  **Experimental Budget:** The experiments are limited to only 20 equivalent full function evaluations (Section 5.1). While relevant for practitioners with small budgets, this is insufficient to make broad claims about "final performance" (one of the paper's own desiderata). The relative rankings of algorithms, especially model-based ones, can change significantly with larger budgets.
+3.  **Prior Formulation:** The assumption of factorized priors over individual optima (Section 2, Eq. 1) is a major simplification. In many real-world problems, objectives are correlated (e.g., model size and latency), meaning the optimal hyperparameters for one objective are related to the optima of another. This assumption is not justified or discussed.
+4.  **Synthetic Priors:** The priors are generated synthetically by pre-evaluating a large number of configurations (Appendix D). This represents a best-case scenario of having a perfect oracle to define "good" and "bad" regions. It is unclear how these results translate to real, imperfect human-generated priors.
+
+**Presentation**
+The paper is generally well-structured, but the tone is overly promotional. The abstract and introduction make bold claims that are only partially supported by the limited-budget experiments. The use of text-based plots in the introduction (Block 4) is confusing and should be replaced by the actual image (Block 7) directly. The key assumption of factorized priors is introduced without sufficient discussion of its potential drawbacks.
+
+**Contribution**
+The paper's primary contribution is the formulation of the multi-objective HPO problem with priors and a first-attempt algorithm to solve it. This is a novel and interesting direction. However, the significance of the contribution is tempered by the methodological weaknesses mentioned above. The proposed algorithm is more of an engineering combination of existing parts (MOASHA, BO with priors, random scalarization) rather than a fundamental algorithmic breakthrough. The true robustness and utility of PriMO in real-world scenarios remain questionable without tests involving actual user priors and larger budgets.
+
+**Strengths**
+- Identifies and formalizes an important, unexplored problem in HPO (Block 6).
+- The idea of using a multi-fidelity method for an initial design to warm-start BO is sensible (Section 4.2).
+- The experimental comparison includes a good range of baselines, including several that the authors adapted to be prior-aware, which strengthens the comparison (Section 5.2).
+- The ablation study provides good insight into the importance of PriMO's different components (Section 5.5).
+
+**Weaknesses**
+- **Overstated and Unscientific Claims:** The paper contains marketing-like language (e.g., "new go-to HPO algorithm" in Block 2) that undermines its scientific credibility.
+- **Limited Experimental Budget:** The 20-evaluation budget is too small to robustly assess "final performance" or make sweeping claims about superiority (Section 5.1).
+- **Unrealistic Prior Assumption:** The assumption of factorized priors over objectives is a strong simplification that may not hold in practice, especially for correlated objectives (Section 2).
+- **Synthetic Priors:** The use of perfectly generated "good" and "bad" priors does not reflect the noisy and uncertain nature of real human expertise (Appendix D).
+
+**Questions**
+1. The claim of a "10x speedup" (Figure 1) seems to be a cherry-picked best-case result. Can you provide the distribution of speedups across all 8 benchmarks and clarify how "speedup" is defined here (is it time-to-threshold)?
+2. Why was the experimental budget capped at 20 evaluations? How do the relative rankings in Figure 3 change if the budget is extended to, for example, 50 or 100 evaluations?
+3. The factorized prior assumption (Section 2) seems unrealistic for problems with correlated objectives. Have you considered or can you discuss alternative ways to model multi-objective priors, for example, over the Pareto front itself, and what are the challenges?
+4. The recovery from "bad priors" (Figure 3, "All priors bad") is shown relative to other prior-aware methods. However, PriMO still performs worse than a simple non-prior-aware method like BO+RW in this setting. Is it fair to call this "remarkable recovery" when it fails to beat a standard baseline?
+
+**Rating**
+- Overall (10): 6 — The paper addresses a novel problem but makes overly strong claims based on limited experiments with unrealistic assumptions.
+- Novelty (10): 8 — The problem formulation is novel, but the algorithmic solution is an incremental combination of existing ideas.
+- Technical Quality (10): 5 — The experimental design is limited by a small budget and synthetic priors, and the core assumption of factorized priors is a major, unjustified simplification (Section 2, 5.1).
+- Clarity (10): 7 — The paper is mostly readable, but the clarity is marred by promotional language and some confusing figures (Block 2, 4).
+- Confidence (5): 5 — I am an expert in HPO and am confident that the identified weaknesses are significant limitations of the current work.
+
+***
+
+### **Review 3**
+
+**Summary**
+This paper presents PriMO, a new algorithm for multi-objective hyperparameter optimization (HPO) that can incorporate expert prior knowledge. The algorithm works in two stages: an initial design phase using the multi-fidelity method MOASHA, followed by a Bayesian optimization phase where the acquisition function is weighted by a user-specified prior. The authors evaluate PriMO on eight deep learning benchmarks and show that it generally outperforms existing multi-objective HPO methods, especially when good prior information is available.
+
+**Soundness**
+The overall methodology appears sound. The authors motivate their work well by showing the shortcomings of a naive approach (Section 3). The proposed algorithm is a logical construction, and the experiments are designed to answer a clear set of research questions (Block 19). The use of relative ranks for aggregated results and hypervolume for individual results is appropriate. The ablation study in Section 5.5 is a good addition that helps justify the design choices. However, the presentation of these sound components could be improved.
+
+**Presentation**
+The paper is well-structured, but there are several areas where the presentation could be significantly improved for clarity.
+- **Figures and Captions:**
+    - The initial presentation of Figure 1 as a block of text (Block 4) is very confusing. The image version (Block 7) should be used directly.
+    - The legend for Figure 7 is provided in the main text (Block 37) rather than in the caption or on the plot itself. The plot image itself (Block 41) is separated from its legend, which is inconvenient for the reader.
+    - Several plots, especially those in the appendix (e.g., the CD plots in Figures 13/14, Blocks 90-97), are rendered too small to be easily legible. The lines and text are difficult to distinguish.
+    - The distinction between Figure 3 (comparison to standard baselines) and Figure 5 (comparison to constructed prior-aware baselines) is logical but could be made more explicit in the section titles or text to guide the reader.
+- **Organization and Flow:**
+    - The paper relies heavily on the appendix for crucial details and results. For instance, the hypervolume plots showing recovery from bad priors (Figure 10) are in the appendix, while the main paper only shows the aggregated relative rank plot (Figure 3). It might be better to show one or two illustrative examples in the main paper.
+    - The algorithm description is split across Sections 4.1 and 4.2, with the main algorithm (Algorithm 3) presented after its components. While logical, this can make it hard to get a high-level picture of PriMO before diving into details. A brief, high-level overview at the start of Section 4 might help.
+- **Clarity of Language:** The paper is mostly clear, but some terms could be defined more explicitly for a broader audience (e.g., "equivalent full function evaluations" is defined in the appendix but is central to understanding the x-axis of all plots).
+
+**Contribution**
+The paper makes a valuable contribution by being the first to tackle multi-objective HPO with user priors. The proposed PriMO algorithm is a practical solution that demonstrates strong empirical performance. The thoroughness of the evaluation, including the construction of new prior-aware baselines for comparison, is a key part of this contribution. The work successfully highlights the potential benefits of incorporating user knowledge in this more complex optimization setting.
+
+**Strengths**
+- A clear and logical paper structure, with an introduction that sets up the problem well (Table 1) and an experimental section guided by research questions (Block 19).
+- The use of relative rank plots provides a clear and concise summary of performance across many different experimental conditions.
+- The ablation study (Section 5.5) is well-designed and provides clear evidence for the utility of each of PriMO's components.
+- The appendix is very comprehensive, providing transparency and details needed for reproducibility.
+
+**Weaknesses**
+- **Figure Quality and Placement:** Several figures are hard to read due to small size or separated legends (Figure 7, Figures 13-14). Key results are sometimes relegated to the appendix.
+- **Initial Confusion:** The text-based plot in Block 4 is confusing and should be removed.
+- **Minor Redundancy:** There is some repetition in the description of the algorithm and experiments between the main paper and the appendix that could be streamlined.
+
+**Questions**
+1. In Figure 7, the legend is in the text (Block 37) and not with the figure itself. Could you please integrate the legend into the figure/caption for better readability?
+2. The Critical Difference plots in Appendix I (Figures 13 and 14) are very small and difficult to interpret. Would it be possible to provide larger, more legible versions of these plots?
+3. The decision to place the hypervolume plots for the "bad prior" scenario in the appendix (Figure 10) while keeping the "good prior" plots in the main paper (Figure 4) seems to de-emphasize the robustness analysis. What was the reasoning behind this choice?
+4. Could you clarify the relationship between the `init` function in Algorithm 1 and the `MOASHA` call? Line 4 suggests `MOASHA` returns a single configuration and fidelity, but MOASHA is an optimizer itself. Does it run for a certain budget within the `init` loop?
+
+**Rating**
+- Overall (10): 8 — A strong paper with a novel contribution and solid results, but its impact is slightly diminished by presentation issues that hinder clarity.
+- Novelty (10): 9 — The problem of multi-objective HPO with priors is new and important, and this paper is the first to provide a solution.
+- Technical Quality (10): 8 — The technical work is solid, with good experiments and analysis, though some choices could be better justified.
+- Clarity (10): 6 — The paper's clarity is hampered by poor figure presentation (e.g., Figure 7, Appendix I) and organizational choices that make it hard to connect all the pieces.
+- Confidence (5): 4 — I am confident in my assessment of the paper's presentation and structure, though less of an expert on the deepest technical details of LMEMs.
+
+***
+
+### **Review 4**
+
+**Summary**
+The paper introduces PriMO, a hybrid algorithm for multi-objective hyperparameter optimization (HPO) that incorporates user priors. The method consists of an initial design phase using MOASHA to find promising starting points, followed by a Bayesian Optimization (BO) phase. The BO component uses random linear scalarization to handle multiple objectives and augments a standard acquisition function with a prior term. The influence of this prior term decays rapidly over the course of the optimization. The authors provide extensive empirical evidence on tabular benchmarks to show that PriMO outperforms a variety of baselines.
+
+**Soundness**
+The technical approach is a pragmatic combination of several existing ideas. However, some of the specific design choices warrant closer scrutiny.
+1.  **Prior Decay Schedule:** The paper proposes a decay schedule for the prior's influence, γ = exp(−n^2_{BO}/n_d) (Section 4.1). This decays extremely quickly (quadratically in the number of BO iterations in the exponent). This is a stark contrast to the 1/n decay in πBO. While this aggressive decay aids recovery from bad priors, it may also prematurely discard useful information from a good prior. The paper lacks a strong justification for this specific functional form over other alternatives.
+2.  **Scalarization Method:** The choice of random linear scalarization (Section 4.1, Eq. 3) is simple and scalable but is known to be unable to find solutions in non-convex parts of a Pareto front. The authors acknowledge this in the limitations (Section 7) but perhaps understate its importance, as non-convex fronts are common in HPO. Using a more powerful approach like Expected Hypervolume Improvement (EHVI) or even random hypervolume scalarizations would be more robust. It's unclear how the prior-injection mechanism would interact with these more complex acquisition functions.
+3.  **Prior Formulation:** The model of multi-objective priors as a factorized set of priors on individual objective optima (Section 2) is simple but potentially flawed. It ignores dependencies between objectives. For instance, if two objectives are anti-correlated, a user's prior might be about a specific trade-off region, not the (potentially non-existent) location where both objectives are individually minimized.
+
+**Presentation**
+The algorithm is described in sufficient detail, with pseudocode provided. The related work section (Section 6) correctly positions PriMO relative to key prior-aware (πBO, Priorband) and multi-objective (MOASHA, ParEGO) methods. The structure of the paper is logical. However, the motivation for certain technical decisions, like the specific decay schedule, is not deeply explored in the main text.
+
+**Contribution**
+The main contribution is the novel synthesis of multi-fidelity methods, Bayesian optimization, and user priors for the multi-objective HPO problem. The paper is the first to explore this specific combination. The empirical study is thorough for a conference paper, and the construction of prior-aware baselines like πBO+RW and MO-Priorband (Section 5.2) provides a fair and challenging comparison. While the individual components are not new, their integration into the PriMO framework is novel and shown to be effective.
+
+**Strengths**
+- **Novel Problem Formulation:** The paper is the first to formalize and address multi-objective HPO with factorized expert priors (Section 2).
+- **Hybrid Approach:** The combination of a multi-fidelity warm-up with a BO search is a powerful and practical strategy (Section 4).
+- **Strong Baselines:** The authors go to the effort of creating strong, prior-aware multi-objective baselines (e.g., πBO+RW, MO-Priorband) for a more meaningful comparison (Section 5.2).
+- **Detailed Ablation:** The ablation study in Section 5.5 effectively dissects the algorithm and demonstrates the value of each component (initial design, prior weighting, ε-greedy exploration).
+
+**Weaknesses**
+- **Aggressive Prior Decay:** The quadratic decay schedule for the prior's influence is ad-hoc and lacks strong theoretical or empirical justification (Section 4.1). It may be overly aggressive in good-prior scenarios.
+- **Simplistic Scalarization:** The reliance on linear scalarization is a significant compromise in the BO phase, limiting the algorithm's ability to explore non-convex Pareto fronts (Section 4.1).
+- **Naive Prior Model:** The factorized prior model ignores dependencies between objectives, which can be a critical aspect of multi-objective problems (Section 2).
+- **Fairness of Constructed Baselines:** The adaptation of Priorband to MO-Priorband is non-trivial. The paper states that a scalarization-based incumbent worked better (Appendix E.3), but it's possible this adaptation is not optimal, which could make the comparison in Figure 5 less favorable for the baseline.
+
+**Questions**
+1. What was the rationale behind choosing the `exp(-n^2_{BO}/n_d)` decay schedule over the simpler `1/n` schedule from πBO or other alternatives? Did you experiment with the decay rate, and how did it affect the trade-off between exploiting good priors and recovering from bad ones?
+2. The paper uses random linear scalarization. Have you considered integrating the prior mechanism with a native multi-objective acquisition function like qEHVI or PESMO? What challenges do you foresee in, for example, weighting the hypervolume contribution by a prior?
+3. How sensitive is PriMO's performance to the `n_init` parameter, which controls the budget for the initial MOASHA phase? Is there a risk of MOASHA consuming too much budget and not leaving enough for the more sample-efficient BO phase?
+4. Regarding the factorized prior model, could you discuss a scenario with anti-correlated objectives where this model might fail? For example, if improving accuracy always increases latency, a user's "prior" would be on a trade-off, not on two independent optima.
+
+**Rating**
+- Overall (10): 7 — A solid paper with a novel idea and good experiments, but some key technical design choices feel ad-hoc or overly simplistic.
+- Novelty (10): 8 — The combination of ideas is novel, and it's the first paper on this specific problem, though it builds heavily on existing work.
+- Technical Quality (10): 7 — The algorithm is functional and well-tested, but key components like the decay schedule and scalarization method are questionable choices that limit its generality (Section 4.1).
+- Clarity (10): 8 — The paper is well-written and the algorithm is described clearly, but the motivation for some specific technical decisions could be stronger.
+- Confidence (5): 5 — I am an expert in Bayesian optimization and HPO, and I am confident in my technical assessment of the paper's methods.

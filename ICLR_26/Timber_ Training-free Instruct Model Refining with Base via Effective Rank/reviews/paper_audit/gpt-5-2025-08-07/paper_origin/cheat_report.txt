@@ -1,0 +1,58 @@
+Academic integrity and consistency risk report
+
+Summary
+The manuscript presents a training-free method (Timber) based on effective rank (eRank) to refine Instruct models with their paired Base models. While the overall story is coherent, there are several high-impact internal inconsistencies and numerical mismatches that materially affect the credibility, reproducibility, and interpretability of the results and method.
+
+Major issues
+
+1) eRank values shown in Figure 1 tables/images violate eRank’s formal bounds
+- Evidence: Section 2.1/2.2, Figure 1 tables and graphics (Block #6; images in Blocks #8–#10). Example entries include “q_proj: 26292630”, “up_proj/down_proj: 38443844 / 37653766”, “q_proj: 35593560”, “up_proj/down_proj: 48034803 / 48274826”.
+- Problem: By Equation (1) (Block #5) and its discussion, eRank must lie in [1, r], where r = min{d1, d2}. For LLM linear layers (e.g., q_proj, up_proj, down_proj), r is typically on the order of thousands, not tens of millions. The displayed 8-digit numbers cannot be valid eRank values and directly contradict Equation (1).
+- Impact: This undermines the central claim that “eRanks from paired Base and Instruct models are almost the same” (Blocks #6–#7). If the plotted/annotated numbers are incorrect (likely concatenations of two four-digit values), the weight-level evidence is ambiguous and cannot be evaluated or reproduced.
+- Requested fix: Correct the numeric annotations in Figure 1 and the accompanying tables to valid eRank values (clearly separating Base vs. Instruct), and ensure all values satisfy 1 ≤ eRank ≤ r. Provide layer dimensions so readers can verify the bounds.
+
+2) Contradiction in singular-value ordering vs. “Top‑K” preservation
+- Evidence:
+  - Method description states “Σ contains the singular values in non-decreasing order” (Block #17, after Eq. 3).
+  - The refinement then “preserves” σ1, …, σK and “discards/attenuates” the tail (Eqs. 6–7, Block #17), while the text consistently refers to preserving principal components (Block #14, Figure 3).
+- Problem: If Σ is in non-decreasing (ascending) order, σ1…σK are the smallest singular values, not the “head/principal components.” Preserving σ1…σK and discarding σK+1…σr would remove the largest singular values—the opposite of isolating principal components.
+- Impact: This is a specification-level contradiction that affects the correctness of Timber’s implementation and reproducibility. It is unclear whether “Top‑K” refers to the largest or smallest singular values.
+- Requested fix: Explicitly state the sorting order (standard is non-increasing, i.e., descending) and adjust Eqs. (6–7) or the narrative so “Top‑K” unambiguously refers to the largest singular values (principal components). Clarify whether K counts from the largest end.
+
+3) Misaligned justification: using Figure 2 (weights) to motivate K for WΔ (weight deltas)
+- Evidence: Block #17, immediately after Eq. (6), “As shown in Figure 2, the eRanks are around the 85th percentile of full rank.” Figure 2 (Block #11) reports eRank-to-rank ratios for the weights of Base/Instruct models, not for WΔ.
+- Problem: The threshold K is defined as ceil(eRank(WΔ)) (Eq. 5, Block #17), but no evidence is provided about the distribution of eRank(WΔ). Referencing Figure 2 (weights) to justify the eRank-based truncation/attenuation for deltas is not supported.
+- Impact: Weakens the methodological grounding for the chosen threshold on WΔ, raising concerns about whether the same 0.85-type behavior holds for deltas.
+- Requested fix: Provide a distribution/summary of eRank(WΔ) across layers/models, or avoid using Figure 2 to justify K for deltas. If empirically similar, show those results.
+
+4) Notational inconsistency in the definition of Σ (numbering and cardinality)
+- Evidence:
+  - Equation (1) (Block #5) uses Σ = {σ1, …, σr}.
+  - Eq. (3)/Block #17 defines Σ = diag(σ0, σ1, …, σr−1, σr), implying r+1 values and indexing from 0.
+- Problem: Inconsistent indexing and cardinality of singular values between sections.
+- Impact: Confuses implementation and verification of the method and can cause off-by-one errors in reproductions.
+- Requested fix: Use a consistent indexing convention (either 1…r or 0…r−1) across the manuscript and align equations accordingly.
+
+5) Model naming inconsistency for Figure 6
+- Evidence:
+  - Block #31 text: “Figure 6 shows the results on Llama-3-1B.”
+  - Block #32 caption: “Figure 6: … on Llama-3.2-1B.”
+- Problem: The figure and text refer to different model names/versions.
+- Impact: Causes confusion about which checkpoint was actually used for the merge baseline, hindering reproducibility.
+- Requested fix: Harmonize the naming (Llama-3.2-1B vs. Llama-3-1B) and ensure consistency with Table 1 (Block #5) and the rest of the paper.
+
+6) Reproducibility gaps in “Mean@k” reporting for Table 2
+- Evidence:
+  - Section 4.2: “we report the Mean@k results on 6 benchmarks” (Block #22), but k and n (number of rollouts) per benchmark are not specified.
+  - Section 4.1 (Block #19) mentions following official hyperparameters; Appendix A.3.2 (Block #44) lists generation settings but does not specify k and n per task for Table 2.
+  - Pass@k setup (Block #21) specifies the estimator and that n ≥ k but gives exact n only later for Qwen3-0.6B AIME’24 and GPQA-D (Block #23), not for Table 2.
+- Problem: Without the exact k and n per dataset, the Mean@k results cannot be reliably reproduced, especially since sampling-based accuracies can vary non-trivially with k and n.
+- Impact: Limits verifiability of the headline improvements in Table 2.
+- Requested fix: Provide the exact k and n used for each benchmark/model in Table 2, plus the number of seeds/trials and aggregation details.
+
+Other observations (lower impact but worth clarifying)
+- Block #14: “As illustrated in Figure 3, eRank serves as an effective threshold for isolating the principal components…” This relies on the “principal components” interpretation, which conflicts with the non-decreasing sorting noted later (Issue 2).
+- Block #17: “WΔ is typically full-rank” is asserted without evidence. While plausible, consider adding a summary statistic of observed ranks to support the claim.
+
+Conclusion
+The most serious integrity risks are the invalid eRank numbers reported in Figure 1 (violating Equation 1) and the contradictory specification of singular-value ordering vs. “Top‑K” preservation in the refinement equations. These issues directly affect the core evidence and the correctness/reproducibility of the proposed method. Addressing the highlighted problems and adding the requested clarifications would substantially improve the manuscript’s trustworthiness.

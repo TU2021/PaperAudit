@@ -1,0 +1,104 @@
+{
+  "paper": "Bernoulli-LoRA_ A Theoretical Framework for Randomized Low-Rank Adaptation",
+  "runs": [
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "deepreviewer",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "deep_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180
+      },
+      "config_key": "24b66d75b94c155df325f4e5f2603b40312e4469",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/deepreviewer/gpt-5-2025-08-07/paper_origin/deep_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "motivation_strength_alignment": 0.9,
+        "weakness_error_alignment": 0.55,
+        "overall_alignment": 0.7,
+        "explanation": {
+          "strength": "Both reviews identify the core strength as the broad and technically sound theoretical framework covering multiple optimization regimes, with Review B providing more specific technical details (e.g., non-smooth analysis) that align with and elaborate on Review A's general assessment.",
+          "weakness": "Both reviews strongly agree that the empirical validation is weak and limited to toy tasks, but Review A adds major conceptual critiques about novelty versus RAC-LoRA and unrealistic modeling that are absent in B, while B focuses on more specific technical gaps in the proofs and experimental setup.",
+          "overall": "The reviews show high overall alignment in their final judgment that the paper is a strong theoretical contribution with weak practical evidence, though they arrive at this conclusion by highlighting different secondary weaknesses, with Review A focusing on conceptual novelty and Review B on internal technical details."
+        }
+      },
+      "generated_at": "2025-12-27T20:03:18"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "baseline_review.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180
+      },
+      "config_key": "a14d937ebf873b90a820c8cb44da768956431bd4",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/baseline_review.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "motivation_strength_alignment": 0.9,
+        "weakness_error_alignment": 0.75,
+        "overall_alignment": 0.8,
+        "explanation": {
+          "strength": "Both reviews identify the paper's core strength as its broad and technically sound theoretical framework providing convergence guarantees for numerous optimization settings, and both note the empirical results are consistent with the theory.",
+          "weakness": "Both reviews strongly align on the primary weaknesses: limited novelty compared to RAC-LoRA, weak empirical validation on toy tasks, and unrealistic theoretical assumptions; however, Review A adds conceptual critiques (e.g., pretraining context) while Review B adds specific technical flaws (e.g., unstated independence assumptions).",
+          "overall": "The reviews show high overall alignment, converging on the same judgment: the paper is theoretically sound but lacks demonstrated practical relevance and novelty. While they highlight different secondary weaknesses, their primary focus and substantive conclusions are highly consistent."
+        }
+      },
+      "generated_at": "2025-12-27T20:07:18"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "final_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180
+      },
+      "config_key": "565dcfbed8e348ba365acb8ebe44bf867f3cd0c2",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/final_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "motivation_strength_alignment": 0.9,
+        "weakness_error_alignment": 0.55,
+        "overall_alignment": 0.7,
+        "explanation": {
+          "strength": "Both reviews identify the same core strengths: the broad and rigorous theoretical framework, the technical soundness of the analysis, and the empirical results being consistent with the theory. Review B is more granular in its praise, but the central points of agreement are nearly identical.",
+          "weakness": "Both reviews agree on major weaknesses like limited novelty versus RAC-LoRA, weak empirical validation on toy tasks, and unrealistic theoretical assumptions. However, Review B identifies numerous specific internal inconsistencies and errors (e.g., mismatched theorems) that Review A misses, while Review A raises a conceptual point about pre-training that B omits.",
+          "overall": "The reviews converge on a similar overall judgment: a theoretically broad paper with questionable novelty and practical impact due to weak experiments. They align strongly on the paper's strengths and high-level weaknesses, but diverge significantly on its technical polish, as Review B finds many concrete errors that Review A misses."
+        }
+      },
+      "generated_at": "2025-12-27T20:10:49"
+    }
+  ]
+}

@@ -1,0 +1,161 @@
+Here are four distinct reviews of the paper "Timber: Training-free Instruct Model Refining with Base via Effective Rank".
+
+***
+
+### **Review 1**
+
+**Summary**
+This paper investigates the "superficiality" of post-training in LLMs by analyzing the effective rank (eRank) of weight matrices, finding it remains nearly unchanged between Base and Instruct models. Building on this, the authors identify a trade-off where Instruct models gain exploitation capabilities (better Pass@1) but lose exploration (worse Pass@k). To address this, they propose Timber, a novel, training-free method that refines the Instruct model by partially reverting it to its Base state. This is achieved by performing SVD on the weight delta, using eRank to identify a threshold, and then attenuating or removing the "tail" singular values. Experiments on Llama and Qwen models show consistent performance improvements, especially on Pass@k metrics.
+
+**Soundness**
+The methodology is sound and logically motivated. The initial analysis using eRank to quantify the similarity between Base and Instruct models provides a novel and quantitative foundation for the "superficial alignment" hypothesis. The proposed method, Timber, is a direct and clever consequence of this analysis. The experimental setup is thorough, covering a diverse set of models (0.6B to 30B MoE) and a comprehensive suite of benchmarks for reasoning, instruction following, and coding. The use of Pass@k to specifically measure the claimed improvement in exploration is appropriate and convincing. The comparisons against baselines like simple model merging and truncated SVD further validate the effectiveness of the proposed eRank-based refinement strategy.
+
+**Presentation**
+The paper is exceptionally well-written and easy to follow. The motivation is clearly articulated, starting from the high-level concept of superficial post-training and smoothly transitioning to the technical details of eRank and the Timber method. The figures are illustrative and support the main claims effectively; for instance, Figure 1 provides a striking visual of the eRank similarity, and Figure 5 clearly demonstrates the improved Pass@k performance. The structure of the paper is logical, guiding the reader from analysis to method to results seamlessly.
+
+**Contribution**
+The paper makes several significant contributions. First, it introduces a new, weight-level perspective for analyzing post-training using effective rank, providing strong quantitative evidence for a widely held hypothesis. Second, it proposes Timber, a simple, elegant, and training-free method to improve Instruct models, which is highly practical. The core idea of using the Base model to enhance the Instruct model's exploration capability is novel and impactful. This work opens up a new avenue for training-free model refinement that is both computationally cheap and effective.
+
+**Strengths**
+1.  **Novel Analysis:** The use of effective rank to analyze the relationship between Base and Instruct models is a novel and insightful contribution (Section 2.2).
+2.  **Simplicity and Practicality:** Timber is a training-free, easy-to-implement method that provides consistent gains, making it highly valuable for practitioners (Section 3.2). The provision of a GitHub repository is a plus.
+3.  **Strong Empirical Results:** The method is validated across a wide range of models and benchmarks, demonstrating its robustness and general applicability (Table 2, Figure 4).
+4.  **Clear Motivation and Solution:** The paper clearly identifies the exploration-exploitation trade-off (Section 3.1) and proposes a targeted solution, with strong evidence (Figure 5) that the solution indeed improves exploration.
+
+**Weaknesses**
+The weaknesses are minor. While the paper shows that attenuating the tail (Timber) is generally better than removing it (Timber-L), the theoretical reason for this is not deeply explored. Additionally, the hyperparameter λ is selected from a small set based on one benchmark; a more detailed analysis of its sensitivity or a more adaptive selection method could further improve the work.
+
+**Questions**
+1.  The paper focuses on reverting the Instruct model towards the Base model. Have you considered the opposite direction? Could certain properties from the Instruct model's weight delta be used to refine the Base model for specific tasks?
+2.  The eRank is used as a hard threshold (K). Have you explored using a "soft" threshold or a different partitioning scheme for the singular values?
+3.  The analysis in Figure 7 suggests FFN and Attention layers contribute differently. Could Timber be improved by applying different attenuation factors (λ) to different layer types (e.g., FFN vs. Attention) based on their roles?
+
+**Rating**
+- Overall (10): 9 — The paper presents a novel analysis, a simple and effective method, and strong empirical validation.
+- Novelty (10): 9 — The use of eRank to analyze post-training superficiality and guide weight delta refinement is highly novel.
+- Technical Quality (10): 9 — The methodology is sound, and the experiments are comprehensive and well-executed (Section 4).
+- Clarity (10): 10 — The paper is exceptionally clear, well-organized, and the claims are well-supported by figures and tables.
+- Confidence (5): 5 — I am an expert in this area and am very confident in my assessment.
+
+***
+
+### **Review 2**
+
+**Summary**
+This paper claims that post-training is a "superficial" process, using the effective rank (eRank) of weight matrices as evidence. It observes that the eRank of linear layers is very similar between paired Base and Instruct models. Based on this, it proposes a training-free method called Timber, which modifies the weight delta between the Instruct and Base models. The method uses SVD on the delta, truncates or attenuates singular values beyond the eRank, and adds the modified delta back to the Base model weights. The authors claim this improves the model's "exploration" capability, leading to better performance on various benchmarks, particularly on Pass@k.
+
+**Soundness**
+The paper's core premise rests on two logical leaps that are not fully justified. First, the observation that eRank is similar between Base and Instruct models (Figure 1) is interesting, but concluding this is definitive proof of "superficiality" is an overstatement. eRank measures the uniformity of the singular value distribution, but significant functional changes could still occur via linear transformations that preserve this property. Second, the motivation to use eRank as the specific threshold for truncating the weight delta's singular spectrum feels ad-hoc. The toy example in Figure 3 is not a substitute for a rigorous justification of why eRank is the optimal cut-off point compared to other possible thresholds. The empirical results, while positive, show marginal gains in many cases (e.g., +0.22 for Llama-3.2-3B in Table 2), which questions the practical significance of the method.
+
+**Presentation**
+The presentation has several clarity issues. The figures and tables associated with Figure 1 are confusingly presented. Block 6 contains a non-rendered mermaid diagram and tables with concatenated numbers (e.g., `26292630`) which are impossible to interpret without looking at the actual plots in Blocks 8-10. This suggests a lack of careful proofreading. The "Thinking: ✓/✗" column in Table 1 is never explained, leaving the reader to guess its meaning. The y-axis scales in Figure 4 are inconsistent, which can be misleading when comparing the magnitude of improvements.
+
+**Contribution**
+The contribution is incremental. The idea that post-training is superficial is not new, as the authors themselves cite (Zhou et al., 2023a; Ye et al., 2025). The method itself is a variant of model merging/editing, which is also an established field. The novelty lies in using eRank as a heuristic to guide this merging process. While interesting, without a stronger theoretical foundation, it comes across as a well-engineered trick rather than a fundamental contribution. The claim of being "the first to directly analyze the eRank of weights" (Section 2.1) seems plausible but requires a more thorough literature review to be stated so definitively.
+
+**Strengths**
+1.  The method is training-free, which is an undeniable advantage.
+2.  The paper provides an interesting empirical observation about the conservation of eRank post-training (Section 2.2).
+3.  The experiments are extensive, covering multiple model families and sizes (Table 2).
+4.  The focus on improving Pass@k (Figure 5) is a good way to measure the targeted goal of enhancing exploration.
+
+**Weaknesses**
+1.  **Weak Justification:** The theoretical link between eRank conservation and the proposed refinement strategy is weak. The choice of eRank as the threshold K is not well-justified beyond a toy example (Section 3.2).
+2.  **Marginal Improvements:** Some of the reported performance gains are very small (e.g., Qwen3-8B Timber-L with +0.30 in Table 2), raising questions about the method's impact and statistical significance.
+3.  **Presentation Flaws:** The paper contains confusing figures and tables (Figure 1 / Block 6) and unexplained notation (Table 1), which detracts from its quality.
+4.  **Potential Overclaiming:** The paper frames the eRank analysis as a major new insight into superficiality, but the link to functional change is not established.
+
+**Questions**
+1.  Can you provide a more rigorous justification for using eRank as the truncation threshold K? Have you compared it against other rank-selection heuristics from matrix analysis, and if so, how did they perform?
+2.  The improvements in Table 2 are averages. Could you provide standard deviations or confidence intervals to assess if the smaller gains are statistically significant?
+3.  Why do you think simple linear interpolation (model merge, Section 5.2) fails so dramatically, while your method, which also modifies the delta, succeeds? Is it purely about preserving the top-K components, or is there a deeper reason?
+4.  In Figure 5 (GPQA-Diamond), Timber-L outperforms Timber for all k. This contradicts the general conclusion from Table 2 that attenuation is better than dropping. Can you explain this discrepancy?
+
+**Rating**
+- Overall (10): 5 — An interesting idea with some positive results, but marred by weak justification and presentation issues.
+- Novelty (10): 6 — The use of eRank in this context is new, but the overall concept is an incremental step in model editing.
+- Technical Quality (10): 5 — The methodology lacks rigorous justification, and some results show only marginal gains (Table 2).
+- Clarity (10): 4 — The paper suffers from confusing figures (Figure 1), unexplained table entries (Table 1), and inconsistent axes (Figure 4).
+- Confidence (5): 4 — I am confident in my assessment, having experience with LLM evaluation and model editing techniques.
+
+***
+
+### **Review 3**
+
+**Summary**
+This paper presents a practical, training-free method called Timber to improve the performance of instruction-tuned LLMs (Instruct models). The authors first observe that the effective rank (eRank) of weights doesn't change much after post-training, suggesting the Instruct model is a "superficial" adaptation of the Base model. They argue this leads to better single-answer generation (exploitation) but worse diversity (exploration). Timber aims to fix this by "reverting" the Instruct model slightly towards its Base counterpart. It does this by calculating the difference in weights, performing SVD on this delta, and attenuating the smaller singular values before adding the delta back. The authors show this simple procedure improves performance across many models and benchmarks, especially in generating a diverse set of correct answers (Pass@k).
+
+**Soundness**
+From a practical standpoint, the method's soundness is demonstrated by its results. The authors test Timber on a wide variety of modern LLMs (Llama 3, Qwen3) and tasks, and the method consistently yields improvements (Table 2). The logic is intuitive: the Base model has broader knowledge, while the Instruct model is over-specialized; mixing them should yield a better balance. The use of eRank provides a principled, data-driven way to perform this mixing, which is more sophisticated than simple linear averaging (as shown in Section 5.2). The evaluation on Pass@k (Figure 5) is particularly compelling as it directly tests the hypothesis about improving exploration.
+
+**Presentation**
+The paper is well-structured and the method is explained clearly enough for replication. The inclusion of a GitHub link is a major plus for practitioners. The main results in Table 2 are easy to read and digest. The ablation study on which modules to apply Timber to (Figure 7) provides useful practical insights. While some of the theoretical background on eRank might be dense for some readers, the description of the algorithm itself (Section 3.2) is straightforward.
+
+**Contribution**
+The main contribution is a highly practical and effective tool for improving off-the-shelf Instruct models without any retraining. In a field often dominated by methods requiring massive computational resources, a simple, post-hoc refinement technique that provides a "free" performance boost is very valuable. While it builds on prior concepts like model merging, the specific eRank-guided approach is novel and appears to be more robust than simpler alternatives. This work provides a tangible benefit to anyone using and deploying LLMs.
+
+**Strengths**
+1.  **Training-Free and Simple:** The method requires no gradient updates or additional data, making it extremely efficient and easy to apply.
+2.  **Practical Utility:** Timber delivers consistent performance gains on a wide range of popular models and benchmarks, making it immediately useful.
+3.  **Improved Exploration:** The significant gains in Pass@k (Figure 5) are a key strength, as generating diverse and correct solutions is a critical capability for many applications (e.g., coding, complex reasoning).
+4.  **Robustness:** The method works across different model families, sizes, and even architectures like MoE (Table 2), and is shown to be relatively robust to the choice of the attenuation factor λ (Figure 4).
+
+**Weaknesses**
+1.  **Computational Cost of SVD:** The paper describes the method as "simple," but performing SVD on every linear layer of a very large model (e.g., 30B+) is not trivial. It would be helpful to include an analysis of the computational overhead (time and memory) required to apply Timber.
+2.  **Hyperparameter Tuning:** The method introduces a new hyperparameter, λ. While the paper shows it's robust, it still requires tuning on a validation set for optimal performance (Section 4.1). This adds a small but non-zero cost and complexity. Guidance on how to set λ for a new model without a suitable validation set would be beneficial.
+3.  **Gains Can Be Modest:** While consistently positive, the average gains on Mean@k are sometimes modest (e.g., <0.5% in several cases in Table 2). The practical impact in these scenarios might be limited.
+
+**Questions**
+1.  What is the wall-clock time and peak memory usage required to apply Timber to a model like Llama-3.1-8B or Qwen3-30B-A3B? How does this scale with model size?
+2.  You recommend λ=0.2 for new models (Appendix A.4). Is this based on a theoretical principle, or is it just an empirical sweet spot you observed? Could this recommendation change for future, larger models or different architectures?
+3.  Could the SVD computation be approximated (e.g., using randomized SVD) to speed up the Timber application process for extremely large models, and how would that affect performance?
+
+**Rating**
+- Overall (10): 8 — A very practical and useful method with solid empirical backing, despite some unaddressed questions about computational cost.
+- Novelty (10): 7 — The specific eRank-guided approach is novel, though it exists within the broader context of model merging.
+- Technical Quality (10): 8 — The experiments are extensive and the method is well-validated empirically, which is the most important aspect for a practical paper.
+- Clarity (10): 8 — The method and results are clearly explained, making it easy for practitioners to understand and implement.
+- Confidence (5): 5 — I am highly confident in my review, focusing on the practical aspects of the work.
+
+***
+
+### **Review 4**
+
+**Summary**
+This paper proposes a training-free method, Timber, to refine instruction-tuned LLMs by leveraging their corresponding pre-trained base models. The method is motivated by the observation that the effective rank (eRank) of weight matrices is highly similar between base and instruction-tuned models, which the authors interpret as evidence for the "superficiality" of post-training. Timber computes the weight delta between the two models, decomposes it using SVD, and then modifies the delta by either zeroing out (Timber-L) or attenuating (Timber) the singular values with indices greater than the eRank of the delta matrix. The authors conduct experiments on Llama and Qwen models, showing that Timber improves performance on various benchmarks, most notably on Pass@k scores.
+
+**Soundness**
+The empirical methodology is generally sound, with a good selection of models and benchmarks. The core claim that Timber improves exploration is well-supported by the Pass@k results in Figure 5. However, the connection between the initial eRank analysis and the method itself could be stronger. The paper states that eRank is an "adaptive threshold" (Figure 3), but this is only demonstrated with a toy example. The choice to use the ceiling of eRank, `K := ⌈eRank(W_Δ)⌉` (Equation 5), is presented without justification. Why the ceiling? Why not floor or round? These small details matter for reproducibility and understanding. The comparison with Truncated SVD in Section 5.1 is useful, but the performance of the baselines seems "unstable" (Table 3), which might also suggest that the task is sensitive to the exact rank chosen, and eRank just happens to be a good heuristic for this set of models.
+
+**Presentation**
+The paper is mostly well-written, but it suffers from several presentation issues that detract from its professionalism and clarity.
+1.  **Figure 1 is a mess:** The section text refers to Figure 1, but what follows is a non-functional `mermaid` diagram, followed by three poorly formatted tables with concatenated numbers (e.g., `38443844`), and only then the actual bar chart figures (Blocks 8, 9, 10). The tables should be removed or fixed, as they are unreadable and confusing.
+2.  **Unexplained Details:** Table 1 includes a "Thinking" column that is not defined or explained in the text, making it difficult to understand its relevance.
+3.  **Inconsistent Figures:** The bar charts in Figure 4 use different y-axis ranges, which makes it hard to visually compare the relative improvements. For example, the improvement on HumanEval for Qwen3-30B-A3B looks much larger than it is due to the tight y-axis.
+4.  **Minor Typos/Inconsistencies:** The paper mentions future dates in references (e.g., "Yang et al., 2025" in Section 1), which is common for arXiv papers but can be jarring. The sentence "We can easily prove that the eRank would be exactly the same" (Section 2.1) regarding log base is asserted without proof, which is fine for a simple identity but reflects a slightly rushed writing style.
+
+**Contribution**
+The paper makes a solid contribution by providing a simple, training-free method that demonstrably improves LLM performance. The novelty lies in using eRank as a principled heuristic to guide the model merging process, which appears more effective than naive linear interpolation or fixed-ratio SVD truncation. The analysis reinforcing the superficial alignment hypothesis from a new angle (eRank) is also a valuable, albeit secondary, contribution. The work is a nice piece of engineering, providing a useful recipe for model enhancement.
+
+**Strengths**
+1.  **Comprehensive Experiments:** The evaluation covers a wide range of models, sizes, and benchmarks, providing strong evidence for the method's effectiveness (Section 4).
+2.  **Clear Ablation Studies:** The analyses in Sections 5.1, 5.2, and 5.3 effectively compare Timber to sensible baselines and analyze the contribution of different model components, strengthening the paper's claims.
+3.  **Focus on Exploration:** The paper correctly identifies the exploration-exploitation trade-off and uses an appropriate metric (Pass@k) to validate its claims about improving exploration (Figure 5).
+
+**Weaknesses**
+1.  **Sloppy Presentation:** The issues with Figure 1, unexplained table columns, and inconsistent figure axes are significant and should be fixed.
+2.  **Lack of Rigor in Method Details:** Key choices, like using the ceiling of eRank as the threshold, are not justified (Equation 5).
+3.  **Potentially Overstated Novelty:** The paper claims to be the "first to directly analyze the eRank of weights" (Section 2.1). While this may be true, such strong claims require careful verification. The core idea is an advanced form of model merging.
+
+**Questions**
+1.  Could you please clarify the presentation of Figure 1? The mermaid diagram and the tables with concatenated numbers in Block 6 seem to be formatting errors.
+2.  What is the justification for using the ceiling of eRank as the threshold K in Equation 5? How sensitive is the performance to using floor or rounding instead?
+3.  In Table 3, Timber's energy preservation is 98.82%. The Truncate-R baseline at 99.04% energy preservation (rank ratio 0.9) performs better on average than the one at 98.30% (rank ratio 0.85). This suggests that simply matching the energy level is not enough. What makes the eRank-derived threshold special beyond the energy it preserves?
+4.  What does the "Thinking: ✓/✗" column in Table 1 signify, particularly for the Llama models which do not have an official "Thinking mode" like Qwen?
+
+**Rating**
+- Overall (10): 6 — A good practical idea with solid results, but significant presentation flaws and a lack of rigor in some methodological details hold it back.
+- Novelty (10): 7 — The eRank-guided refinement is a novel heuristic in the model editing space.
+- Technical Quality (10): 7 — The experiments are solid, but the method's justification has some gaps and the baselines could be explored more deeply.
+- Clarity (10): 5 — The paper is understandable, but major presentation errors around Figure 1 and other smaller inconsistencies significantly hinder clarity.
+- Confidence (5): 5 — I am very confident in my assessment, having carefully checked the details of the paper.

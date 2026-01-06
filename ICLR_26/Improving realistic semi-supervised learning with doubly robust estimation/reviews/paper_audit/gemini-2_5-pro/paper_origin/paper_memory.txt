@@ -1,0 +1,80 @@
+# Global Summary
+This paper addresses the problem of Realistic Long-Tailed Semi-Supervised Learning (RTSSL), where the class distribution of the large unlabeled dataset is unknown and differs from the small labeled dataset. The authors argue that standard pseudo-labeling methods are biased towards the labeled distribution, and existing methods that estimate the unlabeled distribution on-the-fly are inaccurate. The core proposal is a 2-stage algorithm. In Stage 1, an initial model is trained using an Expectation-Maximization (EM) framework to produce nuisance components for a doubly robust (DR) estimator, which then provides a high-quality estimate of the unlabeled class distribution. In Stage 2, this fixed distribution estimate is plugged into existing state-of-the-art SSL methods like SimPro and BOAT to improve their final classification accuracy. The DR estimator is supported by strong theoretical guarantees from semi-parametric efficiency theory. Experiments on CIFAR-10-LT, CIFAR-100-LT, STL-10, and ImageNet-127 show that the DR estimator is more accurate than alternatives (measured by Total Variation Distance) and that the 2-stage approach improves the classification accuracy of SimPro and BOAT across most settings. For instance, on CIFAR-10-LT, the proposed SimPro+ improves over SimPro in 9 out of 10 settings.
+
+# Abstract
+The paper tackles a key challenge in Semi-Supervised Learning (SSL): the unknown class distribution of unlabeled data, particularly in long-tailed scenarios. Standard pseudo-labeling is biased towards the labeled class distribution. Existing methods either assume the unlabeled distribution is known or estimate it inaccurately using pseudo-labels. The proposed solution is to first explicitly estimate the unlabeled class distribution using a doubly robust estimator with strong theoretical guarantees. This estimate is then integrated into existing pseudo-labeling methods to improve their accuracy during training. Experimental results show that this technique enhances the performance of common pseudo-labeling approaches.
+
+# Introduction
+- The paper focuses on Realistic Long-Tailed Semi-Supervised Learning (RTSSL), where the unlabeled class distribution P(Y|A=0) is unknown and different from the labeled one P(Y|A=1).
+- It criticizes existing methods like SimPro for producing biased estimates of P(Y|A=0), often overestimating head classes, as shown in Figure 1 for 4 out of 5 studied distributions.
+- The core proposal is a 2-stage algorithm.
+- Stage 1: Explicitly estimate P(Y|A=0) using a doubly robust (DR) estimator from semi-parametric efficiency theory, which provides a more accurate estimate. This stage uses an initial model trained via an Expectation-Maximization (EM) algorithm.
+- Stage 2: Plug the high-quality distribution estimate from Stage 1 into existing pseudo-labeling techniques to train the final classifier.
+- The paper also presents a maximum likelihood framework for SSL with label shift, addressed with an EM algorithm, which is shown to generalize FixMatch and be a reparameterization of SimPro.
+
+# Preliminaries
+- **Notation**: X for features, Y for class label, D_l for labeled data, D_u for unlabeled data. A is a binary variable where A=1 indicates a labeled point and A=0 indicates an unlabeled point. The test set class distribution is assumed to be uniform.
+- **Label Shift Assumption**: P(X|Y, A) = P(X|Y), meaning the feature distribution conditioned on the class is the same for labeled and unlabeled data.
+- **(Balanced) Pseudo-labeling**: Methods like FixMatch use a model's own predictions on unlabeled data as targets. FixMatch uses a confidence threshold and converts high-confidence predictions to one-hot pseudo-labels. This approach suffers when P(Y|A=1) ≠ P(Y|A=0).
+- **Logit Adjustment**: A technique to adapt a classifier trained on one class distribution to another, based on Bayes' formula. It is used in long-tailed learning to adapt to the uniform test distribution.
+- **Non-ignorable Missingness**: The problem is framed as missing data where the missingness indicator A can depend on the outcome Y, which makes standard assumptions invalid.
+- **Doubly Robust (DR) Estimation**: A technique from semi-parametric efficiency theory, often used in causal inference. It combines two different estimators to produce an estimate that is consistent if at least one of the underlying models is correctly specified.
+- The paper contrasts its approach with methods that use a doubly-robust loss (e.g., Sportisse et al., 2023), arguing that such losses can be unstable due to inverse-weighting.
+
+# Method
+- The proposed method is a 2-stage algorithm shown in Figure 2.
+- **Stage 1**: An initial model is trained using an EM algorithm to estimate a classifier P(y|x) and a missingness mechanism P(a|y). These are then used as nuisance components for a doubly robust estimator to get a high-quality estimate of the unlabeled class distribution P(Y|A=0).
+- **Stage 2**: The estimated distribution is plugged into an existing SSL method (like SimPro or BOAT) that uses logit-adjustment to train the final classifier.
+
+- **Label-shift Expectation-Maximization (EM)**:
+    - The problem is formulated as maximizing the observed data log-likelihood.
+    - The E-step computes posterior weights (soft pseudo-labels) for unlabeled data using the current model estimates of P(Y|X) and P(A|Y).
+    - The M-step updates P(Y|X) and P(A|Y) by minimizing cross-entropy losses.
+    - SimPro is described as a reparameterization of this EM framework that uses a logit adjustment loss.
+
+- **Estimators for Class Distribution**:
+    - **Outcome Regression (OR)**: The average of the model's predictions P(Y=c|X=x) over all data.
+    - **Inverse Probability Weighted (IPW)**: Re-weights labeled samples using the inverse of the estimated missingness probability P(A=1|Y=y).
+    - **Doubly Robust (DR)**: Combines the OR and IPW estimators. It is unbiased if either the classifier P(Y|X) or the missingness mechanism P(A|Y) is correctly specified.
+
+- **Theoretical Guarantees**:
+    - **Assumption 3.1**: The nuisance models P(Y|X, θ) and P(A|Y, θ) converge at a rate of o_p(N^{-1/4}). This is claimed to hold for neural networks.
+    - **Theorem 3.2**: Under this assumption, the DR estimator is asymptotically normal and is the most efficient regular estimator, meaning it achieves the smallest possible variance among a large class of estimators.
+
+# Experiments
+- **Datasets**: CIFAR-10, CIFAR-100, STL-10, and ImageNet-127. Long-tailed versions of CIFAR datasets are created with varying imbalance ratios (γ_l, γ_u) and five unlabeled distribution shapes (consistent, uniform, reversed, middle, head-tail).
+- **Stage 1 Evaluation (Distribution Estimation)**:
+    - The quality of P(Y|A=0) estimation is measured by Total Variation Distance (TVD).
+    - Baselines include Supervised (MLLS, RLLS), MLE, and EM models, each with OR, IPW, and DR estimators.
+    - **Result**: The SimPro model combined with the DR estimator consistently achieves the lowest TVD. On CIFAR-10 (γ=150, consistent), SimPro+DR achieves a TVD of 0.017 ± 0.004 (Table 1). On ImageNet-127 (32x32), SimPro+DR achieves a TVD of 0.017 ± 0.000 (Table 7).
+
+- **Stage 2 Evaluation (Classification Accuracy)**:
+    - The best distribution estimate (from SimPro+DR) is plugged into SimPro (SimPro+) and BOAT (BOAT+).
+    - **CIFAR-10 (Table 3)**: SimPro+ improves over SimPro in 9/10 settings. BOAT+ improves over BOAT in 8/10 settings. For consistent distribution (γ=150), SimPro+ achieves 77.8% accuracy vs. 74.4% for SimPro.
+    - **CIFAR-100 (Table 4)**: Improvements are smaller, but the method generally does not degrade performance even with less accurate stage 1 estimates.
+    - **STL-10**: The paper states consistent improvements for 2/2 class imbalance ratios (Table 5 is mentioned but not shown).
+    - **ImageNet-127 (Table 6)**: SimPro+ improves accuracy from 63.7% to 64.2% (64x64). BOAT+ improves from 58.7% to 59.2% (64x64). For this dataset, a smaller WRN-28-2 model was used in stage 1 and a larger ResNet-50 in stage 2.
+
+- **Ablation Study (Table 8)**:
+    - The 2-stage approach is compared against two alternatives on CIFAR-10:
+        1.  `batch-update`: A 1-stage version updating the DR estimate on-the-fly.
+        2.  `DR-risk`: Using a doubly-robust risk as the training loss.
+    - **Result**: The 2-stage SimPro+ performs best (e.g., 77.8% on consistent). `batch-update` is worse (71.9%). `DR-risk` is the worst overall (72.1%), especially in the reversed setting (67.1%), which is attributed to training instability from inverse weighting.
+
+# Conclusion
+- The paper addresses the challenge of unknown unlabeled class distributions in SSL.
+- It proposes a 2-stage method: first, estimate the distribution using a theoretically-grounded doubly-robust estimator, and second, plug this estimate into existing pseudo-labeling methods.
+- Experiments show improved distribution estimation and final classification accuracy on CIFAR-10, STL-10, and ImageNet-127.
+- On CIFAR-100, where estimation was less accurate, the method did not significantly degrade performance, suggesting robustness.
+
+# Appendix
+- **A. Proof of Theorem 3.2**: Provides the formal proof for the asymptotic normality and efficiency of the DR estimator. It relies on regularity assumptions like bounded class count, bounded-away-from-zero missingness probabilities, and sample splitting.
+- **B. Further background and related work**: Discusses the history of semi-supervised EM for non-ignorable missingness. It provides a detailed formulation of the doubly-robust risk (Equation 28) and explains its practical drawbacks, such as instability from inverse probability weighting and the creation of meta-pseudo-labels that can be negative.
+- **C. Training and hyperparameter settings**:
+    - The implementation is based on SimPro's public code.
+    - A Wide ResNet-28-2 is used for stage 1 on all datasets. For ImageNet-127, a ResNet-50 is used for stage 2.
+    - Experiments were run 3 times on a single A6000 GPU, except for ImageNet-127 which was run once.
+    - For SimPro+, the estimated distribution is used in the E-step, but the original running average is kept for the logit adjustment loss term, as this worked better empirically. For BOAT+, the estimate replaces the log-distribution difference term Δ_c.
+
+# References
+This section contains a list of references cited in the manuscript.

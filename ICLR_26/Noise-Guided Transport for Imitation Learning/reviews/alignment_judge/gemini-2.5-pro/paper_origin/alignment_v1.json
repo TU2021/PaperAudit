@@ -1,0 +1,104 @@
+{
+  "paper": "Noise-Guided Transport for Imitation Learning",
+  "runs": [
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "deepreviewer",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "deep_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180
+      },
+      "config_key": "24b66d75b94c155df325f4e5f2603b40312e4469",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/deepreviewer/gpt-5-2025-08-07/paper_origin/deep_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "motivation_strength_alignment": 0.9,
+        "weakness_error_alignment": 0.5,
+        "overall_alignment": 0.6,
+        "explanation": {
+          "strength": "Both reviews identify the same core strengths: the novel, lightweight optimal transport-based approach for low-data imitation learning, its strong empirical performance (especially on Humanoid), and its efficiency from avoiding gradient penalties. The alignment is very high, with both emphasizing the same key contributions.",
+          "weakness": "Both reviews criticize the insufficient number of random seeds and raise concerns about the Lipschitz constant claims. However, Review B identifies several major technical flaws missed by Review A, including a fundamental conceptual error in the OT interpretation, unfair baseline modifications, and a contradiction in hyperparameter tuning claims.",
+          "overall": "The reviews align strongly on the paper's strengths and its overall positive contribution, but they diverge significantly in their critical assessment. While Review A focuses on presentation and clarity, Review B provides a much deeper technical critique, identifying a core conceptual error, which represents a substantial difference in focus and judgment."
+        }
+      },
+      "generated_at": "2025-12-27T20:03:53"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "baseline_review.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180
+      },
+      "config_key": "a14d937ebf873b90a820c8cb44da768956431bd4",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/baseline_review.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "motivation_strength_alignment": 0.9,
+        "weakness_error_alignment": 0.55,
+        "overall_alignment": 0.65,
+        "explanation": {
+          "strength": "Both reviews identify the novel optimal transport formulation for low-data imitation learning, strong empirical results on tasks like Humanoid, and theoretical grounding as key strengths.",
+          "weakness": "Both reviews criticize the heuristic enforcement of the Lipschitz condition and issues with experimental rigor (e.g., few seeds, unfair tuning). However, Review B identifies a major theoretical gap in the policy-reward linkage that Review A misses, while Review A focuses more on presentation and comparison to prior work.",
+          "overall": "The reviews are highly aligned on the paper's strengths, leading to a similar positive overall assessment, but they diverge on several weaknesses, with Review B offering a deeper theoretical critique. This results in a high-moderate substantive alignment, as the core judgment is consistent despite different critical perspectives."
+        }
+      },
+      "generated_at": "2025-12-27T20:07:57"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "final_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180
+      },
+      "config_key": "565dcfbed8e348ba365acb8ebe44bf867f3cd0c2",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/final_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "motivation_strength_alignment": 0.9,
+        "weakness_error_alignment": 0.55,
+        "overall_alignment": 0.7,
+        "explanation": {
+          "strength": "Both reviews identify the same core strengths: the novel optimal transport (OT) formulation for imitation learning, strong empirical results in low-data regimes, and computational efficiency gained by avoiding gradient penalties.",
+          "weakness": "There is clear overlap on weaknesses like the heuristic enforcement of the Lipschitz condition and insufficient experimental rigor (e.g., few random seeds). However, Review B identifies a fundamental theoretical flaw in the OT objective's formulation that Review A completely misses, representing a major gap in alignment.",
+          "overall": "The reviews converge on a similar overall judgment, praising the paper's novel idea and strong results while critiquing its theoretical and experimental justification. Despite the divergence on the most critical weakness, the high-level assessment of the paper's profile (promising but flawed) is largely consistent."
+        }
+      },
+      "generated_at": "2025-12-27T20:11:34"
+    }
+  ]
+}

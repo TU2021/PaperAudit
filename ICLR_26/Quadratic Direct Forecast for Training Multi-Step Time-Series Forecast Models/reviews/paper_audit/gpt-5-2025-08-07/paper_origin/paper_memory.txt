@@ -1,0 +1,152 @@
+# Global Summary
+- Problem: Multi-step time-series forecasting typically trains with mean squared error (MSE), which treats each future step independently and equally. The authors identify two issues: bias due to label autocorrelation among future steps and the lack of heterogeneous weights for tasks at different forecast steps.
+- Core approach: Propose a quadratic-form weighted training objective with a learnable weighting matrix Σ, whose off-diagonals capture label autocorrelation and non-uniform diagonals assign heterogeneous task weights. Introduce Quadratic Direct Forecast (QDF), a bilevel procedure that learns Σ to improve generalization, then trains models with the corresponding negative log-likelihood (NLL).
+- Evaluation scope: Benchmarks across ETT (ETTh1/ETTh2/ETTm1/ETTm2), Electricity (ECL), Weather, and PEMS (PEMS03/PEMS08). Baselines include Transformer-based (PatchTST, iTransformer, FedFormer, PDF, TQNet) and non-transformer (DLinear, TiDE, MICN, TimesNet, FreTS). Comparisons also against alternative objectives (Time-o1, FreDF, Koopman, Soft-DTW). QDF is integrated mainly with TQNet (and also PDF, FedFormer, iTransformer).
+- Key findings:
+  - Table 1: QDF achieves best average performance (MSE/MAE) per dataset when paired with TQNet: ETTm1 0.371/0.389; ETTm2 0.270/0.317; ETTh1 0.431/0.431; ETTh2 0.368/0.397; ECL 0.165/0.257; Weather 0.242/0.268; PEMS03 0.089/0.197; PEMS08 0.120/0.221. Second-best is often TQNet with DF (e.g., ETTm1 0.376/0.391, ETTm2 0.277/0.321).
+  - Table 2: QDF outperforms other objectives (Time-o1, FreDF, Koopman, Soft-DTW, DF) on TQNet and PDF across ETTm1, ETTh1, ECL, Weather. For TQNet/ECL QDF achieves 0.165/0.257 versus DF 0.175/0.265.
+  - Table 3 (ablation): Full QDF (heterogeneous weights + autocorrelation) yields lowest average MSE/MAE versus DF and partial variants; e.g., ECL average MSE/MAE 0.165/0.257 vs DF 0.175/0.265, QDF† 0.166/0.258, QDF‡ 0.166/0.258.
+  - Generalization: QDF improves multiple models; on ECL, QDF reduces MSE by 7.4% for FedFormer and 5.9% for TQNet; on Weather, QDF reduces MSE by up to 4.6% for iTransformer (Fig. 3).
+  - Flexibility: Meta-learning optimizers (MAML, iMAML, MAML++, Reptile) for Σ outperform DF; QDF is best on ECL (Table 4), e.g., T=720 MSE 0.202 (7.37%↓ vs DF 0.218).
+  - Sensitivity: Best performance at K=3 splits; N_in=1 yields most of the gain; robust to η settings >0; η=0 recovers DF.
+  - Complexity: Training-time overhead is small; per-update running time remains below 2 ms even at T=720; no inference overhead.
+- Caveats explicitly stated: Current QDF uses a fixed quadratic objective with a static Σ; future work considers hyper-networks to generate more flexible objectives. Gaussian error assumption underpins the NLL formulation. Details like number of runs for SOTA claims beyond provided seed analysis are not specified in the main sections.
+
+# Abstract
+- Problem framing: Existing objectives (e.g., MSE) treat future steps independently and equally, overlooking label autocorrelation and heterogeneous task weighting, yielding biased objectives and limited performance.
+- Proposal: A quadratic-form weighted training objective with a weighting matrix whose off-diagonal elements capture label autocorrelation and non-uniform diagonals encode heterogeneous task weights.
+- Algorithm: Quadratic Direct Forecast (QDF), which trains using an adaptively updated quadratic-form weighting matrix.
+- Claims: QDF improves performance across various forecast models, achieving state-of-the-art results. Code: https://anonymous.4open.science/r/QDF-8937.
+- Quantitative details: Not specified in abstract; see experiments.
+
+# Introduction
+- Context: Time-series forecasting relies on architecture design and learning objectives. Recent focus has been on architectures (Transformers, linear, hybrids) to capture autocorrelation in historical sequences.
+- Gap: Learning objectives are underexplored; MSE is prevalent but biased due to label autocorrelation and equal weighting across future steps.
+- Identified challenges:
+  - Label autocorrelation effect among future steps leads to biased training when ignored.
+  - Heterogeneous task weights are needed for tasks of varying difficulty across forecast steps; uniform weights limit performance.
+- Contributions:
+  - Propose quadratic-form weighted objective addressing both autocorrelation (off-diagonal Σ elements) and heterogeneous weights (non-uniform diagonal).
+  - QDF algorithm learns Σ adaptively for training direct forecasting models.
+  - Empirical evaluation shows enhancement across diverse datasets.
+- Quantitative references: Not specified in this section.
+
+# Preliminaries
+- Problem definition:
+  - Multi-step forecasting with D covariates: history X ∈ R^{H×D}; labels Y ∈ R^{T×D}; model g_θ: R^{H×D} → R^{T×D} predicts Ŷ; focus on direct forecasting (predict all T steps at once).
+  - For clarity, univariate case D=1 considered; multivariate handled per-variable when computing objectives.
+- Architecture landscape:
+  - Transformers (e.g., PatchTST, iTransformer, TQNet) scale well but cost more; linear models (TimeMixer, DLinear) are efficient; hybrids combine both.
+- Learning objectives:
+  - Standard MSE L_mse = ||Y − g_θ(X)||^2; widely used but biased due to label autocorrelation.
+  - Alternatives: shape-level alignment (e.g., Soft-DTW) emphasize autocorrelation but lack guarantees; transformed labels into decorrelated components (e.g., FreDF, Time-o1) mitigate bias empirically but only partially decorrelate labels.
+- Empirical evidence (Figure 1, T=96):
+  - Partial correlation matrices and conditional variance across future steps; further calculation details in Appendix A.
+
+# Method
+- Theoretical formulation (from Motivation/Theorem 3.1): Under multivariate Gaussian forecast errors, NLL is quadratic with weight Σ^{-1}: L_Σ(X,Y;g_θ) = (Y − g_θ(X))^⊤ Σ^{-1} (Y − g_θ(X)). Σ is the conditional covariance given X.
+- 3.2 Learning weighting matrix targeting generalization:
+  - Bilevel optimization (Definition 3.2): min_{Σ ⪰ 0} L_Σ(D_out; g_{θ*}) where θ* = arg min_θ L_Σ(D_in; g_θ). D_in and D_out are disjoint training splits.
+  - Reparameterization: enforce Σ ⪰ 0 via Cholesky Σ = LL^⊤ with lower-triangular L and positive diagonals (softplus), enabling unconstrained optimization over L.
+  - Algorithm 1 (atomic update): split D into D_in and D_out; perform N inner updates on θ using ∇_θ L_Σ(D_in); then update Σ via ∇_Σ L_Σ(D_out), taking gradient through θ to Σ. Parameters: N (number of updates), η (update rate).
+- 3.3 Workflow of QDF (Algorithm 2):
+  - Initialization: Σ = I_T; split D_train chronologically into K non-overlapping subsets.
+  - Weighting matrix learning: iterate outer updates up to N_out rounds, applying Algorithm 1 sequentially across K subsets; stop if ||Σ_{n+1} − Σ_n||_F < 1e^−4.
+  - Model training: with learned Σ, train g_θ on D_train by minimizing L_Σ via gradient descent (mini-batch estimation allowed).
+  - Properties: Off-diagonals of Σ^{-1} model autocorrelation; non-uniform diagonals set heterogeneous weights. No data leakage (use training set only). Model-agnostic. Conceptually related to meta-learning but differs in goal (static objective) and validation (holdout from same task).
+
+# Motivation
+- Objective design via likelihood: NLL is quadratic weighted by Σ^{-1} (Theorem 3.1), highlighting the need to model both off-diagonals (autocorrelation) and diagonals (heterogeneous uncertainty/weights).
+- Challenges:
+  - Autocorrelation effect: future steps are correlated even conditioned on history X; necessitates non-zero off-diagonal elements in Σ^{-1}.
+  - Heterogeneous weights: different future steps (tasks) have different difficulty/uncertainty; necessitates non-uniform diagonals in Σ^{-1}.
+- Limitations: Σ unknown and intractable to estimate per X; MSE implicitly assumes Σ = I (identity), thus not modeling either effect. Prior label-transform methods (FreDF, Time-o1) provide only marginal decorrelation, not conditional decorrelation; equal component weights persist.
+- Case study (ECL, Fig. 1):
+  - Partial correlation matrix shows significant off-diagonals; "over 61.4% exceeding 0.1".
+  - Conditional variances vary considerably across future steps (plots show variability up to ~400 on y-axis).
+  - Residual autocorrelation remains in FreDF and Time-o1 components (Fig. 1b).
+- Questions motivating QDF: (1) How to estimate a weighting matrix from data? (2) How to define a training objective with it? (3) Does it improve performance?
+
+# Experiments
+- 4.1 Setup:
+  - Datasets: ETT (ETTh1, ETTh2, ETTm1, ETTm2), ECL, Weather, PEMS (PEMS03, PEMS08). Standard chronological splits; statistics in Appendix C.1 (e.g., ETTm1 train/val/test 34465/11521/11521; ECL 18317/2633/5261; Weather 36792/5271/10540; PEMS03 15617/5135/5135; PEMS08 10690/3548/265).
+  - Baselines: Transformer-based (PatchTST, iTransformer, FedFormer, PDF, TQNet) and non-transformer (DLinear, TiDE, MICN, TimesNet, FreTS).
+  - Implementation: Baselines reproduced with official code; trained with Adam to minimize MSE; “drop-last” disabled for fairness; details in Appendix C.
+- 4.2 Overall Performance:
+  - Table 1 averages over T=96,192,336,720; input length fixed at 96; QDF uses TQNet as underlying model.
+  - QDF average MSE/MAE vs selected baselines per dataset:
+    - ETTm1: QDF 0.371/0.389; TQNet 0.376/0.391; PDF 0.387/0.396; FedFormer 0.387/0.398; iTransformer 0.411/0.414.
+    - ETTm2: QDF 0.270/0.317; TQNet 0.277/0.321; PDF 0.283/0.331; FedFormer 0.280/0.324; iTransformer 0.295/0.336.
+    - ETTh1: QDF 0.431/0.431; TQNet 0.449/0.439; PDF 0.452/0.440; FedFormer 0.447/0.434; iTransformer 0.434/0.452.
+    - ETTh2: QDF 0.368/0.397; TQNet 0.375/0.400; PDF 0.375/0.399; FedFormer 0.377/0.402; iTransformer 0.386/0.407.
+    - ECL: QDF 0.165/0.257; TQNet 0.175/0.265; PDF 0.198/0.281; FedFormer 0.191/0.284; iTransformer 0.179/0.270.
+    - Weather: QDF 0.242/0.268; TQNet 0.246/0.270; PDF 0.265/0.283; FedFormer 0.261/0.282; iTransformer 0.269/0.289.
+    - PEMS03: QDF 0.089/0.197; TQNet 0.119/0.217; others notably higher MSE/MAE (e.g., iTransformer 0.122/0.233).
+    - PEMS08: QDF 0.120/0.221; TQNet 0.139/0.240; reduction “by 0.019” in both MSE and MAE relative to TQNet.
+- 4.3 Learning Objective Comparison:
+  - Table 2 (averaged over T=96,192,336,720): For TQNet,
+    - ETTm1 QDF 0.371/0.389 vs Time-o1 0.372/0.390, FreDF 0.375/0.390, Koopman 0.595/0.499, Soft-DTW 0.387/0.394, DF 0.376/0.391.
+    - ETTh1 QDF 0.431/0.431 vs Time-o1 0.437/0.432, FreDF 0.432/0.432, DF 0.449/0.439.
+    - ECL QDF 0.165/0.257 vs Time-o1 0.167/0.257, FreDF 0.168/0.257, Koopman 0.166/0.258, Soft-DTW 0.623/0.524, DF 0.175/0.265.
+    - Weather QDF 0.242/0.268 vs Time-o1 0.245/0.269, FreDF 0.244/0.268, Soft-DTW 0.255/0.276, DF 0.246/0.270.
+  - For PDF,
+    - ETTm1 QDF 0.381/0.394 vs DF 0.387/0.396; ETTh1 QDF 0.436/0.429 vs DF 0.452/0.440; ECL QDF 0.194/0.277 vs DF 0.198/0.281; Weather QDF 0.259/0.281 vs DF 0.265/0.283.
+- 4.4 Ablation Studies:
+  - Table 3 (per T and averaged):
+    - ETTm1 Avg MSE/MAE: DF 0.376/0.391; QDF† 0.375/0.392; QDF‡ 0.372/0.391; QDF 0.371/0.389.
+    - ETTh1 Avg: DF 0.449/0.439; QDF† 0.443/0.436; QDF‡ 0.442/0.434; QDF 0.431/0.431.
+    - ECL Avg: DF 0.175/0.265; QDF† 0.166/0.258; QDF‡ 0.166/0.258; QDF 0.165/0.257.
+    - Weather Avg: DF 0.246/0.270; QDF† 0.244/0.269; QDF‡ 0.245/0.269; QDF 0.242/0.268.
+  - Claim: Modeling either heterogeneity (QDF†) or autocorrelation (QDF‡) improves over DF; combining both (QDF) achieves best performance overall.
+- 4.5 Generalization Studies:
+  - Integration into TQNet, PDF, FedFormer, iTransformer; consistent gains.
+  - Examples (Fig. 3): On ECL MSE reductions: TQNet −5.9%, PDF −2.0%, FedFormer −7.4%, iTransformer −3.1%; MAE reductions: TQNet −3.3%, PDF −1.5%, FedFormer −6.3%, iTransformer −2.2%.
+  - Weather MSE reductions: TQNet −1.3%, PDF −1.9%, FedFormer −2.3%, iTransformer −4.6%; Weather MAE reductions: TQNet −0.9%, PDF −0.7%, FedFormer −1.5%, iTransformer −3.9%.
+- 4.6 Flexibility Studies:
+  - Meta-learning for Σ: iMAML, MAML, MAML++, Reptile all outperform DF; QDF best on ECL (Table 4).
+  - Table 4 (ECL):
+    - DF MSE/MAE: T=96 0.143/0.237; 192 0.161/0.252; 336 0.178/0.270; 720 0.218/0.303.
+    - QDF: T=96 0.135 (6.10%↓)/0.229 (3.63%↓); 192 0.153 (4.76%↓)/0.245 (2.82%↓); 336 0.169 (5.14%↓)/0.262 (2.71%↓); 720 0.202 (7.37%↓)/0.290 (4.09%↓).
+    - Other meta-learning methods yield similar but slightly less reduction; e.g., MAML++ T=720 MSE 0.204 (6.41%↓), MAE 0.292 (3.67%↓).
+- 4.7 Hyperparameter Sensitivity:
+  - N_in: Increasing from 0 to 1 significantly improves accuracy; further increases yield marginal gains.
+  - K: Best at K=3; larger K yields diminishing returns due to smaller per-split sample sizes.
+  - η: η=0 reduces to DF baseline; η>0 robustly improves performance across a range of values.
+- Additional details:
+  - Seed sensitivity (Appendix Table 9): Small variance across seeds 2021–2025; e.g., ECL T=96 QDF MSE 0.135±0.000, MAE 0.229±0.000.
+  - Complexity (Appendix/Fig. 9): Running times per update remain below 2 ms for T up to 720; both inner-loop (θ update) and outer-loop (Σ update) scale with T; training-only overhead, no inference cost.
+  - Varying input length (Appendix Table 8, Weather): QDF consistently outperforms DF and often TQNet/PatchTST across input lengths 96, 192, 336, 720 (e.g., input 96 avg MSE/MAE QDF 0.242/0.268 vs DF 0.260/0.283).
+
+# Conclusion
+- Summary: Two challenges—label autocorrelation and heterogeneous task weights—are identified in learning objective design for forecasting. A quadratic-form weighted objective is proposed, and QDF learns and applies a weighting matrix Σ to address both simultaneously.
+- Outcomes: QDF consistently improves various forecasting models across multiple datasets and objectives, achieving state-of-the-art results in reported comparisons.
+- Limitations & future works:
+  - QDF currently relies on a fixed quadratic objective with a static Σ, which limits flexibility.
+  - Proposed future direction: a hyper-network to generate the learning objective for increased adaptability.
+  - Extension to related tasks (e.g., user rating prediction, dense image prediction) is suggested.
+
+# Appendix
+- Reproducibility: Code available at https://anonymous.4open.science/r/QDF-8937. Theoretical proofs in Appendix B; dataset statistics and processing in Appendix C.
+- Label autocorrelation estimation (Appendix A): Partial correlation conditioned on X via two-stage OLS residual correlation (mirrors MATLAB ‘partialcorr’). Observations across ETTh1, ETTh2, ECL, Weather (T=96): raw labels show significant off-diagonals; FreDF/Time-o1 reduce but do not eliminate autocorrelation.
+- Computational tractability: Direct conditional covariance estimation is intractable; partial correlation estimation scales quadratically with T; case study reduces complexity by subsampling 5,000 examples, history length 8, forecast horizon 96.
+- Theoretical justification (Appendix B): Formal derivation of NLL quadratic form under Gaussian assumption (Theorem B.1).
+- Dataset descriptions (Appendix C.1, Table 5):
+  - ETTh1/ETTh2: D=7; forecasts T={96,192,336,720}; train/val/test 8545/2881/2881; hourly.
+  - ETTm1/ETTm2: D=7; forecasts T={96,192,336,720}; train/val/test 34465/11521/11521; 15min.
+  - Weather: D=21; forecasts T={96,192,336,720}; train/val/test 36792/5271/10540; 10min.
+  - ECL: D=321; forecasts T={96,192,336,720}; train/val/test 18317/2633/5261; hourly.
+  - PEMS03: D=358; forecasts T={12,24,36,48}; train/val/test 15617/5135/5135; 5min.
+  - PEMS08: D=170; forecasts T={12,24,36,48}; train/val/test 10690/3548/265; 5min.
+- Implementation details (Appendix C.2): Baselines trained with Adam; learning rate in {1e−3, 5e−4, 1e−4, 5e−5}; early stopping patience 3. QDF-specific tuning over N_in, K, η.
+- Additional experimental results (Appendix D):
+  - Full per-horizon results (Table 6), additional objective comparisons (Table 7), generalization plots (Fig. 8), examples (Figs. 6–7), input length variation (Table 8), seed sensitivity (Table 9).
+- Complexity (Appendix D.7/Figs. 9, 74–77): Running times per update (forward/backward) increase with T but remain below 2 ms for T up to 720; all overhead confined to training; no inference overhead.
+- LLM usage statement (Appendix E): LLMs (OpenAI GPT-4.1, GPT-5, Google Gemini 2.5) used only for grammar/readability; no role in research ideation or analysis.
+
+# References
+- References cover foundational and recent works across:
+  - Forecasting architectures: Transformers (PatchTST, iTransformer, Autoformer, TQNet), CNNs (ModernTCN), linear/SSM models (SCINet, TimeMixer, DLinear), hybrids and frequency-domain approaches (FREDformer, FreTS, OLinear).
+  - Learning objectives and label transformations: Time-o1, FreDF, Soft-DTW, DBLoss, shape/distortion losses, Koopman-related methods.
+  - Meta-learning algorithms: MAML, iMAML, MAML++, Reptile, and applications to time series forecasting.
+  - Datasets and benchmarking: ETT, Weather, ECL, PEMS; TFB benchmark recommendations.
+  - Additional methodological context: statistical partial correlation estimation, optimization methods (Adam), and computational references. Quantitative citations are primarily in the main text; specific bibliographic details are provided in the manuscript’s references list.

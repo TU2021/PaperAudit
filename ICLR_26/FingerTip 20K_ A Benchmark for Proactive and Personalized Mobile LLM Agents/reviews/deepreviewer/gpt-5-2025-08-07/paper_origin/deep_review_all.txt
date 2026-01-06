@@ -1,0 +1,192 @@
+Summary
+The paper introduces FingerTip 20K, a new benchmark and dataset for mobile GUI agents focused on two under-explored capabilities: proactive task suggestion (predicting a user’s current intent from profile, time, scenario, history, and optionally initial screenshots) and personalized task execution (performing instructed tasks while imitating a user’s action preferences). It reports data collection from real daily usage by 91 Android users (21,437 episodes across 506 apps) with screenshots, accessibility trees, intents, actions, and profiles (Sections 4.2–4.5; Table 1, Table 3, Figure 4). The authors evaluate generalist MLLMs and GUI-control agents on both tracks, propose metrics for suggestion (Sim1, SR1) and execution (SR2, Sim2, Step Ratio), analyze task difficulty, and show LoRA fine-tuning of Qwen-2.5-VL-7B improves both tracks (Tables 4–6; Figure 6).
+
+Soundness
+- Problem setup is well-motivated and formalized with clear inputs/outputs (Equations (1)–(2), Section 3). The proactive suggestion task is a genuine departure from instruction-following benchmarks.
+- Data collection on real devices and long-term usage increases ecological validity (Figure 3; Section 4.2), and personalized action analysis indicates systematic user-specific differences (Figure 5).
+- Evaluation has important limitations: SR1 relies on another LLM (DeepSeek-V3) to judge “same intent” (Section 5.1–5.3), introducing potential bias; SR2 is manually verified, but inter-rater protocol is unspecified (Section 5.1–5.3). Sim2 = SI/SII may be unstable if SII is small and is not bounded or calibrated (Section 5.1–5.3).
+- Some internal inconsistencies reduce methodological soundness: number of users is 91 in text but 83 in Figure 3; agent/model naming varies (CogAgent-9B vs CogAgent-7B; Section 5.1–5.3; Table 5); action terminologies vary across terminate()/finish()/finished() (Sections 4.2, Table 2, Section A.5.2). These suggest gaps in reproducibility.
+
+Presentation
+- The paper is generally clear with helpful diagrams (Figures 1–4, 6) and detailed prompts (Section A.5). Tables summarize comparisons and results well (Table 1, Tables 4–6).
+- However, several notation and naming inconsistencies (users count; model versions; action names; val categories “0” in Table 3) disrupt clarity and require careful editorial revision. Some distributions are described twice with different normalizations (Figure 5 vs Section 5.1–5.3).
+
+Contribution
+- Novel benchmark framing two tracks: proactive intent suggestion and personalization in execution for mobile agents (Sections 3.1–3.2; Table 1) is timely and fills a documented gap in mobile datasets that lack user context (Section 2.1).
+- Real-world, longitudinal, user-contextualized dataset with profiles, timestamps, scenarios, screenshots, accessibility trees, and actions is significant (Sections 4.2–4.5; Appendix A.4).
+- Empirical evidence on current model limitations and effectiveness of user-oriented fine-tuning is valuable (Tables 4–6; Figure 6). The dataset and code availability further strengthen community impact (Introduction; Appendix A.4).
+
+Strengths
+- Clear, formal task definitions for suggestion and personalization (Section 3; Equations (1)–(2)).
+- Real-device, long-term data capturing genuine intents and actions across many apps (Section 4.2; Table 1; Figure 4).
+- Personalized action analysis validates user-specific patterns (Figure 5).
+- Public release of data and detailed prompts enhances reproducibility (Appendix A.4–A.5).
+- Fine-tuning baseline showing meaningful gains, especially in personalization (Table 6).
+
+Weaknesses
+- Evaluation dependence on an LLM judge for SR1 risks circularity and bias; human evaluation or multiple judges with agreement metrics are missing (Section 5.1–5.3).
+- Reproducibility issues: inconsistencies in users count (91 vs 83; Sections 4.2, Figure 3), model naming (CogAgent-9B vs CogAgent-7B; Sections 5.1–5.3; Table 5), and action naming (terminate/finish/finished; Sections 4.2, Table 2, A.5.2).
+- Sim2 ratio definition may be ill-behaved when SII is small; no robustness analysis or alternative personalization metrics (Section 5.1–5.3).
+- Limited generalization: all users are from mainland China; benchmark may not reflect other locales/app ecosystems (Appendix A.1).
+- Data post-processing uses Qwen-VL-Max and OCR to “repair” actions (Section 4.2), potentially introducing artifacts; no audit of how often this occurs or its impact.
+
+Questions
+- How often were actions “re-generated” by Qwen-VL-Max + OCR (Section 4.2), and how did this affect downstream metrics? Can you report proportions and a sensitivity analysis?
+- For SR2 manual verification, how many annotators were used, what guidelines, and what inter-rater reliability was achieved (Section 5.1–5.3)?
+- Can SR1 be complemented by human judges or by agreement across multiple LLMs to reduce bias (Section 5.1–5.3)?
+- What safeguards prevent Sim2 instability when SII is low (Section 5.1–5.3)? Have you tried bounded or rank-based measures (e.g., percentile vs same/different user baselines)?
+- Table 3 shows “Val” with 0 categories—typo or design choice? If design, what is evaluated in validation?
+- Please reconcile user counts (91 vs 83; Section 4.2; Figure 3) and CogAgent model size (Sections 5.1–5.3; Table 5).
+- Can you report cross-region or cross-app generalization (Appendix A.1), or plan multi-region expansions?
+
+Rating
+- Overall (10): 7 — Significant benchmark and dataset contribution with proactive/personalized focus, but evaluation and consistency issues reduce confidence (Sections 3, 4; Tables 4–6; Figure 3; Table 5).
+- Novelty (10): 8 — First mobile benchmark explicitly targeting proactive suggestion and personalization with user context (Sections 2.1–3; Table 1).
+- Technical Quality (10): 6 — Solid data pipeline and baselines, but reliance on LLM judging, metric design (Sim2), and inconsistencies weaken rigor (Sections 4.2, 5.1–5.3; Table 5; Figure 3).
+- Clarity (10): 7 — Generally clear with useful figures and prompts, yet multiple naming/count inconsistencies need correction (Figure 3; Table 5; Table 2; Appendix A.5).
+- Confidence (5): 4 — Based on careful reading and cross-checking reported numbers/figures; some ambiguities remain due to noted inconsistencies.
+
+
+Summary
+This paper presents FingerTip 20K, a benchmark and dataset for mobile GUI agents emphasizing proactive task suggestion and personalized task execution. It gathers 21,437 real-world episodes from Android users, including user profiles, timestamps, scenarios, screenshots, accessibility trees, and action sequences (Sections 4.2–4.5; Table 1). The tasks are formalized (Equations (1)–(2)), metrics are defined (Sim1, SR1; SR2, Sim2), and baseline experiments with generalist and GUI-specific agents are reported. Fine-tuning a 7B model with LoRA yields notable gains (Table 6).
+
+Soundness
+- The data collection design (users record intents then demonstrate actions on their own phones; Section 4.2; Figure 3) strengthens ecological validity and enables personalization analysis (Figure 5).
+- The proactive suggestion track is well-specified and evaluates a previously unbenchmarked capability (Section 3.1).
+- Execution track uses real-device ADB integration (Section 5.1–5.3), reflecting practical constraints with Chinese apps.
+- However, SR1 is judged by an LLM (DeepSeek-V3), which can introduce evaluator bias; no calibration with human raters is provided (Section 5.1–5.3). Sim2 normalization via ratio may be brittle when the denominator is small; bounds and robustness are not discussed (Section 5.1–5.3). Manual SR2 verification lacks detail on annotators and reliability.
+
+Presentation
+- Figures and tables clearly communicate dataset properties and results (Figures 4–6; Tables 1, 4–6; Appendix A.4–A.5).
+- Some contradictions hinder readability: 91 vs 83 users (Section 4.2; Figure 3), CogAgent-9B vs 7B (Sections 5.1–5.3; Table 5), and inconsistent action names across sections (terminate/finish/finished; Section 4.2; Table 2; A.5.2). Table 3 lists “Val” with 0 categories, which is unexplained.
+
+Contribution
+- The benchmark fills an important gap: existing mobile datasets lack user context and proactive suggestion evaluation (Table 1; Section 2.1).
+- The released data, prompts, and code provide valuable infrastructure for research on mobile agent proactivity and personalization (Introduction; Appendix A.4–A.5).
+- Empirical findings highlight model limitations and the benefits of user-oriented fine-tuning (Tables 4–6; Figure 6), likely to influence future agent design.
+
+Strengths
+- Novel task definitions and comprehensive user-context inputs (Section 3; Equations (1)–(2)).
+- Real-world longitudinal dataset with broad app coverage (Sections 4.2–4.5; Table 1; Figure 4).
+- Personalized action analysis quantitatively validates user-specific patterns (Figure 5).
+- Clear reporting of costs (time/tokens) and task difficulty effects (Tables 4–5; Figure 6).
+- Practical environment setup on physical phones, enhancing realism (Section 5.1–5.3).
+
+Weaknesses
+- Evaluation depends on another LLM for SR1; human validation or multi-judge agreement is missing (Section 5.1–5.3).
+- Metric Sim2 defined as a ratio lacks guardrails and may be unstable; alternative measures (e.g., same-user vs different-user margin, DTW) are not explored (Section 5.1–5.3).
+- Inconsistencies in reported users and model variants, and action naming discrepancies, undermine reproducibility (Figure 3; Table 5; Table 2; A.5.2).
+- The dataset’s geographic concentration may limit generalization (Appendix A.1); cross-locale validation is not provided.
+- Post-processing with MLLM+OCR to repair actions is not quantified for prevalence and impact (Section 4.2).
+
+Questions
+- Can you quantify how often action “repairs” were needed and their effect on execution metrics (Section 4.2)?
+- What was the annotation protocol for SR2 manual checks (annotator count, guidelines, agreement; Section 5.1–5.3)?
+- Would top-k intent prediction (nDCG/MRR) or human evaluation for SR1 improve reliability over a single LLM judge (Section 5.1–5.3)?
+- Please reconcile user count (91 vs 83; Section 4.2; Figure 3) and CogAgent model size (7B vs 9B; Sections 5.1–5.3; Table 5).
+- Why does the validation split show 0 categories (Table 3)? Is this a typo or an intentional setup?
+- Could Sim2 be reframed as a bounded margin: SI − SII or a percentile rank among different-user baselines?
+
+Rating
+- Overall (10): 7 — Strong benchmark/dataset contribution with clear novelty, but evaluation design and internal inconsistencies reduce rigor (Sections 3–4; Tables 4–6; Figure 3; Table 5).
+- Novelty (10): 8 — Introduces proactive intent suggestion and personalization with user context not present in prior mobile GUI benchmarks (Table 1; Sections 2.1–3).
+- Technical Quality (10): 6 — Solid pipeline and baselines, weakened by LLM-based judging, Sim2 design, and missing reliability details (Sections 4.2, 5.1–5.3; Table 5).
+- Clarity (10): 7 — Generally well-written with informative visuals, but notable inconsistencies need correction (Figure 3; Table 2; Table 5; Appendix A.5).
+- Confidence (5): 4 — High-level assessment supported by cross-checking tables/figures; residual uncertainties due to reporting inconsistencies.
+
+
+Summary
+FingerTip 20K proposes a benchmark to push mobile GUI agents beyond passive instruction-following toward proactive intent suggestion and personalized execution. The dataset contains user profiles, time, scenario, historical intents/actions, screenshots, and accessibility trees collected from real daily usage (Section 4.2–4.5; Figure 4; Table 1). The paper defines task formulations (Equations (1)–(2)), proposes metrics (Sim1, SR1; SR2, Sim2), evaluates generalist and GUI-specific models (Tables 4–5), studies difficulty effects (Figure 6), and demonstrates improvements via LoRA fine-tuning (Table 6).
+
+Soundness
+- The benchmark’s two-track design is coherent, and the inputs represent realistic signals an agent could use (Section 3; Appendix A.4–A.5).
+- Experiments are well-scoped: generalist MLLMs struggle with GUI grounding (Table 5), while specialized models perform better; proactive suggestion improves with more screenshots (Figure 6(a)).
+- Metric choices have vulnerabilities: SR1 judged by an LLM lacks human validation; Sim2 ratio is close to 1 across models (Table 5), making it weakly discriminative for personalization and sensitive to denominator effects (Section 5.1–5.3).
+- Some reporting inconsistencies raise doubts about exact replication (users count, CogAgent size, action naming; Figure 3; Table 5; Table 2; Appendix A.5.2).
+
+Presentation
+- Overall organization is strong: motivation, related work comparison, formalization, dataset details, experiments, and appendices are logically laid out (Sections 1–6; Table 1; Appendix A).
+- Visualizations and tables are helpful and legible (Figures 4–6; Tables 4–6), and prompts are clearly documented (Appendix A.5).
+- Minor clarity issues: validation split lists 0 categories (Table 3) without explanation; inconsistent nomenclature (terminate/finish/finished) and model sizes require cleanup.
+
+Contribution
+- The benchmark addresses two capability gaps—proactivity and personalization—in mobile agents and provides a dataset with rich user context (Sections 2.1–3; Table 1).
+- It establishes empirical baselines and shows that modest fine-tuning on user-oriented data improves performance and personalization alignment (Table 6).
+- This resource will likely stimulate research on user modeling and context-aware mobile agents.
+
+Strengths
+- Real daily-use data with profiles and context (Section 4.2; Appendix A.4).
+- Clear formal definitions and inputs (Section 3; Equations (1)–(2)).
+- Comprehensive experimental coverage and difficulty analyses (Tables 4–5; Figure 6).
+- Personalized action similarity analysis provides evidence of user differences (Figure 5).
+- Public release and prompts aid reproducibility (Appendix A.4–A.5).
+
+Weaknesses
+- SR1/Sim1 depend partly on automated judgments; absence of human evaluation or multi-judge agreement may skew conclusions (Section 5.1–5.3).
+- Sim2 ratio near 1 across models suggests poor sensitivity; alternative or composite personalization metrics are needed (Table 5; Section 5.1–5.3).
+- Reporting contradictions (user count, CogAgent version, action naming) should be resolved (Figure 3; Table 5; Table 2; Appendix A.5.2).
+- Geographic concentration limits external validity; cross-region validation is missing (Appendix A.1).
+- No ablation on how much each contextual input (profile vs time vs scenario vs history vs screenshots) contributes to proactive accuracy.
+
+Questions
+- Can you provide a human evaluation for SR1 with inter-rater agreement, and compare to LLM-judge outputs (Section 5.1–5.3)?
+- What is the distribution of SII values used in Sim2, and how do you handle small denominators (Section 5.1–5.3)?
+- Can you reconcile the 91 vs 83 users discrepancy (Section 4.2; Figure 3) and the CogAgent size mismatch (Sections 5.1–5.3; Table 5)?
+- Why does validation have 0 categories in Table 3? If by design, what is its role in model selection?
+- Have you conducted ablation to quantify the contribution of each context input to proactive suggestion (Section 3.1)?
+- How frequently were actions “repaired” by LLM+OCR, and what is the measured impact on SR2 (Section 4.2)?
+
+Rating
+- Overall (10): 7 — Compelling benchmark with strong practical relevance and clear novelty, but evaluation and reporting issues temper impact (Sections 3–4; Tables 4–6; Figure 3).
+- Novelty (10): 7 — Adds proactive suggestion and personalization tracks with rich user context not present in prior mobile datasets (Table 1; Sections 2.1–3).
+- Technical Quality (10): 6 — Solid data pipeline and baselines; evaluation metrics and inconsistencies warrant improvements (Sections 4.2, 5.1–5.3; Table 5).
+- Clarity (10): 8 — Mostly clear exposition with useful visuals and prompts; fix noted inconsistencies (Figure 3; Table 2; Appendix A.5).
+- Confidence (5): 3 — Good grasp of methods/results, but unresolved contradictions limit certainty.
+
+
+Summary
+The work proposes FingerTip 20K, a benchmark and dataset to evaluate proactive intent suggestion and personalized execution in mobile GUI agents. It collects user-oriented, longitudinal data (screenshots, accessibility trees, intents, actions, user profiles, time, scenario) from real phone usage (Section 4.2; Appendix A.4). The authors formalize tasks (Section 3), define metrics (Sim1/SR1; SR2/Sim2), compare generalist and GUI-specific models (Tables 4–5), analyze difficulty effects (Figure 6), and report gains via LoRA fine-tuning on Qwen-2.5-VL-7B (Table 6).
+
+Soundness
+- The benchmark addresses a genuine limitation of passive agents and introduces realistic context variables (Section 3.1–3.2).
+- Data is collected in-the-wild with attention to privacy and consent (Appendix A.3), and accessibility trees are leveraged for grounding (Appendix A.4, A.53).
+- The metric design for personalization (Sim2) is simplistic; as a ratio it offers limited interpretability and discrimination (Table 5). Suggestion success via LLM judge may be biased (Section 5.1–5.3).
+- Internal inconsistencies (user count; model size naming; action terminologies) suggest missing quality control in reporting (Figure 3; Table 5; Table 2; Appendix A.5.2).
+
+Presentation
+- Clear motivation and related work comparison (Table 1; Sections 1–2), thorough dataset statistics (Figure 4; Appendix A.4), and explicit prompts (Appendix A.5).
+- The paper would benefit from a consistency pass: reconcile conflicting numbers, unify action names, and explain anomalies (e.g., val categories = 0; Table 3). Some figures use different normalization scales for similarity (Figure 5 vs Sim1 description).
+
+Contribution
+- Introduces two important capabilities—proactive and personalized mobile agents—and provides the first benchmark to evaluate them with real user context (Sections 2.1–3).
+- Demonstrates that current agents underperform on these dimensions and that user-context fine-tuning helps (Tables 4–6).
+- Dataset/code release and detailed task formulations offer high utility to the community (Introduction; Appendix A.4–A.5).
+
+Strengths
+- Real-world, longitudinal, user-contextual data across 506 apps (Section 4.2–4.5; Table 1; Figure 4).
+- Formal task definitions and clear input specifications (Equations (1)–(2); Appendix A.5).
+- Difficulty analyses provide actionable insights (Figure 6).
+- Personalized action analysis highlights real user differences (Figure 5).
+- Fine-tuning results show personalization alignment gains (Table 6).
+
+Weaknesses
+- Reliance on LLM-based intent equivalence for SR1 without human validation (Section 5.1–5.3).
+- Personalization metric Sim2 lacks robustness and interpretability; results clustering near 1 diminish its utility (Table 5).
+- Reporting inconsistencies: 91 vs 83 users (Section 4.2; Figure 3), CogAgent-9B vs 7B (Sections 5.1–5.3; Table 5), action naming mismatch (terminate/finish/finished; Section 4.2; Table 2; Appendix A.5.2).
+- Limited cross-locale generalization; all users from mainland China (Appendix A.1).
+- No ablation on which context signals are most informative for proactive intent prediction; could guide model design (Section 3.1).
+
+Questions
+- Can you report human evaluation for SR1 with inter-rater agreement and calibration against the LLM judge (Section 5.1–5.3)?
+- How do you handle cases where SII is very small in Sim2; any clipping or smoothing (Section 5.1–5.3)?
+- Please reconcile the inconsistencies in user count and CogAgent size, and unify action naming across sections (Figure 3; Table 5; Table 2; Appendix A.5.2).
+- Why does the validation split have 0 categories (Table 3), and how is model selection performed?
+- What is the relative contribution of profile, time, scenario, history, and screenshots to SR1; can you include an ablation (Section 3.1)?
+- How frequently were actions repaired via Qwen-VL-Max+OCR, and what is the quantified impact on SR2/Step Ratio (Section 4.2)?
+
+Rating
+- Overall (10): 6 — Valuable benchmark and dataset with clear novelty, but evaluation metrics and reporting inconsistencies limit technical rigor (Sections 3–4; Tables 4–6; Figure 3; Table 5).
+- Novelty (10): 7 — First explicit mobile benchmark for proactive suggestion and personalized execution using user context (Table 1; Sections 2.1–3).
+- Technical Quality (10): 5 — Sound data collection but weaker evaluation design and unresolved inconsistencies (Sections 4.2, 5.1–5.3; Table 5).
+- Clarity (10): 6 — Good overall structure and visuals; fix contradictions and explain validation split (Figure 3; Table 2; Table 3; Appendix A.5).
+- Confidence (5): 4 — Assessment based on detailed cross-checking; residual uncertainty due to noted inconsistencies.

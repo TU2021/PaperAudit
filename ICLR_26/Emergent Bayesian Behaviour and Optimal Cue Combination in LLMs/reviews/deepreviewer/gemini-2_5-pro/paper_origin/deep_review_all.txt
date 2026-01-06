@@ -1,0 +1,198 @@
+Here are four distinct and complete reviews of the research paper.
+
+***
+
+### **Review 1**
+
+**Summary**
+This paper introduces a novel approach for evaluating Large Language Models (LLMs) by adapting methodologies from human psychophysics. The authors propose BayesBench, a benchmark consisting of four magnitude estimation tasks (length, location, distance, duration) across text and image modalities. They evaluate nine different LLMs, comparing their performance not just on accuracy but also on their ability to integrate multimodal cues and adapt to noisy inputs. The core contributions are the benchmark itself, a new "Bayesian Consistency Score" (BCS) to measure principled behavioral shifts, and the finding that while capable models show emergent Bayes-consistent behaviors, high accuracy does not guarantee robust uncertainty handling, as exemplified by a model dubbed "GPT-5 Mini".
+
+**Soundness**
+The methodology is generally sound and represents a creative application of a classic scientific paradigm to a new domain. The design of the four tasks is well-inspired by psychophysics literature, allowing for controlled manipulation of stimuli (Section 3.1). The use of behavioral models (Linear, Static Bayesian, Sequential Bayesian) to interpret LLM responses is a strong and appropriate choice for treating the models as black-box observers (Section 3.2). The ablations (noise, context, steering) are well-conceived to probe for specific behavioral signatures.
+
+However, the soundness could be improved. The Bayesian Consistency Score (BCS) is a key metric, but its construction feels somewhat ad-hoc. The binary scoring system ($s_a = \pm 1$) discards the magnitude of the behavioral shift, and the cutoff threshold ($w_{\text{prior}}^{(\text{ablation})} > 0.9$) seems arbitrary (Section 3.5). While the authors justify this by focusing on the direction of change, it may oversimplify the analysis. The use of hypothetical future models ("GPT-5 Mini", "Llama-4 Maverick") and future-dated citations is unusual and makes it difficult to assess the claims' grounding in currently available technology.
+
+**Presentation**
+The paper is well-written and the core ideas are communicated clearly. The introduction provides excellent motivation by drawing a compelling parallel between human perception and LLM computation (Section 1). Figure 1 is particularly effective at visually demonstrating the core phenomenon of regression-to-the-mean in both an LLM and human data. The structure is logical, moving from motivation to methods, results, and discussion.
+
+The presentation suffers from some organizational issues. Many critical details are relegated to the appendix, such as the specifics of the LLMs studied (Appendix A.4), prompt design (Appendix A.2.2), and detailed performance breakdowns (Appendix A.11). The main paper would be stronger if some of this information, particularly the model details and prompt examples, were included. The figures in the results section, especially Figure 8, are quite dense and try to convey multiple relationships at once, which can be challenging to parse. The bar chart in Figure 9, however, is very clear and effective at summarizing the final benchmark scores.
+
+**Contribution**
+The paper makes a significant and novel contribution to the field of LLM evaluation. By moving beyond standard accuracy-centric benchmarks, it introduces a new dimension for assessing model behavior: computational strategy under uncertainty. The primary contributions are:
+1.  **A novel evaluation paradigm:** Applying psychophysics to LLMs is a creative and insightful idea that opens up a new avenue for research.
+2.  **BayesBench:** The benchmark and its associated tasks provide a concrete, reproducible tool for the community (Section 3.6).
+3.  **The Bayesian Consistency Score (BCS):** While its formulation could be refined, the concept of a metric that measures *principled adaptation* rather than static performance is a valuable innovation (Section 3.5).
+4.  **Key empirical finding:** The dissociation between accuracy and robust strategy (the "Safety Gap") is an important insight, highlighting a potential blind spot in current evaluation practices (Section 5.2, 6).
+
+**Strengths**
+- **Novelty:** The core idea of using a psychophysics framework to probe LLMs is highly original and intellectually stimulating.
+- **Methodological Rigor:** The experimental design is systematic, with controlled tasks and well-defined ablations that allow for targeted analysis of model behavior.
+- **Insightful Analysis:** The paper successfully demonstrates that accuracy is not the whole story, and the analysis of cue combination efficiency (e.g., GPT-5 Mini's failure and Llama-4 Maverick's success) provides compelling evidence for this (Section 5.2).
+- **Valuable Tools:** The introduction of BayesBench and the BCS provides the research community with new tools to diagnose model robustness in a more nuanced way.
+
+**Weaknesses**
+- **Ad-hoc Metric Definition:** The construction of the BCS is not fully justified. The binary scoring and arbitrary cutoff make the score less interpretable than it could be.
+- **Use of Hypothetical Models:** The reliance on speculative models like "GPT-5 Mini" and "Llama-4 Maverick" (Table 3) weakens the paper's empirical grounding. While this may be for anonymization, it makes the results difficult to verify or contextualize against known models.
+- **Over-reliance on Appendix:** Too much essential information is placed in the appendix, hindering the readability and self-containedness of the main paper. For example, the detailed model performance tables (Figures 14-17) are crucial for understanding the results but are hidden away.
+
+**Questions**
+1.  Could you elaborate on the justification for the binary scoring system in the BCS? Have you considered a version that incorporates the magnitude of the change in $w_{\text{prior}}$, and how might that affect the results?
+2.  The paper highlights that Llama-4 Maverick outperforms the Bayes-optimal linear combiner, suggesting non-linear integration (Section 5.2). Could this "outperformance" instead be an artifact of the baseline model's assumptions (e.g., Gaussian noise) not perfectly matching the LLM's internal error distribution?
+3.  The human baseline is mentioned and included in one plot (Figure 8, left panel) but is not deeply integrated into the analysis. What further insights were gained from the human data, and how does it compare to the LLMs in terms of cue combination and Bayesian consistency?
+
+**Rating**
+- Overall (10): 8 — The paper introduces a highly novel and valuable psychophysics-based evaluation framework, though the reliance on hypothetical models and some ad-hoc metric choices temper its impact.
+- Novelty (10): 10 — Applying a psychophysics paradigm to probe implicit computational strategies in LLMs is a genuinely new and exciting research direction (Section 1, 4).
+- Technical Quality (10): 7 — The experimental design is strong, but the definition of the BCS metric is not fully rigorous and the analysis relies on unreleased models (Section 3.5, Table 3).
+- Clarity (10): 8 — The core ideas are presented very clearly, but the paper's organization requires frequent switching to the appendix for critical details (e.g., Appendix A.4, A.11).
+- Confidence (5): 4 — I am confident in my assessment, but the use of hypothetical models makes it impossible to fully verify the specific empirical claims.
+
+***
+
+### **Review 2**
+
+**Summary**
+This paper proposes a new benchmark, BayesBench, to evaluate the implicit computational strategies of Large Language Models (LLMs) using methods from psychophysics. The authors design four magnitude estimation tasks and test nine LLMs under various conditions (e.g., input noise, contextual cues). They analyze LLM responses by fitting them to behavioral models (linear, Bayesian) and introduce three key metrics: accuracy (NRMSE), cue-combination efficiency (RRE), and a novel Bayesian Consistency Score (BCS). The main finding is that more capable models tend to exhibit more Bayes-consistent behavior, but high accuracy can mask inefficient or brittle strategies for handling uncertainty.
+
+**Soundness**
+The methodological foundation of this work is its primary strength, but it also contains several points that require further justification.
+
+The experimental design, with its controlled tasks and ablations (Section 3.1), is systematic and well-suited for the research question. The choice to model LLM behavior using established observer models from psychophysics (Section 3.2) is appropriate and principled.
+
+However, I have several concerns regarding the technical details:
+1.  **BCS Formulation:** The Bayesian Consistency Score (BCS) in Section 3.5 is problematic. It converts a continuous measure ($\Delta w_{\text{prior}}$) into a binary score ($s_a \in \{+1, -1\}$), losing valuable information about the *degree* of adaptation. The hard cutoff at $w_{\text{prior}}^{(\text{ablation})} > 0.9$ is arbitrary and lacks a theoretical basis. Why not define BCS based on the signed magnitude of the change, perhaps normalized by the model's baseline variance?
+2.  **Model Comparison:** The paper uses AIC for model comparison (Section 3.4) and then a complex procedure to compute "factor evidence" (Appendix A.8). This procedure, involving taking the max likelihood within a "cell," seems designed to get a desired result and is non-standard. A more standard Bayesian model comparison using BIC or, ideally, computing the marginal likelihood (model evidence) for each model family would be more convincing.
+3.  **Confounding Variables:** The study acknowledges that reasoning could not be disabled for "GPT-5 Mini" (Section 4, Appendix A.2.1). This is a major confound. Its near-perfect text performance on the maze task is attributed to this residual reasoning (Section 5.1), which makes it an unfair comparison to other models and complicates the interpretation of its "Safety Gap" in cue combination.
+4.  **API Non-determinism:** The paper mentions API non-determinism as a limitation (Section 6) but doesn't detail how it was handled. Given the sensitivity of the analysis to response distributions, were multiple runs conducted per stimulus to average out this stochasticity? The bootstrapping (Section 4) estimates uncertainty but doesn't mitigate the underlying issue.
+
+**Presentation**
+The paper is generally well-written, but its structure significantly impairs clarity. The main text often feels like a high-level summary, with the methodological core and detailed results scattered throughout a lengthy appendix.
+
+- **Figures and Tables:** Many figures are difficult to interpret. Figure 8 contains three separate scatter plots with different axes and overlapping data points, making it hard to extract clear takeaways. The figures in the appendix labeled 14, 15, 16, and 17 are actually tables of data presented as poorly formatted bar charts, which are nearly unreadable. The mermaid diagram in Figure 10 (Appendix) is helpful, but its placement in the appendix reduces its utility.
+- **Organization:** Critical methodological details, such as the factor analysis procedure (Appendix A.8) and the cue combination models (Appendix A.7), should be summarized more effectively in the main paper. A reader should not have to piece together the core methodology from disparate sections of the appendix.
+- **Terminology:** The use of placeholder names for models ("GPT-5 Mini", "Llama-4 Maverick") and future citations (`Qiu et al., 2025`) is confusing and detracts from the paper's credibility as an empirical study.
+
+**Contribution**
+Despite the methodological and presentation issues, the paper's conceptual contribution is strong. It pioneers a new, cognitive science-inspired approach to LLM evaluation that moves beyond surface-level performance. The idea of testing for *principled* adaptation to uncertainty is novel and important for building more robust AI systems. BayesBench, if refined, could become a valuable diagnostic tool. The finding that accuracy and robustness can be dissociated is a critical warning for the field, which often relies on leaderboards dominated by accuracy metrics.
+
+**Strengths**
+- **Principled Experimental Design:** The tasks are well-controlled and directly inspired by a mature field of study (psychophysics).
+- **Novel Research Question:** Asking whether LLMs develop implicit, optimal strategies for handling uncertainty is a deep and important question.
+- **Focus on Mechanism over Performance:** The paper's emphasis on inferring computational strategies, rather than just measuring accuracy, is a major strength.
+- **The "Safety Gap" Insight:** The demonstration that a high-accuracy model can fail at robust cue integration is a powerful and timely result (Section 5.2).
+
+**Weaknesses**
+- **Questionable Metric Formulation:** The BCS is defined in an ad-hoc and information-lossy way (Section 3.5).
+- **Non-Standard Statistical Analysis:** The "factor evidence" calculation is convoluted and not standard practice (Appendix A.8).
+- **Poor Organization:** The paper is poorly structured, with essential details buried in the appendix, making it difficult to follow and critique.
+- **Uncontrolled Confounds:** The inability to disable reasoning in one of the key models (GPT-5 Mini) undermines the conclusions drawn about it.
+
+**Questions**
+1.  Can you provide a stronger theoretical or empirical justification for the specific formulation of the BCS, particularly the binarization of $\Delta w_{\text{prior}}$ and the 0.9 cutoff?
+2.  Why was the non-standard "factor evidence" procedure in Appendix A.8 used instead of more established methods for model family comparison, such as computing integrated Bayes factors?
+3.  How do you disentangle the effect of "residual reasoning" in GPT-5 Mini from its perceptual abilities? Could its poor cue combination be a result of a conflict between a reasoning module that trusts the perfect text and a perceptual module, rather than a general failure of uncertainty integration?
+4.  Regarding the claim that Llama-4 Maverick uses non-linear combination (Section 5.2): A random forest is a highly flexible model. Could its better fit simply be due to overfitting the specific noise patterns in the unimodal responses, rather than evidence of a sophisticated, generalizable non-linear strategy?
+
+**Rating**
+- Overall (10): 6 — A conceptually brilliant paper with a novel approach, but marred by significant methodological weaknesses in its key metrics and analysis, as well as poor presentation.
+- Novelty (10): 9 — The application of psychophysics to probe LLM cognition is highly novel and opens up a promising research area.
+- Technical Quality (10): 5 — The core experimental design is good, but the custom metrics (BCS) and statistical procedures (factor evidence) are ad-hoc and not well-justified, and key confounds are not controlled.
+- Clarity (10): 5 — The writing is fine, but the paper's structure is confusing, with critical information relegated to a disorganized appendix, making the work very difficult to parse.
+- Confidence (5): 5 — I am highly confident in my assessment of the methodological and presentational shortcomings.
+
+***
+
+### **Review 3**
+
+**Summary**
+This paper investigates whether Large Language Models (LLMs) exhibit emergent Bayesian-like behaviors for handling uncertainty, similar to humans. The authors create "BayesBench," a set of four synthetic magnitude estimation tasks, to probe the behavior of nine LLMs. They measure accuracy, cue combination efficiency, and introduce a "Bayesian Consistency Score" (BCS). The authors report that more accurate models tend to be more "Bayesian" but find a "Safety Gap" where high accuracy doesn't guarantee robust cue integration, suggesting that current benchmarks may be insufficient for evaluating model robustness.
+
+**Soundness**
+The paper's premise is intriguing, but I have reservations about the soundness of its conclusions and the broader implications drawn from the experiments. The methodology is internally consistent for the narrow scope of the synthetic tasks. The use of observer models to characterize behavior is a standard technique in the source domain of psychophysics.
+
+However, the leap from these results to broader claims about LLM robustness and safety seems overstated. The tasks are highly abstract and artificial (e.g., estimating ratios of ASCII lines, Section 3.1, Figure 2). It is unclear how performance on these "unit tests" translates to the complex, semantic, and often unquantifiable uncertainty present in real-world multimodal applications. The paper claims these tasks expose "brittleness invisible to standard benchmarks" (Section 2), but this is asserted rather than demonstrated.
+
+The composite BayesBench score (Section 3.6) is also questionable. It is an unweighted average of three very different metrics: accuracy (A), efficiency (E), and consistency (C). There is no justification for why these components should be equally weighted or even combined into a single number. This aggregation risks obscuring more than it reveals, creating a new leaderboard number that is just as arbitrary as the ones the paper critiques.
+
+Finally, the analysis of GPT-5 Mini feels like a strawman. The model is noted to have residual reasoning capabilities (Section 4), leading to perfect text performance. Its subsequent failure to integrate a noisy visual cue is then framed as a "critical dissociation between capability and strategy" (Abstract). An alternative, simpler explanation is that the model learned a heuristic: if text provides a precise answer, ignore other modalities. This is not necessarily a failure of "uncertainty handling" but a different, and perhaps contextually rational, strategy.
+
+**Presentation**
+The paper is written in a clear, accessible style. The introduction effectively frames the research question. The figures in the main paper are mostly adequate, though Figure 8 is cluttered.
+
+My main criticism of the presentation is the paper's tone, which occasionally borders on hype. Phrases like "critical Safety Gap" (Section 2) and claims that the benchmark can "inform future multimodal architecture designs" (Abstract) feel premature given the limited scope of the synthetic experiments. The use of speculative model names like "GPT-5 Mini" and "Llama-4 Maverick" (Table 3) is distracting and gives the paper an air of being a press release for unannounced products rather than a sober scientific investigation. The paper would be more convincing if it were more modest in its claims.
+
+**Contribution**
+The contribution of this paper is mixed. On one hand, it introduces a creative new lens through which to view LLM behavior, and the idea of probing for implicit computational strategies is valuable. The benchmark itself is a contribution, providing a reproducible artifact for other researchers.
+
+On the other hand, the practical significance of the findings is unclear. Does the fact that an LLM's responses to noisy ASCII art can be fit by a Bayesian model tell us anything fundamental about its internal workings or its reliability in the real world? The paper doesn't provide a compelling link. The main takeaway—that accuracy isn't everything—is an important reminder but not a new concept in the field of ML evaluation. The paper provides a novel demonstration of this principle but perhaps doesn't advance our fundamental understanding as much as it claims.
+
+**Strengths**
+- **Creative Framing:** The analogy to human psychophysics is a powerful and thought-provoking way to frame the problem of LLM evaluation.
+- **Reproducible Benchmark:** The authors are releasing BayesBench, which is a positive contribution to the community (Section 1, footnote 1).
+- **Highlights an Important Problem:** The paper correctly identifies the limitations of accuracy-only evaluation and the need for better probes of model robustness.
+
+**Weaknesses**
+- **Limited External Validity:** The synthetic tasks are highly abstract, and it's a significant leap to generalize findings to real-world robustness or "safety" (Section 3.1).
+- **Overstated Claims:** The paper makes strong claims about a "Safety Gap" and its ability to inform architecture design that are not fully supported by the limited evidence.
+- **Arbitrary Composite Score:** The BayesBench score is an unprincipled aggregation of disparate metrics, undermining its utility as a holistic measure (Section 3.6).
+- **Questionable Interpretation:** The interpretation of model behavior (e.g., GPT-5 Mini's "failure") may be simplistic and ignore alternative, equally plausible explanations.
+
+**Questions**
+1.  How would you defend the claim that performance on these abstract, synthetic tasks is predictive of an LLM's robustness and uncertainty handling in complex, real-world scenarios? Is there any evidence for this correlation?
+2.  What is the justification for combining Accuracy, Efficiency, and Consistency into a single, equally-weighted score for BayesBench? Wouldn't it be more informative to present these as a multi-dimensional profile for each model?
+3.  The "Safety Gap" is presented as a failure of the model. Could it not be interpreted as a feature? For instance, in a high-stakes scenario, if one source of information is known to be 100% reliable (like the text for GPT-5 Mini), isn't it the *optimal* strategy to completely ignore other, noisier sources?
+
+**Rating**
+- Overall (10): 5 — An interesting idea and a novel benchmark, but the work suffers from limited external validity and overstated claims that are not fully supported by the evidence from the synthetic tasks.
+- Novelty (10): 8 — The psychophysics approach is novel, but the core message that "accuracy isn't everything" is not.
+- Technical Quality (10): 6 — The experiments are well-executed within their narrow scope, but the composite score is arbitrary and the interpretation of the results is debatable.
+- Clarity (10): 7 — The paper is clearly written, but the tone is somewhat overconfident and the use of speculative model names is confusing.
+- Confidence (5): 5 — I am confident in my assessment of the gap between the paper's claims and its evidence.
+
+***
+
+### **Review 4**
+
+**Summary**
+This paper introduces a psychophysics-inspired benchmark, BayesBench, to evaluate how Large Language Models (LLMs) handle uncertainty and combine multimodal cues. The study uses four magnitude estimation tasks to test nine LLMs, focusing on their performance, cue combination efficiency, and behavioral consistency under perturbations. The authors find that more capable models often exhibit behaviors consistent with Bayesian observer models. A key finding is the dissociation between task accuracy and cue combination strategy, where a highly accurate model ("GPT-5 Mini") fails to efficiently integrate visual and textual information, while another ("Llama-4 Maverick") appears to use sophisticated non-linear integration.
+
+**Soundness**
+The paper's methodology for probing multimodal cue combination is interesting but could be more rigorous. The setup, using unimodal and multimodal conditions, is standard and appropriate. The choice of cue combination models in Table 1 (Equal weighting, Linear regression, Bayes-optimal fusion) provides a reasonable set of baselines.
+
+My main concerns relate to the depth of the cue combination analysis:
+1.  **Simplicity of Fusion Models:** The Bayes-optimal fusion model (Section 3.3, Appendix A.7) assumes linear combination of cues weighted by their inverse variance. While this is a classic model (Ernst & Banks, 2002), the multimodal literature has explored far more complex fusion mechanisms (e.g., attention-based fusion, gating mechanisms, tensor fusion). Given the transformer architecture of the models under study, it's highly likely they are capable of more dynamic, non-linear fusion. The analysis feels incomplete by not considering these possibilities.
+2.  **Analysis of Llama-4 Maverick:** The paper claims Llama-4 Maverick's outperformance of the Bayes-optimal linear model indicates "more sophisticated non-linear integration strategies" (Section 6). The evidence provided is that a random forest model provides a better fit (Figure 7). This is weak evidence. A random forest is a universal approximator and could simply be overfitting the specific trial-by-trial noise in the model's unimodal responses. A more convincing analysis would involve designing experiments to specifically test for signatures of non-linearity (e.g., by testing for non-additive interactions between cue reliabilities).
+3.  **Analysis of GPT-5 Mini:** The paper concludes that GPT-5 Mini "fails to integrate visual cues efficiently" (Abstract) because its multimodal performance is worse than what a Bayes-optimal model would predict, given its near-perfect text performance (Section 5.2, Appendix A.12). This is a plausible interpretation. However, the analysis doesn't fully explore *why*. Is it a failure to assess the reliability of the visual cue? Or a failure to down-weight it appropriately even if the reliability is assessed correctly? The current analysis doesn't distinguish between these possibilities. The fitted image weights in Figure 6C show that many models reduce image weight under noise, but the connection to the optimal weights is not explicitly quantified.
+
+**Presentation**
+The paper is clearly written, and the motivation is strong. The visual depiction of the tasks in Figure 2 and Figure 10 is helpful. However, the presentation of the multimodal results could be improved.
+
+The results are spread across many figures and the appendix. For example, the cue combination efficiency (RRE) is plotted in Figure 8, but the underlying unimodal and multimodal NRMSE values that determine this efficiency are in the appendix (Figures 14-16). It would be more effective to have a single, comprehensive figure or table in the main text that shows, for each model and task, the unimodal performances, the predicted multimodal performance under a Bayes-optimal model, and the actual multimodal performance. This would make the cue combination results much easier to interpret. Figure 6C is a good step in this direction, but it only shows the *change* in weight, not the weight itself relative to an optimal value.
+
+**Contribution**
+The paper's main contribution is to bring a much-needed focus on multimodal fusion strategies and uncertainty handling to the field of LLM evaluation. While most multimodal benchmarks focus on reasoning over clean inputs, BayesBench provides a framework for stress-testing the integration process itself. This is a significant and timely contribution.
+
+The empirical finding that accuracy and fusion efficiency are not necessarily correlated is a key insight for the multimodal community. The case studies of GPT-5 Mini and Llama-4 Maverick, while needing deeper analysis, are provocative and highlight that different models may be adopting qualitatively different fusion strategies. The paper successfully makes the case that we need to look "under the hood" at how multimodal models work, and provides a viable (if imperfect) methodology for doing so.
+
+**Strengths**
+- **Focus on Multimodal Fusion:** The paper correctly identifies cue combination under uncertainty as a critical and under-explored area in LLM evaluation.
+- **Controlled Experiments:** The use of controlled noise ablations (Section 3.1) is an excellent way to specifically probe cue re-weighting strategies.
+- **Provocative Findings:** The dissociation between accuracy and efficiency (Section 5.2) is an important result that challenges the community's over-reliance on accuracy leaderboards.
+- **Extensible Framework:** The benchmark and methodology provide a solid foundation that can be extended with more complex tasks and more sophisticated fusion models.
+
+**Weaknesses**
+- **Superficial Cue Combination Analysis:** The analysis relies on overly simple linear fusion models and doesn't rigorously test for the non-linearities it speculates about (Section 5.2, Figure 7).
+- **Weak Evidence for Non-Linearity:** The claim that Llama-4 Maverick uses non-linear fusion is based on a simple model fit comparison, which is not conclusive.
+- **Incomplete Presentation of Multimodal Results:** The key data for the cue combination analysis is scattered, making it difficult for the reader to fully assess the results.
+
+**Questions**
+1.  The Bayes-optimal fusion model assumes independence between the noise of the two modalities. Did you test this assumption? Could correlations in the LLM's internal representations of text and image cues explain some of the deviations from the model?
+2.  For the claim about Llama-4 Maverick's non-linear integration, have you considered alternative explanations? For example, could the model be engaging in a form of rule-based switching (e.g., "if image is blurry, rely only on text") rather than a continuous non-linear combination?
+3.  In Figure 6C, you show that models change their image weighting in response to noise. How do these empirical changes compare to the *optimal* change in weighting predicted by the Bayesian model? This seems like a crucial comparison that is missing.
+
+**Rating**
+- Overall (10): 7 — A valuable and timely paper that brings much-needed attention to multimodal fusion strategies, with some interesting findings, but the analysis of cue combination could be deeper and more rigorous.
+- Novelty (10): 8 — While cue combination is a classic topic, applying it as a diagnostic tool for modern, black-box LLMs in this systematic way is a novel and important contribution.
+- Technical Quality (10): 6 — The experimental setup is good, but the analysis of multimodal fusion relies on basic models and draws strong conclusions from weak evidence (e.g., the random forest fit).
+- Clarity (10): 7 — The paper is well-written, but the results pertaining to the core multimodal analysis are fragmented between the main text and appendix, hindering a clear overview.
+- Confidence (5): 5 — I am an expert in multimodal learning and am confident in my assessment of the strengths and weaknesses of the cue combination analysis.

@@ -1,0 +1,105 @@
+Academic integrity and internal consistency risk report
+
+Summary
+The manuscript presents a surprise-prioritized replay (SuRe) and a dual fast–slow LoRA learner with EMA. While the empirical sections are extensive, there are several high-impact internal inconsistencies and factual mismatches that materially affect the paper’s claims and trustworthiness. Below are the main issues, each tied to explicit evidence in the manuscript.
+
+1) Core theoretical inconsistency: EMA variance term scaling contradicts claims
+- Evidence:
+  - Equation (2), Block #8: The variance term in the slow learner’s bound is C_v · (1/(1−β)) · (σ²/(μ n)).
+  - Remark after Lemma 2, Block #8: “the Slow Learner scales the variance term by (1−β)… for β = 0.995, reduces … by a factor of approximately 200.”
+  - Section 3.3, Block #13: “In our bound, B(β) = 1/(1 − β)… larger β (e.g., 0.995) means stronger averaging, reducing the effective noise…”
+- Problem:
+  - Equation (2) states the variance scales with 1/(1−β), which increases as β→1 (e.g., β=0.995 gives 1/(1−β)=200), implying larger variance, not reduced.
+  - The remark and Section 3.3 claim the opposite (variance scales with (1−β) and is reduced when β is large).
+  - This is a direct mathematical contradiction between the bound presented (Eq. 2) and the verbal interpretation.
+- Impact:
+  - Undermines the central “integration error” control argument. The claimed advantage of EMA (with large β) in reducing variance is not supported by the bound as written; either the bound or the explanation must be corrected.
+- Related empirical signal:
+  - Appendix D (Table 10), Block #51: Performance collapses at β=0.999, consistent with large β being harmful, contradicting the text that larger β reduces variance and should help.
+
+2) SOTA claims conflict with reported results and bolding conventions
+- Evidence:
+  - Abstract, Block #2: “SuRe achieves state-of-the-art performance in the Large Number of Tasks (LNT) setting and delivers the best overall average across both Standard CL and LNT benchmarks.”
+  - Table 1, Block #19: LNT avg:
+    - Slow Surprise Replay: 75.1 (bolded)
+    - ProgPrompt⋄: 78.4
+    - PerTaskFT⋄: 78.1
+    - MTL⋄: 76.3
+  - Table 1 note: “Bold indicates the best results…”
+- Problem:
+  - In LNT, ProgPrompt and PerTaskFT numerically outperform Slow Surprise Replay (78.4 and 78.1 vs 75.1). Yet the paper declares SuRe/Slow Surprise as SOTA, and bolds the SuRe variants as “best,” while higher numbers exist in the same table.
+  - The manuscript does mention ProgPrompt requires task identity at training and inference (Block #17), but the abstract’s unconditional SOTA claim and the table’s bolding do not reflect this restriction. No clear rule is stated for a filtered comparison (e.g., methods not requiring task ID).
+- Impact:
+  - The strongest empirical claim (SOTA) is not supported under the table’s own presentation and conventions, risking misleading conclusions.
+- Additional inconsistency:
+  - Standard CL columns in Table 1: MTL has 80.0 but is not bolded despite the note “Bold indicates the best results.” The bolding appears to ignore MTL and ProgPrompt without explicitly stating exclusion criteria in the caption.
+
+3) Wrong table reference in main results
+- Evidence:
+  - Section 4.2, Block #19: “we followed the hyperparameter settings reported in Cao & Wu (2025) and present the results in Table 11.”
+  - Table 2, Block #19: Contains the described comparison under Cao & Wu settings, including an “All avg” column.
+  - Table 11, Appendix E, Block #52: Is about “Sum of Surprise vs Average Surprise” in LNT and not the hyperparameter settings comparison.
+- Problem:
+  - The main results section points to Table 11 for the Cao & Wu (2025) hyperparameter comparison, but the correct table is Table 2. This misreference impedes verification and clarity.
+- Impact:
+  - Readers cannot reliably locate the claimed evidence; suggests quality-control issues in manuscript assembly.
+
+4) Dataset count mismatch and task-set inconsistency
+- Evidence:
+  - LNT description, Block #15: “adding 11 additional datasets… These datasets are: MNLI, QQP, RTE and SST-2 … WiC, CB, COPA, BoolQ, MultiRC and IMDB.” This lists 10 datasets (4 + 6), not 11.
+  - Appendix heatmaps, Block #41–#44: Include tasks such as WSC, RC, SQuAD, DROP, which are not listed in the LNT description (Block #15).
+- Problem:
+  - The text specifies 11 additional datasets but enumerates only 10; appendix figures show tasks beyond those listed. This creates uncertainty about the actual benchmark composition used in experiments.
+- Impact:
+  - Reproducibility and correctness: The exact evaluation suite appears inconsistent across sections, potentially affecting reported averages and conclusions.
+
+5) Forgetting claims misattribute which method has negative forgetting
+- Evidence:
+  - Section 4.2, Block #19: “Slow Replay maintains strong stability with negative forgetting…”
+  - Table 9, Block #50:
+    - “Slow Surprise” shows negative forgetting on both benchmarks (-2.30 and -4.80).
+    - “Replay” shows positive forgetting (3.91 and 3.83).
+- Problem:
+  - The text attributes negative forgetting to “Slow Replay,” but the table shows negative forgetting specifically for “Slow Surprise” and “Slow SB-UA” variants, not for vanilla “Replay.”
+- Impact:
+  - Misleading narrative about which variant maintains stability; readers may credit the wrong method.
+
+6) Mislabelled column in Llama results (Appendix B.2)
+- Evidence:
+  - Table 7 header, Block #48: “Standard CL Benchmark (Order-4)” alongside “Standard CL Benchmark (Order-1)” and “LNT”.
+- Problem:
+  - Orders 4–6 correspond to LNT, not Standard CL per the paper’s own ordering convention elsewhere (Table 1, Block #19).
+- Impact:
+  - Confusion about which benchmark the reported numbers belong to; undermines comparability.
+
+7) Star marker (“second best”) misuse in Table 1
+- Evidence:
+  - Table 1, LNT Order-6 column, Block #19: MoRA♦ has 72.0 marked with “∗” (second best), yet several higher entries exist (e.g., Slow Surprise Replay 75.0; ProgPrompt⋄ 77.8; PerTaskFT⋄ 78.1; MTL⋄ 76.3; Surprise Replay 71.6; LB-CL⋄ 71.8).
+- Problem:
+  - The “∗ indicates the second best” marker does not align with the reported numbers in at least this column. If filtering out certain methods, the filtering criteria are not stated.
+- Impact:
+  - Presentation inconsistency impedes correct interpretation of comparative ranking.
+
+8) Incomplete Algorithm 1
+- Evidence:
+  - Algorithm 1, Block #13: Truncated after step 6 (“Sample batch ℬ_cur ⊂ D_t”), missing key steps on mixing replay data, optimization, and EMA update per step.
+- Problem:
+  - The pseudocode lacks sufficient detail to reproduce the method directly from the main text.
+- Impact:
+  - Reproducibility risk; important for evaluating method correctness and fairness across baselines.
+
+Additional minor but relevant consistency notes
+- Section 3.3 text vs Appendix D trend: The text claims larger β reduces variance (Block #13), while Appendix D empirically shows very large β (0.999) yields poor performance (Block #51). This supports the theoretical inconsistency noted in item (1).
+- Section 4.2 phrasing, Block #18–#19: Claims “improves by over 5 percentage points compared to the previous state of the art method.” Without an explicit statement of which baseline qualifies as “previous SOTA” under identical assumptions (e.g., task-ID availability), this is not verifiable against Table 1 where ProgPrompt⋄ exceeds all SuRe variants on LNT.
+
+Recommendations for correction
+- Fix the EMA variance scaling: Align Eq. (2), Appendix H.2, Section 3.3, and remarks. If EMA reduces variance by effective window length w ≈ 1/(1−β), the variance term should scale as σ²/w = σ²·(1−β), not 1/(1−β). Alternatively, justify 1/(1−β) with clear derivation and update all interpretations accordingly.
+- Clarify SOTA scope and bolding rules: State explicitly whether methods requiring task identity at training/inference (e.g., ProgPrompt) are excluded from SOTA claims and table bolding. Update the abstract and captions to reflect this scope, or revise the SOTA claim.
+- Correct table references: Change “Table 11” to “Table 2” in Section 4.2 and ensure all cross-references match.
+- Resolve dataset count and composition: Correct the “11 additional datasets” listing (Block #15) and ensure the task sets in all figures/tables match the described benchmarks, or document the exact composition used per experiment.
+- Fix misattribution of negative forgetting: Update Section 4.2 to accurately attribute negative forgetting to the correct methods as per Table 9.
+- Correct mislabelled columns in Table 7 (Appendix B.2).
+- Audit “∗ second best” markers for consistency across Table 1 and specify any filtering criteria.
+- Provide complete pseudocode for Algorithm 1 in the main text or refer to a complete version in the appendix.
+
+If these issues are addressed, the manuscript’s theoretical and empirical claims will be clearer and more trustworthy. As it stands, the contradictions around EMA variance control and the SOTA presentation are the most critical integrity risks.

@@ -1,0 +1,211 @@
+Here are 4 independent reviews of the paper.
+
+***
+
+### **Review 1**
+
+**Summary**
+
+This paper introduces ECO, a novel framework for code runtime optimization that leverages Large Language Models (LLMs). The core idea is to move beyond simple slow-fast code pair examples and instead provide the LLM with "performance-aware prompts." ECO achieves this through a two-pronged approach: a symbolic advisor that uses Code Property Graphs (CPGs) to deterministically identify bottlenecks, and an ROI (Runtime Optimization Instruction) retriever that finds relevant, human-readable optimization rationales from a pre-distilled knowledge base. These components are combined to generate a rich prompt that guides the LLM, without requiring any model fine-tuning. The authors demonstrate through extensive experiments that ECO significantly improves the optimization capabilities of various code-LLMs, achieving substantial speedups while maintaining correctness.
+
+**Soundness**
+
+The methodology is very sound. The hybrid approach, combining deterministic symbolic analysis with flexible, LLM-based retrieval and generation, is well-conceived. The symbolic advisor's use of Joern and CPGs (Section 3.2) provides a robust, rule-based foundation for identifying common inefficiencies, grounding the optimization process in established program analysis techniques. The ROI retriever's design, which matches based on performance-related descriptions rather than raw code similarity (Section 3.3), is a clever way to improve the relevance of retrieved examples.
+
+The experimental evaluation is rigorous. The use of the gem5 cycle-accurate simulator (Section 4.1.4) for runtime measurement is a significant strength, as it provides deterministic and reliable performance data, avoiding the noise inherent in wall-clock time measurements. The ablation study (Table 3) is thorough and clearly demonstrates the complementary contributions of the symbolic advisor and the ROI retriever. The testing on both in-distribution (PIE) and out-of-distribution (Codeforces) datasets, as well as across a range of model scales including closed-source APIs (Table 4), provides strong evidence for the framework's generalizability and effectiveness.
+
+**Presentation**
+
+The paper is exceptionally well-written and organized. The motivation is clearly articulated in the introduction, and Figure 1 provides an excellent, intuitive comparison of ECO's approach versus conventional methods. The overall framework is clearly depicted in Figure 2, which effectively illustrates the data flow between the different components (ROI Distillation, Symbolic Advisor, ROI Retriever). The sections are logically structured, guiding the reader from the high-level concept to the detailed implementation and evaluation. The appendix provides ample detail on the prompts (Appendix A.1), symbolic advisor rules (Appendix A.2), and experimental setup (Appendix B), which is crucial for reproducibility.
+
+**Contribution**
+
+The paper makes a significant contribution to the field of LLM-based code optimization. Its primary contribution is the concept of "performance-aware prompting," which shifts the paradigm from imitation of code pairs to reasoning based on explicit optimization instructions. By successfully integrating symbolic analysis (a classic compiler/SE technique) with modern LLMs in a zero-shot, model-agnostic framework, the authors present a practical and powerful solution to a challenging problem. The impressive results, especially the nearly 4x improvement over standard prompting on GPT-o4-mini (Table 4), highlight the real-world impact of this contribution.
+
+**Strengths**
+
+1.  **Hybrid Architecture:** The combination of a deterministic, rule-based symbolic advisor and a flexible, semantics-aware ROI retriever is a major strength. This design leverages the best of both worlds: precision from symbolic analysis and contextual breadth from LLM-driven retrieval.
+2.  **Model-Agnostic and Zero-Shot:** ECO's design as a plug-in prompting framework that requires no fine-tuning makes it highly practical and immediately applicable to new and existing models, including powerful closed-source ones.
+3.  **Strong Empirical Validation:** The use of a cycle-accurate simulator (gem5), a comprehensive set of baselines, thorough ablation studies, and evaluation across multiple datasets and models provides convincing evidence of ECO's effectiveness and robustness.
+4.  **Clarity of Explanation:** The paper does an excellent job of explaining a complex system in a clear and intuitive manner, aided by well-designed figures and concrete examples.
+
+**Weaknesses**
+
+1.  **Scalability of Symbolic Rules:** The symbolic advisor relies on a manually curated set of rule-template pairs derived from clustered ROIs (Section 3.2). While effective for the demonstrated categories, the paper does not discuss the effort required to create these rules or how this approach would scale to other programming languages or more diverse and complex optimization types.
+2.  **Dependence on High-Quality Reference Pairs:** The entire framework is bootstrapped from the PIE HQ dataset of slow-fast code pairs. The quality and diversity of these initial pairs seem critical for both ROI distillation and the symbolic rule creation. The framework's performance might be sensitive to the quality of this reference dataset.
+
+**Questions**
+
+1.  The symbolic advisor's rules are manually created from clustered ROIs. Could you elaborate on the complexity of this process? How many person-hours did it take to develop the current rule set, and do you foresee a way to automate or semi-automate this rule generation in the future?
+2.  The framework uses three different models: a reasoning model for distillation, an embedding model for retrieval, and an inference model for generation (Section 4.1.1). Have you explored consolidating these roles, for instance, by using the same powerful model for all three tasks? What are the trade-offs in terms of performance and cost/latency?
+3.  The analysis of bottlenecks in Figure 4 (left) shows that "Library usage" is the most common category. Does this mean that the symbolic advisor is the most critical component, as many of these (like I/O) are captured by its rules? How does the performance break down by bottleneck category?
+
+**Rating**
+
+- Overall (10): 9 — The paper presents a novel, well-executed, and highly effective framework with strong empirical backing and significant practical implications.
+- Novelty (10): 9 — The concept of performance-aware prompting, combining symbolic analysis and performance-centric retrieval, is a novel and significant departure from standard pair-based guidance.
+- Technical Quality (10): 10 — The technical execution is excellent, featuring a robust hybrid architecture and a rigorous evaluation methodology using cycle-accurate simulation (Section 4.1.4).
+- Clarity (10): 10 — The paper is exceptionally clear, with excellent figures (e.g., Fig. 1, Fig. 2) and a logical structure that makes the complex framework easy to understand.
+- Confidence (5): 5 — I am an expert in this area and am highly confident in my assessment of the paper's strengths and contributions.
+
+***
+
+### **Review 2**
+
+**Summary**
+
+The paper proposes ECO, a framework to improve code optimization with code-LLMs. The method avoids fine-tuning by constructing a complex prompt. This prompt is generated by two main components: a "symbolic advisor" that uses static analysis to find predefined inefficiency patterns in the input code, and an "ROI retriever" that finds similar past optimization examples. The key idea is that instead of retrieving examples based on code similarity, ECO retrieves them based on similarity between textual descriptions of performance bottlenecks. The authors claim this "performance-aware prompting" leads to significant speedups over baseline prompting methods.
+
+**Soundness**
+
+The methodological soundness of the paper is questionable due to its complexity and reliance on several heuristics and manual steps.
+
+1.  **ROI Distillation:** The process of creating "Runtime Optimization Instructions" (ROIs) relies on prompting another LLM (Section 3.1). This introduces a potential source of noise and inconsistency. The quality of the entire downstream pipeline depends on the ability of this "reasoning model" to generate accurate and useful instructions, which is not systematically evaluated.
+2.  **Symbolic Advisor:** This component is based on manually clustered ROIs which are then translated into formal rule-template pairs (Section 3.2). This manual engineering effort seems substantial and non-scalable. It limits the advisor to a fixed set of predefined patterns, and its generalizability to new types of optimizations is not guaranteed.
+3.  **ROI Retriever:** The retriever's effectiveness hinges on the idea that an LLM can generate a good "performance-related" description of the input code, and that this description's embedding will align well with the embeddings of the pre-distilled ROIs (Section 3.3). This is an interesting idea, but it adds another layer of LLM-based generation, increasing the potential for error propagation.
+
+The experimental setup, while using some strong tools like gem5, presents results that are hard to interpret. For example, the `w/o RR+SA` ablation (Table 3) is described as being similar to RAG but performs significantly worse (2.26x SP vs RAG's 2.51x SP at Best@5), which contradicts the claim that adding ROIs is beneficial. This suggests that simply adding more text (the ROI) to a prompt can be distracting if not perfectly relevant.
+
+**Presentation**
+
+The paper is dense and presents the framework as a complex multi-stage pipeline (Figure 2). While the figures are polished, they can also obscure the fact that this is fundamentally a very elaborate prompt engineering technique. The distinction between ECO and a sophisticated RAG system is blurred. The text often uses bespoke terminology ("performance-aware prompting", "runtime optimization instructions") for concepts that are arguably incremental extensions of existing ideas (e.g., generating a summary for retrieval, adding chain-of-thought-like explanations to few-shot examples). Figure 3 is confusingly referenced in the text as a table, and its layout is difficult to parse.
+
+**Contribution**
+
+The paper's contribution appears to be incremental. The core idea is to enhance retrieval-augmented generation (RAG) by changing the retrieval key from code embeddings to embeddings of LLM-generated performance analyses. While this is a valid engineering choice, it does not feel like a fundamental breakthrough. The other component, the symbolic advisor, is a form of classic static analysis/linting, and its integration is a system-building contribution rather than a novel research one. The claim of moving "beyond raw slow–fast code pairs" (Section 8) is overstated, as the framework is still fundamentally bootstrapped from and reliant on these exact pairs.
+
+**Strengths**
+
+1.  **Good Performance on Closed-Source Models:** The framework demonstrates impressive performance gains when applied to powerful models like GPT-o4-mini (Table 4), showing its practical utility as a prompting strategy.
+2.  **Ablation Study:** The paper includes a detailed ablation study (Table 3) that attempts to disentangle the effects of its different components, which is valuable for understanding the system's behavior.
+
+**Weaknesses**
+
+1.  **High System Complexity:** ECO is not a simple "plug-in" framework. It requires a CPG analysis tool (Joern), a separate reasoning model, an embedding model, and a manually curated set of rules. This complexity is a significant barrier to adoption and reproducibility compared to simpler prompting techniques.
+2.  **Significant Manual Effort:** The symbolic advisor relies on manually created rules from clustered ROIs (Section 3.2). This process is subjective, labor-intensive, and not easily scalable to new optimization types or languages, limiting the generalizability of the approach.
+3.  **Potential for Error Propagation:** The multi-stage pipeline (distillation -> analysis -> retrieval -> generation) is susceptible to compounding errors. A poorly distilled ROI or an inaccurate performance analysis can lead the retriever and the final LLM astray.
+4.  **Unclear Novelty:** The work is positioned as a new paradigm, but can also be viewed as a complex combination of existing techniques: static analysis, RAG with a different query formulation, and prompt engineering. The conceptual leap is not as large as suggested.
+
+**Questions**
+
+1.  The manual creation of rules for the symbolic advisor is a major concern for scalability. Can you quantify the effort involved? How many rules were created, and how would one go about extending this to, for example, Python code optimization?
+2.  The `w/o RR+SA` ablation in Table 3 performs worse than the RAG baseline in Table 2. The text claims this suggests ungrounded ROIs can hinder optimization. Could you elaborate on this? Does this imply that the ROI distillation process itself is noisy and the retrieved ROIs are often more harmful than helpful without the guidance of the other modules?
+3.  How sensitive is the ROI retriever's performance to the choice of the "reasoning model" used to generate the performance analysis of the input code at inference time (Section 3.3)? Did you experiment with different models for this step?
+
+**Rating**
+
+- Overall (10): 5 — The paper presents a complex system with good results, but the novelty is incremental and the methodology has significant practical limitations regarding complexity and manual effort.
+- Novelty (10): 4 — The core ideas are extensions of RAG and integration of static analysis, rather than a fundamentally new approach to code optimization.
+- Technical Quality (10): 6 — The system is technically complex and relies on several un-evaluated heuristics (e.g., ROI distillation quality) and manual steps, and some experimental results are counter-intuitive (Table 3).
+- Clarity (10): 7 — The paper is well-written, but the complex architecture and bespoke terminology can make it difficult to discern the core novel contributions from clever engineering.
+- Confidence (5): 4 — I have a strong background in machine learning for code and feel confident in my assessment of the paper's novelty and methodological weaknesses.
+
+***
+
+### **Review 3**
+
+**Summary**
+
+This paper presents ECO, a framework designed to enhance code optimization for large language models. ECO operates without fine-tuning by constructing a detailed prompt for a code-LLM. The prompt is built from two sources: (1) a "symbolic advisor" that uses static analysis on a Code Property Graph to detect specific, rule-based performance bottlenecks, and (2) an "ROI retriever" that finds relevant examples by matching an LLM-generated performance analysis of the input code against a database of pre-extracted "Runtime Optimization Instructions" (ROIs). The authors evaluate ECO on C++ code optimization tasks, showing that it substantially improves runtime speedup compared to various baseline prompting and optimization methods.
+
+**Soundness**
+
+The methodology is generally sound and the authors have made commendable efforts to ensure a rigorous evaluation.
+-   **Evaluation Metrics & Tools:** The use of gem5 for cycle-accurate simulation (Section 4.1.4) is a major strength that ensures reliable and reproducible speedup measurements, a common pitfall in this area. The choice of metrics (ACC, SP, OPT) is standard and appropriate.
+-   **Dataset Curation:** The authors' careful curation of the PIE test set to rebalance the problem distribution and de-duplicate test cases (Appendix C.1) is a thoughtful and important step that strengthens the validity of the results. Creating a new OOD benchmark from Codeforces further enhances the evaluation.
+-   **Ablation Study:** The ablation study in Table 3 is well-designed and provides clear insights into the contributions of the symbolic advisor (SA) and ROI retriever (RR).
+
+However, there are a few points that raise concerns or require clarification:
+1.  **Ablation vs. Baseline Discrepancy:** In Table 3, the `w/o RR+SA` ablation is described as being analogous to RAG but with the addition of an ROI. Surprisingly, it performs worse than the RAG baseline from Table 2 (e.g., Best@5 SP of 2.26x vs 2.51x). The paper's explanation that "ungrounded ROIs... can even introduce mismatches" (Section 4.3) is plausible but brief. This is a key result that seems to undermine the value of ROIs in isolation and needs a more thorough analysis.
+2.  **Baseline Performance:** The performance of some baselines, particularly Supersonic and SBLLM, is extremely poor (Table 2, Figure 3). Supersonic has a 7% accuracy and SBLLM has a 21% accuracy at Best@1. While the authors attribute this to malformed patches and semantic drift, the results are so low that they raise questions about the faithfulness of the re-implementations. For instance, Supersonic's 89.9% error rate (Figure 3) is shocking. A more detailed discussion of potential discrepancies with the original papers' setups would be beneficial.
+3.  **ROI Distillation Model:** The ROI distillation uses DeepSeek-r1:32b in a quantized Q4_K_M configuration (Appendix A.1). The quality of these distilled ROIs is paramount for the entire system. It's unclear how robust this distillation process is and whether a lower-quality model or different quantization would significantly degrade the knowledge base.
+
+**Presentation**
+
+The paper is well-structured and generally easy to read. The figures, especially Figure 1 and the appendix examples (Figs 6-9), are very helpful. However, there are some minor presentation issues:
+-   The caption for Figure 3 ("Detailed analysis of errors...") does not match the figure itself, which is a stacked bar chart showing the distribution of outcomes. The text in Section 4.5 refers to it as a table initially, which is confusing. The figure itself (reproduced in Appendix D as Figure 33) is hard to read due to the number of categories and small text.
+-   The right-hand table in Figure 4 is interesting but the methodology for its creation is described very briefly. A clearer explanation of how "overlapping keywords" are identified and how TF-IDF scores are averaged would be helpful.
+-   The paper uses future dates for two references: Gao et al. (2025) and Free Software Foundation (2025). This is unusual and should be clarified (e.g., if they are forthcoming publications).
+
+**Contribution**
+
+The paper makes a solid engineering contribution by designing and thoroughly evaluating a complex but effective system for code optimization. The main contribution is the demonstration that a carefully constructed, multi-faceted prompt incorporating both symbolic analysis and performance-centric retrieval can significantly boost LLM performance on this task. While the individual components are not entirely new (static analysis, RAG), their synthesis into the ECO framework is novel and the results are compelling.
+
+**Strengths**
+
+1.  **Rigorous Evaluation:** The use of gem5, curated datasets, and extensive experiments across models and settings is a key strength.
+2.  **Strong Ablation Analysis:** The ablation study in Table 3 clearly justifies the two-component design of ECO.
+3.  **Practicality:** The model-agnostic, zero-shot nature of the framework makes it highly practical for real-world use with state-of-the-art LLMs.
+
+**Weaknesses**
+
+1.  **Unexplained Experimental Results:** The underperformance of the `w/o RR+SA` ablation compared to the RAG baseline is a significant, under-explained finding.
+2.  **Potentially Unfair Baseline Comparisons:** The extremely poor performance of Supersonic and SBLLM may be due to implementation artifacts rather than fundamental flaws in the methods, which could weaken the claims of ECO's relative superiority.
+3.  **Hidden Complexities:** The paper emphasizes the "plug-in" nature of ECO, but the dependency on Joern and a manually curated rule set is a non-trivial setup cost.
+
+**Questions**
+
+1.  Could you provide a more detailed analysis of why the `w/o RR+SA` ablation (Table 3) performs worse than the RAG baseline (Table 2)? Does this suggest that the retrieved ROIs are often low-quality or distracting, and only become useful when "grounded" by the other ECO modules?
+2.  Regarding the Supersonic baseline, an 89.9% error rate (Figure 3) is exceptionally high. Can you confirm if this is consistent with the results in the original Supersonic paper under a similar setting? Or could there be an issue with applying the generated patches in your pipeline?
+3.  The symbolic advisor is based on rules derived from the PIE HQ dataset. How well do you think these rules generalize to the OOD Codeforces dataset? The left side of Figure 4 shows a different distribution of bottlenecks for Codeforces vs. PIE, suggesting the rules' applicability might vary.
+
+**Rating**
+
+- Overall (10): 8 — A strong paper with a well-engineered system and impressive results, held back slightly by a few unclear experimental findings and potentially weak baseline comparisons.
+- Novelty (10): 7 — The synthesis of existing techniques is novel and effective, but the core conceptual components are not entirely new.
+- Technical Quality (10): 8 — The evaluation is mostly high-quality (gem5, dataset curation), but the unexplained ablation result and extremely low baseline performances are minor red flags.
+- Clarity (10): 8 — Generally very clear, but with some minor confusing points in the presentation of figures and results.
+- Confidence (5): 5 — I am very familiar with research in this area and am confident in my evaluation.
+
+***
+
+### **Review 4**
+
+**Summary**
+
+This paper introduces ECO, a performance-aware prompting framework to help code-LLMs optimize code for runtime efficiency. Instead of just showing an LLM a slow and fast code example, ECO constructs a more informative prompt. It does this in two ways: first, a "symbolic advisor" analyzes the input code's structure to find specific bottlenecks (like slow I/O or inefficient loops) and generates a diagnosis. Second, an "ROI retriever" finds a relevant past optimization example, not by code similarity, but by matching a performance analysis of the input code with pre-extracted "Runtime Optimization Instructions" (ROIs). The paper shows that this combined prompt significantly boosts the performance of various LLMs, from open-source models to GPT-4 variants, without any model retraining.
+
+**Soundness**
+
+The overall approach is logically sound and well-motivated. The central premise—that LLMs need explicit guidance on *why* an optimization works, not just *what* the transformation looks like—is compelling. The two-module design is clever: the symbolic advisor provides high-precision, deterministic feedback on known anti-patterns, while the ROI retriever provides more flexible, context-aware guidance based on a semantic understanding of performance issues.
+
+The experimental methodology is robust. The authors' decision to use gem5 (Section 4.1.4) for performance measurement is commendable and adds a high degree of credibility to the reported speedups. The ablation study (Table 3) is particularly insightful, showing that both modules contribute meaningfully and that their combination is synergistic. The results showing scalability with model size and applicability to closed-source models (Table 4) are very strong evidence for the framework's utility.
+
+**Presentation**
+
+The paper is exceptionally well-presented. It is clearly written, logically structured, and easy to follow despite the complexity of the framework. The figures are a standout feature:
+-   **Figure 1** is a perfect introductory example that immediately sells the core idea of the paper. It clearly contrasts the vague guidance of conventional retrieval with the actionable, specific guidance from ECO.
+-   **Figure 2** provides a clean, high-level overview of the entire architecture, making it easy to understand how the different pieces fit together.
+-   The figures in the appendix (e.g., **Figures 6, 7, 8, 9**) provide concrete, easy-to-understand examples of how the symbolic advisor works for different bottleneck categories.
+
+The use of the appendix to house implementation details is appropriate and keeps the main body focused on the core concepts and results.
+
+**Contribution**
+
+The paper's primary contribution is the introduction and successful validation of "performance-aware prompting." This is a novel and important concept that moves beyond the limitations of standard in-context learning and RAG for the specialized task of code optimization. By creating a system that can explicitly reason about performance bottlenecks and communicate that reasoning to an LLM, the authors have developed a highly effective and practical tool. The fact that it is model-agnostic and requires no fine-tuning makes the contribution even more significant and immediately useful to the community.
+
+**Strengths**
+
+1.  **Excellent Motivation and Intuition:** The paper does a fantastic job of motivating the problem and building intuition for its solution, particularly through Figure 1.
+2.  **Elegant Two-Module Design:** The symbolic advisor and ROI retriever are complementary, addressing the optimization problem from both a precise, rule-based perspective and a broad, semantic one.
+3.  **Impressive Empirical Results:** The performance gains are substantial and consistent across different models, model sizes, and datasets, with the 7.81x speedup on GPT-o4-mini (Table 4) being a particularly striking result.
+4.  **High Clarity and Readability:** The paper is a pleasure to read. The concepts are explained clearly, and the visual aids are highly effective.
+
+**Weaknesses**
+
+1.  **Minor Naming/Reference Inconsistencies:** There are a few minor but noticeable inconsistencies. The paper uses both "GPT-4o-mini" and "GPT-o4-mini" to refer to the same model (Section 4.4, Table 4), which could cause confusion. Is "GPT-o4-mini" a typo or a distinct model? Similarly, several references point to the year 2025 (e.g., Gao et al., 2025; Free Software Foundation, 2025), which is unusual for a publication and should be checked.
+2.  **ROI Distillation as a Black Box:** The quality of the entire system depends on the initial ROI distillation step (Section 3.1). While the prompt template is provided, the process feels a bit like magic. An analysis of the quality, consistency, or potential failure modes of this distillation step would strengthen the paper. For example, what happens if the reasoning model hallucinates or provides a poor-quality ROI?
+
+**Questions**
+
+1.  Could you please clarify the model names used in Section 4.4 and Table 4? Is "GPT-o4-mini" a typo for "GPT-4o-mini", or are they two different models? The performance difference between them is quite large, so this is an important detail.
+2.  The references for Gao et al. (2025) and GCC (Free Software Foundation, 2025) are cited with a future year. Are these pre-prints of upcoming conference papers or documentation versions? It would be helpful to clarify their status.
+3.  The ROI retriever works by matching an LLM-generated analysis of the input code against the ROI database. How much does the performance of ECO depend on the quality of this initial analysis? For example, if the inference model used for this step is weak (e.g., the 3B model), does it generate a poor analysis that in turn leads to poor retrieval and poor final optimization?
+
+**Rating**
+
+- Overall (10): 9 — An excellent paper presenting a novel, practical, and highly effective solution to an important problem, with outstanding presentation and strong results.
+- Novelty (10): 9 — The concept of "performance-aware prompting" and the specific two-module architecture for achieving it are highly novel and insightful.
+- Technical Quality (10): 9 — The technical approach is sound and the experimental validation is very strong, with only minor questions about the initial distillation step.
+- Clarity (10): 10 — The paper is exceptionally clear, well-organized, and supported by excellent figures and examples that make the work easy to understand and appreciate.
+- Confidence (5): 5 — I am highly confident in my review. I have expertise in both software engineering and LLMs for code.

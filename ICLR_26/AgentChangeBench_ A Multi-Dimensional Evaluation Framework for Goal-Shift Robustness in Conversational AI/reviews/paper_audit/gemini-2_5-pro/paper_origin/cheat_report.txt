@@ -1,0 +1,49 @@
+Based on a critical review of the manuscript, several major internal inconsistencies and integrity risks have been identified. These issues span the abstract, methodology, results, and appendix, and materially affect the trustworthiness and scientific validity of the work.
+
+### **Integrity Risk Report**
+
+**1. Reporting of Results for an Experiment Explicitly Stated as Not Performed (Critical Integrity Risk)**
+
+There is a direct and irreconcilable contradiction regarding the evaluation of the Gemini-2.5-Flash model on new airline tasks.
+
+*   **The Claim:** The main results in Table 5 ("Goal-shift sensitivity on new tasks only") and the "Failure modes" section explicitly report a key finding: "On airline-new, Gemini recovers only 48.6% of goal shifts" (Block #24, Block #27). This specific numerical result is used to draw a strong comparative conclusion against GPT-4o.
+*   **The Contradiction:** The appendix, in Section D.4, unequivocally states that this experiment was not conducted. The text reads: "GSRT is not reported for Airline-new with Gemini-2.5-Flash due to insufficient credits to assess the recovery simulations" (Block #83). This is corroborated by Table 10, which shows "— / — / —" for the corresponding GSRT entry (Block #85).
+
+**Conclusion:** The manuscript reports a precise numerical result (48.6%) for an experiment that the authors explicitly state they did not run due to budget limitations. This represents a critical integrity issue, as a central finding appears to be presented without an empirical basis.
+
+**2. Pervasive and Major Inconsistencies in Dataset Size and Composition**
+
+The manuscript presents multiple conflicting accounts of the benchmark's size and structure, undermining the reproducibility and credibility of the dataset itself.
+
+*   **Abstract vs. Main Body:** The abstract claims the benchmark "comprises 2,835 task sequences" (Block #2). However, the introduction, methodology, results, and conclusion sections all consistently state the benchmark contains "315 tasks" (Blocks #4, #8, #9, #29, #31, #34, #100). This is a discrepancy of nearly an order of magnitude that is never explained.
+*   **Total Task Count vs. Persona Distribution:** The paper repeatedly states a total of 315 tasks, broken down by domain (50 Banking, 100 Airline, 165 Retail) (Block #8). However, Table 8 in the appendix, which purports to show the "number of tasks per persona," lists task counts that sum to only 201 (33+34+69+34+31) (Block #81). This is a significant and unexplained conflict regarding the total number of tasks in the benchmark.
+*   **Contradiction in New Task Creation:** The methodology states that "50 newly generated scenarios across airline and retail" were contributed (Block #9). However, the same section provides numbers implying 101 new scenarios were created: the 100 airline tasks include 50 reused templates (implying 50 new), and the 165 retail tasks include 114 reused templates (implying 51 new). 50 + 51 ≠ 50.
+
+**3. Contradictory Numerical Results Presented Across Different Tables**
+
+Key performance metrics for the same experiment are reported with different values in different tables, making it impossible to ascertain the correct results.
+
+*   **TSR for Claude-3.7-Sonnet on Retail (New) Tasks:**
+    *   Table 5 states it reports on "new tasks only" and gives a TSR of **79.57%** for Claude on Retail tasks (Block #27).
+    *   Table 9, the detailed results table in the appendix, shows that the TSR for Claude on Retail "**New**" tasks is **61.58%**, while the TSR on Retail "**Old**" tasks is **79.57%** (Block #85).
+    *   This is a direct contradiction. Table 5 misrepresents the performance on old tasks as performance on new tasks, significantly inflating the model's capability on the novel portion of the benchmark.
+
+*   **Inconsistent Aggregation in Summary Table:**
+    *   Table 4 claims to present TSR values "averaged over old+new where applicable" (Block #26).
+    *   This claim is inconsistent. For Airline/GPT-4o, the value (62.19%) correctly corresponds to the average of the "Old" and "New" values from Table 9. However, for Retail/Claude-3.7-Sonnet, the value (79.57%) is not an average; it is identical to the "Old" task value from Table 9, again misrepresenting the overall performance.
+
+**4. Mismatch Between Figures and Source Data Tables**
+
+Visualizations of results do not align with the detailed numerical data they supposedly represent.
+
+*   **Figure 1 vs. Table 10:** The caption for Figure 1 ("Goal-Shift Recovery Rate") states its data is from "Appendix Tables 10, 5" and is "Aggregated over all tasks" (Block #4). However, the values plotted in the figure (e.g., 85.0% for Claude on Airline) cannot be derived from a weighted average of the "Old" and "New" task recovery rates reported in Table 10 (which would be 87.2%) (Block #6, Block #85). Multiple values in the figure show similar mismatches with the source data.
+
+**5. Unsubstantiated Claims Due to Missing Evidence**
+
+The manuscript makes claims about performance dimensions for which no supporting data is ever presented.
+
+*   **Claim of "Fastest" Recovery:** The conclusion states that "Claude-3.7-Sonnet recovers fastest" (Block #35). The metric for recovery speed is defined as GSRT (Goal-Shift Recovery *Time*), measured in turns (Block #22). However, all tables and figures in the manuscript report only the Goal-Shift Recovery *Rate* (a percentage), not the time or number of turns. Without data on recovery latency, the claim of being "fastest" is unsubstantiated.
+
+### **Summary Recommendation**
+
+The manuscript contains multiple, severe internal contradictions, including the reporting of a key result for an experiment that was explicitly not performed. This, combined with fundamental inconsistencies in the dataset's description and contradictory reporting of other key results, constitutes a critical risk to scientific integrity. The work, in its current form, is not trustworthy. These issues must be fully resolved and clarified before the manuscript can be considered for publication.

@@ -1,0 +1,48 @@
+Based on a critical review of the manuscript, the following report details a significant internal inconsistency that impacts the paper's scientific clarity and reproducibility.
+
+### **Integrity and Consistency Report**
+
+**Summary of Findings:**
+
+The manuscript presents a coherent and logically consistent framework for classifying and evaluating memory in Reinforcement Learning agents. The definitions, theorems, and the main experimental results in Section 6 appear to logically follow from the proposed methodology. However, a critical inconsistency was identified between the description of the experimental environment in the appendix and the results presented in the main body of the paper. This issue materially affects the reproducibility and trustworthiness of a key experiment.
+
+---
+
+### **Major Inconsistency: Contradictory Description of the Reward Function**
+
+**1. The Issue:**
+The description of the **Passive T-Maze** environment in Appendix E.1 presents conflicting information about the reward function, and the described dense reward structure is inconsistent with the numerical results reported in the main experiment (Figure 5).
+
+**2. Evidence from the Manuscript:**
+
+*   **Conflicting Descriptions in Appendix:** Appendix E.1 (Block #47) provides two different reward structures for the Passive T-Maze environment:
+    1.  **Sparse Reward:** "A correct turn yields a reward of 1, while an incorrect turn results in a reward of 0."
+    2.  **Dense Reward:** "To transition from a sparse reward function to a dense reward function, the environment is parameterized using a penalty defined as penalty = $-\frac{1}{T-1}$, which imposes a penalty on the agent for each step taken within the environment."
+
+    The text does not clarify which of these two reward functions was used for the experiments reported in Section 6.2.
+
+*   **Inconsistency with Reported Results:** The experimental results for the Passive T-Maze environment are shown in Figure 5 (composed of plots from Blocks #31, #32, #33).
+    *   In the successful Short-Term Memory (STM) settings (`K=15, ξ=15` and `K=5, ξ=5`), the reported "Return" on the y-axis converges to **1.0**.
+    *   In the failed Long-Term Memory (LTM) setting (`K=5, ξ=15`), the reported "Return" converges to **0.5**, which corresponds to random guessing between two choices.
+
+    These numerical results are only consistent with the **sparse reward** scheme ({0, 1} final reward). If the **dense reward** scheme with the per-step penalty had been used, the maximum possible return for a correct action would be `1 - (T-1) * (1/(T-1)) = 0`. The return for a random policy would be approximately `0.5 * (0) + 0.5 * (-1) = -0.5` (assuming an incorrect action gives a final reward of 0 and thus a total return of -1). The reported returns of 1.0 and 0.5 directly contradict the dense reward formulation described in the appendix.
+
+**3. Impact on the Paper:**
+
+The reward function is a fundamental component of a Reinforcement Learning experiment. The ambiguity and direct contradiction between the appendix and the results section create a significant problem for the paper's scientific validity:
+*   **Reproducibility:** Other researchers cannot reliably reproduce the results of Experiment 6.2 without knowing the exact reward function used.
+*   **Clarity and Correctness:** The manuscript contains a clear factual inconsistency between its description of methods and its reported results. This undermines confidence in the care with which the experiments were conducted and reported.
+
+---
+
+**Conclusion:**
+
+While the theoretical framework proposed in the paper is internally consistent and the main arguments are well-supported by the structure of the experiments, the contradiction regarding the Passive T-Maze reward function is a serious flaw. This issue needs to be addressed by clarifying which reward function was used and ensuring that the manuscript's description is consistent with the presented data across all sections.
+
+**Recommendation:**
+
+The authors should be required to resolve this inconsistency. They must provide a single, unambiguous description of the reward function used for the Passive T-Maze experiments in Section 6.2 and ensure that this description aligns with the results shown in Figure 5.
+
+***
+
+*No other clear internal inconsistencies or integrity risks were identified in the manuscript. The logical flow from definitions to experimental validation is otherwise sound.*

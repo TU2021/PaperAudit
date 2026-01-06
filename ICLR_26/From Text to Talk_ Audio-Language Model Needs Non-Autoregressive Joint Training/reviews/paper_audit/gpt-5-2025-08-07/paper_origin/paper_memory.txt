@@ -1,0 +1,119 @@
+# Global Summary
+The paper introduces Text-to-Talk (TtT), a unified audio–text framework that jointly trains autoregressive (AR) text generation and non-autoregressive (NAR) audio generation via absorbing discrete diffusion within a single Transformer. It targets speech-in/speech-out conversational systems, arguing that text tokens exhibit target–target causal dependencies while audio tokens are primarily source–target dependent on text, making diffusion more suitable for audio. The method uses modality-aware attention (causal for text, bidirectional within audio spans, causal across spans) and three training strategies to reduce train–test discrepancies: Batchwise AR–NAR Objective Mixing (BANOM), Prefix Preservation Masking (PPM), and Stochastic Span Truncation (SST). Inference alternates AR text with block-wise diffusion audio synthesis, enabling parallel audio generation and streaming.
+
+Evaluation focuses on Audio-QA (assessed via ASR transcription plus LLM-as-a-Judge) and ASR (WER). Backbones are Qwen2.5-Base at 1.5B and 3B parameters. Main quantitative results (Table 1): at 3B, TtT achieves Audio-QA scores of "17.46" (AlpacaEval), "34.68" (LLaMAQuestions), "6.53" (TriviaQA), "11.61" (WebQuestions), outperforming the AR-only baseline by +3.04, +24.68, +5.93, and +10.91 respectively. For ASR, TtT-3B yields WER "12.53" (AISHELL-2) and "13.65" (AISHELL-1), improving over AR baseline by 42.41 and 58.36 absolute WER points. Ablations show removing BANOM, PPM, or SST degrades performance; removing SST drops LLaMAQuestions from "34.68" to "10.20". Large-scale multimodal pretraining (≈200B tokens; batch size 256; 140k steps) further boosts performance: Pretrain+TtT achieves LLaMAQuestions "40.07", TriviaQA "11.07", WebQuestions "21.43", and AISHELL-1 WER "5.78". Training uses AdamW; global batch "2048"; LR "2e-5"; weight decay "1e-2"; warmup "0.01"; training strategies probabilities p_mix "0.3", p_prefix "0.3", p_trunc "0.5". Inference uses nucleus sampling (k "10", p "0.95"), diffusion steps "200", block length "32", total diffusion span "640", CFG scale "0.1". Compute: 4 nodes × 8 A100 GPUs; DeepSpeed.
+
+Explicit caveats: Audio-QA evaluation relies on an ASR-then-LLM-as-a-Judge pipeline rather than direct human evaluation; several dataset sample counts are not fully specified; number of runs, variance, and error bars are not reported in the main text.
+
+# Abstract
+- Problem: Existing autoregressive multimodal models treat text and audio symmetrically, ignoring that text has target–target dependencies while audio is source–target dependent, causing suboptimal training and error propagation.
+- Approach: TtT integrates AR text generation with NAR audio diffusion using absorbing discrete diffusion within one Transformer. Unified training leverages any-order autoregressive property of diffusion; modality-aware attention enforces causal text decoding and bidirectional modeling within audio spans; three training strategies reduce train–test discrepancies.
+- Inference: Block-wise diffusion for parallel audio synthesis; flexible variable-length outputs.
+- Results: Extensive experiments on Audio-QA and ASR show effectiveness; ablations validate each component.
+- Open-source: Models, data, and code will be released.
+
+# Introduction
+- Context: Transition from cascaded ASR–LLM–TTS pipelines to end-to-end models (e.g., Moshi, GLM4-Voice, VITA-Audio) that autoregressively generate interleaved text and speech tokens decoded by codecs/diffusion decoders.
+- Identified challenge: Autoregressive objectives for both modalities ignore distinct generative structures—text requires causal target–target dependencies; audio generation depends on source text (source–target), and AR constraints magnify exposure bias and error propagation for audio.
+- Proposed solution: Use non-autoregressive discrete diffusion for audio; leverage theory that absorbing discrete diffusion connects to any-order AR objectives.
+- Contributions:
+  - Formalizes text vs. audio dependency asymmetry; proves unified objective upper-bounds the NLL of the desired joint distribution via any-order AR properties of absorbing diffusion.
+  - Proposes TtT: hybrid AR (text) + discrete diffusion (audio) in a single LLM-initialized Transformer.
+  - Introduces three training strategies: BANOM, PPM, SST to mitigate train–test discrepancies and enable robust variable-length audio generation.
+  - Empirically outperforms strong AR and NAR baselines on ASR and Audio-QA; ablations validate components.
+- Figures: Figure 1 illustrates modality dependencies and last audio span length variability.
+
+# Preliminaries
+- Tokens and layout: Interleaved sequence x of length L over unified vocabulary 𝒱 = 𝒱_text ∪ 𝒱_audio ∪ 𝒮; special tokens include ⟨SOA⟩, ⟨EOA⟩, ⟨EOS⟩, absorbing mask [M]. Sequence alternates text spans 𝒯_m and audio spans 𝒜_m. Single Transformer f_θ with shared output head W over 𝒱.
+- Autoregressive modeling: p(x) = ∏ p(x^i | x^{<i}); trained by minimizing NLL via per-position cross-entropy.
+- Absorbing discrete diffusion:
+  - Forward process: Continuous-time Markov chain with Q_t = σ(t) Q^{abs}; Q^{abs} masks tokens to [M] at rate σ(t); [M] is absorbing; masking probability λ(t) = 1 − e^{−∫ σ(s) ds}.
+  - Reverse process: Transition rates relate via concrete score p_t(·)/p_t(·); only reverse transitions from [M] → vocabulary tokens.
+  - Time-independent score: Concrete score decomposes into time scalar e^{−\barσ(t)}/(1 − e^{−\barσ(t)}) and time-independent clean conditional p_0(v | UM); objective reduces to denoising masked positions based on unmasked context.
+  - Equivalence: λ-denoising cross-entropy equals Any-Order Autoregressive Model (AO-ARM) objective: L_AO(x_0) = E_{π} ∑ -log q_θ(x_0^{π(l)} | x_0^{π(<l)}), enabling parallel generation.
+
+# Method
+- 3.1 AR modeling for text:
+  - Left-to-right order π_text over text positions; span probability p_θ(𝒯_m | 𝒯_{<m}, 𝒜_{<m}) factorized over tokens (Eq. 6–7).
+  - Loss: causal cross-entropy over text positions, L_AR (Eq. 8).
+- 3.2 Absorbing diffusion for audio:
+  - Mask only audio positions; sample masking level λ ~ U([0,1]); mask each audio token with probability λ; text remains intact.
+  - Parallel masking across all audio spans per sample.
+  - Audio objective: λ-DCE over audio spans (Eq. 9); equivalent AO-ARM form (Eq. 10) averaging over permutations within span.
+- 3.3 Multimodal factorization & unified objective:
+  - Partial-order design: text tokens have within-span causality; spans ordered; audio span tokens form an antichain (no mandatory intra-span order).
+  - Joint scoring (Eq. 14): AR for text times order-marginalized any-order AR for audio.
+  - Training objective upper bound: L_Unified(x) = L_AR + L_AO ≥ −log \tilde{p}_θ(x) (Eq. 20), with inequality derived via Jensen (Eq. 17–19).
+- Training pipeline and attention (Figure 2):
+  - Start from pretrained text LLM; expand vocabulary with audio tokens and control symbols ⟨SOA⟩, ⟨EOA⟩; shared Transformer backbone.
+  - Modality-aware attention: causal for prompt; causal for text (within and across spans); audio uses bidirectional attention within span, causal across spans.
+- Training strategies:
+  - BANOM: with probability p_mix, skip diffusion for subset and train only AR text, letting text observe clean audio spans; probability "0.3" (Section 4.1.4).
+  - PPM: preserve clean prefixes of audio spans; only apply diffusion to later spans with ratio "0.3".
+  - SST: randomly truncate last audio span A_M with probability "0.5" to reduce positional bias in ⟨EOA⟩.
+- 3.5 Inference:
+  - Components: audio encoder/decoder (CosyVoice), unified MLLM. Encode input audio to discrete tokens; AR decode text until ⟨SOA⟩; switch to NAR block-wise diffusion (Algorithm 1); after ⟨EOA⟩, drop remaining predicted tokens in block and return to AR; terminate at ⟨EOS⟩. Audio spans can be decoded to waveform in parallel for low first-token latency.
+- Inference parameters (Section 4.1.4): nucleus sampling k "10", p "0.95"; audio diffusion steps "200"; block length "32"; total diffusion span length "640"; CFG scale "0.1".
+
+# Experiments
+- 4.1.1 Datasets:
+  - Multi-task corpus includes ASR, TTS, audio chat, text chat, AAC, SEC, ASC, and interleaved text–audio. Table 2 total samples "6,321,321".
+  - Training sampling: randomly sample "1,000,000" instances from ASR, "1,000,000" from TTS, and "1,000,000" from audio chat datasets respectively; bilingual interleaved text–audio with roughly equal Chinese/English.
+  - Sources: VoiceAssistant-400K, OpenHermes-2.5, Firefly-Train-1.1M; synthetic audio via CosyVoice2; interleaved text–audio from FineWeb-Edu and Chinese-FineWeb-Edu (Skypile).
+  - Evaluation focuses on Audio-QA and ASR; evaluation datasets summarized in Table 4 (AlpacaEval, TriviaQA, WebQuestions, ReasoningQA; Fleurs-zh/en, AISHELL-1/2, WenetSpeech).
+- 4.1.2 Evaluation:
+  - Audio-QA pipeline: transcribe spoken responses via ASR (Paraformer-zh for Chinese; Whisper-Large-v3 for English), then judge semantic correctness via LLM-as-a-Judge (Qwen3-235B-A30B); report accuracy/score.
+  - ASR metric: Word Error Rate (WER).
+- 4.1.3 Model configuration:
+  - Backbone: Qwen2.5-Base at "1.5B" and "3B"; fine-tune all parameters.
+  - Audio modules: tokenizer and decoder follow GLM-4-Voice.
+- Table 1 Main Results (Audio-QA higher is better; ASR lower WER is better):
+  - Qwen2.5-1.5B (AR): AE "17.99"; LQ "16.78"; TQA "1.61"; WQ "2.32"; WER Fzh "99.08", A2 "59.73", A1 "80.27", WS_met "85.55", WS_net "81.76", Fen "96.16".
+  - Qwen2.5-1.5B (NAR): AE "10.70"; LQ "0.00"; TQA "0.40"; WQ "0.20"; WER Fzh "86.97", A2 "224.37", A1 "191.11", WS_met "123.96", WS_net "143.76", Fen "108.25".
+  - TtT-1.5B (AR–NAR): AE "15.68"; LQ "23.75"; TQA "3.47"; WQ "7.70"; WER Fzh "44.36", A2 "14.89", A1 "16.72", WS_met "52.23", WS_net "41.52", Fen "49.00".
+  - Qwen2.5-3B (AR): AE "14.42"; LQ "10.00"; TQA "0.60"; WQ "0.70"; WER Fzh "90.32", A2 "54.94", A1 "72.01", WS_met "80.01", WS_net "73.64", Fen "74.47".
+  - Qwen2.5-3B (NAR): AE "11.31"; LQ "0.67"; TQA "1.21"; WQ "0.70"; WER Fzh "68.94", A2 "212.27", A1 "160.58", WS_met "89.22", WS_net "111.29", Fen "83.51".
+  - TtT-3B (AR–NAR): AE "17.46"; LQ "34.68"; TQA "6.53"; WQ "11.61"; WER Fzh "55.67", A2 "12.53", A1 "13.65", WS_met "53.83", WS_net "44.29", Fen "64.31".
+- 4.2 Main results highlights:
+  - Audio-QA: At 3B, TtT improves over AR baseline by +3.04 (AE), +24.68 (LQ), +5.93 (TQA), +10.91 (WQ).
+  - ASR: At 3B, TtT WER "12.53" (AISHELL-2) and "13.65" (AISHELL-1), improving over AR baseline by "42.41" and "58.36" absolute points.
+  - Scaling: TtT-3B outperforms TtT-1.5B (e.g., LQ "34.68" vs "23.75"; AISHELL-2 "12.53" vs "14.89").
+- 4.3 Ablation study (Table 1):
+  - TtT-3B w/o BANOM: AE "13.87"; LQ "19.87"; TQA "2.81"; WQ "5.12"; WER Fzh "58.25", A2 "18.58", A1 "21.35", WS_met "58.48", WS_net "49.52", Fen "68.90".
+  - TtT-3B w/o PPM: AE "14.27"; LQ "22.79"; TQA "2.71"; WQ "5.54"; WER Fzh "58.86", A2 "15.63", A1 "18.83", WS_met "57.76", WS_net "47.92", Fen "67.37".
+  - TtT-3B w/o SST: AE "14.12"; LQ "10.20"; TQA "1.30"; WQ "3.72"; WER Fzh "56.39", A2 "25.43", A1 "31.03", WS_met "64.41", WS_net "56.70", Fen "62.60".
+  - Removing SST severely harms LQ (from "34.68" to "10.20").
+- 4.4 Effect of multimodal alignment pretraining:
+  - Pretraining: ≈"200B" tokens; global batch "256"; "140k" steps; standard AR objective; improves cross-modal alignment before hybrid training.
+  - Training strategy comparison (Table 1):
+    - TtT (from base 3B): AE "17.46"; LQ "34.68"; TQA "6.53"; WQ "11.61"; WER Fzh "55.67", A2 "12.53", A1 "13.65", WS_met "53.83", WS_net "44.29", Fen "64.31".
+    - Pretrain+AR: AE "29.45"; LQ "15.93"; TQA "3.61"; WQ "11.45"; WER Fzh "23.37", A2 "9.79", A1 "12.67", WS_met "26.75", WS_net "20.91", Fen "19.49".
+    - Pretrain+TtT: AE "26.73"; LQ "40.07"; TQA "11.07"; WQ "21.43"; WER Fzh "18.99", A2 "6.80", A1 "5.78", WS_met "27.59", WS_net "19.85", Fen "19.10".
+- 4.1.4 Training details and inference settings:
+  - Optimizer: AdamW; global batch "2048"; LR "2e-5"; weight decay "1e-2"; cosine decay; warmup "0.01".
+  - Strategy probabilities: BANOM p_mix "0.3"; PPM ratio "0.3"; SST p_trunc "0.5".
+  - Inference: text nucleus sampling k "10", p "0.95"; audio diffusion steps "200"; block len "32"; total diffusion span len "640"; classifier-free guidance scale "0.1".
+  - Compute: 4 nodes × 8 NVIDIA A100 GPUs; DeepSpeed; checkpoints selected at converged training loss.
+- Additional evaluation tools (Appendix Table 3): ASR model WERs—Whisper-Large-v3: WER-zh "0.5054", WER-en "0.2167"; Paraformer-zh: WER-zh "0.1028", WER-en "0.3946".
+- Not specified: Number of random seeds or runs per configuration; confidence intervals or variance; exact sizes for several training datasets (many entries in Table 2 list blank sample counts).
+
+# Conclusion
+- The paper presents TtT, a unified hybrid AR–NAR framework respecting modality-specific dependencies: AR for text (target–target) and absorbing discrete diffusion for audio (source–target).
+- The unified training objective upper-bounds the NLL of the joint distribution, providing theoretical support.
+- Three training strategies (BANOM, PPM, SST) mitigate train–test gaps and enable variable-length audio generation.
+- Experiments on Audio-QA and ASR show TtT outperforms AR-only and NAR-only baselines; scaling improves performance; ablations validate each strategy.
+
+# References
+- Cites works on discrete diffusion (Austin et al., 2021; Ou et al., 2024; Shi et al., 2024; Sahoo et al., 2024; Lovelace et al., 2024; Gong et al., 2024), audio-language models (Défossez et al., 2024; Zeng et al., 2024; Long et al., 2025; Huang et al., 2025; Li et al., 2025; Liu et al., 2025), codecs and TTS (Kong et al., 2020; Mehta et al., 2024; Wang et al., 2023; Du et al., 2024), and related multimodal/diffusion language model advances. No additional quantitative details in this section.
+
+# Appendix
+- A.1.1 Derivation: Shows L_Unified(x) = L_AR + L_AO ≥ −log \tilde{p}_θ(x) by applying Jensen to order-marginalized audio likelihood, yielding Eq. 20.
+- A.2 Related Work: Summarizes limitations of uniform AR objectives in prior audio-language models and advances in discrete diffusion; theoretical bounds and adaptation from AR to diffusion.
+- A.3 Block-wise masked diffusion: Algorithm 1 details generation in blocks of length B over T steps; predict masked positions in parallel; commit top-k confident tokens per step; early termination on ⟨EOA⟩.
+- A.4 Training dataset details: Not specified beyond Table 2 summary.
+- A.5 Evaluation details:
+  - Audio-QA: ASR transcription (Whisper-Large-v3 for English; Paraformer-zh for Chinese) then Qwen3-235B-A30B as judge; reports average accuracy/score.
+  - ASR task: WER metric; Table 3 reports standalone ASR model WERs ("0.5054"/"0.2167" for Whisper-Large-v3; "0.1028"/"0.3946" for Paraformer-zh).
+- Table 2 Training datasets: Total "6,321,321" samples; includes Emilia_zh/en (TTS; "500000" each), GigaSpeech ("600000" ASR), WenetSpeech ("400000" ASR), OpenHermes-2.5 ("1,000,000" audio chat), plus many entries without specified counts.
+- A.5.2 Evaluation datasets: Audio-QA—AlpacaEval, ReasoningQA, TriviaQA, WebQuestions; ASR—Fleurs-zh/en, AISHELL-1/2, WenetSpeech.
+- A.6 Data formats: Provides standardized interleaved input–output examples for ASR, TTS, audio chat, text chat, AAC/SEC/ASC, and interleaved data; includes special tokens ⟨SOA⟩, ⟨EOA⟩, ⟨EOS⟩.

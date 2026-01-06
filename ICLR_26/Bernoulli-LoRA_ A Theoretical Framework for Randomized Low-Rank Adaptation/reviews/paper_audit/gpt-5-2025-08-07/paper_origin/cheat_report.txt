@@ -1,0 +1,85 @@
+Academic integrity and internal consistency risk report
+
+Summary of high-impact issues identified
+
+1) Systematic mismatch between main-text theorems and appendix theorems on stepsize conditions
+- Bernoulli-LoRA-SGD:
+  - Main text Theorem 2 states 0 < γ ≤ min{ 1/(√(L A1 λmax^p) T), (1/(L B1))·(λmax^p/λmin^p)^{-1} } (Block 35).
+  - Appendix Theorem 11 states 0 < γ ≤ min{ 1/√(L A1 λmax^p T), 1/(L B1)(λmax^p/λmin^p)^{-1} } (Block 91).
+  - The first bound differs materially: main text has 1/(√(L A1 λmax^p) T) while appendix has 1/√(L A1 λmax^p T). The presence of T outside vs. inside the square root changes stepsize scaling by √T, not an “absolute constant,” and affects validity of derived rates.
+
+- Fed-Bernoulli-LoRA-QGD:
+  - Main text Theorem 5: 0 < γ ≤ min{ 1/(L√(ω/M) λmax^p T), (1/L)(λmax^p/λmin^p)^{-1} } (Block 38).
+  - Appendix Theorem 17: 0 < γ ≤ min{ 1/(L √((ω/M) λmax^p T)), (1/L)(λmax^p/λmin^p)^{-1} } (Block 117).
+  - Again, main text places λmax^p T multiplicatively outside the square root, whereas the appendix includes them inside √(·). This is a nontrivial discrepancy.
+
+- Fed-Bernoulli-LoRA-MARINA:
+  - Main text Theorem 6: 0 < γ ≤ 1/(L(1 + √((1/λmax^p) · ((1−q)/q) · (ω/M)))) (Block 38).
+  - Appendix Theorem 19: 0 < γ ≤ 1/(L(1 + √(λmax^p · (1−q)/q · ω/M))) (Block 121).
+  - The λmax^p factor is inverted in the main text (1/λmax^p). This changes the permissible stepsize, not covered by omitted constants.
+
+- Fed-Bernoulli-LoRA-EF21:
+  - Main text Theorem 7: 0 < γ ≤ 1/(L(1 + √(λmax^p(1−β)/(1−√(1−β))))) (Block 38).
+  - Appendix Theorem 21 and the subsequent selection in the proof introduce different constants, including √2 factors in the denominator bound (Blocks 129–130). While some constant differences may be acceptable, the structured discrepancy in the bound’s form suggests lack of internal alignment.
+
+Impact: Stepsize constraints directly govern convergence guarantees. The above inconsistencies materially affect whether the stated rates can actually be achieved under the claimed conditions.
+
+2) Table 1 convergence rates do not match the detailed theorems (variance terms and dependence on λmax^p/λmin^p)
+- Bernoulli-LoRA-PAGE:
+  - Table 1 (Block 16) nonconvex rate: Φ2/(γ λmin T), where Φ2 := Δ0 + (γ/q) 𝒢0. No λmax/λmin factor multiplying the 𝒢0 term.
+  - Main text Theorem 4: E[||∇f(Ẇ^T)||^2] ≤ 2Δ0/(γ λmin^p T) + (𝒢0/(qT))·(λmax^p/λmin^p) (Block 37).
+  - Missing λmax^p/λmin^p in Table 1’s 𝒢0-term; this is not an absolute constant omission.
+
+- Bernoulli-LoRA-MVR:
+  - Table 1 (Block 16) nonconvex rate: Φ1/(γ λmin T) + b σ^2 λmax/((2−b) λmin), with Φ1 := Δ0 + (b γ/(2−b)) 𝒢0.
+  - Main text Theorem 3: E[||∇f(Ẇ^T)||^2] ≤ 2Δ0/(γ λmin^p T) + (𝒢0/(bT) + 2bσ^2/(2 − b))·(λmax^p/λmin^p) (Block 36).
+  - The coefficient in front of 𝒢0/T differs (Table: b/(2−b)/λmin; Theorem: (1/b)·(λmax/λmin)). The λmax/λmin dependence is missing in Table 1’s Φ1 term.
+
+- Fed-Bernoulli-LoRA-EF21:
+  - Table 1: Φ3/(γ λmin T) with Φ3 := Δ0 + γ/(1−√(1−β)) 𝒢0 (Block 16), no λmax/λmin factor on the 𝒢0 term.
+  - Appendix Theorem 21: E[||∇f(Ẇ^T)||^2] ≤ 2Δ0/(γ λmin^p T) + (𝒢0/((1−√(1−β)) T)) · (λmax^p/λmin^p) (Block 129–130).
+  - Again, Table 1 omits λmax^p/λmin^p in the variance term.
+
+Impact: Table 1 is presented as a summary of main results. Discrepancies in dependence on λmax^p/λmin^p and nonconstant coefficients (in b, q) can mislead readers about the true rates and conditions.
+
+3) Left/Right sketch selection inconsistent across algorithms
+- Algorithm 1: “if c^t = 1 then Left sketch” (Lines 4–7) (Block 18).
+- Algorithm 3 (non-smooth setting): “If c^t = 1 then (Right sketch)” (Lines 4–7) (Block 74).
+Impact: This inversion of the Bernoulli branch condition creates a clear internal contradiction. While proofs rely on generic projections H_A, H_B, algorithmic reproducibility and clarity are materially affected.
+
+4) Incorrect index set in PAGE sampling
+- Algorithm 6 (Bernoulli-LoRA-PAGE): “Sample i_{t+1} uniformly at random from [n]” (Step 13) (Block 104).
+- The finite-sum setting is defined over N samples (Equation (2), Block 8). The index should be from [N].
+Impact: This is a concrete, nontrivial notation/definition error that can invalidate the algorithm specification for the finite-sum case.
+
+5) Broken or incorrect equation reference in EF21 lemma
+- Lemma 10 proof cites “(130),(131)” (Block 128), but only (130) is defined before; there is no (131) in that vicinity.
+Impact: Referencing a non-existent equation undermines traceability of the proof steps.
+
+6) Mislabeling in the appendix text
+- In Appendix C.1, immediately before Theorem 1, the text states: “we can now state our main convergence result for RAC-LoRA with Gradient Descent updates” (Block 64), while the theorem is for Bernoulli-LoRA-GD.
+Impact: This is an internal inconsistency indicating copy/paste artifacts that reduce trust in carefulness of derivations and exposition.
+
+7) Missing promised experimental details for MNIST
+- Main text claims: “Detailed configurations, hardware specs, and dataset descriptions are provided in Appendix E.” for MNIST (Block 43).
+- Appendix E only provides details for the linear regression experiments (Blocks 133–139). No MNIST-specific configurations, preprocessing, architecture, or hyperparameter ranges are given.
+Impact: The lack of promised MNIST experimental details materially affects reproducibility and verification of empirical claims.
+
+8) Citation inconsistency
+- Appendix B cites “[Hall, 2013, Schur, 2024]” for Schur’s Lemma (Block 55).
+- The references list has “Issai Schur. … 1905.” (Block 51); no “Schur, 2024” entry.
+Impact: This is a concrete bibliographic mismatch; while minor, it signals oversight in citation management.
+
+Additional observations (lower impact)
+- Table/Figure caption misalignment: Figure 1 caption claims “Curves with p = 0.01, 0.2, … indicate Bernoulli-LoRA sampling parameters” (Block 41), but the legend visible shows only p = 0.5 for the Bernoulli variants (Block 42). This seems presentational and does not affect the theoretical claims.
+
+Conclusion
+The manuscript exhibits several high-impact internal inconsistencies:
+
+- Stepsize conditions in the main text theorems do not align with those in the appendix for key algorithms (SGD, QGD, MARINA, EF21).
+- Table 1’s summarized nonconvex rates omit critical dependence on λmax^p/λmin^p present in the detailed theorems, and mismatch the coefficients of variance terms.
+- Core algorithm definitions (Left vs. Right sketch selection) are inconsistent across sections.
+- Algorithmic indices (PAGE) and equation references (EF21) contain errors.
+- Promised MNIST experimental details are missing from the appendix.
+
+These issues materially affect the paper’s correctness, interpretability, and reproducibility. Resolving them would significantly improve scientific integrity. If addressed, no further clear integrity-related problems were identified in the remaining content.

@@ -1,0 +1,129 @@
+{
+  "paper": "Q-FSRU_ Quantum-Augmented Frequency-Spectral Fusion for Medical Visual Question Answering",
+  "runs": [
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "deepreviewer",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "deep_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "55f39c3e353412551a5ae68e81fc4acc489b4edd",
+      "inputs": {
+        "human_review": "review_origin.txt",
+        "ai_review": "reviews/deepreviewer/gpt-5-2025-08-07/paper_origin/deep_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 0.83,
+        "weakness_coverage_recall": 0.58,
+        "ai_extra_major_points_rate": 0.13,
+        "symmetric_coverage_similarity": 0.55,
+        "note": "The AI review shows very high coverage of strengths but only moderate coverage of weaknesses. It successfully identified core issues like the ambiguous RAG mechanism and missing knowledge base details, but missed several human-raised points, notably the small dataset size, lack of comparison to classical RAG, and unjustified FFT on text. The AI did contribute novel, specific points about internal contradictions in the paper's methodology."
+      },
+      "generated_at": "2025-12-27T23:49:11"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "baseline_review.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "b3137abdd5dd456ecfb029f7bed4151251d086e2",
+      "inputs": {
+        "human_review": "review_origin.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/baseline_review.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 1.0,
+        "weakness_coverage_recall": 0.27,
+        "ai_extra_major_points_rate": 0.5,
+        "symmetric_coverage_similarity": 0.37,
+        "note": "The AI review perfectly covered the strengths but missed many major weaknesses raised by humans, such as the insufficient motivation for quantum retrieval and the lack of comparison to classical RAG methods. Conversely, the AI raised several unique technical concerns not found in the human reviews, including the choice of 1D FFT for images and flawed data augmentation."
+      },
+      "generated_at": "2025-12-27T23:58:21"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "final_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "0a71ca7d783136ba33fb6b5ec9aad08ece2f0c09",
+      "inputs": {
+        "human_review": "review_origin.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/final_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 1.0,
+        "weakness_coverage_recall": 0.5,
+        "ai_extra_major_points_rate": 0.39,
+        "symmetric_coverage_similarity": 0.4,
+        "note": "The AI captures all high-level strengths but diverges significantly on specific weaknesses. While both reviews note the RAG pipeline inconsistency and lack of database details, the AI focuses on technical flaws (stats, augmentations, image FFT, math bounds) while the human focuses on motivation, evaluation breakdowns, and formatting. The AI also incorrectly praises implementation details that the human reviewer explicitly marks as missing."
+      },
+      "generated_at": "2025-12-28T00:07:41"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "deepreviewer",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "deep_review_merge.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "752f27bc09e656c7d041a880d0c174422eea6ca4",
+      "inputs": {
+        "human_review": "review_origin.txt",
+        "ai_review": "reviews/deepreviewer/gpt-5-2025-08-07/paper_origin/deep_review_merge.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 1.0,
+        "weakness_coverage_recall": 0.67,
+        "ai_extra_major_points_rate": 0.47,
+        "symmetric_coverage_similarity": 0.61,
+        "note": "The AI review fully covers the strengths and captures most major weaknesses from the human reviews, such as the unclear RAG pipeline and poor motivation for quantum retrieval. However, the AI also introduces numerous unique, highly specific technical critiques regarding implementation (e.g., mischaracterized convolution, unjustified FFT design) and statistical reporting, which were not mentioned by the human reviewers."
+      },
+      "generated_at": "2025-12-28T00:19:53"
+    }
+  ]
+}

@@ -1,0 +1,645 @@
+OpenReview.net
+Search OpenReview...
+Login
+back arrowGo to ICLR 2026 Conference homepage
+MCCE: A Framework for Multi-LLM Collaborative Co-Evolution
+Download PDF
+ICLR 2026 Conference Submission25559 Authors
+20 Sept 2025 (modified: 24 Dec 2025)
+ICLR 2026 Conference Submission
+Everyone
+Revisions
+BibTeX
+CC BY 4.0
+Keywords: reinforcement learning, large language models, model collaboration, evolutionary algorithms
+TL;DR: MCCE is a framework for collaboration of large and small language models, combining knowledge-driven exploration with experience-driven learning
+Abstract:
+Multi-objective discrete optimization problems, such as molecular design, pose significant challenges due to their vast and unstructured combinatorial spaces. Traditional evolutionary algorithms often get trapped in local optima, while expert knowledge can provide crucial guidance for accelerating convergence. Large language models (LLMs) offer powerful priors and reasoning ability, making them natural optimizers when expert knowledge matters. However, closed-source LLMs, though strong in exploration, cannot update their parameters and thus cannot internalize experience. Conversely, smaller open models can be continually fine-tuned but lack broad knowledge and reasoning strength. We introduce Multi-LLM Collaborative Co-evolution (MCCE), a hybrid framework that unites a frozen closed-source LLM with a lightweight trainable model. The system maintains a trajectory memory of past search processes; the small model is progressively refined via reinforcement learning, with the two models jointly supporting and complementing each other in global exploration. Unlike model distillation, this process enhances the capabilities of both models through mutual inspiration. Experiments on multi-objective drug design benchmarks show that MCCE achieves state-of-the-art Pareto front quality and consistently outperforms baselines. These results highlight a new paradigm for enabling continual evolution in hybrid LLM systems, combining knowledge-driven exploration with experience-driven learning.
+
+Primary Area: transfer learning, meta learning, and lifelong learning
+Submission Number: 25559
+Filter by reply type...
+Filter by author...
+Search keywords...
+
+Sort: Newest First
+15 / 15 replies shown
+For AC: summary of the paper, reviews and our responses
+Official Commentby Authors04 Dec 2025, 04:56 (modified: 04 Dec 2025, 04:56)EveryoneRevisions
+Comment:
+Dear AC,
+
+Due to the updated rebuttal procedure, we would like to offer a concise summary of our work and our responses to the reviewers¡¯ comments. We hope this overview will assist in your final decision.
+
+1. Summary of Our Work
+We propose MCCE, a multi-LLM collaborative co-evolution framework that unites a frozen closed-source LLM (for global exploration) with a lightweight, continuously trainable local LLM (for experience-driven exploitation). Through trajectory-based memory, similarity-aware DPO training, and alternating generation roles, both models progressively improve, achieving state-of-the-art performance on multi-objective molecular design and strong results across three additional NP-hard combinatorial domains.
+
+? Motivation & Novelty
+Current LLM-as-optimizer or LLM-guided evolutionary methods suffer from one or more of the following limitations:
+
+Frozen LLM optimizers cannot internalize experience, causing stagnation once in-context cues become saturated.
+Trainable small LLMs lack global reasoning and broad search priors, making them weak explorers.
+Existing hybrid systems act mostly as distillation pipelines or unidirectional guidance, without a bidirectional co-evolution mechanism.
+Optimization-specific preference learning is highly unstable, especially under multi-objective trade-offs and long-horizon trajectories.
+MCCE is the first framework to operationalize a two-way, continuously evolving collaboration between a frozen reasoning-rich LLM and a compact trainable LLM, supported by:
+
+a trajectory memory that stores breakthrough samples,
+a structurally stable similarity-aware DPO, and
+a population-level co-evolution loop.
+? Our Key Contributions
+1. A novel collaborative co-evolution framework uniting frozen and trainable LLMs
+The frozen model provides global, diversity-preserving exploration.
+The small model absorbs experience via DPO preference learning, continually improving exploitation.
+The two models interact through a shared population pool, forming a mutually reinforcing loop rather than distillation.
+2. A stable similarity-based DPO method for long-horizon optimization
+Introduces similarity-filtered preference pairs (global quantiles + progressive similarity windows).
+Prevents DPO instability and ensures structurally meaningful comparisons.
+Works with both domain-specific metrics (Tanimoto) and generic embeddings, confirming metric-agnostic robustness.
+3. Extensive empirical validation across molecular and non-molecular domains
+Drug design: Achieves SOTA or highly competitive performance across Top-1/Top-10, HV, and AUC metrics under a challenging 5-objective setup.
+Generalization to NP-hard domains: MCCE outperforms or matches specialized solvers on:
+Multi-objective TSP (MOTSP),
+Multi-objective CVRP (MOCVRP),
+Circle Packing (matching or exceeding community records).
+Demonstrates that the frozen-explorer + trainable-exploiter paradigm is domain-agnostic.
+4. Comprehensive ablation of collaboration ratios, update frequency, and similarity strategies
+Finds the optimal 50/32 frozen/local generation split.
+Shows per-round synchronous updates outperform buffered updates.
+Demonstrates that strict similarity windows are essential for DPO stability.
+5. Practicality: low cost, fast runtime, full reproducibility
+Total API cost: ~$3.81 per 5,000-molecule run.
+Runtime: ~3 hours on 8¡ÁA800 GPUs.
+Full anonymous codebase released (including molecular, MOTSP, MOCVRP, Circle Packing tasks).
+Link: https://anonymous.4open.science/r/MCCE_Anonymous-1F92
+2. Summary of Reviewers¡¯ Recognized Strengths
+Across reviewers sWYB, gNx8, PG1o, T7G1, the following strengths were repeatedly acknowledged:
+
+Methodological strengths
+Well-motivated hybrid design combining frozen global reasoning with trainable local adaptation (sWYB, gNx8, PG1o).
+Similarity-aware DPO recognized as meaningful, stable, and technically novel (sWYB, gNx8, PG1o).
+Clear diagrams and writing that make the framework easy to understand (gNx8).
+Thoughtful co-evolutionary design rather than simple distillation (PG1o).
+Experimental strengths
+Strong multi-objective drug design results, surpassing or matching SOTA baselines (sWYB, gNx8, PG1o, T7G1).
+Expanded multi-domain generalization results appreciated by reviewers, especially PG1o (who upgraded their score after rebuttal).
+Comprehensive ablation studies, addressing hyperparameters, similarity metrics, collaboration ratios, and update frequency (gNx8, PG1o).
+Detailed cost analysis, scalability, and synthesizability evaluation (sWYB, PG1o).
+Official Comment by Authors
+Official Commentby Authors04 Dec 2025, 04:58Everyone
+Comment:
+Reproducibility & clarity
+Reviewers praised the well-organized code release, clarity of the training mechanism, and explicit response to all questions (PG1o, sWYB).
+PG1o explicitly stated that ¡°most concerns have been solved¡± and raised their score after reading our response.
+These strengths collectively show that MCCE provides both conceptual novelty and practical value, with extensive experiments, strong results, and clear writing.
+For additional details, we kindly invite you to refer to our revised manuscript (changes highlighted in blue). For how we answer the reviewer's comments in details, please refer to our next summary
+
+For AC: Summary of Responses to Reviewers
+Official Commentby Authors26 Nov 2025, 20:34 (modified: 04 Dec 2025, 04:59)EveryoneRevisions
+Comment:
+We sincerely thank the reviewers (sWYB, gNx8, PG1o, T7G1) for their insightful feedback. Recognizing the consensus on the need for broader domain evaluation, more baselines, and deeper algorithmic analysis, we have conducted extensive additional experiments during the rebuttal period.
+
+Below is a summary of the major revisions and new results incorporated into the manuscript to address these concerns.
+
+1. Expansion of Application Domains (Generalization)
+A primary concern (Reviewers gNx8, T7G1) was whether MCCE is a general framework or limited to molecular design. To substantiate our claim of generality, we extended MCCE to three classic NP-hard combinatorial optimization tasks.
+
+New Domains: Circle Packing, Multi-Objective TSP (MOTSP), and Multi-Objective CVRP (MOCVRP).
+Results: MCCE achieves SOTA or highly competitive performance against specialized evolutionary baselines (e.g., ReEvo, FunSearch, Pymoo).
+MOCVRP (
+): MCCE (1.0488) > ReEvo (1.0345).
+Circle Packing: MCCE surpassed current community records for 
+ and 
+.
+Conclusion: These results confirm that the "frozen explorer + trainable exploiter" paradigm is domain-agnostic. (See Section 5.3 and Tables 2 & 3).
+2. Comprehensive Baseline Comparisons
+Reviewers (gNx8, PG1o) requested comparisons against recent SOTA methods under identical settings. We have significantly expanded our benchmarks.
+
+Added Baselines: MoLLEO, ExLLM, GFlowNet, GB-GA, REINVENT, and DyMol.
+Experimental Setting: All methods were evaluated under the identical challenging 5-objective setup (QED, SA, DRD2, GSK3
+, JNK3).
+Performance: MCCE achieves the highest scores on key optimization metrics (Top-1 F: 4.354, Top-10 F: 4.284) while maintaining superior Pareto coverage (Hypervolume: 0.847) compared to MoLLEO (HV: 0.860, Top-1: 4.190) and ExLLM (HV: 0.905, Top-1: 4.336).
+Conclusion: MCCE consistently outperforms both traditional evolutionary algorithms and recent LLM-based competitors. (See Table 1).
+3. In-depth Ablation Studies
+To address questions regarding algorithmic design choices (Reviewers gNx8, T7G1, PG1o), we performed rigorous ablations:
+
+Similarity-based DPO: We verified that the Similarity Filter is crucial for training stability. We also demonstrated that Embedding-based Cosine Similarity works as effectively as domain-specific metrics (Tanimoto), proving the method's flexibility.
+Collaboration Ratio: We identified that a 50/32 split (Frozen/Local calls) offers the optimal balance between global exploration and local exploitation.
+Update Frequency: We confirmed that synchronous updates (every round) significantly outperform buffered updates (every 200/500 steps), allowing the local model to internalize feedback immediately. (See Ablation Section in Table 1).
+4. Cost Analysis and Reproducibility
+We addressed practical concerns regarding computational cost, metric validity, and code availability (Reviewers sWYB, T7G1).
+
+Cost Efficiency: We provided a detailed cost breakdown. For a standard run (5,000 candidates), the total API cost is remarkably low (~$3.81 USD) with a runtime of ~3.12 hours on 8
+A800 GPUs. This confirms MCCE is highly economical compared to pure API-based methods. (See Appendix A.7).
+Synthesizability (SA): We utilized the standard TDC Oracle (RDKit SA_Score) to verify that generated molecules are chemically viable (Mean SA: 2.00, indicating "Easy to synthesize"). (See Appendix A.6).
+Open Source: We have fully open-sourced the code, including the multi-domain environments and DPO training pipeline, to ensure full reproducibility.
+Link: https://anonymous.4open.science/r/MCCE_Anonymous-1F92
+We hope these our clarifications and additions fully address all the concerns, and we appreciate your time.
+
+Official Review of Submission25559 by Reviewer sWYB
+Official Reviewby Reviewer sWYB06 Nov 2025, 06:06 (modified: 12 Nov 2025, 18:31)EveryoneRevisions
+Summary:
+This paper studies multi-objective molecular optimization with LLMs. Classic evolutionary algorithms often converge prematurely and lose diversity; single-LLM optimizers can stagnate and, if frozen, cannot absorb experience. The proposed MCCE framework pairs a powerful frozen closed-source LLM (broad exploration) with a trainable lightweight local LLM (experience-driven adaptation). The two alternate as generators in an evolutionary loop; ¡°breakthrough¡± trajectories are logged and used to continually refine the local model so the pair co-evolves rather than simply distilling one into the other. For training the local model, the authors compare SFT and RL, finding SFT induces catastrophic forgetting (hurting uniqueness) and RL is unstable with scalar rewards. They instead adopt DPO with a similarity-based preference construction that forms (prompt, preferred vs. rejected) pairs from structurally comparable molecules, improving stability and data efficiency. Empirically, MCCE achieves state-of-the-art hypervolume and consistently outperforms single-model and co-evolution baselines using SFT or RL. DPO-based parameter training is key for long-horizon gains; both the local and frozen components benefit (fitness/diversity and exploration), and score distributions shift upward after co-evolution.
+
+Soundness: 3: good
+Presentation: 3: good
+Contribution: 3: good
+Strengths:
+Combining a frozen, high-capacity API model for exploration with a trainable local model for exploitation/learning is well-motivated and practically appealing.
+
+The DPO + similarity-based pair construction is a neat way to stabilize preference learning without expensive curated labels.
+
+Weaknesses:
+The paper claims they have provide the code however, I do not find the link to the code.
+
+How is the synthesizability metric?
+
+What is the training cost?
+
+Questions:
+Please see the Weaknesses section.
+
+Flag For Ethics Review: No ethics review needed.
+Rating: 6: marginally above the acceptance threshold. But would not mind if paper is rejected
+Confidence: 3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.
+Code Of Conduct: Yes
+Response to Reviewer sWYB
+Official Commentby Authors25 Nov 2025, 11:26Everyone
+Comment:
+We sincerely thank the reviewer for the positive assessment of our work, particularly for recognizing the motivation behind our hybrid exploration-exploitation framework and the novelty of our DPO-based preference construction. We have addressed your concerns regarding code availability, the synthesizability metric, and training costs below.
+
+1. Code Availability
+Reviewer Question: "The paper claims they have provide the code however, I do not find the link."
+
+Response: We apologize for the missing visibility of the code link. We have fully open-sourced the MCCE framework, which includes the complete pipeline for multi-LLM collaborative co-evolution and DPO training. Furthermore, the repository is organized to support not only molecular optimization but also combinatorial tasks such as Circle Packing, MOTSP, and MOCVRP, with support for custom user-defined tasks.
+
+The code is available at the following anonymous link:
+
+Code Repository: https://anonymous.4open.science/r/MCCE_Anonymous-1F92
+
+Revision: We have prominently added this link to the Abstract of the revised manuscript to ensure accessibility.
+
+2. Synthesizability (SA) Metric
+Reviewer Question: "How is the synthesizability metric?"
+
+Response: We strictly followed standard evaluation protocols for this metric. The Synthetic Accessibility (SA) score was computed using the Therapeutics Data Commons (TDC) library[1], consistent with MoLLEO, PMO, and prior molecular optimization benchmarks.
+
+To demonstrate the chemical validity of our results, we conducted a statistical analysis on the final populations (final_pops) across 5 independent evolutionary runs (Total molecules 
+). The results are summarized below:
+
+Metric	Count (
+)	Mean	Std. Dev.	Min	Max
+SA Score	250	2.00	0.22	1.49	3.06
+Interpretation: According to standard SA_Score guidelines:
+
+1.0 ¨C 3.0: Easy to synthesize.
+3.0 ¨C 6.0: Intermediate to difficult.
+> 6.0: Very difficult.
+Our results show that the vast majority of generated molecules fall between 1.8 and 2.3, significantly lower than the "intermediate" threshold. This indicates that:
+
+The molecules produced by MCCE have excellent synthesizability.
+The distribution is highly concentrated with no "hard-to-synthesize" outliers.
+MCCE successfully satisfies the SA constraint while simultaneously optimizing four other conflicting objectives (DRD2, QED, GSK3
+, JNK3).
+Source Link: For further details on the oracle implementation, please refer to the TDC documentation: https://tdcommons.ai/functions/oracles/#synthetic-accessibility-sa.
+
+Revision: We have added this detailed statistical analysis and the reference to the TDC oracle in Appendix A.6 ("Supplementary Analysis of Synthetic Accessibility") of the revised paper.
+
+3. Training and Computation Cost
+Reviewer Question: "What is the training cost?"
+
+Response: We have performed a detailed cost analysis for a standard evolutionary run using GPT-4o-2024-05-13 (frozen API model) and Qwen2.5-7B-Instruct (local trainable model). The computational profile for generating a budget of 5,000 candidates is as follows:
+
+Metric	Specification / Cost
+Total Candidate Budget	5,000 Molecules
+Model Call Ratio (API/Local)	50 / 32
+Hardware Infrastructure	8 
+ NVIDIA A800 (40GB)
+Total LLM Calls	
+Total Wall-clock Time	
+ Hours
+Total API Cost	
+ USD
+Conclusion:
+
+Low Financial Cost: By offloading a significant portion of exploitation and learning to the local model, the API cost is remarkably low (~$3.80 per run), making MCCE significantly more economical than pure API-based evolutionary methods.
+High Efficiency: The entire process, including DPO fine-tuning and evaluation, completes in roughly 3 hours on standard HPC nodes.
+Revision: We have included this comprehensive cost breakdown in Appendix A.7 ("Cost Analysis") of the revised manuscript.
+
+We hope these clarifications and the corresponding revisions fully address your concerns.
+
+[1] Ertl, Peter, and Ansgar Schuffenhauer. ¡°Estimation of synthetic accessibility score of drug-like molecules based on molecular complexity and fragment contributions.¡± Journal of cheminformatics 1.1 (2009): 8.
+
+Official Review of Submission25559 by Reviewer gNx8
+Official Reviewby Reviewer gNx804 Nov 2025, 01:16 (modified: 12 Nov 2025, 18:31)EveryoneRevisions
+Summary:
+This paper proposes Multi-LLM Collaborative Co-evolution (MCCE), a hybrid framework for multi-objective discrete optimization. The core idea is to combine a powerful, but frozen, closed-source LLM (e.g., GPT-4) with a smaller, trainable, open-source LLM. The frozen LLM acts as a global explorer, while the local model is progressively fine-tuned on "breakthrough" search trajectories to internalize experience and perform more targeted, experience-driven learning. Furthermore, a more stable, similarity based version of DPO is presented for RL based training.
+
+Soundness: 3: good
+Presentation: 3: good
+Contribution: 3: good
+Strengths:
+¡ñ Paper is well written and easy to understand - great use of diagrams and figures ¡ñ SOTA results on the multi-objective showing the benefit of co-evolving LLMs vs closed-source LLMs alone ¡ñ Similarity based DPO is a well thought out method for avoiding training instability and ensuring training on structural meaningful pairs
+
+Weaknesses:
+¡ñ Limited comparison to prior work. the benchmarking is done against the closed source LLM and the trainable model, however, the method is not compared against methods such as MoLLEO. ¡ñ The paper restricts its experiments to molecular design and fails to show the benefit of co-evolving LLMs in other discrete optimization domains. ¡ñ Hyperparameters could be ablated to study the effect of values such as alpha or the intervals for similarity.
+
+Questions:
+¡ñ The paper states the operator alternates between the frozen and local LLMs. Is this split 50/50? Is it fixed or adaptable? ¡ñ How crucial is the Tanimoto similarity metric for similarity based DPO? Have you explored alternative, simpler, or non-domain-specific similarity functions (e.g., embedding-based similarity)?
+
+Flag For Ethics Review: No ethics review needed.
+Rating: 4: marginally below the acceptance threshold. But would not mind if paper is accepted
+Confidence: 3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.
+Code Of Conduct: Yes
+Response to Reviewer gNx8
+Official Commentby Authors25 Nov 2025, 11:36Everyone
+Comment:
+We sincerely thank the reviewer for the thoughtful feedback and for recognizing the novelty of our collaborative framework and the effectiveness of the similarity-based DPO method. We have conducted extensive additional experiments to address your concerns regarding baselines, generalization, and hyperparameter sensitivity.
+
+1. Comparison with Prior Work (e.g., MoLLEO)
+Reviewer Concern: "Limited comparison to prior work... the method is not compared against methods such as MoLLEO."
+
+Response: We have expanded our benchmarking to include MoLLEO, GFlowNet, GB-GA, REINVENT, and DyMol. The results, summarized below, confirm that MCCE achieves State-of-the-Art (SOTA) performance across key metrics.
+
+Table 1: Comprehensive Comparison on Multi-Objective Molecular Optimization
+
+Method	Top-1 F	Top-10 F	AUC-Top10	HV	Diversity	Validity
+MCCE (Ours)	4.354	4.284	4.016	0.847	0.484	0.820
+MoLLEO	4.190	4.076	3.949	0.860	0.670	0.938
+GFlowNet	4.243	4.202	4.078	0.871	0.633	0.998
+GB-GA	4.017	3.975	3.861	0.643	0.623	1.000
+REINVENT	4.230	4.136	3.930	0.742	0.640	0.979
+DyMol	4.232	4.164	4.001	0.868	0.581	1.000
+Note on Validity: The slightly lower initial validity of MCCE compared to rule-based methods is expected. The local LLM starts with high diversity and limited chemical knowledge but progressively "learns" validity constraints during the co-evolutionary process, as evidenced by the steady increase in validity scores over generations.
+
+Revision: We have updated Table 1 in the main text to include these baselines and added a detailed discussion in Section 5.2.1.
+
+2. Generalization to Other Discrete Optimization Domains
+Reviewer Concern: "The paper restricts its experiments to molecular design and fails to show the benefit of co-evolving LLMs in other discrete optimization domains."
+
+Response: To demonstrate the universality of MCCE, we extended our evaluation to three classic NP-hard problems: Circle Packing, Multi-Objective TSP (MOTSP), and Multi-Objective CVRP (MOCVRP). MCCE matches or outperforms specialized evolutionary baselines (e.g., ReEvo, FunSearch).
+
+Table 2: Performance on Combinatorial Optimization Tasks
+
+Method	MOTSP (
+)	MOCVRP (
+)
+MCCE (Ours)	1.0252	1.0488
+Pymoo	0.9835	0.9558
+ReEvo	1.0289	1.0345
+AIDE	1.0208	1.0056
+FunSearch	1.0233	1.0321
+AlphaEvolve	1.0293	1.0318
+Table 3: Circle Packing Records
+
+Method	Circle Packing (
+)	Circle Packing (
+)
+MCCE (Ours)	2.635983	2.889970
+Current Community Record	2.634+	2.889+
+These results show that the co-evolutionary mechanism is domain-agnostic and highly effective for general combinatorial optimization.
+
+Revision: We have added a new section, Section 5.3 (Generalization to Combinatorial Optimization), and included these results in Tables 2 and 3.
+
+3. Hyperparameter Ablation (Alpha & Similarity)
+Reviewer Concern: "Hyperparameters could be ablated to study the effect of values such as alpha or the intervals for similarity."
+
+Response: We conducted ablations on the DPO data construction parameter 
+ (quantile threshold) and the similarity filtering strategy.
+
+Table 4: Ablation on 
+ and Similarity Intervals
+
+Setting	Top-1 F	AUC-Top10	Note
+ (Default)	4.354	4.016	Optimal Balance
+4.329	4.019	Similar performance
+4.358	3.991	Slightly lower diversity
+Only 
+ (Relaxed Filter)	4.319	3.992	Increased instability
+No Similarity Filter	--	--	Training diverges
+Conclusion:
+
+Robustness to 
+: The system is relatively insensitive to 
+ within a reasonable range (0.2¨C0.4), as repeated sampling covers the distribution effectively.
+Cruciality of Similarity: The strict similarity intervals (
+) are essential. Removing them or relying only on the broadest interval (
+) leads to higher variance and training instability.
+Revision: These ablation studies have been added to Table 1 (Ablation Section) and Section 5.2.1.
+
+Response to Reviewer gNx8 (part 2)
+Official Commentby Authors25 Nov 2025, 11:38Everyone
+Comment:
+4. Collaboration Strategy (Split Ratio & Frequency)
+Reviewer Question: "Is this split 50/50? Is it fixed or adaptable?"
+
+Response: We explored different fixed ratios of API calls (Frozen LLM) to Local calls (Trainable LLM). We also analyzed the impact of update frequency.
+
+Table 5: Impact of Collaboration Split Ratio (API / Local)
+
+Ratio	Top-1 F	AUC-Top10	HV	Observation
+50/50	4.306	3.992	0.838	Good baseline
+50/32	4.354	4.016	0.847	Optimal Efficiency
+50/16	4.253	3.965	0.734	Insufficient local exploitation
+Table 6: Impact of Training Update Frequency
+
+Update Trigger	Top-1 F	Top-10 F	Observation
+Every 500 candidates	4.279	4.205	Slow adaptation
+Every 200 candidates	4.319	4.267	Better
+Every Round (Ours)	4.354	4.284	Best Performance
+Conclusion: The 50/32 split provides the best trade-off between global exploration and local exploitation. Furthermore, frequent model updates (per round) significantly accelerate convergence.
+
+Revision: This analysis is included in the Ablation Studies portion of Table 1 in the revised paper.
+
+5. Importance of Similarity Metric
+Reviewer Question: "How crucial is the Tanimoto similarity metric... Have you explored alternative, simpler, or non-domain-specific similarity functions?"
+
+Response: We investigated whether the specific choice of metric (Tanimoto) is critical or if the general principle of similarity holds. We compared Tanimoto with a generic Embedding-based Cosine Similarity.
+
+Table 7: Impact of Similarity Metric
+
+Metric	Top-1 F	AUC-Top10	Training Stability
+Tanimoto (Domain-Specific)	4.354	4.016	Very Stable
+Embedding (Generic)	4.286	3.983	Stable
+No Similarity	--	--	Unstable (Loss Oscillates)
+Conclusion: While domain-specific metrics (Tanimoto) yield slightly better results, generic embedding-based similarity is also highly effective and ensures stable training. This confirms that the key to DPO stability is the structural proximity of the pair, rather than the specific mathematical definition of the metric.
+
+Revision: We have added Figure 6 in Appendix A.8, visualizing the loss curves to demonstrate the stability provided by similarity filtering, alongside the discussion on embedding-based metrics. We hope our revisions can fully address your concerns.
+
+Official Review of Submission25559 by Reviewer PG1o
+Official Reviewby Reviewer PG1o01 Nov 2025, 23:36 (modified: 29 Nov 2025, 03:32)EveryoneRevisions
+Summary:
+The paper proposes MCCE, a hybrid optimization framework that couples a frozen, closed?source LLM (for global exploration) with a lightweight, trainable local LLM (for experience?driven exploitation). The system keeps a trajectory memory and periodically fine?tunes the local model using a Direct Preference Optimization (DPO) scheme. A key design is a similarity?based data synthesis procedure that forms stable preference pairs for DPO by filtering generated molecules using global similarity statistics and score quantiles. Core contributions claimed: (i) a collaborative co?evolution framework that lets a frozen API LLM and a trainable local LLM ¡°mutually inspire¡± each other; (ii) an experience?driven learning paradigm via DPO with similarity?aware triplet construction; (iii) empirical gains on a five?objective drug design benchmark, extending prior three?objective setups.
+
+Soundness: 2: fair
+Presentation: 2: fair
+Contribution: 2: fair
+Strengths:
+Timely hybrid design that leverages a frozen API LLM for wide exploration and a trainable local LLM for learned exploitation.
+
+Similarity?aware triplet construction with global statistics and progressive windows
+
+Weaknesses:
+sim(c,q) between a molecule and a prompt is not formally defined; the text proposes fingerprint?based metrics but those are molecule?to?molecule.
+
+Lack of detail about the multi?objective selection operator undermines interpretability of diversity and HV results.
+
+Add GFlowNet numbers and standard EA baselines under identical objectives; include recent LLM?EA baselines (e.g., MoLLEO/ExLLM reproductions with your five?objective setup).
+
+Report API token counts, calls per generation, and cost vs. HV curves. Consider a budgeted setting where total API calls are capped; show MCCE¡¯s advantage under realistic constraints.
+
+Questions:
+see above
+
+Flag For Ethics Review: No ethics review needed.
+Rating: 4: marginally below the acceptance threshold. But would not mind if paper is accepted
+Confidence: 3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.
+Code Of Conduct: Yes
+Response to Reviewer PG1o [part 1/2]
+Official Commentby Authors25 Nov 2025, 11:42Everyone
+Comment:
+We sincerely thank the reviewer for their insightful comments and recognition of our hybrid design and similarity-aware data synthesis. We appreciate the opportunity to clarify our methodology and present additional results that further validate MCCE¡¯s effectiveness.
+
+1. Formal Definition of Similarity Metrics
+Reviewer Concern: ¡°sim(c, q) is not formally defined... the text proposes fingerprint-based metrics but those are molecule-to-molecule.¡±
+
+Response: We apologize for the potential confusion. In our molecular optimization experiments, all similarity calculations are indeed strictly molecule-to-molecule (comparing a generated candidate to its parent molecule in the prompt) using the Tanimoto coefficient on Morgan fingerprints.
+
+To demonstrate the generality of the sim(c, q) function across different domains, we have formalized the metrics used for all tasks in our supplementary experiments. The table below details how similarity is defined for each domain:
+
+Table: Similarity Definitions Across Domains
+
+Task Type	Similarity Metric	Embedding Content	Normalization	Similarity Range
+Molecule Optimization	TDC Similarity_Meta	Molecular fingerprints (SMILES)	N/A (External Library)	[0, 1]
+Circle Packing	Cosine Similarity	Circle centers + radii	L2 Normalization	[0, 1]
+Vehicle Routing (VRP)	Cosine Similarity	Per-route (customer count, demand, distance)	L2 Normalization	[0, 1]
+Traveling Salesman (TSP)	Cosine Similarity	Edge length sequences under two objectives	L2 Normalization	[0, 1]
+This confirms that our similarity-based triplet construction is a general framework adaptable to any domain where a distance metric can be defined in the solution space.
+
+Revision: We have added this formal definition table to Appendix A.8 and clarified the sim(c, q) notation in Section 4.3.
+
+2. Details of the Multi-Objective Selection Operator
+Reviewer Concern: ¡°Lack of detail about the multi-objective selection operator undermines interpretability of diversity and HV results.¡±
+
+Response: We agree that the selection mechanism is critical. To balance high-quality convergence with population diversity, we implemented a Hybrid Elite-Diversity Selection Strategy. The process for selecting the next generation (size 
+) is as follows:
+
+Elite Preservation (Top 50%):
+We select the top 
+ individuals solely based on the aggregated scalarized score (Single-Objective Selection). This ensures strong convergence toward high-fitness regions.
+Diversity Maintenance (Bottom 50%):
+We perform Non-Dominated Sorting on the entire pool to identify Pareto layers (Rank 1, Rank 2, ...).
+Starting from Rank 1, we select individuals based on their aggregated score but enforce a strict duplicate removal constraint.
+We continue filling the remaining 
+ slots rank-by-rank.
+By explicitly filtering duplicates in the diversity phase while retaining elites, this operator directly contributes to the superior Hypervolume (HV) and Uniqueness metrics observed in our results.
+
+Revision: We have added a detailed algorithmic description of this selection strategy in Appendix A.9.
+
+3. Expanded Baselines (GFlowNet, MoLLEO, ExLLM, etc.)
+Reviewer Concern: ¡°Add GFlowNet and standard EA baselines... include recent LLM-EA baselines (e.g., MoLLEO/ExLLM reproductions).¡±
+
+Response: We have conducted a comprehensive benchmark comparison under an identical 5-objective setup (QED, SA, DRD2, GSK3
+, JNK3). As shown in the table below, MCCE achieves the highest scores on key optimization metrics (Top-1 F, Top-10 F) while maintaining competitive diversity and validity.
+
+Table: Performance Comparison with Expanded Baselines
+
+Method	Top-1 F	Top-10 F	AUC-Top10	HV	Diversity	Uniqueness	Validity
+MCCE (Ours)	4.354	4.284	4.016	0.847	0.484	0.660	0.820
+ExLLM	4.336	4.300	4.116	0.905	0.494	0.872	0.908
+MoLLEO	4.190	4.076	3.949	0.860	0.670	0.575	0.938
+GFlowNet	4.243	4.202	4.078	0.871	0.633	0.349	0.998
+GB-GA	4.017	3.975	3.861	0.643	0.623	0.821	1.000
+REINVENT	4.230	4.136	3.930	0.742	0.640	0.690	0.979
+Note: The slightly lower validity of MCCE is due to the local model's exploration of novel structures; however, it rapidly learns validity constraints during the co-evolutionary process.
+
+Revision: We have updated Table 1 in the main text to include these baselines and expanded the discussion in Section 5.2.1.
+
+Response to Reviewer PG1o [part 2/2]
+Official Commentby Authors25 Nov 2025, 11:44Everyone
+Comment:
+4. Cost Analysis and Budgeted Settings
+Reviewer Concern: ¡°Report API token counts, calls per generation, and cost vs. HV curves... Show MCCE¡¯s advantage under realistic constraints.¡±
+
+Response: We tracked the exact computational costs for a standard run using GPT-4o-2024-05-13 (Frozen) and Qwen2.5-7B-Instruct (Local) with a total budget of 5,000 generated candidates.
+
+Table: Computational Cost and Resource Usage
+
+Metric	Value / Specification
+Target Population Budget	5,000 Candidates
+Model Call Ratio (API/Local)	50 / 32
+Hardware Infrastructure	8 
+ NVIDIA A800 (40GB)
+Total LLM Calls	
+Total API Cost	
+ USD
+Total Wall-clock Time	
+ Hours
+Key Advantages:
+
+Low Cost: The total API cost is remarkably low (~$3.80), as the local model handles a significant portion of the generation load.
+Efficiency: The system is computationally efficient, completing in ~3 hours.
+Cost vs. HV: The "Cost vs. HV" relationship is implicitly captured by the generation vs. HV curves in the paper. Under a capped budget, MCCE's ability to continue optimizing via the local model (free of API cost) gives it a decisive advantage over pure API-based methods.
+Revision: We have included this detailed cost breakdown in Appendix A.7 ("Cost Analysis").
+
+ Replying to Response to Reviewer PG1o [part 2/2]
+Official Comment by Reviewer PG1o
+Official Commentby Reviewer PG1o25 Nov 2025, 13:40Everyone
+Comment:
+Thank you for your detailed response. Most of my concerns have been solved and I have updated my score accordingly.
+
+Official Review of Submission25559 by Reviewer T7G1
+Official Reviewby Reviewer T7G130 Oct 2025, 16:55 (modified: 29 Nov 2025, 03:32)EveryoneRevisions
+Summary:
+This paper proposes MCCE, a framework that unites a frozen, closed-source LLM (for global exploration) with a smaller, trainable open-source LLM (for local adaptation) in a collaborative co-evolution setup. The two models alternate between generating and refining candidate solutions, with the small model updated using DPO based on ¡°breakthrough¡± trajectories. The system aims to combine reasoning strength and adaptability, achieving improved performance on multi-objective molecular design tasks such as drug discovery.
+
+Soundness: 2: fair
+Presentation: 2: fair
+Contribution: 2: fair
+Strengths:
+This paper addresses an emerging direction in hybrid LLM collaboration by demonstrating the strengths of large frozen models and fine-tunable smaller models.
+
+Strong results on multi-objective optimization benchmarks with quantitative evidence (e.g., hypervolume and diversity metrics).
+
+Weaknesses:
+Key elements such as the feedback exchange protocol, update frequency, and data flow between models are only briefly described. Without algorithmic pseudocode or concrete update rules, reproduction is difficult.
+
+Evaluation is limited to a single domain (molecular design). Either broader multi-domain testing (e.g., combinatorial optimization or symbolic reasoning) or re-framing the title and introduction to emphasize domain specificity would make the contribution more accurate and credible.
+
+Claims that MCCE constitutes a ¡°general framework for collaborative reasoning¡± are not substantiated by the experiments, which focus solely on molecular tasks. The paper would benefit from tempering these claims or providing stronger cross-domain evidence.
+
+There is no detailed analysis isolating the contributions of each design component¡ªe.g., DPO fine-tuning, trajectory selection, or mutual feedback.
+
+The paper does not discuss computational cost, scalability, or stability of the co-evolution loop, which are critical for practical adoption.
+
+Missing references on multi-agent collaboration:
+
+[1] Collabllm: From passive responders to active collaborators.
+
+[2] From LLM-anation to LLM-orchestrator: Coordinating Small Models for Data Labeling
+
+[3] Collab-RAG: Boosting Retrieval-Augmented Generation for Complex Question Answering via White-Box and Black-Box LLM Collaboration
+
+[4] Many Heads Are Better Than One: Improved Scientific Idea Generation by A LLM-Based Multi-Agent System
+
+Questions:
+Could you elaborate on the exact information exchange mechanism between the large and small models¡ªdoes the frozen model adapt its generation strategy based on feedback, or is the communication one-way?
+
+What is the update schedule between the large and small models? Are updates synchronous after each generation cycle or asynchronously buffered?
+
+Have you tested MCCE in non-molecular domains (e.g., code synthesis, symbolic reasoning, or text generation) to assess generalizability?
+
+Flag For Ethics Review: No ethics review needed.
+Rating: 4: marginally below the acceptance threshold. But would not mind if paper is accepted
+Confidence: 4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.
+Code Of Conduct: Yes
+Response to Reviewer T7G1 [part 1/2]
+Official Commentby Authors25 Nov 2025, 11:54Everyone
+Comment:
+We sincerely thank the reviewer for the detailed evaluation and for highlighting the "fully LLM-generated" flag issue. We appreciate your clarification that the review reflects your own judgment, and we value the constructive feedback regarding reproducibility, generalization, and computational analysis.
+
+Below, we address your concerns point-by-point.
+
+1. Information Exchange Mechanism and Update Schedule
+Reviewer Question: "Could you elaborate on the exact information exchange mechanism... What is the update schedule? ... reproduction is difficult."
+
+Response: We have clarified the "black box" nature of the collaboration. The interaction is bidirectional and mediated through a shared population pool:
+
+Frozen 
+ Local: With best molecules extracted from the shared pool, the frozen LLM (global explorer) generates high-quality, diverse molecules into the pool. The local LLM learns from these "breakthrough" trajectories via DPO.
+Local 
+ Frozen: The refined local LLM generates improved candidates back into the shared pool. These new candidates serve as in-context examples (Top-k or Pareto-front) for the frozen LLM in subsequent rounds, thereby guiding the global exploration. In short, the output molecules of both model will be stored in the pool, and the best molecules selected for training or generating new candidates all come from the pool.
+Update Schedule & Frequency: We conducted extensive experiments to determine the optimal interaction frequency.
+
+Model Call Ratio: We found that a ratio of 50 (Frozen) / 32 (Local) yields the best balance.
+Training Frequency: We compared updating the model every 500/200 candidates versus every round. As shown below, updating every round (synchronous update) is superior, as it allows the local model to internalize feedback immediately.
+Table: Ablation on Training Frequency
+
+Update Trigger	Top-1 F	Top-10 F	AUC-Top10
+Every 500 candidates	4.279	4.205	3.979
+Every 200 candidates	4.319	4.267	4.023
+Every Round (Ours)	4.354	4.284	4.016
+Revision: We have added the frequency ablation analysis in Table 1 of the revised paper. Code Availability: The full source code is available here: https://anonymous.4open.science/r/MCCE_Anonymous-1F92
+
+2. Generalization to Non-Molecular Domains
+Reviewer Weakness: "Evaluation is limited to a single domain... Claims that MCCE constitutes a 'general framework' are not substantiated."
+
+Response: We completely agree that a "general framework" requires multi-domain evidence. We have extended MCCE to three classic discrete optimization tasks: Multi-Objective TSP (MOTSP), Multi-Objective CVRP (MOCVRP), and Circle Packing.
+
+Results: MCCE achieves SOTA or highly competitive performance against specialized baselines (e.g., ReEvo, FunSearch, Pymoo).
+
+Table: Combinatorial Optimization Results
+
+Task	MCCE	Best Baseline (Method)
+MOTSP (
+)	1.0252	1.0229 (AlphaEvolve)
+MOCVRP (
+)	1.0488	1.0345 (ReEvo)
+Circle Packing (
+)	2.636	2.634+ (Record)
+Circle Packing (
+)	2.890	2.889+ (Record)
+These results confirm that MCCE's paradigm generalizes well beyond molecular design.
+
+Revision: We have added Section 5.3 (Generalization to Combinatorial Optimization) and Tables 2 & 3 to the revised paper.
+
+3. Component Analysis (Ablation Studies)
+Reviewer Weakness: "No detailed analysis isolating the contributions of each design component."
+
+Response: We have performed rigorous ablations to isolate the effects of DPO training and the Similarity Filter.
+
+Effect of Co-evolution (DPO): Comparing "Collaboration" (no training) vs. "MCCE" (DPO-trained) in the table below shows that parameter updates significantly boost performance (Top-1 F: 4.19 
+ 4.35).
+Effect of Similarity Filter: Removing the similarity constraints (or using only the relaxed 
+ filter) degrades performance and stability. The full similarity mechanism (
+) is optimal.
+Table: Component Ablation
+
+Setting	Top-1 F	Top-10 F	Note
+MCCE (Full)	4.354	4.284	Optimal
+Collaboration (No Train)	4.194	4.134	Shows gain from learning
+Only 
+ Filter	4.319	4.209	Shows need for strict filter
+4.359	4.272	Robust to 
+Embedding Similarity	4.286	4.218	Metric agnostic
+Revision: These detailed ablations are now detailed in Table 1 and Section 5.2.1.
+
+Response to Reviewer T7G1 [part 2/2]
+Official Commentby Authors25 Nov 2025, 11:55Everyone
+Comment:
+4. Computational Cost and Scalability
+Reviewer Weakness: "The paper does not discuss computational cost, scalability, or stability."
+
+Response: We provided a detailed cost analysis for a standard run (Budget: 5,000 candidates) using GPT-4o and Qwen2.5-7B.
+
+Table: Computational Cost
+
+Metric	Value / Specification
+Total LLM Calls	
+Ratio (API/Local)	50 / 32
+Total API Cost	
+ USD
+Total Time	
+ Hours (8x A800 GPU)
+The low cost ($3.81) and reasonable timeframe (3 hours) demonstrate that MCCE is highly scalable and practical for real-world deployment.
+
+Revision: Added to Appendix A.7.
+
+5. Missing References
+Reviewer Weakness: "Missing references on multi-agent collaboration."
+
+Response: We thank the reviewer for these relevant references. We have integrated the citations for CollabLLM, LLM-orchestrator, Collab-RAG, and Many Heads Are Better Than One into our Related Work section to better contextualize MCCE within the multi-agent landscape.
+
+Revision: Updated Section 2 (Related Work).
+
+About OpenReview
+Hosting a Venue
+All Venues
+Contact
+Sponsors
+Donate
+FAQ
+Terms of Use / Privacy Policy
+News
+OpenReview is a long-term project to advance science through improved peer review with legal nonprofit status. We gratefully acknowledge the support of the OpenReview Sponsors. ? 2025 OpenReview
+
+MCCE: A Framework for Multi-LLM Collaborative Co-Evolution | OpenReview

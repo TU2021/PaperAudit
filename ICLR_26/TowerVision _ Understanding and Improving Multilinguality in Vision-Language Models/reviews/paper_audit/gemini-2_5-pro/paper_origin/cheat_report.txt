@@ -1,0 +1,61 @@
+Based on a critical review of the manuscript, several clear internal inconsistencies and integrity risks have been identified. These issues materially affect the trustworthiness and scientific validity of the reported findings.
+
+### **Integrity and Consistency Risk Report**
+
+**1. Contradiction Between Abstract's Performance Claims and Main Results**
+
+The abstract makes a strong claim that the proposed models "surpass existing approaches ... as demonstrated on ... ViMUL-Bench (video tasks)" (Block 2). However, the results presented in Table 3 (Block 23) do not support this claim.
+
+-   **Evidence:** In Table 3, the proposed `TOWERVIDEO-9B` model is outperformed by baseline models on several languages in the ViMUL-Bench benchmark. For example:
+    -   Arabic (ar): `TOWERVIDEO-9B` (38.6) < `VideoLLaMA3-7B` (45.6)
+    -   Chinese (zh): `TOWERVIDEO-9B` (44.8) < `VideoLLaMA3-7B` (48.0)
+    -   English (en): `TOWERVIDEO-9B` (51.9) < `LLaVA-Video-7B` (53.3)
+    -   Russian (ru): `TOWERVIDEO-9B` (40.9) < `ViMUL-7B` (45.7)
+
+-   **Impact:** The claim in the abstract is an overstatement of the model's performance and is directly contradicted by the paper's own data. This misrepresents the contributions of the work.
+
+**2. Numerical Mismatch Between Figure and Table Data**
+
+There is a significant numerical discrepancy between the performance reported in a summary figure and the detailed results table for the same benchmark.
+
+-   **Evidence:** Figure 1 (Block 5) reports a score of **37.5** for `TowerVideo-9B` on the "Vimul" benchmark. However, the per-language scores for `TOWERVIDEO-9B` in Table 3 (Block 23) average to approximately **30.3**. The source of the value (37.5) in the figure is not explained and does not align with the detailed results.
+
+-   **Impact:** This inconsistency undermines the reliability of the data visualization and suggests a lack of care in data reporting.
+
+**3. Inconsistent Reporting of Supported Languages**
+
+The manuscript provides conflicting information about the languages the model supports, particularly in the context of the ViMUL-Bench evaluation.
+
+-   **Evidence:**
+    -   Section 1, footnote 2 (Block 7) lists the 20 languages and dialects used for training. This list **does not include Arabic (ar) or Swedish (sv)**.
+    -   Table 3 (Block 23) presents results on ViMUL-Bench. It uses an asterisk (*) to mark "unsupported languages." While languages like Bengali (bn) and Sinhala (si) are correctly marked as unsupported, **Arabic (ar) and Swedish (sv) are presented without the asterisk**, implying they are supported.
+
+-   **Impact:** This contradiction creates ambiguity about the evaluation setup. It is unclear whether the results for Arabic and Swedish are zero-shot or if the model was trained on these languages, contradicting the list provided in Section 1. This affects the interpretation of the model's cross-lingual capabilities.
+
+**4. Potential Data Anomaly in Ablation Study Results**
+
+An ablation study table contains highly improbable results that suggest a reporting error.
+
+-   **Evidence:** In Table 5 (Block 26), two distinct 9B model variants—one built with the `SigLIP1` vision encoder and the other with `SigLIP2`—are reported to achieve the exact same score of **83.6** on the ALM-Bench (en) benchmark. It is statistically unlikely for two different model architectures to produce identical scores on a complex benchmark.
+
+-   **Impact:** This identical result raises concerns about the validity of the experimental data in this table, potentially indicating a copy-paste error or other issues in the results generation or reporting process.
+
+**5. Contradictory Formatting in Results Table**
+
+A table in the ablation study uses formatting (bolding) that directly contradicts the numerical data within it.
+
+-   **Evidence:** In Table 6 (Block 27), which evaluates the effect of projector pretraining data, the "9B En" column compares two scores: 83.6 (for the "En" variant) and 83.0 (for the "En+Multi" variant). The table incorrectly bolds the lower score (**83.0**), which violates the convention of highlighting the superior result.
+
+-   **Impact:** This is a clear error that demonstrates a lack of attention to detail and could confuse the reader's interpretation of the ablation study's outcome.
+
+**6. Redundant Presentation of Results**
+
+The same experimental results are presented in two separate tables in different sections of the paper, which is highly redundant.
+
+-   **Evidence:** The results for the `TOWERVISION-2B`, `TOWERVIDEO-2B`, `TOWERVISION-9B`, and `TOWERVIDEO-9B` models on ViMUL-Bench are presented in both Table 3 (Block 23) in the "Main Results" section and again in Table 7 (Block 29) in the "Ablation" section. The numerical values are identical.
+
+-   **Impact:** This redundancy can be misleading and gives the impression of more extensive experimentation than was actually conducted. It points to poor organization and structuring of the paper's results.
+
+**Conclusion:**
+
+The manuscript contains multiple, clear, and substantive inconsistencies that compromise its scientific integrity. The contradictions between the abstract and the results, numerical mismatches, and conflicting details about the experimental setup are significant enough to warrant a thorough revision and re-verification of all reported data before the paper can be considered for publication.

@@ -1,0 +1,198 @@
+[Reviewer 1]
+
+Summary
+The paper introduces SeekBench, a process-level benchmark for evaluating epistemic competence in LLM search agents. It defines an evidence state (Definition 3.1; Eq. 2) and three competencies—groundedness, recovery, and calibration—operationalized by metrics RQI (Definitions 3.2–3.3), ERF (Definition 3.4), and CE (Definition 3.5). The authors curate 190 expert-annotated traces (1,800+ steps) with high inter-annotator agreement (κ > 0.8; Section 3.1; Appendix Fig. 5) and scale evaluation to 28,493 traces via an LLM judge (GPT‑4.1‑mini; Section 4.1). Empirical results indicate RL agents improve calibration and evidence recovery (Figure 3, Table 2) but underperform on evidence-grounded reasoning relative to few-shot prompting (Figure 2). The paper also explores “agent synthesis,” showing that Search‑R1 excels at information synthesis (RQI_type for IS = 0.63; Figure 31; Appendix Table 5) and conservative answering.
+
+Soundness
+- Metric design:
+  - Evidence state E = C + Q with binary clarity/quality (Definition 3.1) is simple and interpretable, but may be overly coarse. Continuous or ordinal scales could capture nuance (e.g., partially sufficient, mixed clarity), particularly for multi-hop QA (Sections 3.3.1–3.3.3).
+  - RQI aggregates a binary grounding label G across steps (Definitions 3.2–3.3). The grounding protocol (Appendix 8.1) deems plan-only text as Not Grounded, which likely depresses PlanFormation RQI regardless of quality planning (Figure 31, PF consistently <0.2; Section 4.2). This design conflates “absence of factual claims” with “ungroundedness,” potentially biasing the competency estimate for planning.
+  - CE (Definition 3.5) assumes an “ideal policy” that answers iff E=2. This is strong: in multi-hop settings, evidence may be split across turns (each turn classified E=1) but jointly sufficient; conversely, turns can have E=2 for the last retrieval while the cumulative prior context is poor. The per-turn conditioning in Eq. (10) does not explicitly model cumulation of evidence.
+  - ERF (Definition 3.4) defines recovery as first hitting E=2 or giving a correct answer (Eq. 7). Equating “correct guess without strong evidence” to recovery risks over-crediting lucky answers; the authors partially mitigate this by separate calibration analysis (Section 4.4) but ERF itself blends search improvement with guess-and-stop.
+- Statistical procedures:
+  - The use of Kaplan–Meier survival curves for recovery efficiency by action type (Figure 3 Right; Section 4.3) is appropriate for right-censored traces; however, ERF itself does not discuss censoring when traces end before recovery (Section 4.3 Left).
+- Annotations and scaling:
+  - Human κ > 0.8 and LLM-human κ ≈ 0.7–0.75 (Section 3.1; Appendix 6–8) support reliability. Still, using the same class of models under evaluation as judges (GPT‑4.1‑mini) introduces distributional/style biases; the authors note robustness but do not provide ablations with non-LLM judges or cross-judge sensitivity.
+
+Presentation
+- Clear problem framing and metric formalization (Sections 3.2–3.3) with useful decompositions (Eqs. 4 and 6).
+- Figures are informative, but there are minor technical inconsistencies:
+  - Figure 3 Right y-axis reads “P(remaining E ≤ 2)”; given E ∈ {0,1,2}, this should be “E < 2” (Section 4.3).
+  - Appendix 62 refers to “CompetenceBench” instead of SeekBench; several “A PREPRINT” interjections fragment the flow (e.g., Blocks 5, 15, 22, 27).
+  - Appendix 75 narrative describes “elevated groundedness even under insufficient evidence (≈0.10 at E = 1 and 0.14 at E = 2)”; E=2 denotes sufficient evidence, so the phrasing is contradictory.
+- The data sanitization procedure (Appendix 6) is clearly written but its implications (biasing towards queries where GPT‑4.1‑mini abstains) are not discussed.
+
+Contribution
+- A principled, process-level benchmark for epistemic competence with formalized metrics for groundedness, recovery, and calibration (Table 1; Section 3).
+- Large-scale, step-level analysis highlighting competency-specific effects of RL training (Sections 4.2–4.4).
+- Methodological insight: survival analysis for recovery at the action-type level (Section 4.3).
+- The “agent synthesis” experiment (Section 4.5; Appendix Table 5) shows actionable system design implications.
+
+Strengths
+- Well-motivated need for process-level evaluation beyond accuracy (Sections 1 and 1.1).
+- Formal, interpretable metrics with evidence-state decomposition (Eqs. 4, 6).
+- Strong human annotation reliability and transparent LLM-judge prompts (Appendix 8).
+- Empirical findings that oppose naive expectations (few-shot better RQI; RL better CE) and enable nuanced diagnosis (Figures 2–4; Table 2).
+- Practical insights for combining agents (Section 4.5; Appendix Table 5).
+
+Weaknesses
+- Grounding definition penalizes plan-only steps (Appendix 8.1), likely driving uniformly low PF RQI (Figure 31) irrespective of planning quality.
+- CE’s ideal policy and per-turn conditioning ignore cumulative evidence, possibly misclassifying justified early answers constructed from multi-turn E=1 fragments (Definition 3.5).
+- ERF equates “correct answer without E=2” with recovery (Eq. 7), confounding search adaptation with lucky correctness.
+- Heavy reliance on an LLM judge from the same ecosystem (Section 4.1); limited cross-judge or human-only ablations on the large-scale run.
+- Dataset scale for expert labels is modest (190 traces), and sanitization may bias towards GPT‑4.1‑mini’s abstention behavior (Appendix 6).
+
+Questions
+- How often do plan-only steps appear, and what fraction is labeled Not Grounded solely due to containing no factual claims? Can you report RQI with PF steps excluded or given a “Not Applicable” grounding label (Section 3.3.1; Appendix 8.1)?
+- Can CE be recomputed with a cumulative evidence state (e.g., monotone aggregation over turns) or a windowed aggregator to reflect multi-hop composition (Section 3.3.3)?
+- For ERF, what fraction of “recoveries” are due to “correct without E=2,” and how do conclusions change if recovery requires E=2 only (Eq. 7)?
+- Could you provide a human-only evaluation subset at scale to quantify potential LLM-judge bias (Section 4.1; Appendix 6–8)?
+- Does evidence clarity/quality labeling operate on the last retrieval only or the current cumulative context? Please clarify in Definition 3.1.
+
+Rating
+- Overall (10): 7 — Strong, well-scoped benchmark with clear metrics and impactful findings, but some metric-design choices (Eq. 7; Eq. 10; Appendix 8.1) plausibly bias competency estimates.
+- Novelty (10): 7 — Formalization of epistemic competencies and survival-based recovery analysis are fresh (Table 1; Section 4.3), though related process-level work exists (Section 2).
+- Technical Quality (10): 7 — Solid methodology and validation (κ in Section 3.1; decompositions Eqs. 4–6), tempered by simplifying assumptions in CE/ERF and grounding-policy biases.
+- Clarity (10): 8 — Generally clear with precise definitions (Section 3), but minor inconsistencies/typos (Figure 3 Right; Appendix 62; Appendix 75).
+- Confidence (5): 4 — High confidence based on close reading of methods, equations, and appendices; some judgments hinge on unreported ablations.
+
+
+[Reviewer 2]
+
+Summary
+SeekBench aims to measure how LLM search agents ground, recover, and assess evidence during open-domain QA. It proposes an 8-field annotation schema (Section 3.1; Figure 1), defines an evidence state (Definition 3.1), and operationalizes three competencies via RQI (grounding), ERF (recovery), and CE (calibration) (Section 3.3). The benchmark comprises 190 human-annotated traces and large-scale LLM-judged annotations (28k traces; Section 4.1). Findings: few-shot prompting yields the best grounded reasoning (Figure 2), RL training improves recovery and calibration (Figure 3; Table 2), and agent synthesis combining Search‑R1’s synthesis with others’ retrieval improves F1 (Section 4.5; Appendix Table 5).
+
+Soundness
+- Conceptual framing is coherent: epistemic competence is decomposed into three measurable behaviors. The trace formalization (Eq. 1) aligns with agentic QA literature.
+- Metric validity: The two-tiered validity argument (annotation κ and correlation of evidence state with answer accuracy, Section 3.3; Figure 4) is reasonable. However, CE’s “ideal policy” (answer iff E=2; Definition 3.5) presumes that E=2 tightly upper-bounds answerability; in practice, sufficiency can be distributed across multiple E=1 turns, and clarity may be orthogonal to sufficiency for simple factoids.
+- The data sanitization criterion that drops examples answered without search (Appendix 6) may filter out easier instances and bias evaluation toward retrieval-heavy questions, potentially inflating the measured importance of recovery/ERF.
+- The survival analysis for action-type recovery is a strong methodological choice (Section 4.3), with correct handling of censoring at the action-type level; it would help to report the number at risk over time for interpretability.
+
+Presentation
+- The manuscript is generally well-structured with equations and figure anchors (Sections 3–4). The overview figure (Figure 1) clearly reflects the schema and dataset statistics.
+- Minor but notable issues:
+  - Typo in Figure 3 Right (E ≤ 2 vs E < 2).
+  - Inconsistent naming (Appendix 62 “CompetenceBench”) and repeated “A PREPRINT” inserts.
+  - Some results are discussed without exact numeric uncertainty (e.g., ERF gaps in Figure 36 lack explicit CI descriptions).
+- The prompts in Appendix 8 are precise and reproducible; this is a strength.
+
+Contribution
+- A new benchmark lens for agent evaluation focusing on epistemic competence, not just end accuracy (Table 1).
+- Introduces interpretable metrics (RQI/ERF/CE) and shows competency-specific effects of RL training at scale (Sections 4.2–4.4).
+- Provides design guidance via action-type analysis (REFINE/FOLLOW-UP > REPEAT; Figure 3 Right) and agent synthesis (Section 4.5).
+
+Strengths
+- Clear articulation of why answer-only metrics are insufficient (Sections 1, 1.2).
+- Strong inter-annotator reliability and transparent LLM-judge design (Section 3.1; Appendix 7–8).
+- Insightful empirical findings contradicting accuracy-only conclusions (Few-shot best RQI; Table 3 vs Figure 2).
+- Survival-analysis-based recovery profiling offers interpretable, actionable insights (Section 4.3).
+
+Weaknesses
+- Limited scale of human annotations (N=190) against a broad claim of generality; reliance on a single LLM judge (GPT‑4.1‑mini) for large-scale labels (Section 4.1).
+- CE’s ideal policy and per-turn conditioning may not reflect multi-hop evidence accumulation (Definition 3.5).
+- ERF conflates evidence improvement with correct guessing (Eq. 7).
+- Grounding label penalizes plan-only reasoning (Appendix 8.1), making cross-type comparisons potentially unfair (Figure 31 PF vs IS/SA).
+
+Questions
+- Can you report a variant CE that uses cumulative E (e.g., running max or evidence pooling) and compare conclusions (Section 4.4)?
+- What proportion of PF steps contain any verifiable factual claims vs pure planning, and how does RQI change if PF steps without factual claims are marked N/A rather than Not Grounded (Section 3.3.1)?
+- How sensitive are the main conclusions to the sanitization filter that removes “no-search” questions (Appendix 6)? Provide results on the unsanitized split.
+- For ERF (Eq. 7), what happens if you drop the “correct answer” clause and require E=2 to declare recovery?
+
+Rating
+- Overall (10): 6 — Valuable benchmark and findings, but key metric assumptions (CE policy, ERF definition) and evaluation dependencies (LLM judge; sanitization) limit conclusiveness.
+- Novelty (10): 7 — Formalization of epistemic competencies and recovery survival analysis add new angles beyond prior process analyses (Section 2; Table 1).
+- Technical Quality (10): 6 — Solid annotation and clear metrics, yet simplifying assumptions (Eq. 7; Eq. 10) and type-dependent grounding bias reduce robustness.
+- Clarity (10): 7 — Mostly clear with detailed prompts, but scattered inconsistencies and minor figure typos (Figure 3 Right; Appendix 62).
+- Confidence (5): 4 — Read equations, figures, and appendices carefully; remaining questions concern unreported ablations.
+
+
+[Reviewer 3]
+
+Summary
+The paper proposes SeekBench to evaluate LLM agents’ epistemic competence via three dimensions—groundedness, recovery, and calibration—measured by RQI, ERF, and CE (Section 3). A small but high-agreement human-annotated set (N=190 traces) is paired with large-scale LLM-judged analysis over 28k traces (Section 4.1). Results demonstrate: (i) few-shot prompting outperforms RL agents on groundedness (Figure 2), (ii) REFINE/FOLLOW-UP actions accelerate recovery per survival curves (Figure 3 Right), (iii) RL agents reduce overconfident answering and overall CE (Table 2), and (iv) agent synthesis can leverage model specializations (Section 4.5; Appendix Table 5).
+
+Soundness
+- The core methodology—derive a compact evidence state (Definition 3.1) and link it to three metrics—is reasonable and yields interpretable diagnostics (Eqs. 3–6, 8, 10). Evidence-conditioned decompositions (Eqs. 4, 6) strengthen interpretability.
+- The survival analysis is methodologically sound and novel in this context (Section 4.3). Right-censoring is handled for action-type curves; however, for the ERF aggregate (Figure 36), trace-length heterogeneity is not explicitly treated.
+- Potential construct validity issues:
+  - Plan steps without factual claims are treated as Not Grounded (Appendix 8.1), which may understate “good planning” behaviors; the authors do partially acknowledge PF weaknesses (Section 4.2) but the metric choice contributes to that outcome.
+  - CE’s ideal policy (Definition 3.5) is prescriptive; many real tasks can be answered with partially sufficient but unambiguous evidence or by composing multiple E=1 steps. A cumulative or windowed evidence state would better represent these cases.
+  - ERF’s inclusion of “correct answer” as recovery (Eq. 7) dilutes the causal link to search adaptation.
+
+Presentation
+- Overall clear, with precise definitions and consistent notation (Sections 3.2–3.3). Figures 2–4 are easy to read; CI bars are appreciated.
+- Minor issues: “E ≤ 2” in Figure 3 Right should be “E < 2”; “CompetenceBench” appears in Appendix 62; Appendix 75’s wording mischaracterizes E=2 as insufficient.
+- The paper could include a small ablation table summarizing how findings change under metric variants (e.g., ERF without “correct answer”).
+
+Contribution
+- Provides a concrete, quantitative framework for step-level agent evaluation grounded in epistemic concepts (Table 1).
+- Offers actionable insights into search behaviors that improve recovery (Figure 3 Right) and into how specialized competencies can be combined (Section 4.5; Table 5).
+- The finding that RL training improves calibration but not grounded reasoning is an important caution for the community (Sections 4.2–4.4).
+
+Strengths
+- Clear formalism; decompositions reveal where errors originate (Eqs. 4, 6).
+- High-quality annotation pipeline and prompt transparency (Appendix 8).
+- Solid empirical breadth across seven QA datasets and multiple agents (Section 4.1).
+- Practical system-design takeaway via agent synthesis (Section 4.5).
+
+Weaknesses
+- Metric choices can bias competency assessment (PF grounding; CE’s ideal policy; ERF definition).
+- Reliance on a single LLM judge for scaling raises concerns about bias and reproducibility (Section 4.1), despite reported κ.
+- Human-annotated corpus is relatively small (N=190 traces).
+
+Questions
+- Could you report RQI excluding PF steps that contain no factual premises to decouple “grounding” from “planning quality” (Appendix 8.1)?
+- How robust are CE conclusions if you compute it on a cumulative evidence state (running max C and Q across turns) rather than per-turn (Definition 3.5)?
+- In Figure 3 Right, can you provide “number at risk” and formal comparisons (e.g., log-rank tests) for the survival curves across action types?
+
+Rating
+- Overall (10): 8 — Strong formalization and empirics with clear, actionable insights; some metric assumptions need refinement but do not undermine the core contribution (Sections 3–4).
+- Novelty (10): 8 — New competency framing with interpretable metrics and survival-based recovery analysis (Table 1; Section 4.3).
+- Technical Quality (10): 7 — Sound methods and validation; caveats around CE/ERF and grounding of planning steps.
+- Clarity (10): 8 — Well-written with minor inconsistencies (Figure 3 Right; Appendix 62; Appendix 75).
+- Confidence (5): 4 — High confidence based on in-depth reading and cross-checks of equations/figures; some claims hinge on unreported ablations.
+
+
+[Reviewer 4]
+
+Summary
+This work presents SeekBench, a benchmark and framework to evaluate epistemic competence of LLM search agents. The authors define an evidence state (Definition 3.1) and three metrics: RQI for groundedness (Definitions 3.2–3.3), ERF for recovery (Definition 3.4), and CE for calibration (Definition 3.5). With 190 expert-labeled traces (κ > 0.8) and scaled LLM-judge annotations (28k traces; Section 4.1), they show RL agents often gather evidence well (ERF; Figure 36) and calibrate better (Table 2) but reason less groundedly than few-shot systems (Figure 30). They also demonstrate agent synthesis benefits (Section 4.5; Appendix Table 5).
+
+Soundness
+- The conceptual mapping from observable step annotations to latent competencies is thoughtfully executed (Section 3.2 with Cronbach & Meehl framing).
+- Evidence state binarization of clarity and sufficiency (Definition 3.1) provides simplicity but loses gradation and interaction effects (e.g., high clarity but narrowly insufficient might be nearly answerable).
+- Grounding label derives from strict span support (Appendix 8.1). This increases precision but, by labeling plan-only steps as Not Grounded, conflates “absence of factual claims” with “unsupported claims,” which partially explains uniformly low PF RQI (Figure 31).
+- CE favors a strict “answer iff E=2” doctrine (Definition 3.5). This penalizes reasonable early answers constructed from cumulative partial evidence and does not consider task cost/benefit (e.g., time-to-answer trade-offs).
+- ERF counting “correct answers” as recovery (Eq. 7) fails to isolate search adaptation; a stricter version that requires E=2 would better capture recovery due to search.
+
+Presentation
+- The paper is accessible, with mathematical precision and good figure integration (Sections 3–4). The overview (Figure 1) clearly shows schema and distributions.
+- A few editorial issues (Figure 3 Right label; Appendix 62 naming; repeated “A PREPRINT” headers) and a contradictory sentence in Appendix 75.
+- Reproducibility is helped by prompt details (Appendix 8) but hindered by dependence on GPT‑4.1‑mini and GPT‑5 (Section 3.1), which may change over time.
+
+Contribution
+- Establishes epistemic competence as a measurable, multi-faceted target for agent evaluation, with interpretable metrics and evidence-conditioned analysis (Table 1; Eqs. 4, 6).
+- Provides empirical evidence that RL training’s benefits are competency-specific (better calibration/recovery, weaker groundedness), informing future training and modular designs (Sections 4.2–4.5).
+
+Strengths
+- Clear motivation and strong alignment between goals and metrics (Sections 1, 3).
+- High annotation reliability and transparent LLM-judge protocols (Section 3.1; Appendix 8).
+- Insightful, actionable analyses: survival curves for recovery actions (Figure 3 Right), evidence-conditioned answer accuracy (Figure 4), and agent synthesis payoffs (Appendix Table 5).
+
+Weaknesses
+- Potential metric-induced biases (PF grounding, CE ideal policy, ERF definition).
+- Limited human-labeled size and heavy reliance on a single LLM judge for scale (Section 4.1).
+- Sanitization step may bias the benchmark toward retrieval-heavy queries and towards the abstention style of GPT‑4.1‑mini (Appendix 6).
+
+Questions
+- Please report sensitivity to different grounding protocols: (i) mark plan-only steps as N/A, (ii) soft grounding with entailment scores, and show RQI changes (Section 3.3.1).
+- Could CE be redefined with a cost-sensitive target policy (e.g., answer when expected utility exceeds threshold) and compared to Eq. (10)?
+- For reproducibility, will human-labeled traces, prompts, and full LLM-judge outputs be released? Are human-only labels used for a subset of the 28k traces to validate scaling (Appendix 7–8)?
+
+Rating
+- Overall (10): 7 — Compelling framework and evidence-rich analysis with practical implications, tempered by simplifying metric assumptions and reliance on LLM-judge scaling.
+- Novelty (10): 7 — Fresh angle on agent evaluation via epistemic competencies and survival-based recovery profiling (Table 1; Section 4.3).
+- Technical Quality (10): 6 — Solid core, but several definitions could better reflect multi-hop accumulation and planning semantics (Definitions 3.1, 3.5; Appendix 8.1).
+- Clarity (10): 8 — Well-written with minor inconsistencies (Figure 3 Right; Appendix 62; Appendix 75); good use of equations and figures.
+- Confidence (5): 4 — High confidence from careful cross-check of equations, figures, and appendices; some reservations due to missing ablations.

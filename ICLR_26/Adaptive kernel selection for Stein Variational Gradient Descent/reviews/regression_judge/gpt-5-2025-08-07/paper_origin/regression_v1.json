@@ -1,0 +1,102 @@
+{
+  "paper": "Adaptive kernel selection for Stein Variational Gradient Descent",
+  "runs": [
+    {
+      "config": {
+        "judge_model": "gpt-5-2025-08-07",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "baseline_file": "baseline_review.txt",
+        "final_file": "final_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 600,
+        "metric": "regression_v2_minimal",
+        "prompt_hash": "2142c04332"
+      },
+      "config_key": "1a46f14f5902ebb0fc2c14773cec6644d2fa5338",
+      "inputs": {
+        "baseline_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/baseline_review.txt",
+        "final_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/final_review_all.txt"
+      },
+      "regression": {
+        "score_delta": {
+          "baseline_score": 7.0,
+          "final_score": 6.0,
+          "delta": -1.0,
+          "scale_hint": "1-10"
+        },
+        "differences": [
+          {
+            "diff_type": "new_critique",
+            "summary": "Kernel differentiability gap for p=1 product kernels",
+            "paperaudit_types": [
+              "METHOD_LOGIC_CONSISTENCY",
+              "CONTEXT_MISALIGNMENT_INCOHERENCE"
+            ],
+            "why_impacts_score": "Questions correctness of KSD terms and algorithm applicability",
+            "evidence": {
+              "baseline_quote": "Experiments use product kernels with p = 1 and per-dimension bandwidths (Section 5.1), leaving generality claims under-tested.",
+              "final_quote": "Use of p = 1 product kernels conflicts with differentiability in Equation (5); non-differentiability at x = y is not handled."
+            }
+          },
+          {
+            "diff_type": "new_critique",
+            "summary": "Internal inconsistency in step-size bound (Equation 8 vs. Theorem 4)",
+            "paperaudit_types": [
+              "METHOD_LOGIC_CONSISTENCY",
+              "RHETORICAL_PRESENTATION_MANIPULATION",
+              "CONTEXT_MISALIGNMENT_INCOHERENCE"
+            ],
+            "why_impacts_score": "Conflicting bounds weaken theoretical guarantees and confidence",
+            "evidence": {
+              "baseline_quote": "The uniform step-size condition (Equation (8)) may be violated; the paper assumes uniformity but does not quantify B across Θ.",
+              "final_quote": "Internal inconsistency in the step-size condition: Equation (8) vs. Theorem 4; no reconciliation or derivation provided."
+            }
+          },
+          {
+            "diff_type": "new_critique",
+            "summary": "Assumption 5 applicability to kernels not verified",
+            "paperaudit_types": [
+              "METHOD_LOGIC_CONSISTENCY",
+              "CLAIM_RESULT_DISTORTION",
+              "CONTEXT_MISALIGNMENT_INCOHERENCE"
+            ],
+            "why_impacts_score": "Iteration-complexity results rest on unverified assumptions",
+            "evidence": {
+              "baseline_quote": "Theorem 4 provides KL-rate bounds under a generalized Stein log-Sobolev inequality, adding depth (technical soundness/impact).",
+              "final_quote": "Applicability of Assumption 5 to the experimental kernel class is not verified; no conditions or examples are provided."
+            }
+          },
+          {
+            "diff_type": "new_critique",
+            "summary": "Unsupported claim of unique closed-form in multiple-kernel SVGD",
+            "paperaudit_types": [
+              "RHETORICAL_PRESENTATION_MANIPULATION",
+              "CLAIM_RESULT_DISTORTION"
+            ],
+            "why_impacts_score": "Unsubstantiated strong claim reduces credibility and clarity",
+            "evidence": {
+              "baseline_quote": "Comparisons focus on the median heuristic, omitting multiple-kernel SVGD [1] and related approaches (Related Work).",
+              "final_quote": "The claim of a “unique” closed-form KSD maximization in multiple-kernel SVGD is not substantiated or expressed, reducing clarity."
+            }
+          },
+          {
+            "diff_type": "score_rationale_shift",
+            "summary": "Final ties lower Overall/Technical scores to new technical gaps",
+            "paperaudit_types": [
+              "METHOD_LOGIC_CONSISTENCY",
+              "CONTEXT_MISALIGNMENT_INCOHERENCE"
+            ],
+            "why_impacts_score": "Adds concrete reasons for lowering Overall and Technical Quality",
+            "evidence": {
+              "baseline_quote": "Overall (10): 7 — relies on unverified Assumption 4 and lacks broader baselines.",
+              "final_quote": "Overall (10): 6 — technical gaps: kernel smoothness for p = 1 and internal step-size bound inconsistency."
+            }
+          }
+        ]
+      },
+      "generated_at": "2026-01-05T20:41:10"
+    }
+  ]
+}

@@ -1,0 +1,144 @@
+{
+  "paper": "Task Tokens_ A Flexible Approach to Adapting Behavior Foundation Models",
+  "runs": [
+    {
+      "config": {
+        "judge_model": "gpt-5-2025-08-07",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "baseline_file": "baseline_review.txt",
+        "final_file": "final_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 600,
+        "metric": "regression_v2_minimal",
+        "prompt_hash": "2142c04332"
+      },
+      "config_key": "1a46f14f5902ebb0fc2c14773cec6644d2fa5338",
+      "inputs": {
+        "baseline_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/baseline_review.txt",
+        "final_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/final_review_all.txt"
+      },
+      "regression": {
+        "score_delta": {
+          "baseline_score": 7.0,
+          "final_score": 7.0,
+          "delta": 0.0,
+          "scale_hint": "1-10"
+        },
+        "differences": [
+          {
+            "diff_type": "new_critique",
+            "summary": "Parameter-count ambiguity vs Bigger MLP configuration",
+            "paperaudit_types": [
+              "EVIDENCE_DATA_INTEGRITY",
+              "METHOD_LOGIC_CONSISTENCY",
+              "RHETORICAL_PRESENTATION_MANIPULATION"
+            ],
+            "why_impacts_score": "Undermines parameter-efficiency claim and reproducibility",
+            "evidence": {
+              "baseline_quote": "The encoder uses ~200k parameters per task",
+              "final_quote": "not reconciled with the “Bigger MLP [512,512,512]” used in main results"
+            }
+          },
+          {
+            "diff_type": "new_critique",
+            "summary": "Unclear use of priors in quantitative vs qualitative results",
+            "paperaudit_types": [
+              "CONTEXT_MISALIGNMENT_INCOHERENCE",
+              "METHOD_LOGIC_CONSISTENCY",
+              "RHETORICAL_PRESENTATION_MANIPULATION"
+            ],
+            "why_impacts_score": "Creates confusion about experimental conditions and comparability",
+            "evidence": {
+              "baseline_quote": "supports multi-modal prompting with joint and text priors (Figures 5–6)",
+              "final_quote": "J.C. is not available for Strike… yet Figure 6 demonstrates Strike with joint and text priors"
+            }
+          },
+          {
+            "diff_type": "new_critique",
+            "summary": "Editorial gap: truncated sentence in Section 3.3",
+            "paperaudit_types": [
+              "RHETORICAL_PRESENTATION_MANIPULATION",
+              "CONTEXT_MISALIGNMENT_INCOHERENCE"
+            ],
+            "why_impacts_score": "Reduces clarity of core methodological justification",
+            "evidence": {
+              "baseline_quote": "The PPO objective is described qualitatively… without explicit loss formulas",
+              "final_quote": "A sentence in Section 3.3 appears truncated ('This design choice is fundamental—…')."
+            }
+          },
+          {
+            "diff_type": "new_critique",
+            "summary": "Steps vs frames budget discrepancy in sample efficiency",
+            "paperaudit_types": [
+              "EXPERIMENTAL_DESIGN_PROTOCOL",
+              "EVIDENCE_DATA_INTEGRITY",
+              "METHOD_LOGIC_CONSISTENCY"
+            ],
+            "why_impacts_score": "Obscures fairness and validity of efficiency comparisons",
+            "evidence": {
+              "baseline_quote": "Sample efficiency is demonstrated only on Strike (Figure 3)",
+              "final_quote": "Figure 3 shows convergence up to 350M steps; Appendix B states 120M frames"
+            }
+          },
+          {
+            "diff_type": "intensified_critique",
+            "summary": "Inconsistent episode termination rules across train/eval",
+            "paperaudit_types": [
+              "EXPERIMENTAL_DESIGN_PROTOCOL",
+              "CONTEXT_MISALIGNMENT_INCOHERENCE"
+            ],
+            "why_impacts_score": "Confounds cross-method success metrics and fairness",
+            "evidence": {
+              "baseline_quote": "Evaluation fairness and scope are limited",
+              "final_quote": "Training and evaluation use different episode termination rules (Appendix B)"
+            }
+          },
+          {
+            "diff_type": "new_critique",
+            "summary": "Overstated robustness claim ('order of magnitude') without numbers",
+            "paperaudit_types": [
+              "CLAIM_RESULT_DISTORTION",
+              "EVIDENCE_DATA_INTEGRITY",
+              "RHETORICAL_PRESENTATION_MANIPULATION"
+            ],
+            "why_impacts_score": "Exaggeration weakens credibility of OOD results",
+            "evidence": {
+              "baseline_quote": "large gains at low friction (~0.4) and high gravity (~1.5)",
+              "final_quote": "claims 'order of magnitude' higher success… Figure 4 provides only qualitative curves"
+            }
+          },
+          {
+            "diff_type": "new_critique",
+            "summary": "Conclusion misleads on human-likeness vs PULSE",
+            "paperaudit_types": [
+              "CLAIM_RESULT_DISTORTION",
+              "CONTEXT_MISALIGNMENT_INCOHERENCE",
+              "RHETORICAL_PRESENTATION_MANIPULATION"
+            ],
+            "why_impacts_score": "Inconsistent summary undermines trust in comparative claims",
+            "evidence": {
+              "baseline_quote": "Task Tokens win against fine-tune, AMP, and PPO in human-likeness",
+              "final_quote": "Conclusion states 'Human studies confirm…' while paper acknowledges PULSE scores higher"
+            }
+          },
+          {
+            "diff_type": "score_rationale_shift",
+            "summary": "Clarity score lowered due to added inconsistencies",
+            "paperaudit_types": [
+              "METHOD_LOGIC_CONSISTENCY",
+              "CONTEXT_MISALIGNMENT_INCOHERENCE"
+            ],
+            "why_impacts_score": "Explicitly reduces the Clarity rating, making the review more negative",
+            "evidence": {
+              "baseline_quote": "Clarity (10): 6 — High-level method and visuals are clear",
+              "final_quote": "Clarity (10): 5 — missing formulas, parameter-count reconciliation, and a truncated sentence"
+            }
+          }
+        ]
+      },
+      "generated_at": "2026-01-05T20:44:19"
+    }
+  ]
+}

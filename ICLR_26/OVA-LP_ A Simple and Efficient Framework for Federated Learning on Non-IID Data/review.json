@@ -1,0 +1,21 @@
+{
+  "paper_title": "OVA-LP: A Simple and Efficient Framework for Federated Learning on Non-IID Data",
+  "file_name": "2511.05028v1",
+  "reviewers": [
+    {
+      "reviewer_id": "2VP7",
+      "score": 8,
+      "confidence": 4
+    },
+    {
+      "reviewer_id": "PhgA",
+      "score": 4,
+      "confidence": 3
+    },
+    {
+      "reviewer_id": "4AKB",
+      "score": 4,
+      "confidence": 3
+    }
+  ]
+}

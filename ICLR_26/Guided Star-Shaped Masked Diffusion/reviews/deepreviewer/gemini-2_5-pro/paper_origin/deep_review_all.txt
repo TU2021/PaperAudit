@@ -1,0 +1,164 @@
+Here are four distinct reviews of the paper "GUIDED STAR-SHAPED MASKED DIFFUSION".
+
+***
+
+### **Review 1**
+
+**Summary**
+This paper introduces Guided Star-Shaped Masked Diffusion (G-Star), a novel sampling algorithm for pre-trained masked diffusion models. The method addresses the issue of irreversible token generation by reformulating the sampling process using a star-shaped paradigm, which allows for token revision. To make this revision efficient, the authors introduce a lightweight, learnable error predictor that guides the re-masking process to target likely incorrect tokens. The paper demonstrates through extensive experiments on text and code generation that G-Star significantly improves sample quality, particularly in few-step generation regimes, and enhances the performance of large-scale instruction-tuned models.
+
+**Soundness**
+The methodology is sound and well-motivated. The core idea of combining a star-shaped sampler for reversibility with a guided error predictor for efficiency is logically coherent. The authors correctly identify the instability of the pure star-shaped sampler in early generation stages and propose a sensible hybrid strategy (MDLM for drafting, G-Star for refinement), which they validate empirically (Section 4.2, Figure 2). The training procedure for the error predictor (Algorithm 1) is clear and appropriate for its purpose. The experimental setup is thorough, covering unconditional text generation, conditional code generation, and large-scale LLM benchmarks. The ablation studies in Section 4 and Appendix C convincingly isolate and validate the contributions of each component of the proposed method.
+
+**Presentation**
+The paper is exceptionally well-written and organized. The introduction (Section 1) clearly articulates the core limitation of standard masked diffusion models and situates the proposed work within the context of recent approaches like ReMDM. The method is developed logically, first introducing the star-shaped sampler (Section 3.1) and then the guided re-masking mechanism (Section 3.2). The figures are a major strength; Figure 1 provides a clear intuition for the two-phase generation process, Figure 3 effectively visualizes the advantage in few-step regimes, and the appendix figures (e.g., Figure 8 vs. Figure 9) offer compelling qualitative evidence of the guided approach's superiority. The tables are comprehensive and easy to interpret.
+
+**Contribution**
+The paper makes a significant contribution to the field of discrete diffusion models. While ideas like re-masking (ReMDM) and star-shaped processes have been explored before, this work is the first to combine them and, crucially, to introduce a *learnable guidance mechanism* to make the refinement process targeted and efficient. The demonstration that this method can be applied to pre-trained models with only a lightweight fine-tuning of a single layer (Section 4.5) is a major practical contribution. Furthermore, showing consistent improvements on a state-of-the-art 7B instruction-tuned model (Section 5.1, Table 3) validates the approach's relevance and scalability for current large language models.
+
+**Strengths**
+1.  **Strong Empirical Results:** The method demonstrates substantial and consistent improvements over strong baselines (MDLM, ReMDM) across multiple tasks, metrics, and model scales. The performance gains in few-step regimes (Figure 3) are particularly impressive and practically relevant.
+2.  **Excellent Motivation and Analysis:** The paper provides a clear diagnosis of the problems with both standard MDLM (irreversibility) and unguided refinement (inefficiency). The analysis in Section 4.2, which identifies the two distinct phases of generation and the optimal time to switch samplers, is insightful and provides a strong foundation for the method.
+3.  **Practicality and Efficiency:** The ability to use pre-trained models and the demonstrated effectiveness of a lightweight, head-only-trained error predictor (Section 4.5) make the approach highly practical. It offers a significant quality boost for a minimal increase in parameter count and training complexity.
+4.  **Scalability:** The successful application to a 7B parameter model (Dream-Instruct, Table 3) shows that the benefits of guided refinement are not limited to smaller models but can enhance even very large, capable LLMs.
+
+**Weaknesses**
+1.  **Limited Discussion of Hyperparameters:** While the paper rightly criticizes ReMDM's sensitivity to `η`, the proposed G-Star method introduces its own set of hyperparameters (e.g., `t_on`, loop size, `τ_remask`). Although a heuristic for loop size is provided (Section 4.4), a more consolidated discussion of hyperparameter sensitivity and tuning guidelines for G-Star would strengthen the paper's practical utility.
+2.  **Fixed Sequence Length:** The current framework is limited to "in-place" token substitution and cannot handle insertions or deletions, as noted by the authors in the limitations (Section G). This restricts its ability to correct errors that require changing the sequence length.
+
+**Questions**
+1.  The error predictor `g_φ` is trained in a separate stage. Have you considered joint or alternating training of the diffusion model `f_θ` and the error predictor `g_φ`? Could this lead to a synergistic effect where the generator becomes more "aware" of its own likely errors?
+2.  The error predictor is trained to predict `x̂_0,i ≠ x_0,i`. Does the performance change if the predictor is instead trained to predict tokens where the model is uncertain (e.g., high entropy in `p_θ(x_0|x_t)`), even if the sampled token happens to be correct?
+3.  How does the performance of the error predictor itself vary with the timestep `t` used to generate `x_t` during its training (Algorithm 1, line 6)? Is it more difficult to predict errors made from a very noisy `x_t`?
+
+**Rating**
+- Overall (10): 9 — The paper presents a well-motivated, technically sound, and empirically powerful method that significantly advances sampling for masked diffusion models (Table 1, Table 3).
+- Novelty (10): 8 — The core novelty lies in the effective combination of a star-shaped sampler with a learned, targeted error predictor, which is a significant step beyond prior stochastic re-masking techniques (Section 3.2).
+- Technical Quality (10): 9 — The experiments are comprehensive, with strong ablation studies that validate key design choices and demonstrate the method's effectiveness across various settings (Section 4, Section 5).
+- Clarity (10): 10 — The paper is exceptionally clear, with excellent writing, logical organization, and highly effective figures that build strong intuition for the method's mechanics and benefits (Figure 1, Figure 2, Figure 8).
+- Confidence (5): 5 — I am an expert in this area and am very confident in my assessment of the paper's strengths and contributions.
+
+***
+
+### **Review 2**
+
+**Summary**
+This paper proposes G-Star, a new sampling method for masked diffusion models designed to enable error correction. The method is based on a "star-shaped" sampling paradigm that allows previously generated tokens to be re-masked and revised. To improve efficiency, this process is guided by a separately trained "error predictor" model that identifies which tokens are most likely to be incorrect. The authors show that a hybrid approach—using standard masked diffusion sampling initially and switching to G-Star for final refinement—outperforms existing methods on text and code generation tasks, especially with a limited number of sampling steps.
+
+**Soundness**
+The methodological soundness has some strong points but also raises concerns. The motivation to overcome the irreversible nature of standard masked diffusion is valid. The proposed star-shaped sampler's connection to ReMDM is an interesting theoretical point (Section 3.1). However, the overall framework's complexity is a concern. The necessity of a two-phase generation process (MDLM then Star, Section 4.2) and a completely separate training pipeline for the error predictor (Algorithm 1) makes the system less elegant and more complex to deploy than presented.
+
+A key issue is the comparison with ReMDM. The authors highlight ReMDM's sensitivity to the `η` hyperparameter (Appendix C.1) as a major drawback. While this is a fair point, the proposed G-Star method introduces its own set of crucial hyperparameters: the switch-over time `t_on` (Figure 2), the re-masking temperature `τ_remask` (Appendix C.3), and the loop size percentage (Section 4.4). The paper does not provide a similarly rigorous sensitivity analysis for these new hyperparameters, making the claim of superior robustness over ReMDM less substantiated. The performance of G-Star could be equally sensitive to its own configuration.
+
+**Presentation**
+The paper is generally well-written, but the structure could be improved. The core method is split between the star-shaped sampler (Section 3.1) and the guided re-masking (Section 3.2), which is logical. However, the crucial insight that a *hybrid* schedule is needed is buried in the analysis section (Section 4.2). This design choice is fundamental to making the method work and should be presented upfront as part of the core methodology in Section 3. The current organization makes it seem like an afterthought discovered during experiments rather than a principled component of the G-Star sampler. The appendices contain critical information (e.g., ReMDM tuning, `τ_remask` ablation) that is essential for a full understanding of the results and should be more prominently referenced or summarized in the main text.
+
+**Contribution**
+The contribution is an incremental but effective improvement in sampling for masked diffusion models. The idea of re-masking tokens for refinement has been established by ReMDM. The main novelty here is making the re-masking *targeted* rather than random by using a learned predictor. While error predictors are not a new concept in machine learning, their application in this specific context is novel and shown to be effective. The paper's contribution is therefore more of a clever and successful engineering solution that combines existing concepts, rather than a fundamental theoretical breakthrough. The equivalence shown between the unguided Star sampler and a specific ReMDM configuration (Section 3.1) is a nice, albeit minor, theoretical contribution.
+
+**Strengths**
+1.  **Clear Problem Formulation:** The paper does an excellent job of explaining the limitations of standard masked diffusion models (Section 1).
+2.  **Strong Performance in Low-Step Regimes:** The most compelling results are in the few-step generation scenarios (Figure 3, Table 1), where targeted correction is logically most important. This demonstrates a clear practical advantage.
+3.  **Parameter-Efficient Predictor:** Showing that a lightweight, head-only trained error predictor is nearly as effective as a fully fine-tuned one (Section 4.5, Table 1) is a strong point for the method's practicality.
+
+**Weaknesses**
+1.  **Increased System Complexity:** The method requires training and running a second model (`g_φ`) and relies on a complex, multi-phase sampling schedule (MDLM -> G-Star loop -> MDLM). This is a significant increase in complexity over both the MDLM baseline and ReMDM.
+2.  **Incomplete Hyperparameter Analysis:** The paper criticizes ReMDM for its hyperparameter sensitivity but does not provide a comprehensive analysis of its own key hyperparameters (`t_on`, loop size, `τ_remask`), weakening claims of superior robustness.
+3.  **Potentially Unfair Baseline Comparison:** While the authors tune ReMDM, the extensive search required suggests that finding the optimal ReMDM is difficult. However, the G-Star results are also presented after tuning its own parameters (e.g., `t_on=0.2`, 10% loop size). The comparison feels somewhat biased towards highlighting the brittleness of the baseline while downplaying the tuning required for the proposed method.
+
+**Questions**
+1.  Could you provide an ablation study on the `t_on` hyperparameter for the G-Star+ and G-Star-loop methods similar to the one in Figure 2, but for the final reported metrics in Table 1? How sensitive is the final performance to this choice?
+2.  The error predictor `g_φ` is trained on errors made by the base model `f_θ`. If `f_θ` is improved or changed, does `g_φ` need to be completely retrained? How tightly coupled are the two models?
+3.  Algorithm 1 uses a single sampled `t` to generate `x_t` for training the error predictor. Did you experiment with training the predictor on errors from a full generation trajectory, or from a specific range of `t` (e.g., only late-stage `t` where refinement happens)?
+
+**Rating**
+- Overall (10): 7 — A solid paper with strong results, but the increased complexity and incomplete hyperparameter analysis temper its overall impact.
+- Novelty (10): 6 — The contribution is an intelligent application of error prediction to guide an existing refinement idea (re-masking), making it more of an incremental engineering success than a brand-new concept.
+- Technical Quality (10): 7 — The experiments are extensive, but the methodological complexity and the potentially biased comparison to baselines regarding hyperparameter tuning are minor weaknesses.
+- Clarity (10): 8 — The paper is mostly clear, but key design choices like the hybrid schedule are misplaced in the analysis section instead of the method section (Section 4.2 vs Section 3).
+- Confidence (5): 5 — I have expertise in generative models and feel confident in my evaluation of the technical details and contributions.
+
+***
+
+### **Review 3**
+
+**Summary**
+This paper presents G-Star, a sampling algorithm to improve pre-trained masked diffusion models by enabling error correction. The method consists of two main ideas: a "star-shaped" sampling process that allows tokens to be revisited, and a "guided" re-masking step where a small, trained error-predictor model identifies which tokens to revise. The authors show that using a standard sampler for the initial draft and then switching to their guided sampler for refinement leads to significant gains in sample quality, especially when the total number of generation steps is small. The method's effectiveness is demonstrated on text generation, code generation, and by improving a 7B instruction-following language model.
+
+**Soundness**
+The technical approach is sound. The derivation of the star-shaped sampler and its connection to ReMDM is correct (Section 3.1, Appendix A). The logic for using a hybrid schedule—leveraging the stability of MDLM for initial structure and the refinement power of the star-shaped sampler for late-stage correction—is well-reasoned and empirically supported by a clear ablation study (Section 4.2). The design of the error predictor and its training scheme (Algorithm 1) is straightforward and sensible. The evaluation is comprehensive, using appropriate metrics (PPL, MAUVE, DIV) and testing on a good variety of tasks. The results in Tables 1, 2, and 3 appear to robustly support the paper's claims.
+
+**Presentation**
+The presentation is a major strength of this paper. The narrative is compelling and easy to follow. The introduction provides excellent context and motivation by framing the problem as one of "irreversible commitments" (Section 1). The use of figures to build intuition is exemplary. For instance:
+*   Figure 2 provides a clear and convincing argument for the hybrid sampling schedule by showing how performance peaks when switching at `t_on ≈ 0.3`.
+*   The side-by-side plots in Figure 1 effectively illustrate the different dynamics of the MDLM and Star samplers, visually justifying the need for a hybrid approach.
+*   The qualitative visualizations in the appendix (Figure 7, Figure 8, Figure 9) are powerful, showing the stark difference between the scattered, random re-masking of unguided methods and the structured, phrase-level corrections enabled by G-Star.
+
+However, there are minor areas for improvement. The paper relies heavily on the appendix for crucial details. For example, the entire discussion of ReMDM's hyperparameter sensitivity (Appendix C.1), which is a key part of the motivation against it, is relegated to the back. A summary of Figure 4 in the main text would strengthen the argument in Section 2. Similarly, the qualitative example in Figure 7 is very effective and could have been considered for inclusion in the main paper to make the "guided" concept more concrete earlier on.
+
+**Contribution**
+The paper's contribution is a practical and effective method for improving discrete diffusion models. The primary contribution is not the invention of a single new component, but the insightful combination of several ideas (star-shaped sampling, re-masking, and error-guided correction) into a cohesive and high-performing system. The demonstration that this complex refinement can be achieved with a very lightweight secondary model (Section 4.5) is a key part of this contribution, as it makes the approach efficient and scalable. The paper successfully shifts the paradigm from random, inefficient refinement (like ReMDM) to targeted, intelligent correction.
+
+**Strengths**
+1.  **Exceptional Clarity:** The paper is extremely well-written. Complex ideas are explained with simple analogies (e.g., "one-way street") and supported by clear figures.
+2.  **Strong Visual Evidence:** The figures are not just illustrative; they form a core part of the paper's argument and are very persuasive (esp. Figures 1, 2, 3, and 7-9).
+3.  **Logical and Thorough Analysis:** The analysis in Section 4 is methodical, building the case for the final G-Star method step-by-step, from the need for a hybrid schedule to the benefit of guidance.
+4.  **Well-Structured Appendices:** The appendices provide a wealth of useful supplementary information that adds depth to the main paper's claims.
+
+**Weaknesses**
+1.  **Organization of Key Results:** Some crucial findings that motivate the method's design are located in the analysis section (Section 4.2) or appendix (Appendix C.1) when they might better serve the narrative if introduced earlier.
+2.  **Inconsistent Figure Labeling:** There appears to be a mix-up or duplication in the appendix figures. The content described for Figure 7 in Section E seems to be visualized in images labeled `G-Star+` and `Star+` (Blocks 67, 68, 71, 72), while the text in Section F refers to Figures 8 and 9. This section is a bit confusing to navigate.
+3.  **Claim 1 Proof:** The proof in Appendix A is helpful, but the final step from Eq. (16) to Eq. (17) is a bit abrupt. Explicitly defining the weights `w'_t` based on the coefficients in Eq. (16) would make the conclusion more transparent.
+
+**Questions**
+1.  In Algorithm 2, line 9, you sample `N` locations to re-mask. `N` is determined by the noise schedule (`1-α_{t-1}`). Did you experiment with making `N` adaptive, for example, by re-masking all tokens where the predicted error probability from `g_φ` is above a certain threshold?
+2.  Could you clarify the relationship between Figure 7 (text in Section E) and the images in blocks 71 and 72? Are they the same? The formatting and numbering are a bit confusing.
+3.  The abstract mentions fine-tuning a "single layer". Section 4.5 discusses fine-tuning one *block* (1B, F) or just the classification *head* (12B, H). Could you clarify what "single layer" refers to? Is it the classification head?
+
+**Rating**
+- Overall (10): 8 — A very well-presented paper with a strong, practical method, let down only by minor organizational choices and some confusion in the appendix.
+- Novelty (10): 7 — The contribution is a novel and effective synthesis of existing ideas into a system that is greater than the sum of its parts, particularly the guided refinement aspect.
+- Technical Quality (10): 9 — The technical work is solid, with thorough experiments and ablations that strongly support the claims.
+- Clarity (10): 9 — The paper is exceptionally clear and well-written, though the placement of some key results and the organization of appendix figures could be slightly improved.
+- Confidence (5): 5 — I am confident in my assessment, with a particular focus on the paper's presentation and clarity.
+
+***
+
+### **Review 4**
+
+**Summary**
+This work introduces G-Star, a sampling algorithm for masked diffusion models that enables iterative error correction. The authors identify that standard masked diffusion makes irreversible token choices. To fix this, they propose a "star-shaped" sampler that can revise tokens, and find it works best when used only in the final stages of generation. The key component is a learned "error predictor" that guides the revision process to focus on the most likely mistakes, making the process more efficient than prior random-revision methods like ReMDM. The authors validate their approach on text and code generation, showing improved performance, especially in low-step count scenarios.
+
+**Soundness**
+The methodology is generally sound and the empirical results are positive. The core logic—that targeted refinement is better than random refinement—is intuitive and well-supported by the data (e.g., Figure 3). The analysis showing that the star-shaped sampler is only effective for late-stage refinement (Section 4.2) is a key finding that makes the overall system viable. The training of the error predictor is reasonable, though it adds another moving part to the overall system. The experiments are quite comprehensive, especially the head-to-head comparisons in Table 1 and the application to a 7B model in Table 3.
+
+**Presentation**
+The paper is well-written and clearly structured. The introduction effectively sets up the problem. The figures and tables are informative and generally support the authors' claims. The step-by-step analysis in Section 4, which deconstructs the method and justifies each component, is a good way to build the argument. The appendices provide useful details, particularly the analysis of ReMDM's hyperparameter sensitivity (Appendix C.1), which provides important context for this work's contribution.
+
+**Contribution**
+The contribution of this paper is a solid, but arguably incremental, advancement in the field of discrete diffusion. The idea of enabling revisions in masked diffusion was previously introduced by ReMDM (Wang et al.). The concept of a star-shaped diffusion process was proposed by Okhotin et al. (2023). This paper's primary contribution is to connect these ideas and significantly improve the revision step by making it *guided* instead of stochastic.
+
+While the resulting system (G-Star) is empirically superior, especially in terms of sample efficiency, it does not introduce a fundamentally new paradigm. Rather, it is a very effective refinement of existing techniques. The most significant aspect of the contribution is the demonstration that a simple, learned guidance signal can so dramatically improve the efficiency of the refinement process. This highlights that "how" you refine is as important as "that" you refine. The finding that this can be done with a lightweight, separately trained module that plugs into existing models is a valuable practical contribution.
+
+**Strengths**
+1.  **Principled Approach to Refinement:** The paper moves beyond the brute-force, stochastic re-masking of prior work and introduces a more principled, targeted approach to error correction.
+2.  **Sample Efficiency:** The method's main advantage is its superior performance in low-to-medium step regimes (Figure 3, Table 1), which is a critical factor for the practical application of diffusion models.
+3.  **Compatibility with Pre-trained Models:** The method is designed to enhance existing masked diffusion models with minimal additional training, which is a significant practical advantage.
+4.  **Demonstrated Scalability:** Showing that the method works on a 7B parameter model (Table 3) suggests it is a generally applicable technique for improving large language models based on diffusion.
+
+**Weaknesses**
+1.  **Incremental Novelty:** The core ideas (re-masking, star-shaped sampling, guidance) are not entirely new in isolation. The novelty lies in their synthesis and the specific application of a learned error predictor, which may be viewed as an incremental step.
+2.  **Trade-off between Quality and Diversity:** The analysis in Section 4.4 and Appendix C.2 shows that intensive refinement, while lowering perplexity, also hurts diversity, eventually causing the MAUVE score to drop. While the authors correctly identify this as a general trade-off, it implies that G-Star's aggressive optimization of perplexity can be counterproductive for metrics that value diversity. This trade-off is not fully resolved.
+3.  **Added Complexity:** The proposed solution involves a hybrid schedule, a separate model for error prediction, and several new hyperparameters. This is a more complex system to manage and tune compared to a standard MDLM sampler.
+
+**Questions**
+1.  The star-shaped formulation is based on Okhotin et al. (2023), which was developed for continuous data (images). Are there any challenges or necessary modifications in applying this concept directly to the discrete, categorical space of tokens that are not discussed in the paper?
+2.  The paper focuses on masked diffusion models. Do you see a path to applying this guided refinement strategy to other types of discrete generative models, such as autoregressive models (e.g., during beam search) or other discrete diffusion formalisms (e.g., absorbing state models)?
+3.  The trade-off between perplexity and diversity is a key theme. Does the error predictor temperature `τ_remask` (Appendix C.3) provide sufficient control over this trade-off, or are there other mechanisms that could be used to more explicitly balance quality and diversity during guided refinement?
+
+**Rating**
+- Overall (10): 8 — A strong paper with a practical and effective method, whose main limitation is that its conceptual novelty is somewhat incremental.
+- Novelty (10): 6 — The work cleverly combines and refines existing concepts to create a superior system, but does not introduce a fundamentally new paradigm.
+- Technical Quality (10): 9 — The experiments are thorough and the results are convincing, providing strong support for the method's effectiveness.
+- Clarity (10): 9 — The paper is very well-written and easy to follow, with clear explanations and supporting figures.
+- Confidence (5): 4 — I am familiar with the literature on generative models and discrete diffusion and feel confident in my assessment.

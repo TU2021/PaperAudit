@@ -1,0 +1,197 @@
+Here are 4 complete reviews of the paper.
+
+***
+
+### **Review 1**
+
+#### Summary
+
+This paper introduces Thanos, a novel post-training, block-wise pruning algorithm for large language models. The method's core ideas are twofold: first, it formulates an optimal update rule for pruning and adjusting multiple weights simultaneously within a block, extending the Optimal Brain Surgeon (OBS) framework. Second, for structured and semi-structured pruning, it proposes a new technique that identifies and preserves a fraction of "outlier rows" deemed critical for model performance, while pruning columns from the remaining sub-matrix. The authors provide extensive experimental results on OPT and LLaMA models, showing competitive performance for unstructured pruning and state-of-the-art results for structured and semi-structured pruning.
+
+#### Soundness
+
+The methodological soundness of the paper has strong points but also a significant flaw. The derivation of the optimal update rule for removing `s` weights at once (Section 4.1, Eq. 10) is a correct and logical extension of the single-weight OBS formulation. The proposed structured pruning algorithm, which uses permutations to isolate and preserve outlier rows before pruning columns (Section 4.7, Algorithm 2), is also well-defined and sound.
+
+However, there is a major inconsistency between the reported computational complexity and the empirical runtime results. Table 1 lists the complexity for unstructured pruning as `O(c^4/B + c^2 B^2)`, which suggests a very poor scaling behavior. The `c^4/B` term, presumably from inverting Hessians for each block, and the `c^3 B^2` term mentioned in Appendix G.6, are substantially worse than SparseGPT's `O(c^3)`. Yet, Figure 9a shows Thanos to be faster than SparseGPT for models up to ~1B parameters. The paper does not provide a satisfactory explanation for this discrepancy. The brief derivation in Appendix G.6 is insufficient to fully understand the analysis, and the contradiction with empirical data casts doubt on the claims of efficiency for larger models.
+
+#### Presentation
+
+The paper is generally well-written, but its structure is highly unconventional and detrimental to its readability. The decision to place the Conclusion and Limitations sections in Appendix A is a major structural flaw. The main body of the paper ends abruptly after the experiments (Section 5.4), leaving the reader without a summary of the key takeaways or a discussion of the work's scope.
+
+On the positive side, the notation is extensive but well-documented in a table (Appendix B, Table 4). The algorithms are presented clearly (Algorithm 1 and 2). The figures illustrating the masking mechanisms (e.g., Figure 2 and Figure 8) are helpful, though the distinction between the global residual mask and the local mask could be explained more intuitively in the main text.
+
+#### Contribution
+
+The paper makes two primary contributions:
+1.  A technically novel formulation for the simultaneous, optimal update of multiple weights within a pruning block (Section 4.1). This moves beyond the one-by-one approach of methods like SparseGPT.
+2.  A novel and highly effective method for structured pruning that identifies and preserves outlier rows (Section 4.7.1).
+
+The second contribution appears to be the most significant. The experimental results in Table 2 show that this outlier-aware strategy leads to dramatic improvements in model quality for structured and semi-structured sparsity, establishing a new state-of-the-art. The contribution in unstructured pruning is less pronounced, with results being competitive but not consistently superior to baselines.
+
+#### Strengths
+
+-   **Novel Structured Pruning:** The outlier-aware structured pruning method is a key strength, being both novel and empirically powerful. The results in Table 2 (e.g., LLaMA-3 8B structured PPL of 36.61 vs. 82.19 for SparseGPT) are a testament to its effectiveness.
+-   **Theoretical Extension:** The generalization of the OBS update rule to multiple weights is a solid theoretical contribution.
+-   **Comprehensive Evaluation:** The paper is evaluated on a wide and modern set of LLMs and tasks, lending credibility to the results.
+
+#### Weaknesses
+
+-   **Conflicting Complexity Analysis:** The theoretical complexity for unstructured pruning is alarmingly high and appears to contradict the empirical runtime plots, a point that is not adequately addressed.
+-   **Flawed Paper Structure:** Placing the conclusion and limitations in the appendix severely weakens the paper's narrative and impact.
+-   **Marginal Unstructured Gains:** The improvements in unstructured pruning are marginal and not consistent across all models and metrics.
+
+#### Questions
+
+1.  Could the authors provide a more detailed derivation of the complexity for unstructured pruning (`O(c^4/B + c^2 B^2)`) and explain why the empirical runtime in Figure 9a does not seem to reflect this poor scaling compared to SparseGPT?
+2.  What was the rationale for moving the Conclusion and Limitations sections to the appendix? I strongly recommend integrating them back into the main paper.
+3.  The update rule in Eq. (10) requires inverting `R̂`, which is a submatrix of the inverse Hessian. How do you ensure this matrix is well-conditioned and invertible, especially as more weights are pruned?
+
+#### Rating
+
+-   Overall (10): 6 — The paper presents a highly effective method for structured pruning, but the confusing complexity analysis for the unstructured case is a major soundness concern.
+-   Novelty (10): 8 — The outlier-aware structured pruning is highly novel, and the multi-weight update is a solid technical extension.
+-   Technical Quality (10): 6 — The mathematical derivations are strong, but the disconnect between theoretical complexity and empirical runtime is a significant technical issue.
+-   Clarity (10): 7 — The paper is mostly well-written, but the unconventional structure and the complex masking mechanism detract from its clarity.
+-   Confidence (5): 5 — I am confident in my assessment, based on a thorough review of the methodology and results.
+
+***
+
+### **Review 2**
+
+#### Summary
+
+This paper proposes Thanos, a new algorithm for post-training weight pruning of large language models. The method operates block-by-block, using a Wanda-like metric to select weights for pruning and an OBS-inspired update rule to adjust remaining weights. Its main innovations are a simultaneous update mechanism for multiple weights and a strategy for structured pruning that preserves a small percentage of "outlier" rows to maintain performance. The authors conduct a comprehensive empirical study on various LLaMA and OPT models, demonstrating that Thanos is competitive with existing methods in unstructured pruning and significantly outperforms them in structured and semi-structured settings.
+
+#### Soundness
+
+The experimental methodology is rigorous and sound. The authors compare Thanos against relevant and strong baselines (Magnitude, Wanda, SparseGPT) on a diverse set of modern LLMs (LLaMA-2, LLaMA-3) of varying scales. The evaluation is comprehensive, covering both perplexity on WikiText-2 and average accuracy on seven zero-shot tasks. The use of a consistent calibration dataset (128 sequences from C4) for all data-aware methods ensures a fair comparison. The inclusion of ablation studies is commendable, particularly the comparison between `Thanos (α=0)` and `Thanos (α=0.1)` in Table 2, which clearly isolates the significant benefit of the outlier preservation mechanism. The study on the effect of block size `B` in Appendix C (Table 5) further strengthens the empirical analysis.
+
+#### Presentation
+
+The paper's presentation of experimental results is clear and effective. Table 2 and Table 3 are well-organized and allow for easy comparison between methods, sparsity types, and models. The summary plots in Figure 1 provide a good high-level overview of the performance trends. The appendix contains an exhaustive breakdown of zero-shot results for each task (Tables 6-17), which is valuable for transparency and detailed analysis. The main text effectively highlights the key findings, correctly pointing out the substantial lead of Thanos in structured pruning.
+
+#### Contribution
+
+The main contribution of this work is empirical: it establishes a new state-of-the-art for structured and semi-structured pruning of LLMs. The performance gains are not minor; for instance, in structured 30% pruning on LLaMA-3 70B, Thanos (`α=0.1`) achieves a perplexity of 16.62, whereas the next best method, SparseGPT, scores 36.75 (Table 2). This is a significant leap forward. The contribution to unstructured pruning is less impactful, as the results show Thanos is merely competitive, with performance often within a very small margin of SparseGPT or Wanda. For example, on LLaMA-2 7B unstructured perplexity, Wanda achieves 6.92 while Thanos gets 6.96. Nonetheless, the overall contribution is strong due to the success in structured settings.
+
+#### Strengths
+
+-   **State-of-the-Art Results:** The paper demonstrates clear and substantial improvements over existing methods for structured and semi-structured pruning across a wide range of models.
+-   **Comprehensive Evaluation:** The experiments are thorough, covering multiple model families, scales, sparsity patterns, and evaluation metrics.
+-   **Strong Baselines:** The comparison against SparseGPT and Wanda provides a robust benchmark for the proposed method's performance.
+-   **Effective Ablation:** The paper effectively demonstrates the value of its novel "outlier row" preservation technique through clear ablation results in Table 2.
+
+#### Weaknesses
+
+-   **Marginal Gains in Unstructured Pruning:** The benefits of Thanos over baselines in the unstructured setting are minimal and inconsistent, making it a less compelling choice for that specific use case.
+-   **Hyperparameter Sensitivity:** The performance in structured pruning relies heavily on the `α` parameter. The paper uses `α=0.1` throughout but provides little analysis on how this value was chosen or how sensitive the results are to it.
+
+#### Questions
+
+1.  The hyperparameter `α=0.1` seems critical to the success of structured pruning. How was this value selected? Did you perform a hyperparameter sweep, and how robust is the model's performance to variations in `α`?
+2.  Could you provide some analysis on the characteristics of the "outlier rows" that are preserved? For example, do they tend to be in specific layers (e.g., FFNs vs. attention) or have certain statistical properties?
+3.  Given the marginal differences in unstructured pruning performance, can the authors comment on the statistical significance of these results?
+
+#### Rating
+
+-   Overall (10): 9 — The paper presents a method with exceptionally strong and well-documented empirical results that establish a new SOTA for structured pruning.
+-   Novelty (10): 8 — The outlier-aware pruning strategy is a novel and highly effective contribution.
+-   Technical Quality (10): 9 — The experimental design is rigorous, comprehensive, and follows best practices for fair comparison.
+-   Clarity (10): 9 — The results are presented very clearly in tables and figures, making the key takeaways easy to understand.
+-   Confidence (5): 5 — I am an expert in this area and am very confident in my evaluation of the experimental results.
+
+***
+
+### **Review 3**
+
+#### Summary
+
+This paper presents Thanos, a block-wise pruning algorithm designed for practical LLM compression. It supports unstructured, structured, and semi-structured (n:m) sparsity, the latter two being particularly relevant for hardware acceleration. The method's key feature is its ability to update multiple weights within a block simultaneously, aiming for a more accurate reconstruction than methods that update weights one by one. The authors also introduce a novel technique for structured pruning that preserves important rows. An open-source implementation is provided.
+
+#### Soundness
+
+From a practical standpoint, the soundness of the method is mixed. The approach for structured and semi-structured pruning is excellent; it is not only more accurate than baselines (Table 2) but also empirically faster (Figure 9c). This combination of higher accuracy and lower pruning time for hardware-friendly sparsity patterns is a significant practical achievement.
+
+However, the practicality of unstructured pruning with Thanos is questionable. The theoretical complexity reported in Table 1 (`O(c^4/B + c^2 B^2)`) is a major red flag. While the authors' efficient batched implementation (Appendix H) makes it faster than SparseGPT on smaller models, this scaling behavior suggests that the pruning time could become prohibitive for the very large models where compression is most needed. The paper does not provide wall-clock times for pruning the largest models (e.g., 70B), which would be crucial for assessing its real-world utility.
+
+#### Presentation
+
+The presentation is geared well towards a practitioner audience. The inclusion of explicit algorithms (Algorithm 1, 2, 8) and a link to a public code repository is highly valuable for reproducibility and adoption. The diagrams are helpful, especially Figure 7, which clearly visualizes the "in-block" and "off-block" communication that distinguishes Thanos from SparseGPT. The discussion in Appendix H on implementation details, such as batched operations and handling GPU memory limits, is a welcome and practical addition that acknowledges real-world engineering challenges.
+
+#### Contribution
+
+The most significant practical contribution is the development of a superior algorithm for structured and semi-structured pruning. These sparsity patterns are more readily accelerated on existing hardware (e.g., NVIDIA's 2:4 support) than unstructured sparsity. By delivering a method that is both faster to apply and yields a more accurate model (Table 2, Figure 9), the paper provides a tangible benefit for deploying compressed LLMs. The open-source code is another important contribution that will benefit the research community. The contribution to unstructured pruning is less compelling from a practical perspective due to the high computational cost and marginal accuracy gains.
+
+#### Strengths
+
+-   **Focus on Practical Sparsity:** The method excels in structured and n:m sparsity formats, which have clear pathways to hardware acceleration.
+-   **Superior Performance in Structured Pruning:** Thanos is demonstrably better and faster than prior work for structured pruning, a clear win for practical applications.
+-   **Reproducibility:** The provision of open-source code is a major strength that facilitates verification and adoption.
+-   **Good Implementation Insights:** Appendix H provides useful details on how to implement such a complex algorithm efficiently.
+
+#### Weaknesses
+
+-   **Prohibitive Unstructured Complexity:** The high theoretical complexity for unstructured pruning raises serious concerns about its scalability and practical use on truly massive models.
+-   **Lack of Large-Scale Timing Data:** The paper lacks concrete runtime figures for pruning its largest models (e.g., LLaMA 70B), which makes it hard to fully assess the practical cost.
+
+#### Questions
+
+1.  What is the actual wall-clock time required to prune the LLaMA-3 70B model with Thanos (unstructured) versus SparseGPT on your hardware? Does the `O(c^4/B)` complexity become a bottleneck?
+2.  The block size `B` presents a trade-off between the accuracy gained from "in-block communication" and computational cost. Could you provide some practical guidance on how to choose an optimal `B` for a new model?
+3.  Have you measured the actual inference speed-up of a Thanos-pruned model with 2:4 sparsity on an NVIDIA Ampere GPU compared to a dense model or a SparseGPT-pruned model?
+
+#### Rating
+
+-   Overall (10): 8 — The method is a significant practical advancement for structured pruning, though its utility for unstructured pruning on large models is questionable.
+-   Novelty (10): 8 — The outlier-aware structured pruning is a novel and practical idea.
+-   Technical Quality (10): 7 — The method is well-implemented, but the underlying complexity for the unstructured case is a technical weakness.
+-   Clarity (10): 8 — The paper is clearly written, with good algorithms and diagrams that aid practical understanding.
+-   Confidence (5): 4 — I am confident in my assessment, focusing on the practical implications of the work.
+
+***
+
+### **Review 4**
+
+#### Summary
+
+This paper introduces Thanos, an elegant and effective new algorithm for compressing large language models via weight pruning. The method builds upon recent work by proposing a more sophisticated block-wise update that considers the joint impact of removing multiple weights simultaneously. Its standout feature is a novel approach to structured pruning that identifies and preserves "outlier rows," which proves to be remarkably effective. Through extensive experiments, the authors show that Thanos achieves state-of-the-art performance, particularly in structured and semi-structured sparsity settings.
+
+#### Soundness
+
+The work is methodologically sound and well-motivated. The core idea that the cumulative impact of pruning cannot be approximated by summing independent changes (Section 4.8) provides a strong justification for the proposed multi-weight update mechanism. The mathematical formulation in Section 4.1 and Appendix G.1 appears correct and is a natural extension of the OBS framework. The empirical work is thorough, with strong baselines and modern model architectures, providing convincing evidence for the algorithm's effectiveness.
+
+#### Presentation
+
+The paper is very well-written, and the authors have made a great effort to make complex ideas accessible. The use of figures is excellent; for example, the comparison of communication patterns in Figure 6b and Figure 7 provides a clear, intuitive understanding of how Thanos differs from Wanda and SparseGPT. The overall narrative is compelling, building a clear case for the need for a more advanced pruning method.
+
+My main suggestion for improvement relates to the paper's structure. The conclusion and limitations are currently in Appendix A. These sections contain crucial information that summarizes the paper's achievements and contextualizes its shortcomings. Moving them into the main body would create a more complete and impactful manuscript. For instance, the insightful discussion in Appendix A.2 about why SparseGPT might outperform Thanos in some cases is a valuable piece of analysis that should not be hidden.
+
+#### Contribution
+
+This paper makes a significant contribution to the field of model compression. The primary contribution is the novel and highly effective outlier-aware structured pruning technique. This idea is simple in concept but powerful in practice, leading to substantial improvements over prior art as shown in Table 2. This finding alone is a valuable contribution. A secondary contribution is the more general framework for block-wise pruning with simultaneous updates, which advances the theory of OBS-based pruning. The strong and comprehensive results serve as a new, high-quality benchmark for future research in LLM pruning.
+
+#### Strengths
+
+-   **Novel and Impactful Idea:** The concept of preserving outlier rows during structured pruning is a key strength, leading to large and consistent performance gains.
+-   **Strong Empirical Support:** The claims are backed by extensive and convincing experiments on a variety of relevant models and tasks.
+-   **Clear Intuition:** The paper does an excellent job of explaining *why* its proposed methods should work, grounding them in the limitations of prior approaches.
+-   **Well-Written and Illustrated:** The quality of the writing and the clarity of the figures make the paper a pleasure to read.
+
+#### Weaknesses
+
+-   **Suboptimal Structure:** The main weakness is presentational. Placing the conclusion and limitations in the appendix diminishes the paper's overall coherence and impact.
+-   **Unclear Complexity:** The complexity analysis presented in Table 1 is confusing when juxtaposed with the runtime plots in Figure 9. A clearer explanation would strengthen the paper.
+
+#### Questions
+
+1.  The discussion in Appendix A.2 notes that SparseGPT sometimes outperforms Thanos on zero-shot tasks with unstructured sparsity. Could you elaborate on your hypothesis for why this might be? Does the one-by-one greedy approach of SparseGPT offer some advantage in that specific setting?
+2.  The outlier preservation idea is very powerful. Have you considered whether this concept could be applied to other compression techniques, such as quantization, where certain rows or columns might also be disproportionately important?
+3.  To improve the paper's structure, would you be willing to move the content from Appendix A (Conclusion & Limitations) into a new section in the main body of the paper?
+
+#### Rating
+
+-   Overall (10): 9 — A high-quality paper with a novel, impactful contribution and strong empirical results; minor presentational issues can be easily fixed.
+-   Novelty (10): 9 — The outlier-aware structured pruning method is a significant and novel contribution.
+-   Technical Quality (10): 9 — The method is technically sound and the experiments are of high quality.
+-   Clarity (10): 8 — The paper is very clearly written, but the unconventional structure is a minor drawback.
+-   Confidence (5): 5 — I am highly confident in my positive assessment of this work.

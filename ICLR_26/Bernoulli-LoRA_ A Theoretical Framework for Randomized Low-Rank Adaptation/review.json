@@ -1,0 +1,26 @@
+{
+  "paper_title": "Bernoulli-LoRA: A Theoretical Framework for Randomized Low-Rank Adaptation",
+  "file_name": "2508.03820v1",
+  "reviewers": [
+    {
+      "reviewer_id": "TnTK",
+      "score": 4,
+      "confidence": 4
+    },
+    {
+      "reviewer_id": "8Tnv",
+      "score": 2,
+      "confidence": 4
+    },
+    {
+      "reviewer_id": "CiyU",
+      "score": 6,
+      "confidence": 2
+    },
+    {
+      "reviewer_id": "TCPp",
+      "score": 2,
+      "confidence": 4
+    }
+  ]
+}

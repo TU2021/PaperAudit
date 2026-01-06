@@ -1,0 +1,193 @@
+Review 1
+
+Summary
+The paper investigates why reinforcement learning (RL) post-training improves LLMs beyond supervised fine-tuning (SFT) by analyzing internal circuitry changes using Edge Attribution Patching (EAP). It models Transformer residual pathways as a directed acyclic graph (Sec. 3.1), estimates edge importance via a first-order gradient-based approximation (Eq. 9), and defines three aggregate metrics—Activation Intensity, Information Complexity, and Distribution Kurtosis (Sec. 4.2)—computed on truncated, self-entropy-based sequences (Sec. 3.3). Across four 7B model pairs and three math benchmarks (Sec. 4.1; Table 1), the authors report that online RL (PPO/GRPO) increases intensity and diversity (higher entropy, lower kurtosis), while DPO shows weaker or inconsistent changes (Sec. 4.3). Figures 2–3 visualize strengthened activations and diversity improvements.
+
+Soundness
+- Methodological grounding: The graph abstraction of residual streams (Eq. 5; Sec. 3.1) and EAP attribution (Eq. 9; Sec. 3.2) are consistent with prior work and technically sound as an efficient linear approximation to ACDC-style ablations.
+- Target choice and truncation: Computing gradients with respect to a self-entropy objective on each model’s own truncated generations (Sec. 3.3; Eq. 13) is efficient but introduces potential confounds. Because targets differ across models (even after length filtering, Eq. 12), edge attributions may reflect stylistic or token-level differences rather than purely capability-related circuitry changes. The choice not to enforce identical token sequences or teacher-forcing on shared references limits causal interpretability of internal differences.
+- Selection bias: Filtering to questions that both models answer correctly (Eq. 10–12) ensures comparability but biases the sample toward items where base and RL models succeed; it might underrepresent cases where RL’s advantage is largest and hence where internal changes are most salient.
+- Metrics: The aggregate metrics (Eq. 14–16) are reasonable proxies for intensity and diversity, but they mix across layers, heads, and modules without per-layer normalization. Cross-model comparisons can be affected by architectural differences (Appendix A) and scale (LayerNorm behavior), particularly given different d_model and vocab sizes. The entropy histogram (Eq. 15) depends on binning (B, ε), which is not specified (Sec. 4.2), potentially affecting reproducibility and numerical stability.
+- Validation: The paper does not cross-validate EAP with a small-scale ACDC ablation subset to bound approximation error, nor does it provide statistical significance or confidence intervals for Table 1 trends. The claim that DPO cannot broadly activate pathways (Sec. 4.3) is plausible in this setup but should be qualified, as online variants of DPO exist (Sec. 4.1 references include Online-DPO-R1).
+
+Overall, the approach is conceptually coherent and plausibly explains observed trends, but several design choices reduce the strength of causal conclusions.
+
+Presentation
+The paper is generally clearly written and organized: preliminaries (Sec. 2) establish notation; method (Sec. 3) walks from graph abstraction to EAP; metrics (Sec. 4.2) are well-defined; results (Sec. 4.3) concisely summarize trends; and related work contextualizes contributions (Sec. 5). Figures 1–3 are helpful, though some subpanels (e.g., Fig. 3(b)) present approximate values rather than exact scales. Table 1 is dense but central; missing entries due to GPU memory overflow are noted, though better handling (e.g., consistent subsampling) would help. Hyperparameters for filtering/truncation (α, β, γ, δ, bins B, ε) are not fully specified in the main text, hindering reproducibility beyond the provided code link.
+
+Contribution
+The paper proposes a unified, mechanistic perspective on how online RL reshapes internal circuitry: more edges fire more strongly and activation patterns diversify (Sec. 4.3; Figs. 2–3; Table 1). Demonstrating these effects across multiple model families and datasets—while highlighting DPO as a methodological outlier—adds interpretive depth to the growing empirical observation that “SFT memorizes, RL generalizes.” The novelty lies less in new attribution techniques and more in applying EAP to compare internal dynamics across training paradigms, defining aggregate diversity/intensity metrics, and articulating a mechanistic hypothesis linking online interaction and internal redundancy/flexibility.
+
+Strengths
+- Clear graph-based adaptation of EAP for large models (Sec. 3.1–3.2), enabling scalable edge-level analysis.
+- Systematic sample filtering and truncation to maintain tractability (Sec. 3.3).
+- Cross-family, multi-dataset evaluation (Sec. 4.1; Table 1), revealing robust trends for PPO/GRPO.
+- Insightful framing of online RL vs static preference optimization (Sec. 4.3), aligning with literature (Xu et al., 2024).
+- Practical metrics capturing intensity and diversity (Sec. 4.2), supported by visualizations (Fig. 2–3).
+
+Weaknesses
+- Attribution target mismatch: self-entropy on model-specific outputs (Eq. 13; Sec. 3.3) confounds interpretation of internal differences; identical token targets or teacher-forcing baselines are missing.
+- Lack of statistical rigor: no confidence intervals, hypothesis tests, or effect sizes for Table 1 trends; exceptions are qualitatively discussed but not quantified.
+- Incomplete hyperparameter disclosure: β, γ, δ for filtering and B, ε for entropy histograms are unspecified (Secs. 3.3, 4.2).
+- Cross-model normalization: metrics aggregate across modules without per-layer/head normalization, risking scale artifacts from architectural differences (Appendix A).
+- Validation of EAP approximation: no ACDC subset sanity check to bound error (Sec. 3.2).
+- Generalization scope: only math benchmarks (Sec. 4.1), leaving it unclear whether trends hold for other domains (reasoning, coding, dialogue).
+
+Questions
+1. Can you report B and ε for the entropy histogram (Eq. 15), and analyze sensitivity of Info.Complex. to binning choices?
+2. Did you explore teacher-forced evaluation with identical token sequences (e.g., gold process labels or shared rationales) to isolate circuitry differences from output-style differences?
+3. Can you provide per-layer/head-normalized versions of Act.Intens. and Info.Complex., and show whether the trends persist?
+4. Did you validate EAP estimates with a small ACDC ablation subset to quantify approximation error and rank-order stability?
+5. For DPO, did you try an online or iterative re-sampling variant (cf. Online-DPO-R1) to test whether “static supervision” explains the observed inconsistency?
+6. What are the values of β, γ, δ and α used in Sec. 3.3, and how do results vary under different truncation lengths?
+7. Can you add statistical significance tests or confidence intervals for Table 1 entries to substantiate robustness?
+
+Rating
+- Overall (10): 7 — Cross-family EAP analysis reveals consistent RL-induced intensity/diversity shifts (Table 1; Sec. 4.3; Fig. 2–3), but target mismatch and missing statistical validation weaken causal claims.
+- Novelty (10): 7 — Novel application and aggregation of EAP to compare post-training paradigms with new metrics (Sec. 4.2; Sec. 4.3), though the core technique is adapted from prior work (Sec. 3.2).
+- Technical Quality (10): 6 — Sound framework (Eq. 9; Sec. 3.1–3.2) but confounds from self-entropy targets (Sec. 3.3) and lack of significance/validation (Table 1; Sec. 4.3).
+- Clarity (10): 8 — Clear exposition and helpful figures (Fig. 1–3), but incomplete hyperparameter reporting (Sec. 3.3; Sec. 4.2) and dense tables with missing entries.
+- Confidence (5): 4 — High familiarity with mechanistic LLM analysis and RL post-training; assessment based on explicit methodology and reported results.
+
+
+Review 2
+
+Summary
+The manuscript analyzes internal changes induced by RL fine-tuning in LLMs using an EAP-based edge-importance measure (Sec. 3.2). It models residual pathways as a DAG (Sec. 3.1), computes edge importance via gradients of a self-entropy loss over truncated tokens (Sec. 3.3; Eq. 13), and summarizes changes with Activation Intensity, Information Complexity, and Distribution Kurtosis (Sec. 4.2). Experiments across DeepSeek-Math, Mistral, Distilled-Qwen, and Qwen2.5 (Sec. 4.1) show that PPO/GRPO increase intensity and entropy while decreasing kurtosis (Table 1; Fig. 2–3), with DPO showing weaker or inconsistent changes (Sec. 4.3).
+
+Soundness
+- Attribution correctness: The EAP derivation (Eq. 9) is a standard linearization, but its use with self-entropy targets (Eq. 13) means the measured “importance” is gradient-aligned with how the model reinforces its own outputs. This can entangle preference for its output style with true task-related circuitry changes. Without a shared target, the attribution is not strictly comparable across base vs RL.
+- Truncation/filtering: The token truncation and length balancing (Sec. 3.3) reduce memory, but α choices are not fully justified; missing values in Table 1 due to memory overflow suggest variable coverage, which can skew trends. Filtering to questions both models answer correctly (Eq. 10–12) ensures comparability but narrows the regime of analysis, possibly underestimating RL’s distinctive circuitry on harder items.
+- Metrics and normalization: Aggregating absolute edge weights (Eq. 14) and entropy histograms (Eq. 15) across all edges without per-layer/head normalization can be sensitive to architecture (Appendix A) and scaling behavior (LayerNorm). The paper claims cross-family consistency (Sec. 4.3), but magnitudes in Table 1 should not be directly compared across families.
+- Causal interpretation: The conclusion that online RL enhances redundancy and flexibility of information flow (Sec. 6) is plausible but not causally demonstrated; alternative explanations (changes in logit sharpness, formatting, or reasoning verbosity) are not ruled out. No ablation comparing identical token sequences or ACDC spot-check exists (Sec. 3.2).
+- DPO claims: The assertion that DPO “cannot activate a broader range of neural pathways” (Sec. 4.3) is stronger than the evidence presented; it applies to the static DPO regimen used here (Qwen2.5-7B-DPO), but online or iterative DPO variants exist (Sec. 4.1 references), and the study does not test them.
+
+Presentation
+The paper communicates the approach and results clearly, with compact equations (Eq. 5, 9, 14–16) and informative figures (Fig. 1–3). However, several implementation specifics are missing: entropy binning parameters (B, ε; Eq. 15), exact α/β/γ/δ (Sec. 3.3), dataset sizes per benchmark, and number of samples per configuration. Table 1 is informative but dense, and the note about GPU overflow indicates uneven experiment execution. The discussion of exceptions (Sec. 4.3) is clear but would benefit from statistical support.
+
+Contribution
+The main contribution is a cross-family mechanistic characterization of internal changes caused by online RL post-training, operationalized via EAP-derived intensity/diversity metrics and demonstrated on math tasks. This is a useful bridge between behavioral gains and internal interpretability, especially the unified view distinguishing PPO/GRPO from DPO in terms of internal activation diversity (Sec. 4.3). The technical novelty is moderate—EAP is adapted rather than invented—but the framework and empirical synthesis are valuable.
+
+Strengths
+- Well-motivated use of EAP to scale attribution across large models (Sec. 3.2).
+- Clear, reproducible graph formalism (Sec. 3.1) and metric definitions (Sec. 4.2).
+- Broad model coverage and multi-dataset evaluation (Sec. 4.1; Table 1).
+- Insightful qualitative synthesis connecting online RL to activation intensity/diversity (Sec. 4.3; Sec. 6).
+- Open-source code and implementation details (Appendix B; Reproducibility statement).
+
+Weaknesses
+- Attribution target mismatch and potential confounds from model-specific outputs (Sec. 3.3; Eq. 13).
+- Lack of statistical testing, confidence intervals, or robustness analysis for Table 1 trends.
+- Missing specification for entropy histogram parameters and filtering hyperparameters (Sec. 3.3; Sec. 4.2).
+- No validation of EAP linearization vs ablation on a subset (Sec. 3.2), reducing confidence in edge-importance rankings.
+- DPO generalization claims are overbroad relative to tested setup (Sec. 4.3).
+
+Questions
+1. What are the exact values of α, β, γ, δ used across datasets (Sec. 3.3), and how sensitive are results to these choices?
+2. What are the number of bins B and ε in Eq. 15, and do you observe different trends with alternative binning schemes or kernel density estimates?
+3. Can you provide per-layer/head-normalized metrics to reduce architecture-induced scale bias (Appendix A)?
+4. Did you attempt teacher-forcing on common references or aligned rationales to remove output-style confounds?
+5. Can you include an ACDC-based validation on a smaller model or subset to assess EAP approximation fidelity?
+6. For DPO, have you considered re-sampling preferences during training (online DPO) to test whether static data drives the observed inconsistency?
+
+Rating
+- Overall (10): 6 — Useful cross-family mechanistic insights (Sec. 4.3; Table 1) but weakened by attribution target confounds (Sec. 3.3) and lack of statistical validation.
+- Novelty (10): 6 — Applies known EAP tools to a new comparative question with new aggregate metrics (Sec. 4.2), but the technique and framing are extensions of prior work.
+- Technical Quality (10): 6 — Sound derivations (Eq. 9) but important methodological limitations (Eq. 13; missing validation and statistics; Sec. 4.3).
+- Clarity (10): 7 — Clear exposition and figures (Fig. 1–3), yet incomplete hyperparameter and experimental detail disclosure.
+- Confidence (5): 4 — Strong familiarity with interpretability and RLHF; conclusions based on the paper’s explicit content and noted gaps.
+
+
+Review 3
+
+Summary
+The paper proposes a scalable, graph-based probing of LLM internal circuitry to explain RL fine-tuning effects. Using EAP to estimate edge importance (Sec. 3.2; Eq. 9) over truncated self-entropy objectives (Sec. 3.3), it defines activation intensity and diversity metrics (Sec. 4.2) and evaluates four 7B model pairs on GSM8K, MATH, and College Math (Sec. 4.1). The main findings are: online RL (PPO/GRPO) increases edge activation strength and entropy while reducing kurtosis (Table 1; Sec. 4.3; Fig. 2–3), suggesting more redundant and flexible information flow (Sec. 6). DPO deviations are attributed to static preference datasets and lack of online interaction (Sec. 4.3).
+
+Soundness
+- The residual DAG abstraction (Eq. 5; Sec. 3.1) is appropriate and aligns with mechanistic interpretability practice. EAP linearization (Eq. 9) is standard and justified as a tractable alternative to edge ablations.
+- The use of self-entropy (Eq. 13) is a pragmatic choice to avoid ground-truth rationales, but comparability across base/RL is weakened by differing generated tokens; attribution weights then reflect both capability and generation style. The authors mitigate length artifacts (Eq. 10–12), yet do not control for token identity, making causal attribution less precise.
+- Activation/Diversity metrics (Eq. 14–16) capture meaningful distributional properties, but lack normalization across layers/heads—architecture differences (Appendix A) and model scalings can affect raw magnitudes. Results are rightly interpreted as within-pair trends rather than absolute cross-model comparisons, though Table 1 juxtaposes values across families.
+- Robustness and validation: Trends appear consistent at larger truncation scales (Sec. 4.3; α increasing) and across datasets, but no statistical significance is reported, and no ACDC subset validation of EAP is provided. Exceptions (e.g., Mistral at α=0.03 in Table 1) are qualitatively explained but not quantified.
+
+Presentation
+The structure is coherent and readable. Equations (Eq. 5, 9, 13–16) are concise; figures (Fig. 1–3) effectively convey the model, activation changes, and diversity improvements; and Table 1 consolidates results. However, several experimental details are underspecified—entropy binning parameters (Eq. 15), filtering/truncation hyperparameters (Sec. 3.3), sample counts—and missing entries due to GPU memory overflow hinder completeness. The DPO discussion (Sec. 4.3) would benefit from clear caveats about generality.
+
+Contribution
+This work advances interpretability of RL post-training in LLMs by characterizing consistent internal changes—greater activation intensity and diversity—across multiple model families and datasets, and by framing methodological distinctions between online RL and preference-based DPO. It provides a unifying mechanistic perspective connecting observed behavioral gains with internal pathway engagement and flexibility. The novelty lies in the integrative application and metricization of EAP for training-method comparisons rather than in algorithmic invention.
+
+Strengths
+- Scalable EAP pipeline enabling edge-level analysis in 7B models (Sec. 3.2).
+- Clear, principled metrics for intensity and diversity (Sec. 4.2).
+- Multimodel, multidataset evidence for robust RL-induced trends (Sec. 4.1; Table 1).
+- Insightful interpretation linking online RL to redundancy/flexibility and generalization (Sec. 4.3; Sec. 6).
+- Open-source code and reproducibility commitments (Appendix B; Reproducibility statement).
+
+Weaknesses
+- Attribution computed on self-generated outputs (Sec. 3.3) introduces comparability confounds; no teacher-forcing control.
+- Lack of per-layer/head normalization and statistical testing (Sec. 4.2; Table 1).
+- Missing specification for entropy binning; sensitivity analysis absent (Eq. 15).
+- No ACDC subset validation to calibrate EAP estimates (Sec. 3.2).
+- Overgeneralized claim about DPO’s inability to activate broader pathways (Sec. 4.3), despite existence of online DPO variants.
+
+Questions
+1. Can you report sample sizes per model/dataset and add confidence intervals or bootstrap estimates for Table 1 entries?
+2. Did you examine per-layer/head contributions to see whether RL strengthens specific strata (early vs late layers) or head types?
+3. How sensitive are results to α and to alternative objectives (e.g., teacher-forcing on ground-truth answers or shared rationales)?
+4. Can you normalize edge weights per layer (z-score or variance-normalize) and re-compute metrics to confirm trends?
+5. Could you include a small ACDC validation (Eq. 8) on a subset to assess EAP approximation error?
+6. For DPO, can you test iterative or online DPO with re-sampled pairs to check whether static data is the main driver of the inconsistency?
+
+Rating
+- Overall (10): 8 — Compelling cross-family evidence of RL-induced intensity/diversity shifts (Table 1; Sec. 4.3; Fig. 2–3), with clear framing, though causal precision is limited by target choice and missing statistics.
+- Novelty (10): 7 — New integrative application of EAP to compare training paradigms and introduce aggregate metrics (Sec. 4.2), with insights on online RL vs DPO (Sec. 4.3).
+- Technical Quality (10): 7 — Solid methodology (Eq. 9; Sec. 3.1–3.2) and careful filtering (Sec. 3.3), but needs normalization, statistical analysis, and validation.
+- Clarity (10): 8 — Well organized with helpful figures, yet experimental details (bins, hyperparameters) are underspecified.
+- Confidence (5): 4 — Confident in assessment based on explicit content; some uncertainties due to missing statistical and validation details.
+
+
+Review 4
+
+Summary
+This study analyzes how RL fine-tuning reshapes internal information flow in LLMs, using a graph view of residual pathways (Sec. 3.1) and EAP to estimate edge importance (Sec. 3.2; Eq. 9). The authors compute Activation Intensity, Information Complexity, and Distribution Kurtosis (Sec. 4.2) on truncated self-entropy sequences (Sec. 3.3) for four 7B model pairs and three math datasets (Sec. 4.1). They find that PPO/GRPO training increases activation intensity and diversity while decreasing kurtosis (Table 1; Fig. 2–3), whereas DPO-trained Qwen2.5 shows inconsistent changes (Sec. 4.3), which the authors attribute to static preference data.
+
+Soundness
+- Core derivations (Eq. 5, 9) are correct and the EAP approximation is appropriate for scaling to large models. The methodology is internally consistent.
+- The reliance on self-entropy (Eq. 13) for attribution introduces a key limitation: since each model’s outputs are targets, differences in generated content/format can drive gradient patterns independently of capability differences. Filtering on correctness and length (Eq. 10–12) reduces variance but does not control for token identity.
+- Metric definitions (Eq. 14–16) are reasonable, but the paper does not normalize across layers/heads; with different architectures (Appendix A) and scaling, cross-family magnitude comparisons are not meaningful. The authors mainly compare within-pair changes, which is appropriate, but the text sometimes implies cross-family generality (Sec. 4.3).
+- The analysis lacks statistical tests, effect sizes, or confidence intervals. Table 1 shows trends but also early α exceptions and missing entries (GPU overflow), which complicate robustness claims.
+- The explanation for DPO inconsistencies (Sec. 4.3) is plausible in this setting, but stronger general claims should be tempered given online DPO variants.
+
+Presentation
+Overall, the paper is readable and well-structured. Figures (Fig. 1–3) are instructive, particularly the schematic (Fig. 1) and diversity plots (Fig. 3). Table 1 is informative but dense; missing values are disclosed. Important hyperparameters and implementation details critical for reproducing metrics—entropy binning (Eq. 15) and filtering thresholds (Sec. 3.3)—are not fully specified in the main text. The narrative carefully links results to a broader mechanistic hypothesis in the conclusion (Sec. 6).
+
+Contribution
+The main contribution is an interpretability-based account of RL post-training effects on internal circuitry—demonstrating increased activation intensity and diversity across multiple models and datasets—and articulating why online RL differs from static DPO in shaping internal dynamics. This bridges external performance gains (Appendix C) with mechanistic evidence and offers a framework that could guide alignment algorithm design.
+
+Strengths
+- Scalable, principled application of EAP to large LLMs (Sec. 3.2).
+- Clear graph abstraction and concise mathematical formulation (Sec. 3.1; Eq. 5, 9).
+- Multi-model, multi-dataset evaluation showing consistent patterns for online RL (Sec. 4.1; Table 1; Fig. 2–3).
+- Thoughtful interpretation connecting redundancy/flexibility to generalization (Sec. 6).
+- Open-source code and reproducibility statement (Appendix B; link).
+
+Weaknesses
+- Attribution computed on self-generated tokens (Sec. 3.3) undermines strict comparability; no teacher-forced control is provided.
+- Missing statistical validation and sensitivity analyses (Table 1; Sec. 4.3), including entropy binning choices (Eq. 15).
+- No EAP-vs-ACDC validation subset to quantify approximation fidelity (Sec. 3.2).
+- Architecture/scale confounds due to lack of per-layer/head normalization (Appendix A; Sec. 4.2).
+- Overgeneralized characterization of DPO’s limitations without testing online variants (Sec. 4.3).
+
+Questions
+1. Will you add a teacher-forced experiment with identical token sequences to isolate circuitry differences independent of output style?
+2. What are B and ε for Eq. 15, and how do trends change with different bin counts or KDE-based entropy?
+3. Can you report sample counts and confidence intervals, and conduct hypothesis tests for the observed increases/decreases?
+4. Did you inspect layer-wise trends (e.g., do later layers show larger diversity gains after RL)?
+5. Can you validate EAP with a small ablation set (Eq. 8) to check rank consistency of important edges?
+6. For DPO, can you evaluate an iterative/online DPO regimen to test whether static data, rather than the objective itself, causes the observed inconsistency?
+
+Rating
+- Overall (10): 7 — Strong, well-argued mechanistic trends across models (Sec. 4.3; Table 1; Fig. 2–3), but methodological limitations (Sec. 3.3) and missing statistics temper the claims.
+- Novelty (10): 7 — New comparative application of EAP with aggregate diversity/intensity metrics (Sec. 4.2) and a unified RL-vs-DPO perspective (Sec. 4.3).
+- Technical Quality (10): 7 — Solid foundations (Eq. 5, 9) and careful experimental design (Sec. 3.3), but lacks normalization, significance testing, and EAP validation.
+- Clarity (10): 8 — Clear exposition and visuals; incomplete reporting of key hyperparameters detracts from reproducibility.
+- Confidence (5): 4 — Assessment grounded in the manuscript; some reservations due to missing robustness checks and sensitivity analyses.

@@ -1,0 +1,125 @@
+# Global Summary
+The paper develops a theoretical framework for parameter transfer in transfer learning, focusing on partial reuse of upstream model parameters by a downstream model. Both models are two-layer ReLU CNNs. The analysis is dynamic (training dynamics) rather than static generalization bounds and explicitly models universal (shared) signal u between source and target tasks and task-specific signals v1, v2. A proportion α of upstream filters is inherited.
+
+Core results:
+- Under explicit over-parameterization, initialization, and learning-rate conditions (Condition 4.1), with probability at least “1 − 2δ,” gradient descent drives training loss below any ε and yields a phase transition in test error depending on dimension d, sample sizes N1, N2, signal norms, noise levels σp,1, σp,2, and inheritance α (Theorem 4.2).
+- With parameter transfer, if d ≤ C1 · [(α^2 N1^2‖u‖^4/σp,1^4) + (N2^2‖u+v2‖^4/σp,2^4)] / [(α^2 σp,2^2 N1/σp,1^2) + N2], the test error achieves near Bayes-optimal: P(y f(W;x) < 0) ≤ exp{−C2[(α^2 N1^2‖u‖^4/σp,1^4) + (N2^2‖u+v2‖^4/σp,2^4)] / [(α^2 σp,2^2 N1 d/σp,1^2) + N2 d]}.
+- If d ≥ C3 · [(α^2 N1^2‖u‖^4/σp,1^4) + (N2^2‖u+v2‖^4/σp,2^4)] / [(α^2 σp,2^2 N1/σp,1^2) + N2], test error is sub-optimal: P(y f(W;x) < 0) ≥ 0.1.
+- Without transfer (baseline), near Bayes-optimal occurs if N2‖u+v2‖^4 ≥ C1′ σp,2^4 d, with error ≤ exp(−C2′ N2‖u+v2‖^4/(σp,2^4 d)); otherwise error ≥ 0.1 (Theorem 4.3).
+- Proposition 4.4 defines Γ = α^2 N1‖u‖^4/(σp,1^2 σp,2^2 d) and shows regimes where transfer improves or does not degrade performance; it also identifies a negative-transfer condition: when ‖u+v2‖^2/‖u‖^2 ≥ α N1 σp,2^2/(N2 σp,1^2) ≥ C4 (C4 large), the universal knowledge is weak and transfer harms accuracy.
+- Empirical validations: synthetic data ablations (vary N1, σp,1, ‖u‖, and heatmaps across d and ‖u‖; test sample size 1000; CNN with m=40; η=0.01; σ0=0.01; T1=800, T2=400) and real data (CIFAR-10/100 with ResNet/VGG and ViT). Table 1 reports test accuracies: e.g., CIFAR-10 ResNet-101→ResNet-34: 90.80 (w/o PT) improves to 94.20, 96.90, 97.20 for N1/N2 ratios 2, 3, 4; CIFAR-100 ResNet-101→ResNet-34: 68.35 (w/o PT) improves to 70.95, 74.10, 80.35.
+- Caveats stated: analysis is for shallow two-layer CNNs; upstream selection of parameters in experiments uses random sampling rather than designed feature selection; parameter transfer can be detrimental when shared signal is weak.
+
+# Introduction
+- Problem: Understand when and why partial parameter reuse (parameter transfer) between an upstream and a downstream model improves generalization, and characterize conditions producing negative transfer.
+- Framework: Two-layer ReLU CNNs for both tasks; α proportion of upstream weights inherited by the downstream model; the rest randomly initialized.
+- Key factors analyzed: (1) universal knowledge (shared signal strength ‖u‖), (2) upstream sample size N1, (3) upstream noise level σp,1.
+- Contributions:
+  - First theoretical framework for parameter transfer with dynamic training analysis; proves that test error can approach Bayes optimal under tight conditions on sample sizes, signal strength, noise level, and dimensions; shows sharp phase transition and sub-optimality outside the regime.
+  - Identifies when parameter transfer outperforms random initialization by quantifying the roles of ‖u‖, N1, and σp,1; inherited parameters carry universal knowledge of guaranteed strength, improving generalization and mitigating noise memorization.
+  - Theoretically establishes negative transfer: weak shared signal leads to upstream weights with large norms that amplify target noise more than signal, lowering test accuracy; guidance to transfer only strong shared features and choose relevant, high-quality source datasets.
+
+# Related Work
+- Transfer learning methods: non-negative matrix tri-factorization bridging domains (Tan et al., 2015); common subspace projections preserving domain-specific info (Li et al., 2014); PCA-based transformations aligning distributions (Tsai et al., 2016); semantic mapping for heterogeneous few-shot (Ye et al., 2021); layer selection as “learngene” (Wang et al., 2022); applications to tabular LMs (Gardner et al., 2024), dynamic pricing (Wang et al., 2025), multimodal biological transfer (Garau-Luis et al., 2024).
+- NTK and lazy training: Jacot et al. (2018) and follow-ups analyze over-parameterized regimes; weights stay near initialization (lazy training) but do not explain superior performance.
+- Feature learning line: benign overfitting and nonlinear dynamics with small initializations; analyses of ensemble/distillation (Allen-Zhu & Li, 2023), CNNs learning XOR (Meng et al., 2024), spurious vs invariant features (Chen et al., 2023), importance of second-layer initialization (Shang et al., 2024).
+- For further transfer learning theory discussion see Appendix Section G.
+
+# Preliminaries
+- Data generation for Task 1 (Definition 3.1): x ∈ ℝ^{2d} split into patches x^(1), x^(2); y ∈ {±1} Rademacher; one patch equals y·(u + v1) (signal), other equals Gaussian noise ξ ~ 𝒩(0, σp,1^2 (I − uu^⊤/‖u‖^2 − v1v1^⊤/‖v1‖^2)); u ⟂ v1, u ⟂ v2.
+- Task 2 (Definition 3.2): same structure with y·(u + v2) signal; noise ξ ~ 𝒩(0, σp,2^2 (I − uu^⊤/‖u‖^2 − v2v2^⊤/‖v2‖^2)).
+- Orthogonality simplification: noise orthogonal to signal; can be extended to correlated noise (not analyzed here).
+- Sample sizes and variances: N1, N2; σp,1, σp,2; data sets {x_{i,1}, y_{i,1}}_{i=1}^{N1}, {x_{i,2}, y_{i,2}}_{i=1}^{N2}.
+- Network: two-layer ReLU CNN with m filters:
+  - f(W;x) = F_{+1}(W;x) − F_{−1}(W;x), with F_j(W;x) = (1/m) ∑_{r=1}^m [σ(⟨w_{j,r}, x^(1)⟩) + σ(⟨w_{j,r}, x^(2)⟩)], σ(z)=max(0,z).
+- Losses: cross-entropy ℓ(z)=log(1+exp(−z)); L_Task1(W) and L_Task2(W) are empirical means over tasks.
+- Notation for asymptotics: O, Ω, Θ, tilde variants; event indicators; poly(·), polylog(·).
+
+# Method
+- Algorithm 1 (Parameter Transfer):
+  - Upstream initialization: w_{j,r}^{A,(0)} ~ 𝒩(0, σ0^2).
+  - Train upstream for t ≤ T*: w_{j,r}^{A,(t+1)} = w_{j,r}^{A,(t)} − η ∇_{w_{j,r}^A} L_Task1(W^{A,(t)}).
+  - Initialize downstream: inherit w_{j,r}^{D,(0)} = w_{j,r}^{A,(T*)} for r ≤ αm; random init w_{j,r}^{D,(0)} ~ 𝒩(0, σ0^2) for r > αm.
+  - Train downstream for t ≤ T*: w_{j,r}^{D,(t+1)} = w_{j,r}^{D,(t)} − η ∇_{w_{j,r}^D} L_Task2(W^{D,(t)}).
+  - Note: inheritance samples weights randomly; contrasts with methods designed to select strong shared features.
+- Algorithm 2 (Baseline without transfer): downstream random initialization and training on Task 2.
+- Training iteration bound: T* = η^{-1} poly(n, d, ε, m), with n = max{N1, N2}.
+- Condition 4.1 requirements (for stability, over-parameterization, small init):
+  1) d = \tilde{Ω}(max{n σp^{-2}‖u+v‖^2, n^2}).
+  2) m ≥ C log(n/δ), n ≥ C log(m/δ).
+  3) ‖u+v‖^2 = Ω(σp^2 log(n/δ)).
+  4) σ0 = O((max{σp d/√n, √log(m/δ)·‖u+v‖})^{-1}).
+  5) η ≤ O((max{σp^2 d^{3/2}/(n^2 m √log(m/δ)), σp^2 d/n, ‖u+v‖^2/m})^{-1}).
+- Theorem 4.2 (With parameter transfer; probability ≥ 1 − 2δ; at T = Ω(N2 m/(η ε σp,2^2))):
+  1) Training loss ≤ ε.
+  2) If d ≤ C1[(α^2 N1^2‖u‖^4/σp,1^4) + (N2^2‖u+v2‖^4/σp,2^4)] / [(α^2 σp,2^2 N1/σp,1^2) + N2], then
+     P(y f(W^{(t)};x) < 0) ≤ exp{−C2[(α^2 N1^2‖u‖^4/σp,1^4) + (N2^2‖u+v2‖^4/σp,2^4)] / [(α^2 σp,2^2 N1 d/σp,1^2) + N2 d]}.
+  3) If d ≥ C3[(α^2 N1^2‖u‖^4/σp,1^4) + (N2^2‖u+v2‖^4/σp,2^4)] / [(α^2 σp,2^2 N1/σp,1^2) + N2], then P(y f(W^{(t)};x) < 0) ≥ 0.1.
+- Theorem 4.3 (Without parameter transfer; Kou et al., 2023):
+  1) Training loss ≤ ε.
+  2) If N2‖u+v2‖^4 ≥ C1′ σp,2^4 d, then P(y f(W^{(t)};x) < 0) ≤ exp(−C2′ N2‖u+v2‖^4/(σp,2^4 d)).
+  3) If N2‖u+v2‖^4 ≤ C3′ σp,2^4 d, then P(y f(W^{(t)};x) < 0) ≥ 0.1.
+- Proposition 4.4:
+  - Define Γ = α^2 N1‖u‖^4 / (σp,1^2 σp,2^2 d).
+  - If Γ ≥ C (large), and d > C1′ N2‖u+v2‖^4/σp,2^4: without transfer error ≥ 0.1 (sub-optimal), with transfer error near optimal: P(y f(W;x) < 0) ≤ c (c small).
+  - When d < C3′ N2‖u+v2‖^4/σp,2^4: both with and without transfer achieve near-optimal error rate.
+  - Negative transfer condition: when ‖u+v2‖^2 / ‖u‖^2 ≥ α N1 σp,2^2 / (N2 σp,1^2) ≥ C4 (C4 large), parameter transfer is detrimental.
+- Notes: Γ is sufficient, not necessary; success may occur even with small Γ if N2 or data quality in Task 2 is high.
+
+# Experiments
+- Synthetic Data (Section 5):
+  - Setup: dimension d = 2000; m = 40 filters; learning rate η = 0.01; Gaussian init σ0 = 0.01; upstream epochs T1 = 800; downstream epochs T2 = 400; test sample size = 1000; signals u, v1, v2 constructed orthogonal via Gram–Schmidt; noise Gaussian.
+  - Settings:
+    1) Fix σp,1 = σp,2 = 5 and N2 = 100; vary N1; Figure 1(a) shows test accuracy improves with larger N1; “w/o PT” baseline lower.
+    2) Fix N1 = N2 = 100, σp,2 = 5; vary σp,1; Figure 1(b) shows lower noise (smaller σp,1) in Task 1 improves transfer effectiveness over baseline.
+    3) Fix N1 = 1000, N2 = 100, σp,1 = σp,2 = 15, and ‖u+v2‖ = 3; vary ‖u‖; Figure 1(c) shows larger ‖u‖ increases test accuracy; when ‖u‖ = 0, transfer degrades test accuracy (negative transfer).
+    4) Fix N1 = 1000, N2 = 100, σp,1 = σp,2 = 15, α = 0.5; vary d and ‖u‖; Figure 2 heatmap shows phase transition: increasing ‖u‖ or decreasing d improves transfer; truncated heatmaps threshold at 0.65 and 0.70 illustrate regimes (exact values per cell not specified).
+- Real Data (Section 6):
+  - Varying N1 via number of source classes:
+    - Procedure: For Task 2, randomly select 2 classes from CIFAR-10 (or 20 from CIFAR-100); Task 1 uses k classes from remaining categories; report results by N1/N2 ratios (e.g., 2, 3, 4).
+    - Upstream model: ResNet-101; downstream: ResNet-34, ResNet-50; also VGG-16→VGG-11/13.
+    - Table 1 accuracies (%):
+      - CIFAR-10: ResNet-101→ResNet-34: w/o PT 90.80; w/ PT (N1/N2=2) 94.20; (3) 96.90; (4) 97.20.
+      - CIFAR-10: ResNet-101→ResNet-50: w/o PT 89.25; w/ PT 94.25; 97.25; 97.85.
+      - CIFAR-10: VGG-16→VGG-11: w/o PT 82.05; w/ PT 91.85; 94.25; 96.80.
+      - CIFAR-10: VGG-16→VGG-13: w/o PT 85.90; w/ PT 89.80; 92.65; 95.20.
+      - CIFAR-100: ResNet-101→ResNet-34: w/o PT 68.35; w/ PT 70.95; 74.10; 80.35.
+      - CIFAR-100: ResNet-101→ResNet-50: w/o PT 70.45; w/ PT 74.95; 76.55; 81.20.
+      - CIFAR-100: VGG-16→VGG-11: w/o PT 62.05; w/ PT 64.30; 65.65; 66.60.
+      - CIFAR-100: VGG-16→VGG-13: w/o PT 63.75; w/ PT 64.35; 65.35; 65.65.
+    - Reported increments: ResNet-101→ResNet-34 on CIFAR-100: +2.6% when source tasks are 40 classes; +12% when source tasks are 80 classes.
+  - Varying σp,2 (target noise):
+    - Add Gaussian noise ξ ~ 𝒩(0, σp,2^2) to images; upstream ResNet-101; downstream ResNet-34/50; as σp,2 increases from 1 to 20, inherited-parameter models consistently surpass from-scratch baselines; Figures 3(a,b) show widening advantage (exact numbers not specified beyond plotted curves).
+  - Vision Transformers:
+    - Upstream and downstream architecture: DeiT-Base (12 layers, ~86M parameters).
+    - Upstream pretrained on ImageNet-2012; upstream accuracy = 81.8%.
+    - Transfer layers 9–11 to downstream; fine-tune on CIFAR-10/100; Appendix Figure 4 shows downstream test Acc@1 curves with transfer vs random init, with transfer outperforming (exact numeric improvements not specified).
+
+# Discussion
+- Main findings: Theoretical analysis demonstrates that transfer effectiveness grows with stronger universal signal ‖u‖, larger source sample size N1, and lower source noise σp,1; phase transition and explicit bounds formalize these effects; numerical and real-data experiments consistently support the theory, including cases of negative transfer when ‖u‖ is weak (e.g., ‖u‖=0 in synthetic setting).
+- Limitations acknowledged: Theory focuses on shallow two-layer CNNs; deeper architectures require future work; proposed random inheritance can be improved via regularization or weight selection methods; designing regularization to guide inherited weights remains open.
+- Future directions: Extend dynamics analysis to deep networks; principled feature selection/regularization for transfer.
+
+# References
+- Cited works include foundational transfer learning surveys and methods (Pan & Yang, 2009; Zhuang et al., 2020; Jiang et al., 2022), NTK and lazy-training analyses (Jacot et al., 2018; Chizat et al., 2019; Ghorbani et al., 2019; Zhu et al., 2023), feature learning theories (Cao et al., 2022; Allen-Zhu & Li, 2023; Meng et al., 2024; Chen et al., 2023), and recent applications (Gardner et al., 2024; Garau-Luis et al., 2024; Wang et al., 2025).
+- Figures under the References section include plots of test accuracy vs σp,2 for CIFAR-10 and CIFAR-100 (exact numeric points not specified).
+
+# Appendix
+- Proof sketch (Section A): Training dynamics analysis of CNN filters decomposes weights into components along u, v1, v2 and per-sample noise vectors; coefficients γ (signal learning) and ρ (noise memorization) characterized via continuous approximations x̄_t and x_t solving x + b e^x = c t + b; κ_A and κ_D control bounds; training iterations T*, T** = η^{-1} poly(n, d, ε, m).
+- Gradient calculation (Section B): Unique decomposition (Definition B.1) and iterative update equations (Lemma B.2) for coefficients in Task 1 (A) and Task 2 (D); explicit formulas for γ, γ_1, γ_2, ρ, with per-label gating.
+- Preliminary lemmas (Section C):
+  - Lemma C.1: Concentration for noise norms and inner products; e.g., σp,1^2 d/2 ≤ ‖ξ_{i,1}‖^2 ≤ 3σp,1^2 d/2; and cross terms bounded by constants times √(d log(·)).
+  - Lemma C.2: Initialization norms and inner products bounds for weights w^{(0)}.
+  - Lemma C.3: At initialization, ≥ 0.4m filters activate per sample.
+  - Lemma C.4: Continuous-time approximation bounds for iterative sequence a_{t+1}=a_t + c/(1 + b e^{a_t}).
+- System 1 (Task 1; Section D): Coefficient scale bounds (Propositions D.1, D.5): 0 ≤ \bar{ρ} ≤ 4 log(T*); ρ ≥ −4 log(T*); γ bounds scale as (C2 N1‖u‖^2)/(σp,1^2 d) log(T*), similar for v1; monotonic increase of ⟨w, u+v1⟩; signal learning and noise memorization quantified (Lemmas D.8, D.9).
+- System 2 (Task 2; Section E): Initialization mixes inherited and re-initialized weights; coefficient scale bounds (Proposition E.1/E.6): analogous to System 1 with N2, σp,2; inherited weights’ projections on Task 2 noise bounded (Lemmas E.2, E.3); κ_D constructed and bounded (< 0.1); output bounds (Lemma E.4); refined per-sample gradient ratios ≤ 13 (Lemma E.5); monotonic increase of ⟨w, u+v2⟩; detailed bounds for γ and ρ in Task 2 (Lemmas E.9, E.10).
+- Test error analysis (Section E.3):
+  - Lemma E.11: TV distance between Gaussians ≤ ‖v‖/(2σp,2).
+  - Theorem E.12: With T1 = C1* N1 m/(η σp,1^2 d), T2 = C2* N2 m/(η σp,2^2 d),
+    1) Training loss L_S ≤ ε.
+    2) If d ≤ C′ [(α^2 N1^2‖u‖^4/σp,1^4) + (N2^2‖u+v2‖^4/σp,2^4)] / [(α^2 σp,2^2 N1/σp,1^2) + N2], then P(y f(W;x) < 0) ≤ exp{−C2(1/d) [(α^2 N1^2‖u‖^4/σp,1^4) + (N2^2‖u+v2‖^4/σp,2^4)] / [(α^2 σp,2^2 N1/σp,1^2) + N2]}.
+    3) If d ≥ C′′ [(α^2 N1^2‖u‖^4/σp,1^4) + (N2^2‖u+v2‖^4/σp,2^4)] / [(α^2 σp,2^2 N1/σp,1^2) + N2], then P(y f(W;x) < 0) ≥ 0.1.
+- Other experiments (Section F): Additional ViT transfer plots on CIFAR-10/100 showing performance gains with inherited parameters (exact numeric gains not specified).
+- Section G: Discussion of broader transfer learning theory (Baxter 2000; Maurer et al., 2016; Wang, 2018; Wu et al., 2024; Tripuraneni et al., 2020; Yi et al., 2023).
+- Figures: Heatmaps and curves illustrate phase transitions and performance trends; specific axis ranges include dimension d up to ~790 and ‖u‖ up to ~3 (as in Figure 2; precise binwise accuracies not specified).

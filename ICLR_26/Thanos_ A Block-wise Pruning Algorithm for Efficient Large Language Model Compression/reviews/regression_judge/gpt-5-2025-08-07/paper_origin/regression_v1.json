@@ -1,0 +1,126 @@
+{
+  "paper": "Thanos_ A Block-wise Pruning Algorithm for Efficient Large Language Model Compression",
+  "runs": [
+    {
+      "config": {
+        "judge_model": "gpt-5-2025-08-07",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "baseline_file": "baseline_review.txt",
+        "final_file": "final_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 600,
+        "metric": "regression_v2_minimal",
+        "prompt_hash": "2142c04332"
+      },
+      "config_key": "1a46f14f5902ebb0fc2c14773cec6644d2fa5338",
+      "inputs": {
+        "baseline_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/baseline_review.txt",
+        "final_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/final_review_all.txt"
+      },
+      "regression": {
+        "score_delta": {
+          "baseline_score": 7.0,
+          "final_score": 7.0,
+          "delta": 0.0,
+          "scale_hint": "1-10"
+        },
+        "differences": [
+          {
+            "diff_type": "new_critique",
+            "summary": "Vector dimension mismatch for e^q across sections",
+            "paperaudit_types": [
+              "METHOD_LOGIC_CONSISTENCY",
+              "CONTEXT_MISALIGNMENT_INCOHERENCE"
+            ],
+            "why_impacts_score": "Dimensional errors undermine derivations and reproducibility",
+            "evidence": {
+              "baseline_quote": "Eq. (13) uses “(H_{1:s,1:s}^{−1})^{−1} H_{1:s,:}^{−1}”; ambiguity undermines confidence.",
+              "final_quote": "Section 2.2 defines e^q ∈ ℝ^{1×b}, Appendix E.4 sets e^q ∈ ℝ^{b×1}."
+            }
+          },
+          {
+            "diff_type": "new_critique",
+            "summary": "Misreferenced pruning metric (“3.2”) throughout text",
+            "paperaudit_types": [
+              "RHETORICAL_PRESENTATION_MANIPULATION",
+              "CONTEXT_MISALIGNMENT_INCOHERENCE"
+            ],
+            "why_impacts_score": "Broken equation references obstruct verification of key metric",
+            "evidence": {
+              "baseline_quote": "Mask metric justification lacks ablation and broader theoretical support.",
+              "final_quote": "Multiple references to a “metric (3.2)” appear; no Eq. 3.2 exists."
+            }
+          },
+          {
+            "diff_type": "new_critique",
+            "summary": "Incorrect equation citation for structured update (Alg. 2 step 10)",
+            "paperaudit_types": [
+              "METHOD_LOGIC_CONSISTENCY",
+              "CONTEXT_MISALIGNMENT_INCOHERENCE"
+            ],
+            "why_impacts_score": "Misapplied formula risks invalid implementation of structured pruning",
+            "evidence": {
+              "baseline_quote": "Algorithm 2 step 10 mirrors Eq. (13), perpetuating the same notational problem.",
+              "final_quote": "In Algorithm 2 step 10, annotation cites Eq. (10); structured case needs distinct derivation."
+            }
+          },
+          {
+            "diff_type": "new_critique",
+            "summary": "Inconsistent s-formula (ceil omission near Fig. 3)",
+            "paperaudit_types": [
+              "METHOD_LOGIC_CONSISTENCY",
+              "CONTEXT_MISALIGNMENT_INCOHERENCE"
+            ],
+            "why_impacts_score": "Inconsistency can change pruned columns, affecting reported results",
+            "evidence": {
+              "baseline_quote": "Structured pruning uses s = ⌈pb/(1−α)⌉ (Sec. 4.7.1; Algorithm 2).",
+              "final_quote": "Near Fig. 3, “s = pb/(1−α)” is written; elsewhere uses s = ⌈pb/(1−α)⌉."
+            }
+          },
+          {
+            "diff_type": "new_critique",
+            "summary": "Unfair semi-structured comparisons due to lower effective sparsity with α=0.1",
+            "paperaudit_types": [
+              "EXPERIMENTAL_DESIGN_PROTOCOL",
+              "CLAIM_RESULT_DISTORTION"
+            ],
+            "why_impacts_score": "Non-equivalent sparsity can inflate perceived advantages",
+            "evidence": {
+              "baseline_quote": "Baseline hyperparameters are not fully detailed; only Thanos uses B=128/512 defaults.",
+              "final_quote": "α=0.1 uses lower effective sparsity (p drops to 0.45); tables compare without indicating p differences."
+            }
+          },
+          {
+            "diff_type": "new_critique",
+            "summary": "Model naming inconsistencies across sections and tables",
+            "paperaudit_types": [
+              "CONTEXT_MISALIGNMENT_INCOHERENCE",
+              "RHETORICAL_PRESENTATION_MANIPULATION"
+            ],
+            "why_impacts_score": "Ambiguous model identities hinder verification and replication",
+            "evidence": {
+              "baseline_quote": "Models include OPT-125M/350M and multiple LLaMA-2/3 sizes up to 70B.",
+              "final_quote": "Model naming inconsistent: Tables show “LLaMA-2 1.1B,” Appendix uses “TinyLlama-1.1B.”"
+            }
+          },
+          {
+            "diff_type": "new_critique",
+            "summary": "Overstated performance claims vs presented evidence (ties)",
+            "paperaudit_types": [
+              "CLAIM_RESULT_DISTORTION",
+              "RHETORICAL_PRESENTATION_MANIPULATION"
+            ],
+            "why_impacts_score": "Overclaims reduce credibility of results and conclusions",
+            "evidence": {
+              "baseline_quote": "Perplexity results show Thanos competitive/best in many unstructured cases.",
+              "final_quote": "Sec. 5.2 claims outperformance across LLaMA-3, but Table 2 shows a tie at 70B."
+            }
+          }
+        ]
+      },
+      "generated_at": "2026-01-05T20:43:48"
+    }
+  ]
+}

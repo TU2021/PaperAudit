@@ -1,0 +1,129 @@
+{
+  "paper": "DeepCompress_ A Dual Reward Strategy for Dynamically Exploring and Compressing Reasoning Chains",
+  "runs": [
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "final_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "0a71ca7d783136ba33fb6b5ec9aad08ece2f0c09",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/final_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 0.8,
+        "weakness_coverage_recall": 0.6,
+        "ai_extra_major_points_rate": 0.43,
+        "symmetric_coverage_similarity": 0.44,
+        "note": "The AI review covers most of the human's points but misses the expanded non-math evaluation (likely from rebuttal info). However, the AI identifies several major, distinct weaknesses, most notably numerous internal inconsistencies and numerical errors within the paper, which the human review does not mention."
+      },
+      "generated_at": "2025-12-27T20:38:57"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "baseline_review.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "b3137abdd5dd456ecfb029f7bed4151251d086e2",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/baseline_review.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 0.8,
+        "weakness_coverage_recall": 0.6,
+        "ai_extra_major_points_rate": 0.5,
+        "symmetric_coverage_similarity": 0.37,
+        "note": "The AI review covers most of the human's key points but misses the post-rebuttal mention of expanded evaluation, instead listing limited scope as a weakness. The AI also raises several extra substantive concerns, such as the lack of statistical significance testing and hyperparameter sensitivity analysis."
+      },
+      "generated_at": "2025-12-27T20:43:35"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "deepreviewer",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "deep_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "55f39c3e353412551a5ae68e81fc4acc489b4edd",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/deepreviewer/gpt-5-2025-08-07/paper_origin/deep_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 0.6,
+        "weakness_coverage_recall": 0.6,
+        "ai_extra_major_points_rate": 0.5,
+        "symmetric_coverage_similarity": 0.35,
+        "note": "The main coverage gap stems from Review A being post-rebuttal while Review B is pre-rebuttal; B incorrectly flags the lack of non-math evaluation as a weakness, which A notes was addressed. B also misses A's most critical conceptual weakness (the 'no-correct-rollout' paradox), but raises valid extra points about missing compute cost reporting and specific ablation gaps."
+      },
+      "generated_at": "2025-12-27T20:49:38"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "deepreviewer",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "deep_review_merge.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "752f27bc09e656c7d041a880d0c174422eea6ca4",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/deepreviewer/gpt-5-2025-08-07/paper_origin/deep_review_merge.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 0.67,
+        "weakness_coverage_recall": 0.8,
+        "ai_extra_major_points_rate": 0.5,
+        "symmetric_coverage_similarity": 0.47,
+        "note": "The AI review shows high alignment on weaknesses, capturing key human concerns like the relative difficulty definition and dependence on length variance. However, it misses the human's post-rebuttal point about expanded evaluation beyond math, instead listing math-only evaluation as a weakness. The AI also raises several distinct, valid concerns about missing ablations and compute reporting."
+      },
+      "generated_at": "2025-12-27T21:19:09"
+    }
+  ]
+}

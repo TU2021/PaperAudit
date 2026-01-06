@@ -1,0 +1,40 @@
+# Innovation & Motivation Report
+
+## 1. The Authors' Claimed Contribution
+- **Core Problem**: In high-stakes applications, machine learning models often produce low-quality or untrustworthy explanations. Relying on such explanations can erode user trust and lead to poor human decision-making, even if the underlying prediction is correct.
+- **Claimed Gap**: The authors claim that existing "Learning to Reject" (LtR) frameworks are insufficient because they focus exclusively on predictive uncertainty and performance, completely neglecting the quality of the accompanying explanation. As stated in the Introduction, "Traditional Learning to Reject (LtR) strategies focus on predictive performance... they neglect explanation quality." The paper identifies a clear gap: "no existing rejection strategies integrate user-perceived explanation quality into their decisions."
+- **Proposed Solution**: The paper introduces a new problem formulation called "Learning to Reject Low-Quality Explanations" (LtX). To solve this, they propose ULER (User-centric Low-quality Explanation Rejector), a framework that trains a rejector model to mimic human judgments of explanation quality. ULER is trained on a small set of human annotations, which includes both overall quality ratings and specific per-feature relevance judgments, and employs a novel data augmentation strategy to improve sample efficiency.
+
+## 2. Comparative Scrutiny (The "Trial")
+*Here, we analyze how the paper stands against the identified similar works.*
+
+### vs. [Interaction Design for Explainable AI: Workshop Proceedings]
+- **Identified Overlap**: This workshop proceeding critiques the XAI field for operating "in a vacuum using only the researchers' intuition," calling for more "human-centred approaches." The manuscript under review shares this foundational motivation.
+- **Manuscript's Defense**: The manuscript does not merely echo this call to action; it provides a concrete computational answer. In the "Preliminaries" section, the authors explicitly state that "existing machine-side metrics often do not align with human judgment," directly addressing the critique from the workshop. Their entire ULER framework is designed as a system that learns this human-centric perspective from data rather than pre-defined rules.
+- **Reviewer's Assessment**: The difference is highly significant. The workshop paper identifies a problem and sets a research direction. The manuscript proposes a novel problem formulation (LtX) and a specific, implemented solution (ULER) that directly follows that direction. The existence of this prior work strengthens, rather than weakens, the manuscript's motivation by confirming the relevance of the problem.
+
+### vs. [Study on the Helpfulness of Explainable Artificial Intelligence]
+- **Identified Overlap**: This study advocates for evaluating XAI methods based on their "helpfulness" to a human user, proposing user studies as the primary tool for measurement. The manuscript's ULER is also grounded in data from a user study.
+- **Manuscript's Defense**: The manuscript's contribution is distinct. While the prior work uses a user study for *evaluation*, the manuscript uses user study data as a *training signal*. The goal is not just to measure helpfulness but to build an automated component—the rejector—that can predict and act on this human-defined concept of quality. This is a fundamental shift from post-hoc analysis to an integrated, operational system.
+- **Reviewer's Assessment**: The distinction is clear and significant. The prior work establishes an evaluation paradigm. The manuscript builds a machine learning system that automates decision-making based on that paradigm. The novelty lies in moving from measurement to mechanism.
+
+### vs. [Proceedings of The second international workshop on eXplainable AI for the Arts (XAIxArts) - Referencing PASTA]
+- **Identified Overlap**: The analysis identifies PASTA as the closest technical predecessor. Both PASTA and ULER are learned models that aim to score an explanation's quality based on human perception, moving beyond purely technical metrics like faithfulness or stability.
+- **Manuscript's Defense**: The manuscript successfully defends its novelty against PASTA on multiple fronts.
+    1.  **Problem Formulation**: It explicitly defines the new task of *rejection* (LtX), which is different from PASTA's goal of merely *scoring* explanations.
+    2.  **Direct Comparison**: It includes a rejector based on PASTA's score (PASTARej) as a primary state-of-the-art baseline in all experiments.
+    3.  **Empirical Superiority**: It demonstrates through extensive experiments that ULER significantly outperforms PASTARej. In the human user study, ULER achieves an AUROC of 0.63, while PASTARej scores only 0.51. This empirically validates that a method designed specifically for rejection is superior to adapting a general-purpose quality score.
+- **Reviewer's Assessment**: This is the most critical comparison, and the manuscript's defense is compelling. By identifying the closest prior art, implementing it as a strong baseline, and demonstrating superior performance on a newly defined task, the authors clearly establish the incremental and significant nature of their contribution. The difference is not a minor variation but a well-justified and empirically proven advancement for the specific task of explanation-based rejection.
+
+## 3. Novelty Verdict
+- **Innovation Type**: Substantive
+- **Assessment**:
+  The paper successfully survives the comparative scrutiny. The collection of similar works, which are largely position papers and user studies, collectively establishes the critical need for human-centered XAI. Instead of representing overlapping contributions, they form the foundation upon which this paper's motivation is built. The manuscript's key innovation is the formalization of the **Learning to Reject Low-Quality Explanations (LtX)** problem, which is a novel and valuable contribution that bridges the gap between the Learning to Reject and Explainable AI fields. The proposed ULER method is a concrete and effective solution to this new problem.
+  - **Strength**: The primary strength is the novel and well-motivated problem formulation (LtX). This is supported by a strong empirical evaluation that includes a direct and successful comparison against the most relevant technical baseline (PASTA) and the creation of a new, public dataset with real human annotations.
+  - **Weakness**: The core machine learning component of the ULER rejector (a kernel SVM) is not in itself a breakthrough. However, its novelty comes from its application to the LtX problem, combined with the specific feedback mechanism (using per-feature judgments) and the quality-aware data augmentation strategy.
+
+## 4. Key Evidence Anchors
+- **Introduction & Preliminaries**: The paper clearly defines the LtX problem and explicitly differentiates it from traditional LtR and machine-side explanation metrics.
+- **Method Section**: The description of the feedback-driven data augmentation strategy, which leverages granular per-feature judgments (`W_z` and `C_z`), is a key technical differentiator.
+- **Experiments (Q3, User Study)**: The result showing ULER's AUROC of 0.63 significantly outperforming PASTARej's 0.51 (p < 0.01) is the single most crucial piece of evidence supporting the claim of novelty and superiority over the prior state-of-the-art.
+- **Related Work Section**: The authors correctly position their work as a new type of rejection strategy, demonstrating a clear understanding of the field and their specific contribution within it.

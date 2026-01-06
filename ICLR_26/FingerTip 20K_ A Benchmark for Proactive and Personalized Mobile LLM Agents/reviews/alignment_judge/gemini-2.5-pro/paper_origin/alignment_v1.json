@@ -1,0 +1,104 @@
+{
+  "paper": "FingerTip 20K_ A Benchmark for Proactive and Personalized Mobile LLM Agents",
+  "runs": [
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "deepreviewer",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "deep_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180
+      },
+      "config_key": "24b66d75b94c155df325f4e5f2603b40312e4469",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/deepreviewer/gpt-5-2025-08-07/paper_origin/deep_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "motivation_strength_alignment": 0.9,
+        "weakness_error_alignment": 0.25,
+        "overall_alignment": 0.5,
+        "explanation": {
+          "strength": "Both reviews identify the same core strengths: the novel benchmark tracks (proactive suggestion and personalization), the value of the real-world longitudinal dataset with rich user context, and the open-sourcing of the assets. The alignment on the paper's primary contributions is very high.",
+          "weakness": "The reviews show very low alignment on weaknesses, only overlapping on the limited demographic scope of the dataset. Review A focuses on conceptual issues like privacy and deployment feasibility, whereas Review B provides a detailed critique of methodological flaws, including evaluation metrics (LLM judge, unstable Sim2) and reproducibility issues (inconsistent numbers).",
+          "overall": "The reviews agree on the paper's main contribution but diverge significantly in their critiques, leading to a moderate overall alignment. While both see the paper as a valuable contribution, they identify almost entirely different sets of major flaws, with Review A focusing on high-level concepts and Review B on low-level methodological rigor."
+        }
+      },
+      "generated_at": "2025-12-27T20:02:47"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "baseline_review.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180
+      },
+      "config_key": "a14d937ebf873b90a820c8cb44da768956431bd4",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/baseline_review.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "motivation_strength_alignment": 0.9,
+        "weakness_error_alignment": 0.5,
+        "overall_alignment": 0.65,
+        "explanation": {
+          "strength": "Both reviews identify the same core strengths: the novelty of the proactive and personalized evaluation tracks, and the value of the real-world, longitudinal dataset. Review B is more detailed, but its points strongly overlap with and elaborate on the main contributions highlighted by Review A.",
+          "weakness": "There is clear overlap on the limited demographic scope (Chinese users), but the reviews diverge significantly on other major weaknesses. Review B introduces numerous specific, technical critiques about evaluation metrics, experimental rigor, and reproducibility that are absent from Review A, which instead raises higher-level concerns like privacy and the conceptual link between the tracks.",
+          "overall": "The reviews align strongly on the paper's contributions but only moderately on its flaws, resulting in a high-moderate overall match. Both judge the paper as a valuable contribution with significant issues, but they base this judgment on a partially different set of critiques, with Review B being far more focused on technical and methodological rigor."
+        }
+      },
+      "generated_at": "2025-12-27T20:06:51"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "final_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180
+      },
+      "config_key": "565dcfbed8e348ba365acb8ebe44bf867f3cd0c2",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/final_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "motivation_strength_alignment": 0.9,
+        "weakness_error_alignment": 0.45,
+        "overall_alignment": 0.5,
+        "explanation": {
+          "strength": "Both reviews identify the same core strengths: the novel benchmark with its proactive and personalized tracks, and the value of the real-world, longitudinal dataset. Review B offers a more granular breakdown, but the fundamental contributions highlighted are identical to Review A's, leading to very high alignment.",
+          "weakness": "The reviews overlap on high-level weaknesses like the limited demographic scope (Chinese users) and reproducibility concerns, but diverge significantly on specifics. Review B introduces numerous major technical critiques absent from A (flawed metrics, action space inconsistencies, lack of statistical rigor), while Review A raises unique points about the conceptual link between tracks and the analysis of model performance that B misses.",
+          "overall": "The reviews align on the paper's main contribution but differ substantially in their assessment of its flaws, resulting in moderate alignment. While both see the benchmark as a valuable asset, Review B is far more critical of the technical execution and experimental rigor, whereas Review A focuses on more general or interpretive limitations."
+        }
+      },
+      "generated_at": "2025-12-27T20:10:22"
+    }
+  ]
+}

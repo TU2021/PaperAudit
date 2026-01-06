@@ -1,0 +1,180 @@
+Here are four distinct reviews of the paper.
+
+### **Review 1**
+
+**Summary**
+This paper introduces a new problem setting called Learning to Reject Low-Quality Explanations (LtX). The authors argue that traditional Learning to Reject (LtR) systems focus only on predictive uncertainty, ignoring that a model might produce a correct prediction for the wrong reasons, leading to low-quality explanations that erode user trust. To address this, they propose ULER (User-centric Low-quality Explanation Rejector), a framework that learns to reject prediction-explanation pairs based on user-perceived explanation quality. ULER trains a rejector on a small set of human-annotated explanations (comprising quality ratings and per-feature relevance judgments) and uses a novel data augmentation strategy to improve sample efficiency. The authors demonstrate ULER's effectiveness through experiments on eight benchmark datasets with simulated user feedback and on a new, large-scale human-annotated dataset centered on a soccer analytics task, which they also release publicly.
+
+**Soundness**
+The methodology is sound and well-executed. The formulation of the LtX problem is a logical and necessary extension of the existing LtR paradigm. The proposed ULER method is simple, intuitive, and demonstrably effective. The core idea of training a classifier directly on explanation vectors to predict human quality judgments is well-motivated. The data augmentation strategy, which leverages more detailed per-feature feedback to generate new training examples, is a clever way to address the data scarcity inherent in human annotation tasks.
+
+The empirical evaluation is thorough and convincing. The use of a simulated oracle (Section 4.1) allows for a large-scale comparison against a comprehensive set of baselines, including both standard LtR methods and thoughtfully designed explanation-aware strategies. The results from these experiments (Figure 2, Table 1) strongly support the claim that ULER is superior for the LtX task. The subsequent user study (Section 4.2) provides crucial validation with real human feedback, confirming the findings from the simulated setting. The ablation studies (Section 4.1, Q2) are also well-designed, providing valuable insights into what information the rejector needs and the utility of the augmentation step.
+
+**Presentation**
+The paper is exceptionally well-written, clear, and easy to follow. The introduction provides excellent motivation for the LtX problem, using a concrete example and a clear diagram (Figure 1) to distinguish it from traditional LtR. The structure is logical, moving from preliminaries to the proposed method and then to a comprehensive empirical evaluation. The figures and tables are clear, well-labeled, and effectively communicate the main results (e.g., Figure 2 provides a compelling summary of ULER's superior performance). The appendices are detailed and provide necessary information on hyperparameters, additional experiments, and the user study protocol, without cluttering the main text.
+
+**Contribution**
+The paper makes several significant contributions:
+1.  It formally introduces and motivates the Learning to Reject Low-Quality Explanations (LtX) problem, a novel and important research direction that bridges the gap between explainability and model reliability.
+2.  It proposes ULER, a practical and effective method for tackling the LtX problem that learns from limited, user-centric feedback.
+3.  It provides a strong and comprehensive empirical validation of ULER, demonstrating its superiority over a wide range of relevant baselines.
+4.  It introduces and publicly releases a new, large-scale dataset of human-annotated machine explanations (Section 4.2), which will be a valuable resource for future research in this area.
+
+Overall, this is a high-impact paper that opens up a new and promising subfield.
+
+**Strengths**
+- **Novel Problem Formulation:** The key strength is the introduction of the LtX problem, which addresses a critical and previously overlooked aspect of trustworthy AI.
+- **Thorough Evaluation:** The experiments are extensive, including simulated benchmarks, a real-world user study, robustness checks (Appendix C.3, C.4), and ablation studies (Table 2, Appendix C.5).
+- **New Public Dataset:** The creation and release of a large-scale dataset with human judgments on explanation quality is a major contribution to the community.
+- **Clarity and Presentation:** The paper is written with exceptional clarity, making a new concept easy to understand and appreciate.
+
+**Weaknesses**
+- The performance gain from the data augmentation step, while consistent, is relatively modest (Table 6, Appendix C.5). While the authors argue the cost is low, this might slightly temper the excitement around this specific component of the method.
+- The absolute AUROC in the human study (0.63) is not exceptionally high, indicating the inherent difficulty and subjectivity of the task. However, the significant and statistically validated improvement over the SOTA baseline (PASTARej) is what truly matters and demonstrates the method's value.
+
+**Questions**
+1.  The paper rightly suggests that ULER could be combined with traditional LtR strategies to create a system that rejects for both prediction uncertainty and poor explainability (Section 3.2, Section 5). Could you elaborate on how you envision this combination working in practice? Would it be a simple logical OR on the two rejection signals, or a more complex integration?
+2.  The user study was conducted in the domain of soccer analytics. While this is an excellent and creative choice for a controlled study, how do you see the process of collecting annotations and defining "quality" translating to the high-stakes domains like medicine or finance mentioned in the introduction?
+
+**Rating**
+- Overall (10): 9 — The paper introduces a novel and important problem (LtX) and provides a well-validated and practical solution (ULER), supported by a new public dataset.
+- Novelty (10): 10 — The formulation of the LtX problem is highly novel and opens a new research avenue at the intersection of XAI and LtR.
+- Technical Quality (10): 9 — The proposed method is sound, and the experimental validation is rigorous, comprehensive, and includes a real-world user study.
+- Clarity (10): 10 — The paper is exceptionally well-written and organized, with clear motivation, figures, and a logical flow.
+- Confidence (5): 5 — I am highly confident in my assessment as I am an expert in this area and the paper provides extensive evidence.
+
+---
+### **Review 2**
+
+**Summary**
+The paper proposes a new task, Learning to Reject Low-Quality Explanations (LtX), where a machine learning model should abstain from making a prediction if the accompanying explanation is deemed to be of low quality. The authors introduce ULER, a method to train a rejector that learns to mimic human judgments of explanation quality. ULER is trained on a small dataset of explanations with human-provided quality labels and per-feature feedback, which is then expanded using a data augmentation technique. The method is evaluated on several benchmark datasets using simulated human judgments and on a new dataset collected via a user study in the domain of soccer analytics.
+
+**Soundness**
+The paper's premise is interesting, but I have some reservations about the soundness of the methodology and evaluation.
+
+First, the simulation of human judgments in Section 4.1 is a major point of concern. Human explanation quality is defined as the correlation between a simple model's explanation (linear SVC/SVR) and an "oracle" model's explanation (Random Forest). This setup seems engineered to create disagreement, and it is a very strong and potentially unrealistic assumption that this disagreement is a valid proxy for human-perceived quality. While the authors show robustness to the choice of oracle in Appendix C.4, the fundamental premise that "disagreement with another model's explanation = low quality" is not sufficiently justified and undermines the conclusions drawn from the benchmark experiments.
+
+Second, the technical novelty of the ULER rejector itself is limited. The rejector is a standard SVM classifier trained directly on the feature importance vectors (e.g., SHAP values). While simple solutions are often elegant, the paper presents this as a novel framework, when the core learning component is a straightforward application of a standard classifier.
+
+Third, the data augmentation strategy (Section 3.1) feels heuristic. It relies on perturbing features deemed "correct" or "wrong" based on the oracle. The choice of a Gaussian perturbation and the `u%` threshold for defining wrong features (Section 4.1) lack strong theoretical or empirical justification. The reported benefit of this augmentation is also quite small (Appendix C.5), questioning its practical significance.
+
+Finally, the results of the user study (Section 4.2), while a commendable effort, show a modest AUROC of 0.63. This suggests that while ULER is better than the baseline, it is still far from reliably predicting human judgments in a real-world, subjective task.
+
+**Presentation**
+The paper is generally well-written and structured. However, critical details about the simulation setup and the definitions of the baseline metrics are relegated to the appendix (Appendix B, C.1). Given that the majority of the paper's results rely on this simulation, a more detailed and critical discussion of its assumptions and limitations should be present in the main body of the paper. Figure 1 is a good conceptual illustration.
+
+**Contribution**
+The primary contribution of this paper is the conceptual framing of the LtX problem. This is an interesting and worthwhile direction for the field. The ULER method itself is a simple baseline for this new problem, but not a major technical contribution. The new human-annotated dataset is valuable, although its utility may be limited by the specific domain and the high subjectivity observed (as evidenced by the need to filter data and the modest final performance).
+
+**Strengths**
+- **Interesting Problem Formulation:** The paper clearly identifies and formalizes the important problem of rejecting predictions based on explanation quality.
+- **Inclusion of a User Study:** The authors went to the effort of collecting real human feedback, which adds significant value and grounding compared to a purely simulation-based paper.
+- **Comprehensive Baselines:** The paper compares against a strong and diverse set of baselines, including several novel explanation-aware strategies created for this work.
+
+**Weaknesses**
+- **Unrealistic Simulation of Human Judgments:** The main evaluation on benchmark datasets relies on a proxy for explanation quality (correlation with an oracle) that is not well-justified and may not reflect real human assessment.
+- **Limited Technical Novelty:** The core ULER rejector is a standard SVM applied to explanation vectors, which is a straightforward approach.
+- **Modest Performance on Real Data:** The AUROC of 0.63 in the user study, while statistically significant, suggests limited practical effectiveness in its current form.
+- **Heuristic Data Augmentation:** The augmentation method is based on several un-justified choices and provides only a marginal performance benefit.
+
+**Questions**
+1.  The simulation in Section 4.1 defines low-quality explanations as those with low correlation to an oracle's explanation. Can you provide a more fundamental justification for why this is a good proxy for *user-perceived* quality, beyond the fact that it allows for large-scale experiments? Have you considered alternative simulation strategies?
+2.  The ULER rejector is an SVM. Have you experimented with more complex models for the rejector `r`? Given that the input is a simple feature vector, it seems other models might be equally or more suitable.
+3.  In the user study (Section 4.2), the performance of ULER is quite low in absolute terms (AUROC 0.63). What do you believe are the primary reasons for this, and what steps could be taken to improve performance on real, subjective human data?
+
+**Rating**
+- Overall (10): 6 — The paper introduces an interesting problem but the evaluation relies on a questionable simulation, and the proposed method's performance on real data is modest.
+- Novelty (10): 7 — The problem formulation (LtX) is novel, but the technical solution (ULER) is a straightforward application of existing methods.
+- Technical Quality (10): 5 — The soundness of the main experimental setup (simulation) is questionable, and the augmentation method is heuristic.
+- Clarity (10): 8 — The paper is well-written, but key methodological assumptions in the simulation are not sufficiently discussed in the main text.
+- Confidence (5): 5 — I am confident in my assessment, having expertise in both XAI and machine learning evaluation.
+
+---
+### **Review 3**
+
+**Summary**
+This paper introduces the problem of "Learning to Reject Low-Quality Explanations" (LtX), arguing that AI systems should not only reject uncertain predictions but also those that cannot be explained satisfactorily to a user. The authors propose ULER, a method that learns a rejection model from human feedback. This feedback includes both an overall quality rating for an explanation and identification of specific feature attributions that the user deems incorrect. ULER uses this feedback in a data augmentation scheme to train a rejector. The approach is evaluated using simulated feedback on benchmark tasks and with real human feedback collected via a large-scale user study focused on explaining an expected goals (xG) model in soccer.
+
+**Soundness**
+The paper's focus on user-perceived explanation quality is timely and important. However, the soundness of the work from a human-computer interaction (HCI) and user-centric evaluation perspective has some limitations.
+
+My main concern is the operationalization of "explanation quality." The paper reduces this complex, multi-faceted construct into a binary label (high/low quality) derived from a single 5-point Likert scale question ("To what extent is the AI’s explanation consistent with how you would explain...?"). While this is a necessary simplification for a machine learning task, it glosses over the richness of what makes an explanation "good" for a user (e.g., is it actionable, does it teach the user something new, is it sufficiently detailed?). The low inter-annotator agreement reported in the user study (requiring the authors to filter the data, Section D.4) strongly suggests that "quality" is highly subjective and not well-captured by this single dimension.
+
+The user study itself is well-designed in many respects (e.g., consultation with a psychologist, pilot studies, clear instructions). However, the choice of the soccer xG domain raises questions about generalizability. The introduction motivates the problem with high-stakes domains like medicine and credit scoring. The cognitive task of evaluating feature importances for a soccer shot is fundamentally different from a doctor evaluating an explanation for a diagnosis. The features in the soccer task are visually grounded and relatively simple, whereas in medicine, features can be abstract and their interactions complex. The paper does not adequately discuss how the findings would transfer to these more critical domains.
+
+The per-feature feedback mechanism (a multiple-choice question) is a good idea, but it is also a simplification. It captures *that* a user thinks a feature importance is wrong, but not *why* (e.g., wrong sign, wrong magnitude, wrong feature entirely). This nuance is lost.
+
+**Presentation**
+The paper is clearly written and well-structured. The figures illustrating the user study task (Figure 3, Figure 7) are very helpful for understanding the annotation process. However, the paper would be strengthened by including more qualitative analysis from the user study. For example, showing examples of explanations that were consistently rated as low-quality versus high-quality would provide valuable intuition. Similarly, discussing any common patterns in which features users flagged as incorrect would be insightful. The quantitative results (AUROC) are presented clearly, but the "story" behind the numbers is missing.
+
+**Contribution**
+The main contribution is the framing of the LtX problem from a user-centric viewpoint and the execution of a large-scale user study to create a dataset for this problem. This is a valuable contribution that pushes the field to take human perception more seriously. The ULER method is a reasonable first attempt at a solution, but the more lasting contribution is the problem definition and the dataset itself. The dataset, while domain-specific, provides a much-needed resource for studying human perception of explanations.
+
+**Strengths**
+- **Strong User-Centric Motivation:** The paper is grounded in the important need to align model explanations with human users' reasoning and trust.
+- **High-Quality User Study Design:** The authors clearly took great care in designing their annotation campaign, including consulting experts, running pilots, and using clear instructions (Section 4.2, Appendix D).
+- **Publicly Released Dataset:** The release of the 5250 human annotations is a significant service to the research community.
+- **Separation of Prediction and Explanation Agreement:** The study design smartly asked users to rate their agreement with the prediction and the explanation separately (Section D.3), which is a good methodological practice.
+
+**Weaknesses**
+- **Oversimplification of "Explanation Quality":** The concept of quality is reduced to a single Likert-scale question, which does not capture its multi-dimensional nature.
+- **Questionable Generalizability:** Findings from the soccer analytics domain may not transfer to the high-stakes domains used to motivate the paper.
+- **Lack of Qualitative Insights:** The paper reports quantitative results from the user study but misses an opportunity to provide qualitative analysis of user behavior and feedback.
+- **High Subjectivity and Noise:** The low AUROC (0.63) and low inter-annotator agreement suggest the task is extremely subjective, which may limit the ultimate performance of any model trying to predict it.
+
+**Questions**
+1.  Could you provide more details on the inter-annotator agreement? What was the agreement metric (e.g., Krippendorff's alpha) before and after filtering? What does the level of disagreement tell us about the feasibility of learning a single "user-centric" quality model?
+2.  The introduction motivates the work with high-stakes applications like medical diagnosis. How would you adapt your annotation protocol for a domain where the "expert" is, for example, a radiologist, and the features are abstract measurements from an MRI scan rather than visual positions on a field?
+3.  Could you show a few examples from your user study of explanations that were rated as very low-quality and very high-quality by the annotators? What distinguishes them? This would help build intuition for what ULER is learning.
+
+**Rating**
+- Overall (10): 7 — A valuable paper that introduces an important user-centric problem and provides a new dataset, though the generalizability and practical effectiveness of the solution are still open questions.
+- Novelty (10): 8 — The user-centric framing of rejection is novel, and the user study is a novel contribution in this space.
+- Technical Quality (10): 7 — The ML method is sound but simple; the user study methodology is strong, but the results highlight the extreme difficulty of the task.
+- Clarity (10): 9 — The paper is very clearly written, though it could benefit from more qualitative analysis of the user study.
+- Confidence (5): 5 — I am very confident in my assessment, as my expertise lies in human-centered evaluation of XAI.
+
+---
+### **Review 4**
+
+**Summary**
+This paper introduces "Learning to Reject Low-Quality Explanations" (LtX), a variant of the learning-to-reject framework where the decision to abstain is based on the quality of the explanation rather than the uncertainty of the prediction. The authors propose a method, ULER, which trains a rejector model on human feedback about explanation quality. This feedback consists of a quality score and per-feature relevance judgments. ULER employs a data augmentation strategy to make the most of this limited feedback. The authors evaluate ULER on simulated and real human-annotated data, showing it outperforms standard rejection methods and other explanation-aware baselines. They also release the human-annotated dataset from their user study.
+
+**Soundness**
+The paper's approach is logical and the experiments are well-structured to support the claims. The core idea of training a second-level model to "grade" the output of an explainer is sound. The ablation study in Table 2 is particularly insightful, demonstrating that the explanation vector `z` alone is the most effective input for the rejector, which simplifies the problem nicely. The robustness checks in the appendix (C.3, C.4) add confidence to the results.
+
+However, I have concerns about the practical viability and scalability of the proposed approach. The method hinges on the availability of human annotations, including not just a holistic quality score but also more granular per-feature feedback (`W_z`, `C_z` in Section 3.1). The paper claims a "modest amount" of feedback is needed, but the user study involved 1050 examples with 5 annotations each, which is a non-trivial data collection effort. The claim of sample efficiency would be much stronger if supported by a learning curve showing performance as a function of the number of annotated samples.
+
+Furthermore, the data augmentation strategy, which relies on this more expensive per-feature feedback, yields only a "modest (≈ 2% across tasks)" improvement (Section 4.1, Q2). This raises a critical cost-benefit question: is the extra effort required to collect per-feature feedback justified by such a small gain? For many practical applications, the answer might be no, in which case the simpler ULER-NOAUG variant (Appendix C.5) would be preferred, making the augmentation a less impactful contribution.
+
+Finally, the paper's scope is explicitly limited to tabular data and feature importance explanations (Section 3.2). While this is a reasonable starting point, the paper offers little discussion on the significant challenges of extending this to other modalities like images or text, where the "explanation" is a high-dimensional object (e.g., a saliency map) and the concept of "per-feature feedback" is less clear. This limitation curtails the broader applicability of the proposed ULER framework as-is.
+
+**Presentation**
+The paper is well-written, clearly structured, and transparent about its limitations. The motivation is strong, and the method is described with sufficient detail. The separation of the main results from the extensive supplementary material in the appendix is effective, keeping the main narrative focused. The authors are commendable for explicitly stating the limitations of their work in Section 3.2.
+
+**Contribution**
+The main contribution is the conceptualization of the LtX problem, which is a valuable shift in perspective for the learning-to-reject community. ULER serves as a solid proof-of-concept that this problem is tractable. The release of the human-annotated dataset is also a notable contribution. However, the practical significance of the technical contributions (specifically the augmentation strategy) is somewhat limited by the marginal performance gains and the high cost of the required annotations.
+
+**Strengths**
+- **Clear and Important Problem:** The paper identifies and formalizes a practical and important problem at the intersection of XAI and reliable ML.
+- **Pragmatic Framing:** The authors correctly position ULER as a complement to, not a replacement for, traditional LtR methods (Section 5).
+- **Insightful Ablation Study:** The analysis in Table 2, which shows that explanations alone are the best input for the rejector, is a simple but powerful finding.
+- **Honesty about Limitations:** The paper is upfront about its limitations, such as the reliance on human annotations and the focus on tabular data (Section 3.2).
+
+**Weaknesses**
+- **Practical Cost of Annotation:** The method's reliance on detailed human feedback is a significant bottleneck for real-world deployment. The "sample efficiency" claim is not fully substantiated.
+- **Marginal Benefit of Data Augmentation:** The data augmentation component, a key part of the proposed method, provides only a small performance improvement while requiring more expensive, fine-grained annotations.
+- **Limited Scope:** The work is confined to tabular data and feature attributions, and the path to extending it to other data types and explanation styles is unclear.
+- **Lack of Integration Study:** The paper proposes that LtX and traditional LtR should be combined, but does not provide any experiments or analysis on how to achieve this, which is a critical next step for a practical system.
+
+**Questions**
+1.  To better support the claim of sample efficiency, could you provide a learning curve showing ULER's AUROC as a function of the number of training annotations (e.g., from 50 to 1000)? This would give a much clearer picture of the data requirements.
+2.  The data augmentation provides a ~2% AUROC improvement but requires per-feature feedback. In your user study, was it significantly more time-consuming or cognitively demanding for users to provide this per-feature feedback compared to the single Likert-scale quality rating? This would help assess the cost-benefit trade-off.
+3.  What do you see as the primary obstacle to extending ULER to image data, where the explanation `z` would be a saliency map? Would the rejector `r` need to be a CNN, and how would you collect the "per-feature" (i.e., per-pixel or per-superpixel) feedback required for the augmentation step in a scalable way?
+
+**Rating**
+- Overall (10): 7 — A strong conceptual paper that introduces an important problem with a solid proof-of-concept, but with practical concerns about annotation cost and scalability that limit its immediate impact.
+- Novelty (10): 8 — The LtX problem formulation is highly novel. The ULER method is a novel combination of existing ideas for this new problem.
+- Technical Quality (10): 7 — The method is sound and the experiments are well-conducted, but the practical utility of the augmentation component is questionable given its cost and marginal benefit.
+- Clarity (10): 9 — The paper is very clearly written and transparent about its scope and limitations.
+- Confidence (5): 5 — I am highly confident in my review, based on my experience with deploying machine learning systems.

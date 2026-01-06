@@ -1,0 +1,87 @@
+Integrity and Consistency Risk Report
+
+Summary
+The manuscript contains several high-impact internal inconsistencies and numerical/figure/citation mismatches that materially affect interpretability and trustworthiness of the findings. Key issues are enumerated below with direct anchors.
+
+1) Direct contradiction on cross-lingual transfer (tail vs high‑resource influence on English)
+- Evidence:
+  - Text states: “English validation loss decreases as more tokens from high-resource languages are included, and increases when more tokens from lower-resource languages are introduced.” (Appendix D, Block 68).
+  - Figure caption states the opposite: “Increasing token allocation for tail languages reduces validation loss in English and improves English accuracy.” (Appendix, Block 74).
+  - Plots support the text (not the caption): the English LM loss decreases as the “Proportion of top 25 Langs (%)” increases (Appendix images, Blocks 76–77).
+- Why it matters: This reverses the causal interpretation of what improves English, undermining conclusions about data mixture design and cross-lingual transfer mechanisms.
+
+2) Misclassification of Mongolian as Slavic in pivot experiments
+- Evidence:
+  - Section 4 says: “The Slavic set includes … Mongolian …” (Experiments, Block 14).
+  - Table 4 classifies Mongolian as “Mongolic,” not Slavic (Appendix, Block 64).
+- Why it matters: Misdefining evaluation groups compromises claims about family-based transfer and the validity of “stay in the family” conclusions.
+
+3) Figure mislabeling/misplacement between pivot and curriculum experiments
+- Evidence:
+  - Immediately after the curriculum setup (Blocks 16–21), the figure labels “Figure 4: … as a function of consumed training tokens … under different curriculum strategies” (Block 19) appear alongside plots whose x‑axis is “Pivot Language Proportion (%)” and legend “Pivot: EN/RU/EN+RU” (Blocks 17–18) — these correspond to the pivot (Figure 3) experiment, not curriculum learning.
+  - The curriculum‑learning plots with x‑axis “Training Tokens (B)” and legend “All‑at‑once / English‑all / English‑Pivots‑all / Pivots‑all” appear later, near the start of Assumption 4 (Blocks 23–25).
+- Why it matters: Misplaced/mislabelled figures obscure which evidence supports which claim, hampering verification of core results on curriculum learning and pivot effects.
+
+4) Token budget inconsistency in Table 10 (Fixed Total Budget; en=60%)
+- Evidence:
+  - For en=60%, English shows 57,614.01 million tokens but is annotated as “(60.0%).” (Appendix, Table 10, Block 83).
+  - Other English proportions (10–50%, 70–100%) numerically match their annotated percentages (e.g., 10,002.43 ≈ 10B, 50,012.16 ≈ 50B, 70,017.02 ≈ 70B, etc.).
+- Why it matters: This apparent error (likely “60,014.01” intended) affects the integrity of the fixed‑budget ablation and any conclusions drawn about the point at which multilingual loss begins to degrade.
+
+5) Non‑monotonic per‑language counts under a fixed total budget
+- Evidence:
+  - In Table 10 (Fixed Total Budget), Japanese token count increases from 3,037.67M at en=30% to 3,149.49M at en=40% (Appendix, Block 83), whereas under a fixed total budget and rising English share, non‑English language allocations would be expected to generally decrease. Most other languages decrease monotonically.
+- Why it matters: Without an explanation (e.g., re-sampling specifics causing non‑monotonic shifts), this anomaly raises questions about the correctness of the token allocation accounting used in the ablation.
+
+6) Benchmark suite mismatch (reported vs described)
+- Evidence:
+  - Appendix B.1 (Benchmarks) lists 10 tasks (Belebele, XCodah, XCSQA, XCOPA, XStoryCloze, XWinogrande, MMMLU, INCLUDE, Exams, M3Exams) (Appendix, Block 60).
+  - Table 9 (English benchmark scores) reports results for Belebele, M3Exams, MMLU, PAWS‑X, XCSQA, XCODAH, XCOPA, XStoryCloze, XWinogrande (Appendix, Block 82), which:
+    - includes PAWS‑X (not listed in B.1),
+    - excludes INCLUDE and Exams (listed in B.1).
+- Why it matters: Inconsistent benchmark definitions make aggregated scores and comparisons ambiguous, impacting the validity of the downstream claims (e.g., in Figures 2 and Table 1).
+
+7) Unspecified weighting for “weighted average LM loss”
+- Evidence:
+  - Multiple figures/captions refer to “weighted average LM loss” for non‑English groups (e.g., Figure 1 captions in Experiments, Block 6; Figure 3 caption in Block 15; Figure 5 caption in Block 28), but the manuscript does not specify the weighting scheme (by tokens, languages, validation size, etc.). The Evaluation section (Block 5) and Appendix B.2 (Blocks 60–61) define aggregation for benchmarks, not LM loss weighting.
+- Why it matters: Without a defined weighting scheme, the group‑level LM loss comparisons are not reproducible and can bias interpretation of multilingual performance trends.
+
+8) Dataset reference mismatch for mC4
+- Evidence:
+  - Pretraining Data cites using “the multilingual version of the C4 corpus (mC4; Xue et al., 2021)” but links to “https://huggingface.co/datasets/allenai/c4” (Methods, Block 5, footnote 2), which points to C4, not mC4.
+- Why it matters: Using the wrong dataset link undermines traceability of data sources and reproducibility for mC4‑based experiments.
+
+9) Learning‑rate schedule not specified for >100B‑token runs
+- Evidence:
+  - Methods state models are trained on D=100 to 225B tokens (Block 5).
+  - LR schedule (Appendix, Figure 6/Table, Blocks 55 and 59) is explicitly defined for 0–100B tokens only.
+- Why it matters: For Fixed Multilingual Budget runs up to 225B tokens (Experiments, Block 13; Appendix Table 11, Block 84), the LR schedule beyond 100B is unspecified, affecting reproducibility and comparability across data budgets.
+
+10) Unexplained uncertainty (±) in Table 1
+- Evidence:
+  - Table 1 reports “Benchmark Performance ± …” for English (Experiments, Block 27), but the manuscript does not define what the “±” represents (standard deviation across tasks, across runs/seeds, standard error, etc.). No seeds or repetitions are described in Methods (Blocks 5, 53–57) or Appendix B.2 (Blocks 60–61).
+- Why it matters: The statistical meaning of the reported uncertainty is unclear, limiting the strength of conclusions about stability or significance across configurations.
+
+11) Unsupported quantitative claim about correlation in curriculum experiments
+- Evidence:
+  - Section 5 states: “we find a strong correlation between the number of English tokens in the training mix and the model’s performance on English.” (Experiments, Block 21).
+  - No correlation coefficients, plots, or tables are provided to substantiate this claim. No direct evidence found in the manuscript.
+- Why it matters: The conclusion that curriculum gains are explained by data volume rather than schedule structure lacks presented quantitative support.
+
+Additional clarity issues
+- Repetition/misplacement of experimental heatmaps inside the Related Work section (images in Blocks 31–34) likely due to formatting, but it confuses provenance of results.
+
+Recommendations to remediate
+- Correct the contradictory caption in Figure 10 (Appendix) to align with the text and plots (tail vs top‑25 effects).
+- Fix the Slavic set composition (remove Mongolian or clearly separate family vs script groupings) and re‑analyze if grouping affected averages (Blocks 14, 64).
+- Align figure numbering and placement (pivot vs curriculum) so each claim references the correct figure; keep curriculum plots adjacent to Section 5 (Blocks 17–19, 23–25).
+- Correct the English token count at en=60% in Table 10; verify all per‑language counts for monotonicity or explain the sampling process that yields non‑monotonic allocations (Block 83).
+- Reconcile the benchmark suite: ensure Table 9 uses the same tasks as listed in Appendix B.1 or document why subsets/tasks differ (Blocks 60, 82).
+- Specify the exact weighting scheme for “weighted average LM loss” and ensure it is applied consistently across all figures (Blocks 6, 15, 28).
+- Provide the correct mC4 dataset link and sufficient details for data splits.
+- Document the LR schedule used for runs exceeding 100B tokens.
+- Define the uncertainty metric (±) in Table 1 and report seeds/runs if applicable.
+- Provide quantitative evidence (e.g., correlation coefficients/plots) for the curriculum‑related correlation claim.
+
+Conclusion
+Multiple substantive inconsistencies (contradictory statements vs figures, token budget errors, benchmark definition mismatches, misclassified language groups, and missing methodological details) reduce confidence in key conclusions. Addressing the above issues is necessary to ensure the results are interpretable, reproducible, and trustworthy.

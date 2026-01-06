@@ -1,0 +1,147 @@
+# Global Summary
+- Problem: Detecting LLM-generated text can have serious consequences when misclassified; the authors argue decisions must be interpretable so users can assess reliability.
+- Core approach: ExaGPT is an interpretable detector that classifies a text by checking whether its spans share more similar examples with human-written or LLM-generated texts in a datastore. It retrieves top-k similar n-gram spans, computes per-span scores (length, reliability, prediction), and selects non-overlapping spans via dynamic programming to balance span length and similarity. The final decision averages per-span prediction scores; evidence consists of the retrieved similar spans per target span.
+- Evaluation scope: English subset of the M4 benchmark across four domains (Wikipedia, Reddit, WikiHow, arXiv) and three generators (ChatGPT, GPT-4, Dolly-v2). For each domain–generator combination: 3,000 paired samples; splits of 2,000/500/500 (train/validation/test). Baselines: RoBERTa with SHAP, LR-GLTR, DNA-GPT.
+- Metrics: AUROC and accuracy at a fixed false positive rate (FPR) of 1%. Interpretability measured by the accuracy of human judgments about detector correctness given evidence.
+- Key findings:
+  - Human evaluation: ExaGPT achieved 61.5% accuracy of human judgments, exceeding baselines (RoBERTa 47.9%, LR-GLTR 57.3%, DNA-GPT 53.1%).
+  - Detection performance: ExaGPT attained high AUROC and strong accuracy at 1% FPR across domains and generators, with average accuracy 96.2% for ChatGPT, 96.2% for GPT-4, and 83.3% for Dolly-v2. Reported improvements reach “up to +40.9 points” accuracy at 1% FPR compared to prior detectors.
+  - Robustness analyses indicate minor sensitivity to the interpolation coefficient α and effective performance even with reduced datastore sizes.
+- Caveats explicitly stated: Retrieval and search over large span datastores is computationally costly (four NVIDIA A6000 GPUs; ~25 hours total processing). Human interpretability judgments may be biased due to expert annotators.
+
+# Abstract
+- Introduces ExaGPT, an interpretable LLM-generated text detector grounded in human judgment: compare similar spans (verbatim and semantic) with human vs. LLM texts in a datastore.
+- Provides per-span similar examples as evidence to help users assess reliability.
+- Human evaluation shows similar span examples more effectively support judging correctness than existing interpretable methods.
+- Experiments across “four domains and three generators” show ExaGPT outperforms prior detectors by “up to +40.9 points of accuracy at a false positive rate of 1%.”
+
+# Introduction
+- Motivation: LLMs generate human-like text but can be misused (cheating, fake news). Misclassifications in detection can harm careers and students’ academic dignity.
+- Need: Detectors should provide interpretable evidence for decisions; perfect accuracy is unrealistic, so users must gauge reliability.
+- Gap: Existing interpretable detectors (e.g., token likelihood highlighting, perturbation-based attribution, n-gram overlaps) are not aligned with intuitive human decision-making, which compares similar spans between sources.
+- Proposal: ExaGPT aligns with human decision-making by checking whether a text shares more similar spans with human or LLM texts, and provides similar span examples per span as evidence.
+
+# Method
+- Overview: Two phases—Span Scoring and Span Selection—followed by overall detection with evidence.
+- Span Scoring:
+  - For each n-gram span x_{i:i+n} (n from 1 to 20), retrieve top-k similar spans {(s_j, l_j, c_j)} via k-NN in an embedding space; l_j ∈ {Human, LLM}, c_j is cosine similarity.
+  - Scores:
+    - Length L(x_{i:i+n}) = n.
+    - Reliability R(x_{i:i+n}) = (∑ c_j)/k (mean similarity).
+    - Prediction P(x_{i:i+n}) = (# of retrieved spans labeled LLM)/k.
+- Span Selection:
+  - Segment text into non-overlapping spans T = [t_1, …, t_H] to maximize average S(T) = (∑ [α L^{std}(t_h) + (1 − α) R^{std}(t_h)]) / H.
+  - Use dynamic programming to choose boundaries, trading off normalized length L^{std} and reliability R^{std}. α ∈ [0.0, 1.0] controls the trade-off.
+- Overall detection and evidence:
+  - Compute P_overall = mean of P(t_h) over selected spans; classify as LLM if P_overall ≥ ε, else Human. ε (threshold) not specified in this section.
+  - Evidence E = list of selected spans with their top-k similar spans; users can inspect similarities and original labels to assess reliability.
+- Implementation details (cross-referenced to Experiments):
+  - Embeddings: BERT-large (uncased), mean of second-layer hidden outputs over tokens in span.
+  - k-NN: FAISS; top-10 neighbors (k = 10).
+  - α selected on validation grid {0.0, 0.125, …, 1.0}.
+
+# Experiments
+- Evaluation measures:
+  - AUROC for overall behavior.
+  - Accuracy at fixed FPR = 1% (practical emphasis on minimizing false positives).
+- Datasets:
+  - M4 English subset; for each domain–generator combination: 3,000 pairs (human vs. LLM).
+  - Domains: Wikipedia, Reddit, WikiHow, arXiv; Generators: ChatGPT, GPT-4 (closed-source), Dolly-v2 (open-source).
+  - Splits per combination: 2,000 train / 500 validation / 500 test pairs.
+- Baselines:
+  - RoBERTa with SHAP; fine-tuned on train split following Wang et al. (2024).
+  - LR-GLTR; trained on GLTR features as in Wang et al. (2024).
+  - DNA-GPT; truncation ratio γ = 0.7 (closed-source) and 0.5 (open-source); re-generations K = 10 (closed-source) and 5 (open-source); temperature matched to original; prompt known; other defaults. Further configuration in Appendix A.
+- ExaGPT settings:
+  - Datastore: train split spans (per domain–generator).
+  - n-grams from 1 to 20; BERT-large embeddings; mean of second-layer outputs.
+  - k-NN retrieval: top-10 with FAISS.
+  - Span selection: α chosen from {0.0, 0.125, …, 1.0} for best validation performance; held constant in all evaluations.
+- Human evaluation of interpretability:
+  - Metric: accuracy of human judgments about whether each detection is correct, given evidence.
+  - 96 samples per detector: two samples (one correct, one incorrect) per domain–generator across four domains and three generators; ratio of correct/incorrect even; four annotators (one MSc, one PhD, two NLP researchers); different samples per annotator.
+  - Evidence display: color highlights per span by P (red < 0.5 human; green = 0.5; blue > 0.5 LLM); tooltip shows top-10 similar spans and label distribution.
+- Results: Interpretability (Table 1; human judgment accuracy):
+  - RoBERTa: 47.9%.
+  - LR-GLTR: 57.3%.
+  - DNA-GPT: 53.1%.
+  - ExaGPT: 61.5% (up to +13.6 points over baselines).
+- Results: Detection performance (Table 2; AUROC and Acc@1% FPR across domains and generators):
+  - ChatGPT averages:
+    - RoBERTa: Avg. AUROC 100.0; Avg. ACC 59.1.
+    - LR-GLTR: Avg. AUROC 98.9; Avg. ACC 90.4.
+    - DNA-GPT: Avg. AUROC 91.4; Avg. ACC 66.4.
+    - ExaGPT: Avg. AUROC 99.2; Avg. ACC 96.2.
+  - GPT-4 averages:
+    - RoBERTa: Avg. AUROC 100.0; Avg. ACC 69.6.
+    - LR-GLTR: Avg. AUROC 98.7; Avg. ACC 87.6.
+    - DNA-GPT: Avg. AUROC 57.3; Avg. ACC 55.3.
+    - ExaGPT: Avg. AUROC 99.2; Avg. ACC 96.2.
+  - Dolly-v2 averages:
+    - RoBERTa: Avg. AUROC 100.0; Avg. ACC 61.1.
+    - LR-GLTR: Avg. AUROC 91.3; Avg. ACC 67.7.
+    - DNA-GPT: Avg. AUROC 72.0; Avg. ACC 66.9.
+    - ExaGPT: Avg. AUROC 90.4; Avg. ACC 83.3.
+  - Selected per-domain highlights (Acc@1% FPR):
+    - ChatGPT: Wikipedia 95.0 (ExaGPT), Reddit 95.0 (ExaGPT), WikiHow 96.8 (ExaGPT), arXiv 98.2 (ExaGPT).
+    - GPT-4: Wikipedia 94.9 (ExaGPT), Reddit 96.1 (ExaGPT), WikiHow 94.9 (ExaGPT), arXiv 99.0 (ExaGPT).
+    - Dolly-v2: Wikipedia 78.4 (ExaGPT), Reddit 90.8 (ExaGPT), WikiHow 87.0 (ExaGPT), arXiv 76.9 (ExaGPT).
+  - Reported maximum improvement: “up to +40.9 points” in accuracy at 1% FPR.
+- Visual evidence examples and distributions:
+  - Figure 4: reliability score distributions (long spans, n ≥ 10) show correct samples skew to higher reliability than incorrect samples.
+
+# Discussion
+- Analysis of interpretability (4.1):
+  - From 1,000 correct vs. 1,000 incorrect ExaGPT predictions, long spans (n ≥ 10) in correct samples have higher reliability scores; offering long, high-reliability spans is empirically associated with better human judgments of correctness.
+  - Table 3 illustrates k-NN spans for a target span, showing balanced lexical and semantic similarity with label distribution (e.g., multiple LLM neighbors with similarities around 0.89–0.92).
+- Impact of α (4.2):
+  - α ∈ [0.0, 1.0] examined at 0.125 intervals. The text reports: higher α (placing more weight on reliability) tends to improve performance; the lowest observed AUROC and Acc@1% FPR across domains are “98.5%” and “93.4%,” indicating minor variation and robustness to α.
+  - Generator-specific trends for ChatGPT, GPT-4, Dolly-v2 shown (Figures 5, 10); overall detector ranking unaffected by α variation within tested ranges.
+- Impact of datastore size (4.3):
+  - Datastore sizes sampled from train split: {500, 1,000, 1,500, 2,000} pairs.
+  - Larger datastore improves performance; even with 500 pairs, Acc@1% FPR is “at least 94.5%” across four domains (ChatGPT), outperforming baselines. Trends consistent for GPT-4 and Dolly-v2 (Figures 6, 11).
+- Limitations (7):
+  - Inference cost: datastore of spans from 2,000 human and 2,000 LLM texts; retrieval over many span instances requires significant compute; experiments used four NVIDIA A6000 GPUs. Cost may be reduced by smaller datastores (per §4.3).
+  - Human judgment bias: only four annotators with NLP expertise; real users may differ, affecting interpretability evaluation.
+- Ethics and Broader Impact (8):
+  - Human subjects: informed consent; awareness of goals; right to withdraw.
+  - Transparency: code and data released, including human annotations.
+
+# Related Work
+- LLM-generated text detection categories:
+  - Watermarking (e.g., secret token ratios adjusted during decoding).
+  - Metrics-based (token log probabilities, ranks, entropy, perplexity, probability curvature/negative curvature).
+  - Supervised classifiers (probabilistic and neural models).
+- Interpretability approaches:
+  - GLTR: token likelihood/rank visualizations.
+  - LIME/SHAP applied to classifiers via perturbation-based attribution.
+  - DNA-GPT: overlaps between truncated target text and LLM continuations.
+- Example retrieval for interpretability in NLP:
+  - Nearest neighbor methods in machine translation, sequence labeling, NER, grammatical error correction leverage retrieved examples for decisions.
+- Distinction of ExaGPT:
+  - Grounded in human decision-making by comparing similar spans across sources, retrieving per-span examples, and optimizing span segmentation via dynamic programming for interpretable evidence.
+
+# Conclusion
+- ExaGPT detects LLM-generated vs. human-written text by comparing verbatim and semantic span similarities to a labeled datastore and presents per-span similar examples as evidence.
+- Human evaluation indicates similar span examples help users judge correctness more effectively than prior interpretable detectors.
+- Experiments across multiple domains and generators show notably superior detection performance, including accuracy at 1% FPR with reported gains “up to +40.9 points.”
+- Future work: evaluate cross-domain and cross-generator settings to identify common LLM characteristics beyond in-domain conditions.
+
+# References
+- Citations encompass work on LLM detection (watermarking, metrics-based, supervised), interpretability (GLTR, LIME/SHAP, DNA-GPT), retrieval-based methods in NLP, and the M4 benchmark. Quantitative details beyond those reported in the main text are not specified in this section.
+
+# Appendix
+- Baseline configurations (A):
+  - LR-GLTR features: counts of tokens in top-{10, 100, 1,000, 1,000+} ranks (4 features) and probability ratio bins over 10 intervals (10 features), following Wang et al. (2024).
+- Detection evidence descriptions (B):
+  - RoBERTa with SHAP: colored spans indicating contribution to LLM vs. Human prediction; tooltip shows contribution magnitude.
+  - LR-GLTR: token rank highlights (green/yellow/red/purple) with predicted token distribution.
+  - DNA-GPT: overlapping n-gram spans between truncated text and LLM continuations; implemented with lowercasing and stemming; n = 8 for visualization.
+- Analysis details (C):
+  - Impact of α and datastore size across generators and domains presented in Figures 10 and 11; trends consistent with main text.
+- Computational budget (D):
+  - Hardware: two AMD EPYC 7453 CPUs, four NVIDIA A6000 GPUs.
+  - Total processing time: approximately “25 hours.”
+- Additional notes:
+  - Demo app implemented with Streamlit; FAISS used for k-NN search; embeddings from BERT-large (uncased) second layer.
+  - Threshold ε for classification is referenced but its numeric value is not specified.

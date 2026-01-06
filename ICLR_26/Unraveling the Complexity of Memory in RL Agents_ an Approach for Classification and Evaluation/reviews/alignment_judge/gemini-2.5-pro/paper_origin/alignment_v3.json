@@ -1,0 +1,129 @@
+{
+  "paper": "Unraveling the Complexity of Memory in RL Agents_ an Approach for Classification and Evaluation",
+  "runs": [
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "deepreviewer",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "deep_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "55f39c3e353412551a5ae68e81fc4acc489b4edd",
+      "inputs": {
+        "human_review": "review_origin.txt",
+        "ai_review": "reviews/deepreviewer/gpt-5-2025-08-07/paper_origin/deep_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 0.86,
+        "weakness_coverage_recall": 0.38,
+        "ai_extra_major_points_rate": 0.83,
+        "symmetric_coverage_similarity": 0.43,
+        "note": "The AI review covers strengths well but misses several key human weaknesses, such as the lack of a new benchmark and the limited coverage of other memory types. Conversely, the AI introduces many new, specific methodological concerns not raised by the human reviewers, like the absence of a 'positive control' LTM agent."
+      },
+      "generated_at": "2025-12-27T23:49:49"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "baseline_review.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "b3137abdd5dd456ecfb029f7bed4151251d086e2",
+      "inputs": {
+        "human_review": "review_origin.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/baseline_review.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 0.67,
+        "weakness_coverage_recall": 0.57,
+        "ai_extra_major_points_rate": 0.33,
+        "symmetric_coverage_similarity": 0.44,
+        "note": "The AI review captures most key strengths and the weakness of limited experiments. However, it misses the major human concern about the paper's novelty being insufficient, and introduces several new, specific critiques, such as the unquantified \"transitional interval\" and the coarse mapping of memory types."
+      },
+      "generated_at": "2025-12-27T23:55:53"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "final_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "0a71ca7d783136ba33fb6b5ec9aad08ece2f0c09",
+      "inputs": {
+        "human_review": "review_origin.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/final_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 1.0,
+        "weakness_coverage_recall": 0.57,
+        "ai_extra_major_points_rate": 0.25,
+        "symmetric_coverage_similarity": 0.56,
+        "note": "The AI successfully identifies all major strengths but misses specific human critiques regarding the taxonomy's coverage of 'working' and 'episodic' memory and a technical rebuttal concerning LSTM gradient issues. Conversely, the AI introduces a valid methodological critique about the 'transitional interval' and detailed reporting gaps that the human reviewers did not mention."
+      },
+      "generated_at": "2025-12-28T00:07:42"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "deepreviewer",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "deep_review_merge.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "752f27bc09e656c7d041a880d0c174422eea6ca4",
+      "inputs": {
+        "human_review": "review_origin.txt",
+        "ai_review": "reviews/deepreviewer/gpt-5-2025-08-07/paper_origin/deep_review_merge.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 0.86,
+        "weakness_coverage_recall": 0.25,
+        "ai_extra_major_points_rate": 0.88,
+        "symmetric_coverage_similarity": 0.32,
+        "note": "The AI review shows high alignment on strengths but very low alignment on weaknesses. The AI misses the human reviewers' central concern about the paper's limited novelty and contribution. Conversely, the AI raises many specific methodological critiques not mentioned by humans, such as the lack of a positive control experiment and the failure to measure effective context length."
+      },
+      "generated_at": "2025-12-28T00:20:19"
+    }
+  ]
+}

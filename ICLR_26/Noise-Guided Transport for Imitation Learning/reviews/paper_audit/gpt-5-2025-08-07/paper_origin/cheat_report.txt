@@ -1,0 +1,65 @@
+Academic integrity and consistency review for “Noise-Guided Transport (NGT)”
+
+Summary
+I inspected the manuscript for high‑impact internal inconsistencies, logical contradictions, and numerical mismatches. The items below are supported by explicit anchors to the text, figures, tables, and equations. Where evidence is missing, I state so explicitly.
+
+Major issues
+
+1) Single‑potential EMD derivation vs. two different pairing losses used in practice
+- Theory assumes a single 1‑Lipschitz potential h used in both expectations: L(ξ) = E_expert[hξ(x)] − E_agent[hξ(x)] (Eq. 2, Section 4.1; Section 4.2 explicitly states “we learn only one (hξ)… we use hξ for the first expectation, and −hξ for the second.”; Block #12).
+- Practice uses different σ on each side, which changes the pairing loss ℓ and therefore the effective potential, breaking the single‑potential setup: “since the pairing loss appears twice in the reward loss, we have the option to use different σ’s on each side… we can use a higher σ value in the expert-side expectation” (Section 5 references and Section 4.3.2, last paragraph; Block #16). The default hyperparameter table confirms different σ’s: ℓ_HLG agent‑side σ = 0.05; expert‑side σ = 0.25 (Appendix N, Table 1; Block #50).
+Impact: Using different σ implies the two expectations operate on different functions of x (h_expert vs. h_agent), contradicting Eq. 2 and the Kantorovich–Rubinstein dual link in Eq. 3 that requires a single 1‑Lipschitz potential. As stated, the EMD equivalence (Eq. 3) no longer holds for the implemented loss.
+
+2) Incorrect equality in Lipschitz constant statement (Theorem 4.1)
+- Section 4.3 states: Λ(hξ) = Λ(ℓ)(Λ(fξ) + Λ(fξ†)) “as Lipschitz constant” (Eq. 4; Block #13).
+- Appendix G’s proof shows only an upper bound via inequality: |hξ(x1) − hξ(x2)| ≤ Λ(ℓ)(Λ(fξ)+Λ(fξ†)) d(x1,x2) (Appendix G, Eq. (13), (14); Block #37).
+Impact: Presenting an equality in the main text (Eq. 4) contradicts the proof, which yields a bound (≤). This affects any claim that exact 1‑Lipschitz control follows from Eq. 4.
+
+3) Reward boundedness claim vs. the reward rescaling actually used
+- Section 4.1 claims rξ(x) := exp(−hξ(x)) “ensures positivity, bounds the reward between 0 and 1 (the pairing loss ℓ is non‑negative)” (Block #10).
+- Appendix J states they rescale and shift rewards per minibatch using percentile statistics (divide by Perc95−Perc05 and shift by Perc05), explicitly to “have a controlled environment in which ℓ choices can be compared” (Appendix J; Blocks #44–45). This transformation can produce negative rewards or values exceeding 1.
+Impact: The manuscript’s claim that rewards are in [0,1] is not true for the rewards actually used in experiments after the stated rescaling. This undermines the stated numerical property of the method.
+
+4) Claimed 1‑Lipschitz requirement for EMD vs. acknowledged non‑enforcement in implementation
+- Theory: Section 4.2 restricts to Hξ^1 (1‑Lipschitz potentials) to justify Eq. 3 (EMD equivalence).
+- Practice: Section 4.3.1 admits: “we do not aim for the perfect 1‑Lipschitz… we found it empirically enough to tame its value and keep it ‘close enough to 1’” (Block #14). Further, Theorem 4.2 shows Λ(ℓ_HLG) ≤ √(1 + (C/σ)^2) (Eq. 5; Block #17), which can be large for small σ; default σ_agent=0.05, σ_expert=0.25 (Appendix N, Table 1; Block #50). The same table also lists “Output post‑tanh rescale = 5.0,” which increases Λ(fξ).
+Impact: The equivalence to EMD (Eq. 3) hinges on strict 1‑Lipschitzness. The stated implementation does not ensure Λ(hξ) ≤ 1 and even uses hyperparameters that can inflate Λ(hξ), so the theoretical equivalence is not satisfied under the actual training setup.
+
+5) Promise to “provably close the gap” is not substantiated
+- Section 4.1 states: “In the next section, we show that this loss: (1) enables the agent to provably close the gap with the expert…” (end of Block #10).
+- Section 4.2 provides an OT equivalence (Eq. 3) for the critic and a concentration bound for empirical estimates (Appendix F), but no result is given that establishes policy convergence or gap‑closing under the joint updates of reward and policy.
+Evidence status: No direct evidence found in the manuscript that proves the agent closes the expert gap under NGT’s coupled updates.
+
+Moderate issues
+
+6) Inconsistent messaging about spectral normalization on the prior network
+- Section 4.3.1 says SN is applied to predictor and prior, yet argues SN “would not be needed for the prior network” under orthogonal initialization (Block #15).
+- The ablation (Appendix figures and text) reports failure “removing spectral normalization from the prior and predictor networks,” but does not isolate removal from only the prior (Appendix text around Figure 7; Blocks #54, #62–#64).
+Impact: The claim that SN is unnecessary for the prior network is not supported by evidence shown (no ablation removing only prior SN). This is a claim–evidence mismatch; the paper should align the claim with ablations or add the missing experiment.
+
+7) Appendix cross‑referencing and labeling inconsistencies
+- Section 5 states extra environments appear in “APPENDIX O” (Block #21 last paragraph), but the extra environments section is labeled “C Extra Environments” (Blocks #67–#68), which duplicates the earlier Appendix C on HL‑Gaussian code (Block #31).
+- Appendix A’s first sentence references “Eq. ??” (Appendix A; Block #29), a missing equation placeholder.
+Impact: These inconsistencies hinder reproducibility and traceability of claims (e.g., locating the “extra environments” promised in Section 5).
+
+8) Hyperparameter table labeled for NGT contains a BC‑specific entry
+- Appendix N, Table 1 is titled “Default Hyper-parameters for NGT Algorithm,” but includes “Number of behavioral cloning iterations: 10^7” (Block #50).
+Impact: This is a configuration/documentation inconsistency. It may confuse readers as to which settings are used for NGT vs. BC and could affect reproducibility.
+
+Minor clarity issues (low impact)
+
+- Section 4.2 contains an incomplete sentence: “This approach aligns” followed immediately by unrelated text about the off‑policy distribution β (Blocks #11–#12). This appears to be a formatting/flow error.
+
+Recommendations to address the issues
+
+- Ensure the theoretical derivation and the implemented loss match: either use a single σ (and thus a single ℓ/h) on both expectations or explicitly re‑derive the objective for asymmetric ℓ, and clarify how (if at all) this relates to EMD.
+- Replace the equality in Eq. (4), Section 4.3 with an inequality consistent with Appendix G, and state clearly that it is an upper bound.
+- Update Section 4.1 to reflect the actual reward numerics after Appendix J rescaling (reward may not be in [0,1] anymore), or modify Appendix J’s procedure to preserve the stated bounds if that property is important.
+- Qualify claims about 1‑Lipschitz assumptions and EMD equivalence to acknowledge that the implementation does not strictly enforce Λ(hξ) ≤ 1, and discuss implications.
+- Remove or substantiate the “provably close the gap” claim by providing a proof under the actual training dynamics, or rephrase to avoid an unsupported theoretical guarantee.
+- Align statements about spectral normalization on the prior with evidence (add an ablation that removes SN only from the prior, or soften the claim that SN is unnecessary for the prior).
+- Fix appendix cross‑references and labels (ensure “Extra Environments” matches its label; remove the duplicate “Appendix C” label; resolve “Eq. ??” placeholder).
+- Clean the NGT hyperparameter table to exclude BC‑specific entries or move them to a BC table.
+
+Conclusion
+The manuscript contains several substantive internal inconsistencies between the theoretical objective (single 1‑Lipschitz potential yielding an EMD dual) and the implemented loss (different σ per side; non‑enforced Lipschitzness), as well as a correctness error in the Lipschitz equality statement and a reward‑range claim contradicted by the stated rescaling. These issues materially affect the correctness and interpretability of the theoretical claims. Addressing them would improve the paper’s scientific validity and reproducibility. If these are clarified and corrected, the empirical section appears carefully executed, with extensive comparisons and ablations.

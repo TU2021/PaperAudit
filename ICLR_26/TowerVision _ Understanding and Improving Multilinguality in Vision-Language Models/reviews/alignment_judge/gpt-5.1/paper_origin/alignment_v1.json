@@ -1,0 +1,97 @@
+{
+  "paper": "TowerVision _ Understanding and Improving Multilinguality in Vision-Language Models",
+  "judge_model": "gpt-5.1",
+  "review_agent": "deepreviewer",
+  "ai_model": "gpt-5-2025-08-07",
+  "ai_review_file": "deep_review_all.txt",
+  "inputs": {
+    "human_review": "review.txt",
+    "ai_review": "reviews/deepreviewer/gpt-5-2025-08-07/paper_origin/deep_review_all.txt"
+  },
+  "multi_review": {
+    "detected": false,
+    "num_reviews": 1,
+    "summarize_used": false,
+    "summary_note": null
+  },
+  "ai_review_consolidated": null,
+  "alignment": {
+    "motivation_strength_alignment": 0.95,
+    "weakness_error_alignment": 0.9,
+    "overall_alignment": 0.93,
+    "explanation": {
+      "strength": "Both reviews describe essentially the same motivation and main contributions. They agree that (1) the work introduces TowerVision/TowerVideo, multilingual VLMs for images and video; (2) the models are built on the Tower+ multilingual text backbone with a strong vision encoder and a staged training pipeline (projector alignment on English, multilingual fine-tuning on images, then video fine-tuning); (3) a key contribution is an empirical, component-wise study of where and how to inject multilinguality (backbone, encoder, training stages, language coverage), with clear design insights; (4) the VisionBlocks dataset (~6M+ multilingual multimodal examples) is a major asset, curated via translation and filtering; and (5) the models achieve strong results on culturally grounded benchmarks (e.g., ALM-Bench) and multimodal translation (Multi30K), with competitive multilingual video QA. Both also emphasize openness of models/data/recipes and the practical value of the findings. The AI review goes into more detail on specific tables/figures and engineering choices, but these are elaborations of exactly the strengths highlighted in the human review, not deviations.",
+      "weakness": "The overlap in weaknesses is also strong. Both identify: (1) limited architectural novelty—the contribution is framed as empirical/ablational rather than a new architecture; (2) OCR underperformance due to lack of OCR-focused data, with no targeted ablations or fixes; (3) some concerns around dataset design and evaluation, particularly translation quality/filtering and cultural fidelity, though the AI review is more specific (e.g., synthetic translations via Gemini/Tower+, potential artifacts, missing contamination/leakage checks, licensing); (4) evaluation limitations, where the AI review highlights reliance on xCOMET alone for translation and GPT‑4o as a single judge for multilingual video, while the human review more generally notes mixed/murky quantitative results and a need for deeper analysis—these are compatible concerns about evaluation robustness; and (5) presentation/analysis gaps: the human review asks for more ablations on video-specific design (e.g., frame size) and qualitative/error analyses; the AI review mentions missing metric labels, minor mischaracterization of TextVQA, lack of per-language distributions, missing compute details, and absence of error breakdowns. All these are in the same broad category of incomplete reporting/analysis, though the AI review is more granular. The human review additionally flags the specific, somewhat counterintuitive finding that multilingual captions in projector alignment hurt performance and calls for more exploration; the AI review mentions this result but treats it as plausible and aligned with prior practice rather than a major concern. Overall, the weaknesses are well-aligned in substance, with the AI review adding extra evaluation/replicability issues not explicitly raised in the human review.",
+      "overall": "In aggregate, the two reviews are highly aligned in their substantive judgment. Both see the work as a solid, practically important empirical study of multilingual VLM design with strong benchmarks and a valuable dataset, but with modest architectural novelty and some evaluation and analysis gaps. They emphasize the same core ideas (staged multilingual training, importance of multilingual backbone and encoders, English-only projector alignment, language coverage effects) and highlight overlapping limitations (OCR weakness, evaluation/reporting shortcomings, empirical rather than architectural novelty). The AI review is more detailed and raises additional specific concerns (metrics, judges, licensing, leakage, labeling), but these extend rather than contradict the human review. Hence, alignment on motivations/strengths is very high, alignment on weaknesses is slightly lower but still strong due to extra issues introduced by the AI review, and the overall alignment is high."
+    }
+  },
+  "generated_at": "2025-12-27T19:28:35",
+  "runs": [
+    {
+      "config": {
+        "judge_model": "gpt-5.1",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "baseline_review.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180
+      },
+      "config_key": "3b28d70d5731760031a4514ebc98b0afd78edf6d",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/baseline_review.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "motivation_strength_alignment": 0.86,
+        "weakness_error_alignment": 0.72,
+        "overall_alignment": 0.82,
+        "explanation": {
+          "strength": "Both reviews clearly agree on the core motivation and contributions: a multilingual VLM family (TowerVision/TowerVideo) built on Tower+, with a modular multi-stage training recipe, strong performance on culturally grounded and multimodal translation tasks, and the introduction/curation of the VisionBlocks dataset. They both emphasize broad multilingual evaluation and the importance of empirical ablations about data composition, encoder choice, and projector language; Review B just provides more granular evidence and additional points like openness/reproducibility, but the central strengths largely match.",
+          "weakness": "They both highlight limited OCR performance as a key shortcoming and tie it to insufficient OCR-focused data, and they both note that some results (e.g., video, multilingual projector pretraining) are mixed or counterintuitive and warrant deeper analysis. Review B introduces several extra concerns absent from Review A—proprietary dependence, incomplete training/compute reporting, ablation clarity issues, per-language balance transparency, and detailed video-comparison gaps—so the overlap on weaknesses is substantial but not exhaustive.",
+          "overall": "In substance, the reviews converge on the same picture: a practically valuable, empirically rich multilingual VLM effort with strong cultural/translation results, modest architectural novelty, and some performance and methodological gaps. Differences lie mainly in Review B’s more exhaustive methodological and reproducibility critiques rather than in conflicting judgments. Hence alignment is high overall, though not perfect due to additional weakness dimensions only raised in Review B."
+        }
+      },
+      "generated_at": "2025-12-27T19:51:01"
+    },
+    {
+      "config": {
+        "judge_model": "gpt-5.1",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "final_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180
+      },
+      "config_key": "4569a6a97a67c8e2b360606eb74d6eb53b892d06",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/final_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "motivation_strength_alignment": 0.86,
+        "weakness_error_alignment": 0.48,
+        "overall_alignment": 0.64,
+        "explanation": {
+          "strength": "Both reviews agree that the core contribution is a multilingual, culturally grounded VLM family built on Tower+, with a clear multi-stage training pipeline, the curated VisionBlocks dataset, strong cultural understanding and multimodal translation, and an extension to video. The AI review adds more detail on openness/reproducibility and fine-grained ablations, but these largely elaborate on strengths already present in the human review rather than introducing conflicting priorities.",
+          "weakness": "Both reviews flag weak OCR performance due to limited OCR-focused data and note that video results/claims are not uniformly competitive, calling for more careful analysis or tuning. The human review uniquely emphasizes limited architectural novelty and the counterintuitive projector multilinguality as key concerns, whereas the AI review instead focuses on proprietary dependencies, missing training/compute details, and ablation/reporting ambiguities, which the human review does not mention.",
+          "overall": "Substantively, both reviews portray TowerVision as a solid, impactful multilingual VLM effort with strong empirical results but notable shortcomings in certain areas (especially OCR and some video/multilingual details). The main divergence lies in what is treated as primary weaknesses—novelty and specific stage-wise findings vs. reproducibility and evaluation transparency—so the overall alignment is better than moderate but short of near-perfect agreement."
+        }
+      },
+      "generated_at": "2025-12-27T19:53:25"
+    }
+  ]
+}

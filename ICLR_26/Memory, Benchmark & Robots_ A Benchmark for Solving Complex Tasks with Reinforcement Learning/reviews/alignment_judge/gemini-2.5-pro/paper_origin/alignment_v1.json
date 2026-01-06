@@ -1,0 +1,104 @@
+{
+  "paper": "Memory, Benchmark & Robots_ A Benchmark for Solving Complex Tasks with Reinforcement Learning",
+  "runs": [
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "deepreviewer",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "deep_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180
+      },
+      "config_key": "24b66d75b94c155df325f4e5f2603b40312e4469",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/deepreviewer/gpt-5-2025-08-07/paper_origin/deep_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "motivation_strength_alignment": 0.9,
+        "weakness_error_alignment": 0.55,
+        "overall_alignment": 0.75,
+        "explanation": {
+          "strength": "Both reviews identify the core strengths as the comprehensive benchmark (MIKASA), the structured four-part memory taxonomy, and the extensive set of new robotic tasks. They also agree on the value of the empirical evaluations and usability, showing very high alignment on the paper's contributions.",
+          "weakness": "There is moderate alignment on weaknesses, with both reviews highlighting the lack of real-world experiments and the failure to disentangle memory from perception. However, Review A uniquely criticizes the limited task scope (tabletop only), while Review B's central critique is the absence of modern memory architectures in the baselines and a bias in the offline datasets.",
+          "overall": "Overall, the reviews show high alignment in their final judgment, viewing the paper as a significant and useful benchmark contribution with clear limitations. While they diverge on some specific weaknesses, their assessment of the paper's core value and the general areas needing improvement are largely consistent."
+        }
+      },
+      "generated_at": "2025-12-27T20:02:56"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "baseline_review.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180
+      },
+      "config_key": "a14d937ebf873b90a820c8cb44da768956431bd4",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/baseline_review.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "motivation_strength_alignment": 0.9,
+        "weakness_error_alignment": 0.55,
+        "overall_alignment": 0.75,
+        "explanation": {
+          "strength": "Both reviews identify the comprehensive benchmark (MIKASA) and the novel four-category memory taxonomy as the core strengths, and both praise the extensive empirical validation showing the tasks are challenging for current models.",
+          "weakness": "Both reviews agree that the lack of real-world experiments is a major weakness, but they diverge on secondary points; Review A critiques the limited task scope (tabletop only) and simplicity, while Review B focuses on more technical issues like baseline selection and offline dataset design.",
+          "overall": "The reviews show high alignment in their overall positive judgment, agreeing on the paper's main contribution and its most significant limitation (simulation-only), with differences primarily in the focus of their secondary critiques."
+        }
+      },
+      "generated_at": "2025-12-27T20:06:47"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "final_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180
+      },
+      "config_key": "565dcfbed8e348ba365acb8ebe44bf867f3cd0c2",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/final_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "motivation_strength_alignment": 0.9,
+        "weakness_error_alignment": 0.55,
+        "overall_alignment": 0.7,
+        "explanation": {
+          "strength": "Both reviews identify the comprehensive benchmark, the novel four-part memory taxonomy, and the extensive empirical evaluations as the core strengths. Review B provides more granular detail, but the central positive points are nearly identical, leading to very high alignment.",
+          "weakness": "Both reviews agree on the lack of real-world experiments and the need for deeper validation of the memory taxonomy. However, Review B introduces several major critiques absent from Review A, including flaws in the offline dataset design, narrow online RL baseline choices, and internal consistency errors in the paper.",
+          "overall": "The reviews align very well on the paper's strengths but only moderately on its weaknesses, where Review B is far more detailed and identifies several unique critical issues. Despite this, their overall judgment is consistent: the paper presents a valuable benchmark, but its experimental validation has significant room for improvement."
+        }
+      },
+      "generated_at": "2025-12-27T20:10:16"
+    }
+  ]
+}

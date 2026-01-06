@@ -1,0 +1,167 @@
+Review 1
+
+Summary
+- The paper proposes PriMO, a multi-objective hyperparameter optimizer that incorporates expert priors over multiple objectives and leverages cheap approximations via a multi-fidelity initial design. The method uses MOASHA to seed maximum-fidelity points (Algorithm 1) and then runs an ε-greedy Bayesian optimization whose acquisition is multiplied by one objective prior selected at random and decayed as γ = exp(−n_BO^2/n_d) (Section 4.1; Eq. 4), with scalarization by random weights (Eq. 3). Experiments on 8 DL surrogate benchmarks (Section 5.1; Appendix F) compare PriMO to MO baselines and prior-augmented adaptations, reporting relative ranks and hypervolume curves, ablations, and LMEM-based significance tests (Appendix I). PriMO shows strong anytime and final performance and robustness to misleading priors (Figures 3–7).
+
+Soundness
+- The overall algorithmic design is coherent: multi-fidelity initial design improves early performance (Section 4.2; Figure 7), and ε-greedy BO with a fast-decaying prior helps recover from bad priors (Section 5.4; Figure 5, Figure 11). The factorized prior over objectives (Eq. 1) is a reasonable starting point, though it ignores trade-offs and dependencies between objectives; the paper acknowledges this (Section 7).
+- The γ schedule (Section 4.1) is heuristic and chosen without theoretical justification or broad sensitivity analysis; only a fixed ε is used (Appendix C), and the robustness to these hyperparameters is not systematically probed. The selection of a single prior π_{f_j} per iteration may be suboptimal when objectives conflict; alternatives (mixtures or dominance-aware priors) are not explored.
+- The evaluation protocol is careful (25 seeds, fixed budgets, HV at full fidelity, Appendix G) and accompanied by significance analysis (Appendix I). However, the priors are constructed using near-oracle procedures from 100k samples on surrogates (Appendix D), which may overstate practical gains from “expert beliefs.” The experiments rely exclusively on surrogates; while appropriate for breadth, they do not capture wall-clock/runtime aspects on real training.
+
+Presentation
+- The paper is generally clear and well organized. Key elements—problem formulation (Eq. 2), acquisition (Eq. 4), and full algorithms (Algorithms 1–3)—are presented cleanly; figures convey anytime vs final performance well (Figures 1, 3–7).
+- Two minor clarity issues: (i) Algorithm 1/3 compute y = w^T y but store vector y in D; explaining how this scalar is used would help (Algorithms 1–3). (ii) Section 4.2 states the initial design “chooses one of the priors uniformly at random during each iteration,” but Algorithm 1 does not reflect any prior usage in MOASHA; clarifying whether priors are used during seeding would avoid confusion.
+
+Contribution
+- The paper addresses a clear gap: integrating expert priors in multi-objective HPO with cheap approximations. Prior-based HPO existed for single objectives (πBO, Priorband) but not for multiple objectives. The proposed combination—factorized MO priors + ε-greedy prior-augmented BO + MF initial design—is simple, scalable, and empirically strong.
+- Claims of “first to” and “new go-to” are ambitious but largely supported by results across 8 benchmarks with thorough ablations and significance testing (Sections 5.3–5.5; Appendix I). The contribution is mainly algorithmic/empirical; there is no new theory.
+
+Strengths
+- Timely and practically motivated problem formulation with clear desiderata (Table 1; Section 1).
+- Simple, implementable algorithm with public code and detailed settings (Appendix C; Appendix J).
+- Strong empirical evidence across multiple MO settings, prior qualities, and an SO special case (Figures 3–7; Figure 6).
+- Robustness to misleading priors due to fast-decaying γ and ε-greedy policy (Sections 4.1, 5.4; Figures 5, 11).
+
+Weaknesses
+- Prior construction relies on surrogate sweeps and Gaussian perturbations around best/worst configurations (Appendix D), which may not reflect real expert priors; the “~10x speedup” (Figure 1-right) is under good priors and should be contextualized.
+- Missing strong MOBO baselines that directly optimize HV (e.g., qEHVI/dEHVI; Daulton et al., 2020) and information-theoretic methods (Belakaria et al., 2019); only ParEGO and scalarization BO are included.
+- Heuristic choices (γ = exp(−n_BO^2/n_d), fixed ε = 0.25; Appendix C) lack theoretical grounding and systematic sensitivity analysis.
+- The factorized-per-objective prior does not encode Pareto-front structure; a discussion of how it behaves when per-objective optima are mutually exclusive would be useful beyond the brief note in Section 7.
+
+Questions
+- Can you add comparisons to qEHVI/dEHVI and modern HV-based MOBO to assess whether PriMO’s advantages persist when competing against acquisition functions tailored to HV (Section 5.2)?
+- How sensitive is PriMO to ε and the γ schedule across budgets and dimensionalities (n_d)? Could Appendix H or a new appendix include a grid over ε and alternative decay rates?
+- Are priors used during the initial MOASHA seeding or not? Section 4.2 text vs Algorithm 1 appear inconsistent; please clarify and, if not used, provide results for a version that does.
+- How would PriMO accommodate priors over a Pareto front or joint preferences (e.g., reference points), as opposed to per-objective optima (Eq. 1)? Any preliminary experiments?
+- Could you report time-to-target-HV to substantiate the “~10x speedup” claim (Figure 1-right) and include AUC metrics?
+
+Rating
+- Overall (10): 8 — Strong, well-motivated algorithm with convincing empirical results and code, though priors are idealized and some baselines are missing (Sections 5.3–5.5; Appendix D; Figure 1).
+- Novelty (10): 8 — First explicit integration of expert priors in MO HPO with MF seeding and BO phase (Section 2; Section 4), beyond prior single-objective works.
+- Technical Quality (10): 7 — Sound design and analyses, but heuristic hyperparameters and incomplete MOBO baselines (Section 4.1; Section 5.2).
+- Clarity (10): 8 — Clear algorithms/figures, with minor inconsistencies noted (Algorithms 1–3; Section 4.2).
+- Confidence (5): 4 — Read full paper and appendices; checked code pointers and baseline descriptions; confidence high but tempered by surrogate-only evaluations.
+
+Review 2
+
+Summary
+- PriMO is a multi-objective HPO algorithm designed to integrate user priors over multiple objectives and exploit cheap approximations via an initial MOASHA phase (Algorithm 1) followed by an ε-greedy, prior-weighted BO with random scalarizations (Section 4.1; Eq. 3, Eq. 4). The prior influence decays with γ = exp(−n_BO^2/n_d). Experiments on 8 surrogate DL tasks (Appendix F) compare PriMO with MO baselines and prior-augmented variants, reporting strong anytime and final performance (Figures 3–5), robustness to bad priors (Figure 11), and helpful ablations (Figure 7).
+
+Soundness
+- The central idea—attenuating prior impact quickly while preserving early guidance—is sensible and evidenced by recovery under bad priors (Figure 5; Appendix H.2). The MF initial design accelerates early progress (Section 4.2; Figure 7).
+- Several methodological choices are heuristic: (i) a single prior π_{f_j} is sampled per iteration (Section 4.1) even when scalarization weights place importance on other objectives; (ii) γ = exp(−n_BO^2/n_d) lacks derivation and may be brittle; (iii) ε fixed at 0.25 (Appendix C). No systematic sensitivity study is provided.
+- The factorized prior (Eq. 1) may mislead when objective optima are mutually exclusive; there is no mechanism to express trade-off beliefs or reference-point preferences, which are common in MO. The paper acknowledges this limitation but does not mitigate it (Section 7).
+- The evaluation on surrogates is broad but omits real-training studies; the prior generation relies on oracle-quality sweeps (Appendix D), weakening ecological validity.
+
+Presentation
+- The exposition is mostly clear, but a few inconsistencies remain: whether priors are used in the initial design (Section 4.2 states they are “chosen,” Algorithm 1 does not show this); ambiguous role of y = w^T y in Algorithms 1 and 3. Figures are informative and include uncertainty bands (Figures 3–5).
+
+Contribution
+- The paper pushes prior-based HPO into the multi-objective setting and couples it with a pragmatic initial-design strategy. This is a useful engineering contribution that seems to deliver robust performance at low budgets (Table 1; Figures 3–5).
+
+Strengths
+- Practical problem and desiderata for DL HPO (Section 1; Table 1).
+- Simple approach that is easy to implement and integrate with existing BO stacks (Algorithms 1–3).
+- Extensive experiments, ablations, and significance tests (Appendix I); good reporting of compute (Appendix K) and reproducibility (Appendix J).
+- Robust to misleading priors (Section 5.4; Figure 11).
+
+Weaknesses
+- Missing comparisons to strong HV-based MOBO (qEHVI/dEHVI; Daulton et al., 2020) and information-theoretic MOBO (Belakaria et al., 2019); ParEGO and BO+RW may underrepresent modern MOBO.
+- Priors are arguably unrealistic: they come from 100k samples and Gaussian perturbations around best/worst configs on surrogates (Appendix D). Results under “good priors” may be optimistic.
+- Heuristic hyperparameters (ε, γ) without sensitivity analysis; unclear coupling between sampled prior π_{f_j} and scalarization weights w (Eq. 3).
+- Claims such as “10× speedup” (Figure 1-right) are not formalized (no time-to-target metrics).
+
+Questions
+- Please add a sensitivity study for ε and γ, including different budgets and n_d, and report whether γ = exp(−n_BO^2/n_d) is consistently preferable to alternatives (e.g., 1/n or 1/√n schedules).
+- How does PriMO compare to qEHVI or other modern HV-based MOBO in wall-clock and sample efficiency? Even if compute-heavy, a small-scale comparison would be informative.
+- Can the acquisition be weighted by a mixture or product of priors across objectives, possibly using the sampled scalarization weights w as coefficients?
+- Would practitioners need distinct priors per objective? Could you show a realistic prior elicitation procedure from historical runs (without oracle sweeps)?
+- Please clarify whether priors are used during MOASHA seeding (Section 4.2 vs Algorithm 1).
+
+Rating
+- Overall (10): 6 — Solid engineering contribution with promising results, but limited by heuristic design choices, optimistic prior construction, and missing strong MOBO baselines (Sections 4.1, 5.2; Appendix D).
+- Novelty (10): 7 — Multi-objective expert priors with an MF initial design is new relative to single-objective πBO/Priorband (Sections 2, 4).
+- Technical Quality (10): 6 — Method is reasonable but largely heuristic and lacks sensitivity and competing MOBO baselines (Section 4.1; Section 5.2).
+- Clarity (10): 7 — Clear overall, with minor inconsistencies and a need for added detail on Algorithms 1–3 (Section 4.2; Algorithms).
+- Confidence (5): 4 — Read main and appendices; conclusions based on reported results and cited baselines; moderate-to-high confidence.
+
+Review 3
+
+Summary
+- The authors introduce PriMO, a multi-objective HPO algorithm that: (i) defines per-objective priors over the locations of individual optima (Eq. 1); (ii) seeds BO using MOASHA at multiple fidelities (Algorithm 1); and (iii) in the BO phase, applies an ε-greedy acquisition multiplied by one randomly chosen objective prior with a fast-decaying exponent (Eq. 4). Evaluations on 8 DL surrogate tasks with different prior qualities show strong anytime and final performance, including robustness under misleading priors (Figures 3–5), and ablations highlight the importance of each component (Figure 7).
+
+Soundness
+- The method is consistent with the desiderata in Table 1 and addresses both cheap approximations and expert priors. The use of random scalarizations (Eq. 3) provides scalability in the number of objectives. The ε-greedy policy combined with aggressive decay is a plausible mechanism for recovery from bad priors (Section 5.4; Figure 11).
+- Some design decisions are ad hoc: the choice to sample a single prior π_{f_j} per iteration rather than combining priors; the specific decay schedule γ = exp(−n_BO^2/n_d) (Section 4.1) without ablation; and fixed ε across all benchmarks (Appendix C). No theoretical guarantees are provided for convergence to the Pareto front.
+- The evaluation is thorough in breadth and includes a statistical analysis (Appendix I). However, the exclusive use of surrogates and priors derived from large random sweeps (Appendix D) reduces external validity.
+
+Presentation
+- Writing and figures are clear, with comprehensive appendices. Minor notational issues exist: the use of y = w^T y in Algorithms 1 and 3 is not explained; and Section 4.2 text suggests priors are sampled during initial design but Algorithm 1 lacks a corresponding step. The “~10x speedup” in Figure 1 is visually compelling but would benefit from a formal speedup definition.
+
+Contribution
+- The main novelty is integrating multi-objective priors into an HPO algorithm and demonstrating an effective combination with MF seeding. This fills an identified gap between single-objective prior methods and multi-objective HPO. The contribution is empirical/pragmatic and relevant to DL practitioners working under tight budgets.
+
+Strengths
+- Clear motivation and desiderata, with an algorithm explicitly designed to meet them (Table 1; Section 4).
+- Strong anytime performance and robustness to bad priors (Figures 3–5), including single-objective special case (Figure 6).
+- Extensive ablation supporting each design element (Figure 7).
+- Open code and detailed experimental protocol (Appendices C, G, J).
+
+Weaknesses
+- Realism of priors and datasets: priors are oracle-like (Appendix D) and all benchmarks are surrogates (Appendix F).
+- Limited baseline coverage for MOBO: no qEHVI/dEHVI or MESMO comparisons (Section 5.2), which are competitive for small budgets.
+- Lack of sensitivity/theoretical analysis for ε and γ schedules; dependence on random choice of prior per iteration may be misaligned with scalarization weights.
+- Claims of broad superiority could be toned down or supported with time-to-target and AUC metrics.
+
+Questions
+- Could you show PriMO with a mixture-of-priors acquisition (e.g., ∏_i π_{f_i}^{α_i} where α_i ∝ w_i) to align priors with scalarization weights (Eq. 3)?
+- How does PriMO perform when all good priors point to mutually incompatible regions (strong trade-offs)? A synthetic stress test would be helpful.
+- Please provide a sensitivity study for ε and γ, and include a budget-dependent schedule for ε.
+- Can you include qEHVI or qNEHVI comparisons, at least on a subset of benchmarks with controlled compute, and report wall-clock/runtime?
+
+Rating
+- Overall (10): 7 — Useful, well-engineered method with broad empirical support, but external validity and baseline coverage limit the strength of the claim (Sections 5.3–5.5; Appendix D).
+- Novelty (10): 8 — First explicit use of expert priors in the MO HPO setting with a pragmatic design (Sections 2, 4).
+- Technical Quality (10): 7 — Sound design and thorough experiments, but missing key baselines and sensitivity analyses (Section 5.2; Section 4.1).
+- Clarity (10): 7 — Generally clear with small inconsistencies and missing explanations (Algorithms 1–3; Section 4.2).
+- Confidence (5): 3 — Good confidence from reading paper and appendices, but absence of some baselines and real-training results lowers certainty.
+
+Review 4
+
+Summary
+- The paper presents PriMO, a practical multi-objective HPO algorithm that integrates per-objective expert priors and cheap approximations. It seeds BO with MOASHA at varying fidelities (Algorithm 1), then performs BO with a prior-weighted acquisition that decays quickly and uses ε-greedy switching between prior-augmented and vanilla BO (Section 4.1; Eq. 4), with random-weight scalarization (Eq. 3). On 8 DL surrogate tasks, PriMO outperforms prominent MO methods and adapted prior-based baselines on both anytime and final performance, including the single-objective special case (Figures 1, 3–7).
+
+Soundness
+- The methodology is internally consistent and directly addresses the four desiderata (Section 1; Table 1). The initial-design choice (MOASHA) is justified by early performance and budget invariance (Section 4.2), and the ε-greedy, fast-decay acquisition balances prior guidance and exploration (Section 4.1). Ablations verify the necessity of all components (Figure 7), and robustness to misleading priors is demonstrated (Section 5.4; Figure 11).
+- While the design is heuristic, the statistical analysis lends credence to the empirical claims (Appendix I). Limitations are candidly discussed (Section 7).
+
+Presentation
+- The paper is clearly written, with helpful diagrams and detailed appendices (Appendices C–I). Algorithms are explicit (Algorithms 1–3), and the evaluation protocol is transparent (Appendix G). Minor clarifications would improve precision (e.g., whether priors are used during seeding; Algorithms 1–3’s y = w^T y role).
+
+Contribution
+- A practical and original contribution that extends expert priors to multi-objective HPO and demonstrates how to integrate them with cheap approximations. The approach is implementable and shows strong results at low budgets—valuable for DL practitioners.
+
+Strengths
+- Addresses a real gap: multi-objective prior integration with cheap proxies (Sections 2, 4).
+- Strong empirical results across varied prior conditions and tasks; robust to misleading priors (Figures 3–5; Figure 11).
+- Thorough ablations and statistical significance testing (Figure 7; Appendix I).
+- Public code and reproducibility (Appendix J); compute-efficient and fast (Appendix K).
+
+Weaknesses
+- Benchmarks are surrogates; no results on real training runs, which would strengthen the “go-to” claim (Figure 1; Section 8).
+- Prior construction assumes access to near-optimal configurations from large sweeps (Appendix D); true expert priors may be weaker or structured differently.
+- Some strong MOBO baselines (qEHVI/dEHVI) are not included (Section 5.2).
+- Hyperparameters (ε and γ) are fixed without sensitivity analysis; γ schedule is motivated empirically (Section 4.1; Appendix C).
+
+Questions
+- Can you add a limited comparison to qEHVI or qNEHVI to assess performance against HV-aware MOBO, even if with fewer seeds?
+- Would a mixture-of-priors weighted by scalarization weights w (Eq. 3) improve alignment between prior guidance and the scalarization used in acquisition?
+- How sensitive is PriMO to ε and the γ decay schedule across different budgets and dimensions?
+- Could you provide at least one experiment with real training (e.g., short-budget CIFAR-10) to verify surrogate-to-real transfer?
+
+Rating
+- Overall (10): 9 — Clear, implementable method that fills a real gap and demonstrates strong and robust empirical gains across diverse MO settings (Sections 4–5; Figures 3–7).
+- Novelty (10): 9 — First explicit integration of expert priors in MO HPO with an effective MF initial design (Sections 2, 4).
+- Technical Quality (10): 8 — Solid engineering with extensive experiments and significance analysis, though some baselines and sensitivity studies are missing (Section 5.2; Appendix I).
+- Clarity (10): 9 — Well written with explicit algorithms and comprehensive figures, minor clarifications aside (Algorithms 1–3; Section 4.2).
+- Confidence (5): 4 — High confidence based on careful reading of main paper and appendices; slightly limited by surrogate-only evidence.

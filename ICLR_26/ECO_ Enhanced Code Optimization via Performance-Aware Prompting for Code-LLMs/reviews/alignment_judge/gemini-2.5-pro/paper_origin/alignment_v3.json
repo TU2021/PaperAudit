@@ -1,0 +1,129 @@
+{
+  "paper": "ECO_ Enhanced Code Optimization via Performance-Aware Prompting for Code-LLMs",
+  "runs": [
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "deepreviewer",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "deep_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "55f39c3e353412551a5ae68e81fc4acc489b4edd",
+      "inputs": {
+        "human_review": "review_origin.txt",
+        "ai_review": "reviews/deepreviewer/gpt-5-2025-08-07/paper_origin/deep_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 1.0,
+        "weakness_coverage_recall": 0.29,
+        "ai_extra_major_points_rate": 0.6,
+        "symmetric_coverage_similarity": 0.25,
+        "note": "The reviews show very high alignment on strengths, with the AI capturing all major positive points. However, there is very low alignment on weaknesses; the AI misses most human concerns (e.g., manual effort, scalability, comparison to fine-tuning) while introducing a large number of distinct, new critiques (e.g., lack of rule validation, retriever circularity, non-standard code suggestions)."
+      },
+      "generated_at": "2025-12-27T23:47:25"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "baseline_review.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "b3137abdd5dd456ecfb029f7bed4151251d086e2",
+      "inputs": {
+        "human_review": "review_origin.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/baseline_review.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 1.0,
+        "weakness_coverage_recall": 0.44,
+        "ai_extra_major_points_rate": 0.56,
+        "symmetric_coverage_similarity": 0.43,
+        "note": "The AI review perfectly covers all strengths but misses several major human concerns, most notably the failure to compare against key concurrent work (RAS/AEGIS) and the weakness of baselines. Conversely, the AI introduces many valid new concerns not raised by humans, such as the lack of end-to-end overhead analysis and potential self-bias in the retriever design."
+      },
+      "generated_at": "2025-12-27T23:51:40"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "final_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "0a71ca7d783136ba33fb6b5ec9aad08ece2f0c09",
+      "inputs": {
+        "human_review": "review_origin.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/final_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 1.0,
+        "weakness_coverage_recall": 0.33,
+        "ai_extra_major_points_rate": 0.7,
+        "symmetric_coverage_similarity": 0.38,
+        "note": "The AI review excels at capturing strengths but misses critical contextual weaknesses raised by humans, such as the differentiation from concurrent work (RAS/AEGIS), outdated baselines, and the incremental nature of the contribution. Instead, the AI focuses on distinct methodological critiques like precision/recall metrics, overhead analysis, and dataset filtering details."
+      },
+      "generated_at": "2025-12-28T00:03:11"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "deepreviewer",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "deep_review_merge.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "752f27bc09e656c7d041a880d0c174422eea6ca4",
+      "inputs": {
+        "human_review": "review_origin.txt",
+        "ai_review": "reviews/deepreviewer/gpt-5-2025-08-07/paper_origin/deep_review_merge.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 0.6,
+        "weakness_coverage_recall": 0.22,
+        "ai_extra_major_points_rate": 0.75,
+        "symmetric_coverage_similarity": 0.21,
+        "note": "The AI review (Review B) shows moderate alignment on strengths but very low alignment on weaknesses. It completely missed major human concerns about comparison to concurrent work (RAS/AEGIS) and the incremental nature of the contribution. Conversely, the AI review raised many valid, distinct weaknesses not mentioned by humans, such as retrieval-model circularity and a lack of statistical rigor."
+      },
+      "generated_at": "2025-12-28T00:17:58"
+    }
+  ]
+}

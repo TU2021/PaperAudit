@@ -1,0 +1,155 @@
+# Global Summary
+- Problem: Integrate virtual try-on (VTON—garment dressing) and virtual try-off (VTOFF—garment extraction into canonical templates) into a single diffusion-based framework, addressing their complementary symmetry and differing mask dependencies.
+- Approach: Two-Way Garment Transfer Model (TWGTM), a unified latent diffusion framework with dual-space conditional guidance—latent-space spatial concatenation and pixel-space feature disentanglement—and a phased training strategy to reconcile mask-guided VTON and mask-free VTOFF.
+- Key components:
+  - Semantic Abstraction Module (SAM): frozen CLIP image encoder + QFormer with text guidance to distill garment semantics.
+  - Spatial Refinement Module (SRM): Swin Transformer + TaskFormer with masked attention and multi-scale queries to extract fine spatial details and predict VTOFF garment masks.
+  - Extended Attention Block: fuses UNet self-attention with SRM and SAM via dual cross-attention; includes a Zero Linear Layer to modulate spatial feature influence and suppress noise.
+  - Phased training: Stage 1 uses predicted flattened garment masks with auxiliary segmentation losses for VTOFF; Stage 2 uses morphology-based square masks and activates extended attention for joint feature fusion.
+- Evaluation scope: Experiments on VITON-HD (>10,000 upper-body pairs) and DressCode (>40,000 pairs across upper, lower, dresses). Metrics include SSIM/MS-SSIM/CW-SSIM, LPIPS, FID, KID, DISTS, DINO similarity, CLIP-FID.
+- Major quantitative findings:
+  - VTON on VITON-HD (Table 1): Ours achieves FID 6.107, DINO 0.960 (highest), SSIM 0.905 (highest), LPIPS 0.055 (lowest vs baselines listed).
+  - VTON on DressCode (Table 2): Upper body SSIM 0.941 (best); Lower body FID 8.298 (best) and SSIM 0.922 (best); Dresses FID 8.412 (best), DINO 0.923 (best), LPIPS 0.062 (best).
+  - VTOFF on VITON-HD (Table 3): Ours achieves MS-SSIM 0.590 (best), CW-SSIM 0.524 (best), LPIPS 0.332 (lowest), FID 10.393 (lowest), KID 1.5 (lowest), DISTS 0.195 (lowest). SSIM 0.721 and CLIP-FID 5.651 (not best).
+  - Ablations (Table 4): Removing SRM (Variant 1) or QFormer (Variant 8) degrades both tasks; replacing spatial concatenation with warping (Variant 2) degrades VTOFF. Variant 3 (Mask2BBox) improves VTOFF: FID 9.201, SSIM 0.769, LPIPS 0.225, DISTS 0.174.
+  - Cross-task fine-tuning (Figures 7–8): Fine-tuning one task improves the other—VTOFF metrics vary approximately FID 10.0–10.6, SSIM 0.710–0.735, LPIPS 0.31–0.35, DISTS 0.1925–0.2050; VTON metrics approximately FID 6.05–6.25, SSIM 0.9040–0.9065, LPIPS 0.054–0.057, DINO 0.9590–0.9615.
+- Caveats explicitly noted by authors:
+  - On DressCode, some metrics underperform due to color/texture inconsistencies between model and flattened garments caused by lighting variations.
+  - CLIP-FID for VTOFF is not the lowest (TryOffAnyone achieves 5.131).
+
+# Abstract
+- Problem framing: VTON is mature for dressing synthesis; VTOFF (reconstructing canonical garment templates from dressed humans) is underexplored and treated separately.
+- Proposal: TWGTM, a unified diffusion framework that jointly addresses mask-guided VTON and mask-free VTOFF via bidirectional feature disentanglement and dual-conditioned guidance (latent and pixel).
+- Mask asymmetry solution: Phased training to bridge modality gap—progressively connects mask-guided and mask-free regimes.
+- Evidence: Extensive qualitative and quantitative experiments on DressCode and VITON-HD demonstrate efficacy and competitive edge.
+
+# Introduction
+- Context: VTON traditionally uses two-stage warping + synthesis (GANs, etc.), suffering from error propagation and boundary artifacts. Diffusion-based methods split into warping-enhanced and warping-free pipelines.
+- VTOFF challenges: Pose-induced deformations while preserving geometry, textures, and patterns; recent diffusion approaches learn inverse deformations implicitly.
+- Key insight: VTON and VTOFF are dual objectives—forward vs inverse deformation fields of the same paradigm.
+- Analysis:
+  - Parameter similarity between CatVTON (VTON) and TryoffAnyone (VTOFF): self-attention and FFN layer similarity increases from "6.4% at threshold 0.0005 → 65.6% at 0.05" (relative errors); suggests joint modeling feasible with minor architectural changes.
+  - Cross-task cosine similarity in intermediate layer outputs at diffusion step T=30 (Figure 1(b)); feature concatenations of one task can be transformed to target outcomes of the other.
+- Design overview:
+  - Dual-space guidance: latent-space spatial concatenation for topology; pixel-space dual branches—Semantic Abstraction Module (category-aware semantics) and Spatial Refinement Module (fine-grained textures).
+  - Extended attention enables hierarchical integration across abstraction levels.
+  - Mask utilization disparity: VTON uses inpainting masks; VTOFF lacks reliable masks. Phased training with auxiliary segmentation loss and attention gating; mask conditioning provided (VTON) or predicted (VTOFF).
+- Contributions:
+  - First unified diffusion framework achieving bidirectional garment manipulation via dual-path conditioning, deriving both tasks through an implicit unified deformation field.
+  - Dual-phase training strategy leveraging auxiliary segmentation loss for implicit canonical mask prediction in VTOFF.
+  - Extensive experimental validation of jointly modeling VTON and VTOFF.
+
+# Related Work
+- Virtual Try-On:
+  - Two-stage pipelines: TPS warping, flow estimation, landmarks, followed by GAN synthesis; issues with warping errors and boundary artifacts.
+  - Diffusion trajectories:
+    - Warping-enhanced diffusion (e.g., LaDI-VTON, appearance flow integration) refine alignment and texture fidelity.
+    - Warping-free diffusion (e.g., TryOnDiffusion, StableVITON, OOTDiffusion) learn transformations implicitly via garment feature extraction and attention; MMTryOn reduces auxiliary inputs via multi-modal conditioning.
+- Virtual Try-Off:
+  - TryOffDiff: SigLIP-conditioned latent diffusion; strong segmentation but struggles with fine details and color fidelity under varied illumination.
+  - TryOffAnyone: mask-integrated Stable Diffusion with transformer tuning; efficient but spatial inaccuracies at sleeves/joints and adjacent garments.
+
+# Method
+- Overview (Figure 2b):
+  - Latent-space inputs: spatial concatenation of target and guidance features with mask-guided feature; reversal of order for VTOFF.
+  - Pixel-space processing: two modules—Semantic Abstraction Module (SAM) and Spatial Refinement Module (SRM); outputs integrated by Extended Attention Block.
+- Semantic Abstraction Module (SAM):
+  - CLIP image encoder (frozen) produces global semantic feature F_CLIP_G ∈ R^{B×1×D} and token sequence F_CLIP_S ∈ R^{B×L×D}.
+  - QFormer conditioned by text prompts (e.g., “upper garment”) filters CLIP outputs: F_QF = QFormer(F_CLIP_S, T_p) ∈ R^{B×N×D}.
+  - Composite semantic sequence: F_SAM = [F_CLIP_G, F_QF] ∈ R^{B×(1+N)×D}.
+- Spatial Refinement Module (SRM):
+  - Swin Transformer yields multi-scale features H = [H1, H2, H3] at 1/4, 1/8, 1/16 resolutions.
+  - TaskFormer (decoder-like, masked attention per Mask2Former) processes three scale-specific blocks with hierarchical masks propagated across units:
+    - F'_QF = Block_1(F_{i−1}, F_QF, M^1_{i−1})
+    - H'_2 = Block_2(F'_QF, H_2, M^2_{i−1})
+    - H'_3 = Block_3(H'_2, H_3, M^2_{i−1})
+  - Dual projections:
+    - Mask-space: M^1_i = σ(Linear(F_i) ⊙ F_QF) ∈ [0,1]^{B×K×N}; M^2_i = σ(MLP_mask(F_i) ⊙ H_1) ∈ [0,1]^{B×K×H×W}.
+    - Task-space: TFQ_0 = σ(MLP^0_task(F_i) ⊙ H_1) ∈ [0,1]^{B×1×H×W} predicts flattened garment masks for VTOFF; TFQ_j = MLP^j_task(F_i) ⊙ H_1 for j≥1 refine details.
+  - Decoder projects TaskFormer outputs to UNet-compatible F_SRM.
+- Extended Attention Block (Figure 2c):
+  - Standard self-attention on UNet features; cross-attention between UNet query Q and SRM-derived K′, V′; outputs modulated by Zero Linear Layer (ZLL) and summed with self-attention:
+    - F_fused = SelfAttn(Q,K,V) + ZLL(CrossAttn(Q,K′,V′)).
+  - Additional cross-attention between F_fused and F_SAM injects high-level semantics.
+- Mask handling:
+  - Mask zeros M can match M’s dimensions; rectangular masks (bounding boxes) serve as alternatives for garment proportion optimization.
+- Training Strategy:
+  - Stage 1 (inpainting capability, VTOFF mask prediction): loss includes noise prediction and auxiliary mask loss:
+    - L = E||ε − ε_θ(I_t, t, τ_SAM(x_ref))||_2^2 + λ L_mask; L_mask = λ′ L_dice + λ″ L_bce.
+  - Stage 2 (shape awareness): uses morphology-generated square masks; Extended Attention activated; loss:
+    - L = E||ε − ε_θ(I_t, t, τ_SAM(x_ref), τ_SRM(x_ref))||_2^2.
+
+# Preliminaries
+- Latent Diffusion Model (LDM) setup:
+  - CLIP text encoder projects prompts to 768-D.
+  - VAE encodes I ∈ R^{3×H×W} to z0 ∈ R^{c×h×w} with c=4, h=H/8, w=W/8; decoder reconstructs image.
+  - UNet ε_θ denoises z_t over T steps; forward process z_t = √α_t z_0 + √(1−α_t) ε; optimizes E[||ε − ε_θ(z_t, t, E_T(y))||_2^2].
+- Processing in Latent Space:
+  - VTON training:
+    - Spatially concatenate model image x and flattened garment c: h_i = [x, c] ∈ R^{3×H×2W}.
+    - Mask M; masked person x_a = (1−M) ⊗ x; mask-guided feature h_m = [1−M, ones(M)] ∈ R^{1×H×2W}; guidance feature h_f = [x_a, c] ∈ R^{3×H×2W}.
+    - Encode h_i and h_f via VAE; h_i is noised; h_m resized to latent dims.
+    - Final input I_t = [Noise_t(E(h_i)), E(h_f), resize(h_m)] ∈ R^{(4+4+1)×(H/8)×(2W/8)}.
+  - VTOFF training:
+    - Reverse spatial order between x and c (and corresponding h_m, h_f).
+    - Stage 1: garment mask synthesized from c to train precise inpainting; Stage 2: replace with erosion–dilation square masks to challenge geometric reasoning.
+  - Inference:
+    - Use guidance feature and mask-guided feature; replace initial input channels with fully noised tensor.
+    - For VTOFF, original garment mask in h_m is replaced with all-zeros mask.
+
+# Experiments
+- Datasets:
+  - VITON-HD: over 10,000 pairs of upper-body garments.
+  - DressCode: upper, lower, dresses; total over 40,000 pairs.
+- Metrics:
+  - Structural/texture: SSIM, MS-SSIM, CW-SSIM, LPIPS, DISTS.
+  - Perceptual realism: FID, KID.
+  - Semantic alignment: DINO similarity, CLIP-FID.
+- Quantitative comparison—VTON on VITON-HD (Table 1):
+  - DCI-VTON: FID 7.119, DINO 0.940, SSIM 0.881, LPIPS 0.065.
+  - MV-VTON: FID 8.597, DINO 0.942, SSIM 0.887, LPIPS 0.060.
+  - GP-VTON: FID 8.939, DINO 0.899, SSIM 0.880, LPIPS 0.068.
+  - LaDI-VTON: FID 11.297, DINO 0.924, SSIM 0.869, LPIPS 0.075.
+  - IDM-VTON: FID 6.098, DINO 0.957, SSIM 0.865, LPIPS 0.074.
+  - CatVTON: FID 5.693, DINO 0.954, SSIM 0.871, LPIPS 0.060.
+  - Ours: FID 6.107, DINO 0.960, SSIM 0.905, LPIPS 0.055.
+- Quantitative comparison—VTON on DressCode (Table 2):
+  - Upper body: GP-VTON FID 17.585, DINO 0.864, SSIM 0.779, LPIPS 0.200; LaDI-VTON FID 14.108, DINO 0.883, SSIM 0.919, LPIPS 0.055; IDM-VTON FID 7.277, DINO 0.941, SSIM 0.929, LPIPS 0.033; CatVTON FID 7.805, DINO 0.919, SSIM 0.929, LPIPS 0.034; Ours FID 7.497, DINO 0.939, SSIM 0.941 (best), LPIPS 0.043.
+  - Lower body: GP-VTON FID 21.411, DINO 0.904, SSIM 0.771, LPIPS 0.206; LaDI-VTON FID 14.215, DINO 0.926, SSIM 0.914, LPIPS 0.058; IDM-VTON FID 8.313, DINO 0.967, SSIM 0.913, LPIPS 0.035; CatVTON FID 8.910, DINO 0.937, SSIM 0.912, LPIPS 0.045; Ours FID 8.298 (best), DINO 0.960, SSIM 0.922 (best), LPIPS 0.054.
+  - Dresses: GP-VTON FID 13.816, DINO 0.893, SSIM 0.794, LPIPS 0.156; LaDI-VTON FID 16.548, DINO 0.859, SSIM 0.863, LPIPS 0.077; IDM-VTON FID 9.018, DINO 0.921, SSIM 0.884, LPIPS 0.075; CatVTON FID 8.890, DINO 0.906, SSIM 0.865, LPIPS 0.062; Ours FID 8.412 (best), DINO 0.923 (best), SSIM 0.881, LPIPS 0.062 (best).
+- Quantitative comparison—VTOFF on VITON-HD (Table 3):
+  - TryOffDiff: SSIM 0.727, MS-SSIM 0.526, CW-SSIM 0.422, LPIPS 0.414, FID 21.397, CLIP-FID 8.627, KID 7.6, DISTS 0.246.
+  - TryOffAnyone: SSIM 0.723, MS-SSIM 0.583, CW-SSIM 0.513, LPIPS 0.340, FID 11.553, CLIP-FID 5.131 (best), KID 2.0, DISTS 0.213.
+  - Ours: SSIM 0.721, MS-SSIM 0.590 (best), CW-SSIM 0.524 (best), LPIPS 0.332 (best), FID 10.393 (best), CLIP-FID 5.651, KID 1.5 (best), DISTS 0.195 (best).
+- Qualitative comparisons:
+  - VTON (Figure 3): preserves subtle textures (e.g., low-contrast lettering) and textual elements under color variation.
+  - VTOFF (Figure 4): compared to TryOffDiff and TryOffAnyone, TWGTM better preserves color, texture, and shape without extraneous features.
+- Ablation studies (Table 4; Figures 5–6):
+  - Variant 1 (without SRM): VTON FID 6.317, DINO 0.957, SSIM 0.891, LPIPS 0.062; VTOFF FID 11.748, SSIM 0.690, LPIPS 0.370, DISTS 0.211.
+  - Variant 2 (without spatial concatenation, using warping fusion): VTON FID 6.604, DINO 0.950, SSIM 0.906, LPIPS 0.056; VTOFF FID 15.288, SSIM 0.738, LPIPS 0.309, DISTS 0.208.
+  - Variant 3 (Mask2BBox at inference): VTOFF FID 9.201, SSIM 0.769, LPIPS 0.225, DISTS 0.174 (shows geometric control benefits).
+  - Variant 4 (scratch-only VTON training): VTON FID 6.165, DINO 0.960, SSIM 0.905, LPIPS 0.055.
+  - Variant 5 (scratch-only VTOFF training): VTOFF FID 13.398, SSIM 0.680, LPIPS 0.367, DISTS 0.217.
+  - Variant 6 (pre-self-attention feature concatenation): VTON close to baseline; VTOFF degraded (FID 15.082, SSIM 0.629, LPIPS 0.448, DISTS 0.241).
+  - Variant 7 (IP-Adapter integration): VTOFF degraded (FID 14.182, SSIM 0.651, LPIPS 0.420, DISTS 0.230).
+  - Variant 8 (without QFormer): VTOFF degraded (FID 14.094, SSIM 0.668, LPIPS 0.386, DISTS 0.225).
+  - TWGTM (Ours): VTON FID 6.107, DINO 0.960, SSIM 0.905, LPIPS 0.055; VTOFF FID 10.393, SSIM 0.721, LPIPS 0.332, DISTS 0.195.
+- Cross-task fine-tuning (Figures 7–8; text):
+  - Fine-tuning VTON improves VTOFF partially in FID/SSIM/LPIPS; fine-tuning VTOFF improves VTON in FID/LPIPS.
+  - Reported ranges: VTOFF FID 10.0–10.6, SSIM 0.710–0.735, LPIPS 0.31–0.35, DISTS 0.1925–0.2050; VTON FID 6.05–6.25, SSIM 0.9040–0.9065, LPIPS 0.054–0.057, DINO 0.9590–0.9615.
+- Additional notes:
+  - Authors attribute some DressCode discrepancies to lighting-induced color/texture inconsistencies.
+  - Rectangular mask alternative improves garment proportion control.
+
+# Conclusion
+- TWGTM provides a unified diffusion framework for bidirectional garment manipulation (VTON and VTOFF), leveraging dual-conditioned guidance from latent and pixel spaces and an Extended Attention Block for hierarchical feature fusion.
+- A dual-phase training strategy mitigates mask dependency discrepancies between tasks.
+- Extensive experiments on VITON-HD and DressCode demonstrate superior or competitive performance, including best-in-class metrics for VTOFF (e.g., DISTS 0.195, FID 10.393) and strong VTON results (e.g., VITON-HD SSIM 0.905, DINO 0.960).
+
+# References
+- The manuscript cites foundational works in diffusion models (DDPM, LDM, DDIM), CLIP, VAE, UNet, attention mechanisms, Swin Transformer, BLIP-2/QFormer, and Mask2Former.
+- VTON baselines and related diffusion methods: Han et al. (VITON), Wang et al., Ge et al., GP-VTON, LaDI-VTON, IDM-VTON, CatVTON, StableVITON, TryOnDiffusion, OOTDiffusion, MMTryOn.
+- VTOFF baselines: TryOffDiff, TryOffAnyone.
+- Datasets: VITON-HD, DressCode.
+- Evaluation metrics: SSIM and variants, LPIPS, DISTS, FID, KID, DINO similarity, CLIP-FID.
+- Not specified in this section: dataset licenses, training budgets, number of runs, compute resources.

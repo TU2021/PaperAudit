@@ -1,0 +1,101 @@
+{
+  "paper": "MCCE_ A Framework for Multi-LLM Collaborative Co-Evolution",
+  "runs": [
+    {
+      "config": {
+        "judge_model": "gpt-5-2025-08-07",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "baseline_file": "baseline_review.txt",
+        "final_file": "final_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 600,
+        "metric": "regression_v2_minimal",
+        "prompt_hash": "2142c04332"
+      },
+      "config_key": "1a46f14f5902ebb0fc2c14773cec6644d2fa5338",
+      "inputs": {
+        "baseline_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/baseline_review.txt",
+        "final_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/final_review_all.txt"
+      },
+      "regression": {
+        "score_delta": {
+          "baseline_score": 6.0,
+          "final_score": 6.0,
+          "delta": 0.0,
+          "scale_hint": "1-10"
+        },
+        "differences": [
+          {
+            "diff_type": "new_critique",
+            "summary": "Implausible uniformity in Top100auc suggests metric/reporting issues",
+            "paperaudit_types": [
+              "EVIDENCE_DATA_INTEGRITY",
+              "EXPERIMENTAL_DESIGN_PROTOCOL"
+            ],
+            "why_impacts_score": "Undermines trust in results due to possible computation/reporting errors",
+            "evidence": {
+              "baseline_quote": "Metric definitions for 'Top1F...Top100auc...Diversity, Uniqueness, Validity' are not explained.",
+              "final_quote": "'Top100auc' shows near-identical means across most models, implausible and raising concerns about calculation or reporting accuracy."
+            }
+          },
+          {
+            "diff_type": "new_critique",
+            "summary": "Narrative–figure mismatch on training loss behavior",
+            "paperaudit_types": [
+              "RHETORICAL_PRESENTATION_MANIPULATION",
+              "CONTEXT_MISALIGNMENT_INCOHERENCE"
+            ],
+            "why_impacts_score": "Conflicting evidence weakens claims of training stability",
+            "evidence": {
+              "baseline_quote": "Loss dynamics are visualized, evidencing learning progress and reduced oscillation over time.",
+              "final_quote": "Text claims 'monotonically decreasing average loss curve', but Figure 4 shows pronounced spikes, creating a narrative–figure mismatch."
+            }
+          },
+          {
+            "diff_type": "new_critique",
+            "summary": "Distribution analysis uses no-parent prompt inconsistent with main regime",
+            "paperaudit_types": [
+              "CONTEXT_MISALIGNMENT_INCOHERENCE",
+              "EXPERIMENTAL_DESIGN_PROTOCOL"
+            ],
+            "why_impacts_score": "Limits comparability of analysis to core optimization setting",
+            "evidence": {
+              "baseline_quote": "Output distribution analysis indicates the trained local model’s distribution shifts toward higher fitness.",
+              "final_quote": "Distribution analysis uses a 'no-parent prompt' while main generation relies on parent-based prompts, limiting comparability."
+            }
+          },
+          {
+            "diff_type": "intensified_critique",
+            "summary": "More specific gaps in HV computation (reference point, normalization)",
+            "paperaudit_types": [
+              "EXPERIMENTAL_DESIGN_PROTOCOL",
+              "METHOD_LOGIC_CONSISTENCY"
+            ],
+            "why_impacts_score": "Unclear HV settings hinder reproducibility and fair comparison",
+            "evidence": {
+              "baseline_quote": "HV computation lacks the reference point and normalization details required for reproducibility and comparability.",
+              "final_quote": "Eq. 10 shows normalization, but no HV reference point specification; HV settings remain unspecified."
+            }
+          },
+          {
+            "diff_type": "intensified_critique",
+            "summary": "Similarity computation unclear for multi-parent prompts",
+            "paperaudit_types": [
+              "METHOD_LOGIC_CONSISTENCY",
+              "EXPERIMENTAL_DESIGN_PROTOCOL",
+              "CONTEXT_MISALIGNMENT_INCOHERENCE"
+            ],
+            "why_impacts_score": "Ambiguities in similarity affect DPO pairing validity and fairness",
+            "evidence": {
+              "baseline_quote": "Similarity function specifics (e.g., fingerprint radius/bit length) are not provided.",
+              "final_quote": "Clarify how sim(c,q) is computed when q aggregates parent molecules and handles similarities to multiple parents."
+            }
+          }
+        ]
+      },
+      "generated_at": "2026-01-05T20:43:15"
+    }
+  ]
+}

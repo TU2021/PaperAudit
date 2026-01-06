@@ -1,0 +1,53 @@
+Based on a critical review of the manuscript, several significant internal inconsistencies and integrity risks have been identified. These issues pertain to the presentation of results for a non-existent model, contradictions between claims in the text and data in tables, and numerical discrepancies across different sections of the paper.
+
+### **Integrity Risk Report**
+
+**1. Inclusion of Results for a Non-Existent Model**
+
+A major integrity concern arises from the inclusion of performance metrics for a model named "GPT-5" in Table 1.
+
+*   **Evidence:** Table 1 ("Comparative performance of various LLM-based regression models") lists results for "GPT-5" and provides a corresponding citation: "GPT-5 (OpenAI, 2025)".
+*   **Problem:** As of the time of this review, GPT-5 has not been released by OpenAI, and no such model or its performance data is publicly available. Presenting fabricated or anticipatory results as factual data in a comparative table is a serious breach of scientific integrity. This calls into question the trustworthiness of all other reported results.
+
+**2. Contradictions Between Quantitative Claims in Text and Data in Tables**
+
+Multiple quantitative claims made in the main text are not supported by, or are directly contradicted by, the data presented in the paper's own tables.
+
+*   **Claim vs. Evidence (Regression Performance):** In Section 4.3.1, the authors state that "ChemBOMAS achieved the highest prediction accuracy on the Arylation and Buchwald datasets, with R² scores exceeding the second-best model by 2000% and 140%, respectively."
+    *   **Contradiction:** According to Table 1, for the Arylation dataset, ChemBOMAS (R²=0.13) outperforms the second-best open LLM, LLaMa-3.1-8B (R²=0.09), by approximately 44%, not 2000%. For the Buchwald dataset, ChemBOMAS (R²=0.20) outperforms the next-best model with a positive R², LLaMa-3.1-8B (R²=0.01), by 1900%, not 140%. The claims in the text are grossly exaggerated and inconsistent with the provided data.
+
+*   **Claim vs. Evidence (Optimization Speedup):** In Section 4.3.2, it is claimed that the subspace tree search yields "up to a 34-fold improvement in optimization efficiency".
+    *   **Contradiction:** The relevant metric, "95% Max Iter", is provided in Table 2. Comparing "BO w/o tree" to the best-performing tree-based method for each dataset shows speedups of 5.3x (16/3 for Suzuki), 8x (8/1 for Arylation), 26x (26/1 for Buchwald_sub-1), and 13x (13/1 for Buchwald_sub-2). None of these values approach the claimed 34-fold improvement.
+
+*   **Claim vs. Evidence (Final Performance Improvement):** The Introduction (Section 1, Contribution 3) claims that ChemBOMAS improves "optimal results by approximately 3–10%".
+    *   **Contradiction:** According to the ablation study in Table 4, the improvements over the baseline ("w/o both") are:
+        *   Suzuki: (96.15 - 83.16) / 83.16 = **15.6%** (higher than the claimed range)
+        *   Arylation: (81.26 - 80.45) / 80.45 = **1.0%** (lower than the claimed range)
+        *   Buchwald_sub-1: (80.00 - 78.86) / 78.86 = **1.4%** (lower than the claimed range)
+        *   Buchwald_sub-2: (56.81 - 56.29) / 56.29 = **0.9%** (lower than the claimed range)
+    The reported range of 3–10% is inconsistent with the paper's own results for all four benchmarks.
+
+**3. Inconsistent Narrative in Ablation Study**
+
+The interpretation of the ablation study results in Section 4.4 misrepresents the data presented in Table 4, undermining the paper's central argument about synergy.
+
+*   **Evidence:** The text states, "The performance of the single-module ablations is comparable to or only marginally better than the version lacking both modules, indicating that neither strategy alone is sufficient."
+*   **Problem:** The data in Table 4 contradicts this narrative. For the Suzuki dataset:
+    *   The baseline ("w/o both") achieves a "Best Found" value of **83.16%**.
+    *   The data-only module ("w/o knowledge module") achieves **88.98%**, which is a significant improvement, not a marginal one.
+    *   The knowledge-only module ("w/o data module") achieves **82.65%**, which is *worse* than the baseline.
+    The narrative selectively ignores cases where a single module is substantially better or worse than the baseline, presenting a misleading conclusion about the synergistic effect.
+
+**4. Numerical and Factual Discrepancies Across Sections**
+
+There are several instances of conflicting numerical values and factual descriptions for the same experiments.
+
+*   **Conflicting Optimization Results:** For the Arylation dataset, the full ChemBOMAS method is reported to achieve a "Best Found" value of **81.26%** (Section 4.3.3, Table 4). However, in a separate experiment comparing clustering strategies, the knowledge-driven component (ChemBOMAS<sub>k-d</sub>) is reported to achieve a superior result of **82.23%** (Table 2). It is unclear and counter-intuitive why the full, integrated method would perform worse than one of its core components operating under fixed conditions.
+
+*   **Inconsistent Sample Count in Wet-Lab Experiment:** The wet-lab experiment is described as identifying the optimum "after evaluating only 43 samples in 2 iterations" (Section 4.3.3). However, the protocol detailed in Appendix H.2 specifies "fourteen samples per round". An experiment running for an initial round (0) plus two subsequent iterations (1 and 2) would involve 3 * 14 = 42 samples. The number "43" is inconsistent with the described protocol.
+
+*   **Mismatched Figure and Caption:** The caption for Figure 4 in Appendix E (Block 52) states it is a "Heatmap of the best-found objective value over 40 iterations on the **Suzuki dataset**". However, the image itself contains labels for four different datasets ("Suzuki", "Arylation | Buchwald C–N | Buchwald C–O"), and the corresponding figures in the appendix (Blocks 56-59) are indeed four separate plots. The caption is incorrect.
+
+### **Conclusion**
+
+The manuscript contains multiple, severe inconsistencies and a clear instance of reporting data for a non-existent model. The pattern of exaggerated claims in the text that are not supported by the tables, combined with contradictory narratives and numerical errors, significantly undermines the credibility and scientific validity of this work. The issues identified are not minor errors but fundamental problems that affect the core claims and trustworthiness of the paper.

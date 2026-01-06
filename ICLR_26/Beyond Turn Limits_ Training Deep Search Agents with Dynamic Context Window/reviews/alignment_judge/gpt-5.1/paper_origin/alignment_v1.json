@@ -1,0 +1,97 @@
+{
+  "paper": "Beyond Turn Limits_ Training Deep Search Agents with Dynamic Context Window",
+  "judge_model": "gpt-5.1",
+  "review_agent": "deepreviewer",
+  "ai_model": "gpt-5-2025-08-07",
+  "ai_review_file": "deep_review_all.txt",
+  "inputs": {
+    "human_review": "review.txt",
+    "ai_review": "reviews/deepreviewer/gpt-5-2025-08-07/paper_origin/deep_review_all.txt"
+  },
+  "multi_review": {
+    "detected": false,
+    "num_reviews": 1,
+    "summarize_used": false,
+    "summary_note": null
+  },
+  "ai_review_consolidated": null,
+  "alignment": {
+    "motivation_strength_alignment": 0.95,
+    "weakness_error_alignment": 0.8,
+    "overall_alignment": 0.9,
+    "explanation": {
+      "strength": "Both reviews describe essentially the same core contributions and motivations. They agree that the paper tackles a key bottleneck for long-horizon web/search agents: context explosion driven by verbose tool outputs. They both highlight the dynamic sliding-window context mechanism that preserves assistant reasoning while discarding or compressing old tool outputs, emphasizing training–inference consistency via sequence decomposition and masking. They also converge on the importance of the reverse-constructed, multi-source, web-grounded, hard QA data pipeline as the other main pillar, stressing that it yields challenging, verifiable, multi-document tasks. Both note strong empirical gains on BrowseComp-en (and other benchmarks like GAIA/XBench/BrowseComp-zh) and frame these as substantial and practically meaningful improvements that narrow the gap with proprietary agents. They further mention the SFT + RL/GRPO-style training and see the joint combination—data construction + dynamic context + RL—as the main contribution. Overall, the strengths and motivations are nearly perfectly aligned; differences are mostly in level of detail (e.g., Review B cites specific tables/figures, while Review A mentions additional insights from rebuttal and perturbation tests).",
+      "weakness": "There is substantial, but not perfect, overlap in identified weaknesses. Clear points of alignment: (1) Both raise concerns about credit assignment under trajectory-level binary rewards propagated to sequence-level updates; Review A frames this as coarse reward and potential mis-crediting of steps, while Review B worries about over-crediting early steps and missing alternative credit assignment strategies. (2) Both flag limited ablations, especially around the dynamic window: Review A notes initially missing ablations and window sensitivity that were only partially addressed in rebuttal; Review B repeatedly calls out missing ablations on window size/slide step and absence of a quantitative locality test for tool outputs. (3) Both mention reproducibility and data/code availability as incomplete or constrained. Areas where they diverge: Review B emphasizes reliance on an LLM judge for both evaluation and reward, potential evaluation bias, and lack of human/robust validation—this is a major weakness in B but is not explicitly highlighted in A. Review A, instead, focuses more on the \"discard vs summarize\" design trade-off and potential failure on tasks requiring early-evidence comparison, as well as on training stability/compute constraints and the difficulty of fully disentangling the contributions of data vs context mechanism. Review B touches comparability/fairness of baselines (tools, budgets) and presentation polish; Review A does not. Thus the core technical concerns about window design, ablations, and credit assignment align well, but some important ancillary concerns (LLM judge, fairness audit, compute/training dynamics, discard vs summarize) are asymmetrically emphasized.",
+      "overall": "Taken together, the reviews are strongly aligned in their substantive view of the work. They share the same understanding of what the paper is about (long-horizon web agents, reverse-constructed hard QA data, sliding-window context that preserves reasoning), why it matters (context explosion, long-turn behavior) and how it performs (notable gains on deep-search benchmarks). On the positive side, they converge on the two-pronged contribution and the practical significance of the results. On the critical side, they both see the main open issues in the quality and granularity of empirical validation: missing or limited ablations for the window/locality assumptions and potential issues with reward/credit assignment and decomposition. Review B adds more detailed concerns around LLM-judge reliance and fairness of baselines, while Review A adds more about the summarize-vs-discard design choice and training dynamics. These differences represent complementary emphases rather than contradictions. Overall, the judgments are directionally and substantively consistent, with high but not perfect overlap in highlighted weaknesses, yielding a high overall alignment score."
+    }
+  },
+  "generated_at": "2025-12-27T19:28:01",
+  "runs": [
+    {
+      "config": {
+        "judge_model": "gpt-5.1",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "baseline_review.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180
+      },
+      "config_key": "3b28d70d5731760031a4514ebc98b0afd78edf6d",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/baseline_review.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "motivation_strength_alignment": 0.82,
+        "weakness_error_alignment": 0.7,
+        "overall_alignment": 0.78,
+        "explanation": {
+          "strength": "Both reviews clearly agree on the core motivations and contributions: DeepMiner as a two-pronged framework combining (i) reverse-constructed, web-grounded hard QA trajectories and (ii) a dynamic sliding-window context mechanism that preserves reasoning while compressing/dropping tool outputs to enable long-horizon search under fixed context. They both emphasize strong benchmark gains on BrowseComp and other deep-search benchmarks, and highlight the practical importance of addressing context growth and maintaining training–inference consistency. Review B adds more granular details (e.g., specific pipeline stages, GRPO setup, comparisons to summarization), but these elaborate on, rather than conflict with, Review A’s identified strengths.",
+          "weakness": "Both reviews raise concerns about limited ablations/component analyses and incomplete attribution between data design and the context mechanism, and both question aspects of the reward design/credit assignment (trajectory-level binary rewards, masking, and how the signal is propagated). They also converge on the discard-vs-summarize tension and lack of evidence that omitting distant tool outputs is always safe, though Review A mentions rebuttal experiments that partially alleviate this, while Review B largely treats this as an open gap; Review B further adds new, more granular critiques (evaluation comparability, judge specification, dataset statistics, efficiency/cost reporting) that are not present in Review A but do not contradict it. Thus, the overlap on primary issues is good but not exhaustive.",
+          "overall": "Substantively, the two reviews share a consistent picture: they view the same central ideas as the main contributions, regard the empirical gains as strong and practically meaningful, and focus on similar high-level limitations around ablations, attribution, and reward/credit design. Review B is more detailed and introduces additional secondary concerns about evaluation rigor and reporting, while Review A incorporates rebuttal clarifications and is somewhat more positive about reproducibility and evidence on dropping tool outputs. Overall judgment and focus are largely aligned, with differences mainly in depth and emphasis rather than direction."
+        }
+      },
+      "generated_at": "2025-12-27T19:50:37"
+    },
+    {
+      "config": {
+        "judge_model": "gpt-5.1",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "final_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180
+      },
+      "config_key": "4569a6a97a67c8e2b360606eb74d6eb53b892d06",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/final_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "motivation_strength_alignment": 0.72,
+        "weakness_error_alignment": 0.63,
+        "overall_alignment": 0.67,
+        "explanation": {
+          "strength": "Both reviews emphasize the same core motivations: addressing context growth bottlenecks via a sliding window and creating hard, verifiable multi‑source QA trajectories. They also agree on strong benchmark improvements and the value of training–inference consistency. Review B adds many more fine‑grained strengths, but they largely elaborate on themes already present in Review A.",
+          "weakness": "Both identify missing ablations, questions around credit assignment/reward design, and concerns about dropping old tool outputs as core limitations. Review B introduces numerous additional methodological, reporting, and consistency critiques not discussed in Review A, so the overlap is partial but clear on the major themes.",
+          "overall": "The two reviews converge on the main contributions and main limitations, though Review B is far more granular and raises many additional issues. Alignment is solid in substance but not complete due to Review B’s breadth and additional critiques."
+        }
+      },
+      "generated_at": "2025-12-27T19:52:42"
+    }
+  ]
+}

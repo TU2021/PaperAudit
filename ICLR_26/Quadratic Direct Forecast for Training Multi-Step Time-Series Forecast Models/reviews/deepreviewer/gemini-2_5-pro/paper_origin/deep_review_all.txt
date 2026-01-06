@@ -1,0 +1,161 @@
+Here are four distinct reviews of the paper.
+
+***
+
+### **Review 1**
+
+**Summary**
+This paper identifies two key challenges in designing training objectives for multi-step time-series forecasting: the label autocorrelation effect and the need for heterogeneous task weights for different forecast horizons. To address these, the authors propose a novel quadratic-form weighted training objective, where the weighting matrix $\Sigma$ is learned from data. The off-diagonal elements of $\Sigma^{-1}$ are intended to account for autocorrelation, while the diagonal elements provide heterogeneous weights. The paper introduces the Quadratic Direct Forecast (QDF) algorithm, a bilevel optimization procedure, to learn this weighting matrix by optimizing for generalization performance on a holdout set. Extensive experiments show that QDF, when applied to various state-of-the-art forecasting models, consistently improves their performance.
+
+**Soundness**
+The methodology is sound and well-motivated. The paper starts from a principled likelihood formulation (Theorem 3.1), which naturally leads to a quadratic loss weighted by the inverse conditional covariance matrix $\Sigma^{-1}$. Recognizing the intractability of estimating the true $\Sigma$, the authors cleverly reframe the problem as learning a proxy matrix that optimizes for model generalization. The proposed bilevel optimization framework (Definition 3.2) is a logical and effective way to achieve this. The re-parameterization of $\Sigma$ via Cholesky decomposition to ensure positive semi-definiteness is a standard and correct technique. The overall workflow in Algorithm 2, which involves splitting the training data to learn a robust $\Sigma$ before final model training, is a solid and practical procedure.
+
+**Presentation**
+The paper is exceptionally well-written and organized. The motivation is clearly articulated in Section 3.1, with a compelling case study (Figure 1) that visually demonstrates the existence of both label autocorrelation and non-uniform conditional variance. The methodology is presented logically, progressing from the theoretical motivation to the practical algorithm. Algorithms 1 and 2 are clear and easy to follow. The experimental section is comprehensive, addressing performance, ablation, versatility, and sensitivity, which provides a convincing case for the method's effectiveness. The figures and tables are generally clear and support the main claims effectively.
+
+**Contribution**
+The contribution of this paper is significant and novel. While re-weighting loss functions is not a new concept, the formulation of a full quadratic objective and a principled, data-driven method for learning the entire weighting matrix is a novel approach in the context of time-series forecasting. The identification and simultaneous tackling of the two distinct problems (autocorrelation and heterogeneous weights) via a single mechanism is elegant. The proposed QDF algorithm is model-agnostic, making it a valuable and broadly applicable tool that can potentially elevate the performance of a wide range of existing and future forecasting models. This work successfully shifts focus from architecture design to the often-overlooked but critical area of objective function design.
+
+**Strengths**
+1.  **Clear Problem Formulation:** The paper does an excellent job of identifying and motivating two fundamental, yet underexplored, issues with standard training objectives like MSE (Section 3.1).
+2.  **Novel and Principled Method:** The QDF algorithm, based on a bilevel optimization that learns the loss function itself, is a novel and powerful idea. It is grounded in a clear theoretical motivation (Theorem 3.1).
+3.  **Strong Empirical Validation:** The experiments are thorough and convincing. QDF shows consistent improvements over numerous strong baselines across multiple datasets (Table 1). The ablation studies (Table 3) clearly demonstrate the benefits of addressing both autocorrelation and heterogeneous weights.
+4.  **Model-Agnosticism:** The method is presented as a general wrapper that can improve various underlying forecasting models, which is demonstrated effectively in the generalization studies (Section 4.5, Figure 3).
+
+**Weaknesses**
+1.  **Computational Overhead:** The bilevel optimization process for learning $\Sigma$ introduces additional computational complexity during training. While Appendix D.7 shows the cost per step is low, the total training time increase due to the outer loop (N_out rounds) is not fully quantified.
+2.  **Interpretability of $\Sigma$:** The paper demonstrates that the learned $\Sigma$ improves performance, but provides little analysis on the structure of the learned matrix itself. It would be insightful to visualize the learned $\Sigma^{-1}$ and see if it aligns with the intuitions about autocorrelation and task difficulty.
+
+**Questions**
+1.  The bilevel optimization learns a single static matrix $\Sigma$ for the entire dataset. Have you considered a dynamic approach where $\Sigma$ could be conditioned on the input $X$, for instance, by using a hyper-network as mentioned in the future work section? This might capture how correlation structures could change over time.
+2.  Could you provide some visualization or analysis of the learned weighting matrices ($\Sigma^{-1}$)? For example, do the diagonal elements show a clear trend (e.g., decreasing weight for farther future steps)? Do the off-diagonal elements capture visible correlation patterns?
+3.  How sensitive is the performance of the final trained model to the convergence of $\Sigma$ in Algorithm 2? Is it necessary to run it until full convergence, or does it stabilize after a few outer-loop iterations?
+
+**Rating**
+- Overall (10): 9 — The paper presents a novel, well-motivated, and empirically strong method that addresses a fundamental problem in time-series forecasting.
+- Novelty (10): 9 — The idea of learning a full quadratic loss via bilevel optimization is highly novel for time-series forecasting.
+- Technical Quality (10): 9 — The methodology is sound, and the experiments are rigorous, comprehensive, and well-executed.
+- Clarity (10): 10 — The paper is exceptionally clear, well-structured, and easy to follow from motivation to conclusion.
+- Confidence (5): 5 — I am highly confident in my assessment; the paper is thorough and the claims are well-supported.
+
+***
+
+### **Review 2**
+
+**Summary**
+This paper proposes a method called Quadratic Direct Forecast (QDF) to improve the training of multi-step time-series forecasting models. The authors argue that the standard Mean Squared Error (MSE) objective is flawed because it ignores (1) autocorrelation in the prediction target (labels) and (2) varying difficulty across different prediction steps. They propose replacing MSE with a quadratic loss $(Y - \hat{Y})^\top W (Y - \hat{Y})$, where $W$ is a learned weighting matrix. This matrix $W$ (denoted $\Sigma^{-1}$ in the paper) is learned via a bilevel optimization scheme, where the outer loop updates $W$ to minimize the loss of a model trained on a separate split of the training data. Experiments show that using this learned objective improves the performance of several existing forecasting models.
+
+**Soundness**
+The methodological soundness has some weak points. The entire motivation is predicated on Theorem 3.1, which assumes that forecast errors follow a multivariate Gaussian distribution. This is a strong assumption that is unlikely to hold in practice for many real-world time series, and its violation could undermine the theoretical justification for the quadratic form.
+
+Furthermore, the proposed bilevel optimization (Algorithm 1 and 2) is a heuristic approximation. Algorithm 1 performs $N_{in}$ gradient steps on the model parameters $\theta$ before taking a single gradient step on the weighting matrix $\Sigma$. This one-step (or few-step) approximation of the inner optimization is computationally convenient but is not guaranteed to find a good solution to the true bilevel problem defined in Eq. (3). The stability and convergence properties of this nested loop are not discussed. It is unclear if the learned $\Sigma$ is a stable or unique solution, or if it is prone to overfitting to the specific train/holdout splits ($\mathcal{D}_{in}, \mathcal{D}_{out}$) used during its learning phase.
+
+**Presentation**
+The paper is generally well-written, but some aspects could be clearer. The connection to meta-learning is mentioned, but the distinction could be sharpened. The paper claims QDF's goal is a "static objective" while meta-learning is for "dynamic tasks," but the process of learning the objective itself is very much in the spirit of meta-learning ("learning to learn"). The presentation of Algorithm 1 as an "atomic update" is slightly confusing; it is actually a multi-step inner loop. The caption for Figure 9 is difficult to parse, with "left panel" and "right panel" descriptions that don't clearly map to the subfigures (a) and (b). In Table 1, the underlining for "second-best" results appears inconsistent (e.g., for ETTh2 MAE, PDF's 0.399 is better than TQNet's 0.400, but both are underlined).
+
+**Contribution**
+The contribution is incremental. The idea of learning a loss function or re-weighting its terms is not new and has been explored in other domains, often under the umbrella of meta-learning, as the authors themselves acknowledge (Section 3.3, 4.6). The core ideas in FreDF and Time-o1, which the authors build upon and critique, already attempted to address label correlation. This paper's main contribution is to combine the re-weighting of diagonal (heterogeneous weights) and off-diagonal (autocorrelation) terms into a single matrix and propose a specific bilevel optimization scheme to learn it. While the results are good, the conceptual leap is not as large as suggested.
+
+**Strengths**
+1.  **Problem Identification:** The paper clearly identifies two important, practical problems with the standard MSE loss in time-series forecasting. The case study in Figure 1 is effective at illustrating these issues.
+2.  **Good Empirical Performance:** Despite the methodological concerns, the proposed QDF method demonstrates strong and consistent performance improvements across a wide range of models and datasets (Table 1, Figure 3).
+3.  **Thorough Ablation Study:** The ablation study in Section 4.4 is well-designed and provides convincing evidence that both components of the learned matrix (diagonals and off-diagonals) contribute to the performance gain.
+
+**Weaknesses**
+1.  **Strong, Unjustified Assumptions:** The method's theoretical grounding relies on a Gaussian error assumption (Theorem 3.1) which is not validated or discussed.
+2.  **Heuristic Optimization:** The bilevel optimization is an approximation whose convergence and stability are not analyzed. The quality of the learned $\Sigma$ may depend heavily on the hyperparameters of this optimization process ($K, N_{in}, \eta$).
+3.  **Potential for Overfitting:** The process of learning $\Sigma$ involves splitting the training data and could overfit to this particular split, potentially leading to a matrix that is not robust. The use of K-fold splitting mitigates this but doesn't eliminate the risk.
+4.  **Computational Cost:** The method adds a non-trivial nested loop to the training process, which will increase training time and complexity, making it less practical for very large datasets or models.
+
+**Questions**
+1.  How does the method perform if the Gaussian assumption on the errors is strongly violated (e.g., for time series with heavy-tailed noise or multimodal distributions)? Does the justification for the quadratic form still hold?
+2.  Can you provide more analysis on the convergence of Algorithm 2? How many outer-loop iterations ($N_{out}$) are typically needed, and how does the final performance vary with this number?
+3.  The bilevel optimization depends on the split of $\mathcal{D}_{train}$ into $\mathcal{D}_{in}$ and $\mathcal{D}_{out}$. How sensitive is the learned $\Sigma$ and the final model performance to the way this split is performed (e.g., the ratio of the split, random vs. chronological)?
+
+**Rating**
+- Overall (10): 6 — A practical method with good results, but the theoretical justification is weak and the optimization is heuristic.
+- Novelty (10): 5 — The idea is an incremental extension of existing work on learned loss functions and correcting for label correlation.
+- Technical Quality (10): 5 — The reliance on an unsubstantiated Gaussian assumption and the use of an approximate, unanalyzed bilevel optimization are significant technical weaknesses.
+- Clarity (10): 7 — Mostly clear, but with some confusing notations and presentation choices (e.g., Algorithm 1, Figure 9 caption).
+- Confidence (5): 4 — I am reasonably confident in my assessment, particularly regarding the technical and methodological weaknesses.
+
+***
+
+### **Review 3**
+
+**Summary**
+This paper presents a practical method, Quadratic Direct Forecast (QDF), for improving the training of time-series forecasting models. The core idea is to replace the standard MSE loss with a more flexible quadratic loss function. This new loss function is defined by a weighting matrix that is learned from the data. This matrix is designed to handle two common issues: correlations between future time steps and the fact that predicting some steps is harder than others. The authors propose a "learning to learn" style algorithm to find a good weighting matrix and show through extensive experiments that this approach improves the accuracy of many state-of-the-art forecasting models.
+
+**Soundness**
+The method seems sound from a practical standpoint. The motivation makes intuitive sense: if future data points are correlated, the errors on them shouldn't be treated independently. Similarly, if predicting one day ahead is easier than predicting 30 days ahead, they shouldn't necessarily have the same weight in the loss. The proposed solution, learning a weighting matrix $\Sigma$ using a bilevel optimization that targets generalization, is a clever and pragmatic way to find a matrix that "works" without needing to know the true, complex error structure. The ablation study in Section 4.4 provides strong evidence that the method is doing what it claims, as both the diagonal-only (heterogeneous weights) and off-diagonal-only (autocorrelation) versions of QDF outperform the baseline.
+
+**Presentation**
+The paper is very well-organized and easy to read. The authors do a great job of explaining a complex idea in simple terms. The introduction clearly lays out the problem, and the methodology section walks the reader through the proposed solution step-by-step. The algorithms are presented clearly (Algorithm 2 gives a great overview of the whole process). The experimental results are presented in a compelling way, especially Figure 3, which clearly shows QDF providing a consistent boost to several different models. This makes a strong case for the method's practical utility.
+
+**Contribution**
+The main contribution is a highly practical, model-agnostic tool that improves time-series forecasting. While the underlying ideas might have roots in meta-learning, the authors have packaged them into a specific, effective algorithm (QDF) tailored for the forecasting problem. The ability to take an existing, high-performing model like TQNet or iTransformer and make it even better with a simple-to-understand modification is a very valuable contribution to the field. This work provides a "drop-in" enhancement that practitioners can readily apply.
+
+**Strengths**
+1.  **Practicality and Usability:** QDF is a model-agnostic wrapper. This makes it immediately useful to anyone working with direct forecasting models, as they can apply it to their existing architecture to get a potential performance boost.
+2.  **Strong Empirical Results:** The method is shown to work, and work well, across many different datasets and several SOTA models (Table 1). The improvements are consistent and sometimes substantial (e.g., on PEMS datasets).
+3.  **Excellent Ablation Study:** The study in Table 3 is a key strength. It clearly dissects the method and shows that both of the intended mechanisms (handling autocorrelation and heterogeneous weights) contribute positively to the final result.
+4.  **Clear Motivation:** The paper is motivated by a real, practical problem that many researchers and practitioners face, and the solution directly addresses this problem.
+
+**Weaknesses**
+1.  **Added Complexity and Hyperparameters:** The QDF procedure introduces a new layer of complexity to the training pipeline. It requires splitting the training data and running a nested loop optimization. It also adds several new hyperparameters to tune ($N_{in}, N_{out}, K, \eta$), which could make it more difficult to use in practice compared to just using MSE.
+2.  **Increased Training Time:** Learning the matrix $\Sigma$ requires an iterative process that runs before the final model training. This will inevitably increase the total time required to train a model. The paper analyzes the time per step in Appendix D.7, but a comparison of total wall-clock training time (e.g., TQNet vs. TQNet+QDF) would be useful for a practitioner to assess the trade-off.
+
+**Questions**
+1.  Could you provide some practical rules of thumb or guidance for setting the new hyperparameters ($K, N_{in}, \eta$)? The sensitivity analysis in Figure 4 is helpful, but advice on where to start would be valuable for practitioners. For example, is $N_{in}=1$ and $K=3$ a good default for most cases?
+2.  Is the learned weighting matrix $\Sigma$ specific to the model architecture it was trained with? For instance, if I learn a $\Sigma$ using TQNet on the ECL dataset, could I reuse that same $\Sigma$ to train an iTransformer on the same dataset and still expect to see an improvement?
+3.  The method is applied to direct forecasting. Do you see any fundamental barriers to extending this idea to iterative forecasting strategies, where predictions are made one step at a time?
+
+**Rating**
+- Overall (10): 8 — A very practical and effective method that provides a clear benefit, despite adding some training complexity.
+- Novelty (10): 7 — The application of a learnable quadratic objective in this specific, well-formulated way for forecasting is novel and clever.
+- Technical Quality (10): 8 — The method is empirically solid and well-validated, even if it's more of a pragmatic heuristic than a theoretically guaranteed procedure.
+- Clarity (10): 9 — The paper is very clearly written and the core ideas and results are easy to understand.
+- Confidence (5): 5 — I am highly confident in my assessment of the paper's practical strengths and weaknesses.
+
+***
+
+### **Review 4**
+
+**Summary**
+The paper proposes a novel training objective for multi-step time-series forecasting, termed Quadratic Direct Forecast (QDF). The method is motivated by the observation that standard Mean Squared Error (MSE) objectives fail to account for two properties of the forecast target: the autocorrelation between future time steps and the heterogeneous uncertainty (or difficulty) of predicting each step. The proposed objective is a quadratic form, $(Y - g_\theta(X))^\top \Sigma^{-1} (Y - g_\theta(X))$, where the weighting matrix $\Sigma^{-1}$ is learned. The learning procedure for $\Sigma$ is formulated as a bilevel optimization problem, solved approximately by iterating between inner-loop model updates and outer-loop updates of $\Sigma$ on separate splits of the training data. The authors demonstrate empirically that QDF improves the performance of various modern forecasting architectures on several benchmark datasets.
+
+**Soundness**
+The methodology is generally sound. The theoretical motivation starting from the negative log-likelihood of a multivariate Gaussian (Theorem 3.1) is a standard and appropriate starting point. The core of the method is the bilevel optimization in Definition 3.2, which is a principled approach for learning parameters (here, the matrix $\Sigma$) that promote generalization. The implementation via Algorithms 1 and 2, which uses chronological splits of the training data and an iterative refinement of $\Sigma$, is a reasonable and well-considered heuristic for solving this optimization problem. The re-parameterization $\Sigma = LL^\top$ is the correct way to enforce the positive semi-definite constraint. The claim that prior methods like FreDF and Time-o1 only achieve marginal, not conditional, decorrelation (Section 3.1) is a key justification for this work and appears plausible, though it relies on self-citations (Wang et al., 2025d,e).
+
+**Presentation**
+The paper is well-structured and clearly written. The arguments are easy to follow. However, there are several minor presentation issues.
+- **Future Citations:** The paper heavily relies on citations from 2025 (e.g., Lin et al., 2025; Wang et al., 2025d,e), which are presumably concurrent or unpublished works from the authors. While common in preprints, this makes it difficult to verify some claims and contextualize the work.
+- **Table Inconsistencies:** The marking of "second-best" results with an underline is not always consistent. For example, in Table 1 on ETTh2, the MAE for QDF is 0.397. The next best is PDF (0.399), followed by TQNet (0.400). However, both PDF and TQNet are underlined, which is confusing.
+- **Figure Clarity:** The caption for Figure 9 is unclear. It refers to a "left panel" and "right panel" for each sub-figure, but the sub-figures (a) and (b) themselves seem to be the panels. The plots themselves in Figure 9 are also missing y-axis labels and clear legends, making them hard to interpret without reading the text very carefully. The plots in Figure 4 are much clearer in this regard.
+- **LLM Statement:** The statement on LLM usage in Appendix E is unusual. While transparency is commendable, citing specific future versions like "GPT-4.1, GPT-5, and Google Gemini 2.5" seems speculative and potentially distracting.
+
+**Contribution**
+The paper makes a solid contribution to the field of time-series forecasting. The primary novelty lies in the formulation and operationalization of learning a full quadratic-form objective. While the concept of learning loss functions exists in meta-learning, this paper provides a specific, well-motivated, and effective instantiation for the important problem of multi-step forecasting. It successfully tackles two distinct issues (autocorrelation and heterogeneous weights) within a unified framework. The demonstration that this single technique can consistently improve a wide variety of strong, recently-published models (TQNet, iTransformer, etc.) highlights its significance and utility.
+
+**Strengths**
+1.  **Unified Framework:** The quadratic form elegantly unifies the handling of label autocorrelation (off-diagonals) and heterogeneous task weights (diagonals).
+2.  **Comprehensive Experiments:** The experimental evaluation is extensive, covering overall performance, comparisons with other objectives, ablations, generalization across models, and hyperparameter sensitivity.
+3.  **Reproducibility:** The authors provide code and detailed descriptions of their setup in the appendix, which is commendable and crucial for scientific progress.
+4.  **Strong Ablation:** The ablation study (Table 3) is particularly effective at demonstrating that both the "Hetero." and "Auto." components are beneficial, with their combination being synergistic.
+
+**Weaknesses**
+1.  **Approximation in Optimization:** The bilevel optimization is solved via a heuristic (iterating between a few inner steps and one outer step). The theoretical properties of this approximation (e.g., convergence, quality of the solution) are not analyzed.
+2.  **Minor Presentation Flaws:** As noted above, there are several small issues in tables and figures that detract from the overall polish of the paper.
+3.  **Static Weighting Matrix:** The method learns a single, static $\Sigma$ for the entire dataset. This assumes the error covariance structure is stationary, which may not be true for all time series. This is acknowledged as a limitation.
+
+**Questions**
+1.  In Algorithm 2, the training set $\mathcal{D}_{train}$ is split into $K$ subsets. The text says this is done "chronologically." Does this mean $\mathcal{D}_1$ is the earliest part of the training data, $\mathcal{D}_2$ is the next, and so on? And when calling Algorithm 1, is $\mathcal{D}_{in}$ always chronologically before $\mathcal{D}_{out}$? Please clarify the exact splitting and assignment procedure.
+2.  Could you please double-check the underlining of second-best results in the tables for consistency? For instance, in Table 1 (ETTh2, MAE), why are both 0.399 and 0.400 underlined as second-best when 0.399 is strictly better?
+3.  The case study in Section 3.1 and Appendix A uses partial correlation to motivate the work. This requires a linear regression against the history $X$. How was this history $X$ constructed for the plots in Figure 1 and 5, given that the history can be high-dimensional? The appendix mentions subsampling and restricting history length to 8, but more detail would be helpful.
+
+**Rating**
+- Overall (10): 8 — A strong paper with a novel method and compelling results, held back slightly by minor presentation issues and the heuristic nature of the optimization.
+- Novelty (10): 8 — The specific formulation of learning a quadratic objective via bilevel optimization for forecasting is novel and impactful.
+- Technical Quality (10): 7 — The method is empirically sound and well-validated, but the theoretical analysis of the optimization procedure is absent, and some details are glossed over.
+- Clarity (10): 8 — Very clear in its high-level exposition, but some details in figures and tables could be improved.
+- Confidence (5): 5 — I am very confident in my assessment, having reviewed the paper in detail.

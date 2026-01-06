@@ -1,0 +1,78 @@
+Summary
+- The paper formalizes the concept of memory in reinforcement learning by introducing precise definitions for declarative versus procedural memory and short-term versus long-term memory, grounded in cognitive science. It proposes the Memory Decision-Making (Memory DM) framework, defines agent context length K, correlation horizon ξ, and “memory-intensive” environments, and provides Theorem 1 and Algorithm 1 to design experiments that separate LTM from STM. The methodology is illustrated on Passive T-Maze and MiniGrid-Memory tasks using DTQN, DQN-GPT-2, and SAC-GPT-2, showing that misconfigured experiments (e.g., mixing ξ inside and outside K) can lead to incorrect claims about LTM. Results (Figure 4–5) demonstrate how varying K and ξ clarifies whether agents possess STM or LTM capabilities.Strengths
+- Bolded titles are required, including sub-point evidence and why it matters.- Strong formalization of RL memory types
+  - Evidence: Definitions 1–6 (Section 5), especially Definition 3 (Equations (1)–(2)) and Definition 4 (STM/LTM via ξ and K), Figure 2 (STM/LTM scheme), Figure 1 (declarative/procedural scheme).
+  - Why it matters: Provides quantitative anchors (K, ξ, n_envs, n_eps) for memory types, enabling standardized classification; enhances clarity and comparability across works, addressing confusion noted in Section 4.2.- Clear separation of task classes and memory manifestations
+  - Evidence: Definition 2 (Memory DM), Appendix Definition 7 (Meta-RL), Table 1 (task classification by n_envs and n_eps), Figure 19 (memory taxonomy diagram; Section 5).
+  - Why it matters: Distinguishing Memory DM (declarative) from Meta-RL (procedural) avoids conflating within-episode recall with across-task skill transfer, strengthening evaluation validity and aligning with cognitive science (Section 4.1).- Methodology for rigorous memory evaluation
+  - Evidence: Theorem 1 and Equation (3) (context memory border K̄), Equation (4) (computing K̄), strong/weak conditions for STM (Section 5.1), Algorithm 1 (Section 5.2), Equation (6) (condition for LTM testing with μ(K)).
+  - Why it matters: Offers a replicable experiment-design protocol that demarcates when an environment tests exclusively LTM or STM, preventing ambiguous setups that blur interpretations; improves experimental rigor.- Practical environment analysis and setup examples
+  - Evidence: Section 5.3 (Passive T-Maze) including ξ = T and K̄ = T − 1; Appendix E.1 environment descriptions for Passive T-Maze and MiniGrid-Memory (Figures 6, 49).
+  - Why it matters: Concrete guidance shows how to parameterize tasks (via L or corridor length) to probe memory types; enhances applicability and reproducibility for other researchers.- Empirical demonstration of evaluation pitfalls and corrective design
+  - Evidence: Section 6.1 (Impact of configuration), Figure 4 (MiniGrid-Memory: K=22 vs K=14; fixed vs variable ξ), Section 6.2 (relative nature via K and ξ), Figure 5 (Passive T-Maze transitions K=15, ξ=15 → K=5, ξ=15 → K=5, ξ=5).
+  - Why it matters: Shows that “variable mode” corridors can falsely suggest LTM when agents only have STM; validates the necessity of the proposed methodology; improves impact by exposing common error modes.- Notational clarity and reader support
+  - Evidence: Appendix A Glossary (items 1–11), consistent use of α, β, ξ, K, K̄, μ(K), K_eff across Sections 4–5.
+  - Why it matters: Clear notation enables exact reasoning and makes the framework accessible; strengthens clarity claims and reduces ambiguity.- Reproducibility details
+  - Evidence: Appendix E.2 (three runs, validation over 100 random seeds 0–99; Table 2 hyperparameters for SAC-GPT-2, DQN-GPT-2, DTQN).
+  - Why it matters: Reporting training protocol and hyperparameters supports replicability and increases confidence in empirical results.Weaknesses
+- Bolded titles are required, including sub-point evidence and why it matters.- Limited empirical scope and environment diversity
+  - Evidence: Section 6 uses only Passive T-Maze and MiniGrid-Memory; Appendix E.1 (two environments, both discrete control with single-clue recall).
+  - Why it matters: Conclusions about LTM/STM methodology are not stress-tested on diverse modalities (e.g., continuous control, multi-cue tasks), reducing generality.
+  - Evidence: Both tasks feature single-event recall pairs (Section 5.3, step 1 states n=1; Appendix E.1 Minigrid uses one object cue).
+  - Why it matters: Single event pairs simplify ξ estimation and may not capture compounded temporal dependencies.
+  - Evidence: No benchmarks beyond these two (Section 6); Related Work cites PopGym and Memory Gym (Section 3; Appendix C), but they are not used.
+  - Why it matters: Missing broader validation raises questions on robustness across standard memory benchmarks.- Underspecified operationalization of K and μ(K)
+  - Evidence: Definition 1 (K) defines maximal history tokens the base model can process; experiments set K=14/22 (Section 6.1) but do not explain how K was enforced or measured per architecture.
+  - Why it matters: Without a precise operational procedure, K may differ between implementations (e.g., GPT-2 attention window vs effective sequence length), undermining reproducibility.
+  - Evidence: Definition 6 (μ(K)) and Equation (5) introduce K_eff ≥ K, but experiments do not report measured K_eff or mechanisms used to increase it for tested agents.
+  - Why it matters: LTM validation hinges on μ(K) producing K_eff > K (Equation (6)), yet no direct evidence of μ(K) > K for any evaluated agent is provided.
+  - Evidence: Algorithm 1 (steps 2–3) requires estimating ξ_n and setting K relative to K̄; however, details on computing ξ in MiniGrid variable mode (range ξ ∈ [7, L+1]) lack sampling protocol specifics (Section 6.1).
+  - Why it matters: Ambiguity in ξ distribution affects whether the experiment sits in the transitional interval, impacting conclusions.- Transitional interval remains unquantified
+  - Evidence: Section 5.1 defines “weak condition” where K lies in (K̄, maxΞ), implying mixed STM/LTM; Section 6.1 notes this yields ambiguity.
+  - Why it matters: The paper does not provide quantitative criteria or diagnostic metrics to characterize ambiguity or to estimate the relative contributions of STM vs LTM.
+  - Evidence: Equation (4) gives K̄, but there is no analysis of sensitivity around K≈K̄ (e.g., performance gradients).
+  - Why it matters: Lack of sensitivity analyses leaves practitioners uncertain about “safe margins” for exclusive validation.
+  - Evidence: No statistical tests are reported to distinguish curves in Figure 4 between fixed vs variable mode beyond SEM shading (Section 6.1; Appendix E.2).
+  - Why it matters: Without formal quantification, claims about ambiguity are illustrative rather than rigorously substantiated.- No positive LTM baseline to validate the framework end-to-end
+  - Evidence: Evaluated agents (DTQN, DQN-GPT-2, SAC-GPT-2; Section 6) are primarily context-bounded Transformers; no external-memory or explicit LTM mechanism is included.
+  - Why it matters: The methodology shows failures (absence of LTM) but does not demonstrate success with an agent where μ(K) produces K_eff > K (Equation (6)).
+  - Evidence: Appendix C cites external-memory (Graves et al., 2016; Parisotto & Salakhutdinov, 2017), retrieval-augmented RL (Goyal et al., 2022), and world models (Hafner et al., 2019; Ha & Schmidhuber, 2018), but none are tested.
+  - Why it matters: Without positive LTM cases, the empirical validation remains partial and may be perceived as tailored to transformer limitations.
+  - Evidence: Section 5.2 asserts “agents with memory mechanisms … that can solve long-term memory tasks can also handle short-term” but provides no experiment with such an agent.
+  - Why it matters: This claim is plausible but unverified in the presented results.- Reporting gaps affecting reproducibility and interpretation
+  - Evidence: Appendix E.2 states “three runs” and “validation using 100 random seeds,” but it is unclear how validation seeds interact with training runs, and whether curves (Figures 4–5) aggregate across both.
+  - Why it matters: Ambiguity in aggregation protocols can impact error bars and claims of significance.
+  - Evidence: Section 6.1 “variable mode” ξ ∈ [7, L+1] lacks a sampling distribution (uniform? curriculum?), and Figure 4 does not specify how ξ varies over timesteps.
+  - Why it matters: Different ξ sampling schemes could produce the observed high SR for K=14, changing the interpretation.
+  - Evidence: Appendix E.1 modifies Passive T-Maze reward structure relative to Ni et al. (2023) (dense penalty r_step = −1/(T−1)), but does not describe how this affects training duration or returns scaling in Figure 5.
+  - Why it matters: Deviations from prior setups without ablation hinder comparability and may confound results.- Conceptual mapping of declarative/procedural memory may be too coarse
+  - Evidence: Definition 3 reduces declarative memory to n_envs × n_eps = 1 (Equation (1)) and procedural memory to n_envs × n_eps > 1 (Equation (2)); Table 1 maps MDP-based Meta-RL to “outer-loop memory only.”
+  - Why it matters: Tying memory type to training regime (number of envs/episodes) may conflate data organization with behavioral manifestation; edge cases (e.g., single-env multiple episodes with within-episode recall) may not cleanly fit.
+  - Evidence: Section 4.2 notes confusion in prior literature and introduces these definitions, but does not provide empirical tests that corroborate the declarative/procedural split beyond taxonomy.
+  - Why it matters: Without empirical validation of this mapping, the framework risks oversimplification, potentially misclassifying tasks where procedural elements arise in single environments.
+  - Evidence: Appendix B.1 states intent not to replicate human memory fully but “align with intuitive understanding”; still, the mapping to n_envs/n_eps is a design choice without formal derivation.
+  - Why it matters: Readers may require stronger justification to adopt these definitions across diverse RL tasks.Suggestions for Improvement
+- Bolded titles are required, including sub-point evidence and why it matters.- Broaden empirical coverage across environments and modalities
+  - Add evaluations on standardized memory benchmarks referenced in the paper (PopGym, Memory Gym; Section 3; Appendix C), including tasks with multiple event–recall pairs to stress ξ estimation beyond n=1.
+  - Include continuous-control POMDPs (e.g., partially observable MuJoCo; Section 5.1 mentions their limitations) with parameterizable ξ to test whether Algorithm 1 generalizes beyond discrete grid worlds.
+  - Incorporate tasks with overlapping, nested, or distractor cues (Appendix E.1 Minigrid uses a single cue) to probe interaction among multiple ξ_n and validate the framework in more complex settings.- Precisely operationalize and report K and μ(K)
+  - For each architecture, define how K is enforced (e.g., transformer attention window, sequence truncation) and measured during training and evaluation (Definition 1; Section 6.1) to ensure comparability across agents.
+  - When claiming or testing μ(K), report K_eff, the mechanism that increases it (Equation (5)–(6)), and empirical checks (e.g., synthetic tasks where ξ is systematically varied) to verify K_eff > K in practice.
+  - Document ξ sampling protocols explicitly in variable-mode experiments (Section 6.1) and provide code to compute ξ for each episode to prevent inadvertent placement in the transitional interval.- Quantify the transitional interval and provide diagnostics
+  - Around K≈K̄ (Equation (4)), perform sensitivity analyses by sweeping K and reporting performance gradients or slopes, identifying “safe margins” for exclusive LTM/STM validation (Section 5.1).
+  - Introduce a diagnostic metric estimating the proportion of event–recall pairs with ξ inside versus outside the current K during evaluation, to quantify STM/LTM mixture in the weak condition (Section 5.1).
+  - Apply statistical tests (e.g., bootstrap confidence intervals) to differences between fixed and variable modes in Figure 4, reporting p-values or effect sizes to strengthen claims about ambiguity.- Include a positive LTM baseline to validate the full methodology
+  - Evaluate at least one agent with explicit external memory (e.g., Neural Map or Neural Turing Machines; Appendix C, Graves et al., 2016; Parisotto & Salakhutdinov, 2017) to demonstrate μ(K) achieving K_eff > K and success under Equation (6).
+  - Test retrieval-augmented RL (Goyal et al., 2022; Appendix C) or world models (Hafner et al., 2019; Ha & Schmidhuber, 2018) on Passive T-Maze/MiniGrid-Memory to show positive LTM outcomes and contrast curves with transformers.
+  - Provide ablations where memory mechanisms are disabled to confirm causal contribution to LTM performance under the proposed conditions (Section 5.2 claim that LTM-capable agents handle STM).- Strengthen reporting for reproducibility and interpretation
+  - Clarify aggregation: specify whether training curves (Figures 4–5) aggregate across three runs and 100 validation seeds, and define SEM computation; include training budgets and wall-clock compute.
+  - Detail the ξ sampling distribution in variable mode (Section 6.1), whether uniform over [7, L+1] or curriculum-based, and show per-ξ performance to support the observed high SR for K=14.
+  - Provide ablation on reward shaping differences (Appendix E.1) versus the original Passive T-Maze, reporting how dense penalties affect learning curves and returns scaling.- Provide stronger justification and testing of declarative/procedural mapping
+  - Augment Section 5 and Appendix B.1–B.2 with empirical case studies illustrating edge cases (e.g., single environment with multiple episodes involving within-episode recall) to validate n_envs × n_eps rules (Equations (1)–(2); Table 1).
+  - Offer theoretical or behavioral arguments (e.g., task structures showing skill transfer vs information recall) that tie n_envs/n_eps directly to procedural vs declarative manifestations in RL, beyond taxonomy (Section 4.2; Table 1).
+  - Include a brief experimental probe where the same inner-loop POMDP is evaluated under different outer-loop regimes (n_envs/n_eps) to empirically test whether the proposed classification predicts observed behavior.Score
+- Overall (10): 6 — Formal definitions (Section 5; Definitions 1–6; Equations (1)–(6)) and a clear methodology (Algorithm 1; Theorem 1; Table 1) are strong, but empirical validation is limited to two simple environments with no positive LTM baseline (Section 6; Appendix E.1–E.2; Figure 4–5).
+- Novelty (10): 6 — The quantitative framing of K, ξ, K̄ and “memory-intensive environments” (Section 5; Theorem 1; Equation (4)) is a useful synthesis, though related ideas about memory vs credit assignment exist (Section 4.2; Ni et al., 2023).
+- Technical Quality (10): 5 — Theorem 1 is correct but straightforward (Section 5.1), and experiments illustrate pitfalls (Figure 4–5) without rigorous quantification of the transitional interval or inclusion of LTM-capable baselines (Section 6.1–6.2).
+- Clarity (10): 8 — The paper is clearly written with consistent notation and helpful diagrams/glossary (Figures 1–2, 19; Appendix A; Algorithm 1; Table 1), though some operational details for K, μ(K), and ξ sampling are missing (Section 6.1; Appendix E.2).
+- Confidence (5): 4 — The manuscript provides enough detail and anchors for a careful assessment, but the narrow empirical scope and reporting gaps (Appendix E.2; Section 6.1) limit certainty about generality.

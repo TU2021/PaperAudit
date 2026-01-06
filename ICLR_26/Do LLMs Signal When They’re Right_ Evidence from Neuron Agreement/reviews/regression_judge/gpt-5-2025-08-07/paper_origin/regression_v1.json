@@ -1,0 +1,102 @@
+{
+  "paper": "Do LLMs Signal When They’re Right_ Evidence from Neuron Agreement",
+  "runs": [
+    {
+      "config": {
+        "judge_model": "gpt-5-2025-08-07",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "baseline_file": "baseline_review.txt",
+        "final_file": "final_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 600,
+        "metric": "regression_v2_minimal",
+        "prompt_hash": "2142c04332"
+      },
+      "config_key": "1a46f14f5902ebb0fc2c14773cec6644d2fa5338",
+      "inputs": {
+        "baseline_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/baseline_review.txt",
+        "final_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/final_review_all.txt"
+      },
+      "regression": {
+        "score_delta": {
+          "baseline_score": 7.0,
+          "final_score": 7.0,
+          "delta": 0.0,
+          "scale_hint": "1-10"
+        },
+        "differences": [
+          {
+            "diff_type": "new_critique",
+            "summary": "Unsubstantiated p-value claim and missing statistical testing details",
+            "paperaudit_types": [
+              "EVIDENCE_DATA_INTEGRITY",
+              "METHOD_LOGIC_CONSISTENCY",
+              "CLAIM_RESULT_DISTORTION"
+            ],
+            "why_impacts_score": "Undermines validity of correlation claims, reducing technical rigor",
+            "evidence": {
+              "baseline_quote": "Correlational evidence (Figure 2) but no formal derivation mapping activations to entropy/self-certainty.",
+              "final_quote": "The claim of 'p-value less than 0.05' lacks reporting of sample sizes, exact p-values, or tests."
+            }
+          },
+          {
+            "diff_type": "new_critique",
+            "summary": "Missing citation for GPT-4 calibration assertion",
+            "paperaudit_types": [
+              "REFERENCE_BACKGROUND_FABRICATION",
+              "CONTEXT_MISALIGNMENT_INCOHERENCE"
+            ],
+            "why_impacts_score": "Weakens grounding and credibility of background claims, lowering clarity",
+            "evidence": {
+              "baseline_quote": "Clear definitions and diagrams with comprehensive tables; some parameter specifics are underreported.",
+              "final_quote": "Introduction references GPT-4 calibration issues without a corresponding citation; No direct evidence found."
+            }
+          },
+          {
+            "diff_type": "new_critique",
+            "summary": "Cross-table numerical inconsistencies between main text and appendix",
+            "paperaudit_types": [
+              "EVIDENCE_DATA_INTEGRITY",
+              "EXPERIMENTAL_DESIGN_PROTOCOL",
+              "CLAIM_RESULT_DISTORTION"
+            ],
+            "why_impacts_score": "Inconsistent results compromise reproducibility and comparative claims",
+            "evidence": {
+              "baseline_quote": "Clear definitions and diagrams with comprehensive tables.",
+              "final_quote": "Several accuracies differ between Table 1 and Appendix Table 3, undermining consistency."
+            }
+          },
+          {
+            "diff_type": "score_rationale_shift",
+            "summary": "Technical Quality score decreased due to reporting and inconsistency issues",
+            "paperaudit_types": [
+              "EVIDENCE_DATA_INTEGRITY",
+              "METHOD_LOGIC_CONSISTENCY"
+            ],
+            "why_impacts_score": "Explicitly lowers technical quality assessment",
+            "evidence": {
+              "baseline_quote": "Technical Quality (10): 6 — Solid correlational evidence but lacks formal analysis; some details missing.",
+              "final_quote": "Technical Quality (10): 5 — Missing statistical test details and inconsistencies between tables reduce rigor."
+            }
+          },
+          {
+            "diff_type": "score_rationale_shift",
+            "summary": "Clarity score decreased due to conflicting numbers across tables",
+            "paperaudit_types": [
+              "EVIDENCE_DATA_INTEGRITY",
+              "CONTEXT_MISALIGNMENT_INCOHERENCE"
+            ],
+            "why_impacts_score": "Conflicting figures reduce clarity and trust in reporting",
+            "evidence": {
+              "baseline_quote": "Clarity (10): 7 — Clear definitions and diagrams with comprehensive tables.",
+              "final_quote": "Clarity (10): 6 — Clear definitions, but numbers conflict across tables."
+            }
+          }
+        ]
+      },
+      "generated_at": "2026-01-05T20:39:46"
+    }
+  ]
+}

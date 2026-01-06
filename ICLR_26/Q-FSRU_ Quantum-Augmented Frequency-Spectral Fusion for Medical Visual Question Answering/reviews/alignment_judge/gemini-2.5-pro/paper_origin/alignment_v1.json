@@ -1,0 +1,104 @@
+{
+  "paper": "Q-FSRU_ Quantum-Augmented Frequency-Spectral Fusion for Medical Visual Question Answering",
+  "runs": [
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "deepreviewer",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "deep_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180
+      },
+      "config_key": "24b66d75b94c155df325f4e5f2603b40312e4469",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/deepreviewer/gpt-5-2025-08-07/paper_origin/deep_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "motivation_strength_alignment": 0.9,
+        "weakness_error_alignment": 0.75,
+        "overall_alignment": 0.85,
+        "explanation": {
+          "strength": "Both reviews identify the novel fusion of frequency-domain processing (FFT) and quantum-inspired retrieval as the core contribution and highlight the strong empirical results on the VQA-RAD and PathVQA datasets.",
+          "weakness": "Both reviews pinpoint the same critical weakness: a major contradiction in how retrieved knowledge is integrated into the model's final prediction. They also share concerns about the justification for the quantum component and the poorly described retrieval pipeline, though Review B identifies several additional technical inconsistencies that Review A misses.",
+          "overall": "The reviews are highly aligned in their overall judgment, concluding that the paper presents a promising and novel idea but is undermined by significant methodological inconsistencies and a lack of rigor. Review B provides more granular technical evidence for the same core critiques raised by Review A, leading to a very similar substantive conclusion."
+        }
+      },
+      "generated_at": "2025-12-27T20:05:01"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "baseline_review.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180
+      },
+      "config_key": "a14d937ebf873b90a820c8cb44da768956431bd4",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/baseline_review.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "motivation_strength_alignment": 0.9,
+        "weakness_error_alignment": 0.5,
+        "overall_alignment": 0.65,
+        "explanation": {
+          "strength": "Both reviews identify the novel integration of frequency-domain processing and quantum-inspired retrieval as the main contribution and highlight the strong empirical results on the VQA-RAD and PathVQA datasets. Review B provides more granular points about the mathematical formulation and ablation studies, but these align with Review A's broader praise for the paper's clarity and comprehensive evaluation.",
+          "weakness": "Both reviews pinpoint the same critical inconsistency regarding how retrieved knowledge is integrated into the final classifier. However, they diverge significantly on other weaknesses: Review A focuses on broader issues like the small dataset size and limited evaluation scope, while Review B identifies more numerous and specific technical flaws, such as the questionable FFT application, unclear label mapping, and missing statistical methodology.",
+          "overall": "The reviews show high alignment on the paper's core strengths but only moderate alignment on its weaknesses, leading to a similar overall judgment (novel idea, flawed execution) supported by different critiques. While both identify the same major technical contradiction, Review B provides a much more extensive list of secondary technical and methodological flaws that Review A does not mention."
+        }
+      },
+      "generated_at": "2025-12-27T20:09:12"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "final_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180
+      },
+      "config_key": "565dcfbed8e348ba365acb8ebe44bf867f3cd0c2",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/final_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "motivation_strength_alignment": 0.8,
+        "weakness_error_alignment": 0.5,
+        "overall_alignment": 0.65,
+        "explanation": {
+          "strength": "Both reviews identify the same core strengths: the novel integration of frequency-domain and quantum-inspired techniques, strong empirical results on VQA-RAD and PathVQA, and a comprehensive evaluation with ablations. Review B is more granular but the central points are identical, resulting in a very high alignment.",
+          "weakness": "Both reviews identify the same critical weakness: a major inconsistency in how the retrieved knowledge is integrated into the final prediction. However, Review B identifies numerous additional, significant weaknesses that Review A misses (e.g., missing knowledge base details, questionable FFT method, lack of statistical rigor), while Review A notes the small dataset size, which B does not.",
+          "overall": "The reviews align well on the paper's strengths but only moderately on its weaknesses, leading to a similar but not identical overall judgment. Both see a novel method with strong results but flawed execution; however, Review B's critique is far more extensive and detailed, highlighting many more issues than Review A."
+        }
+      },
+      "generated_at": "2025-12-27T20:12:55"
+    }
+  ]
+}

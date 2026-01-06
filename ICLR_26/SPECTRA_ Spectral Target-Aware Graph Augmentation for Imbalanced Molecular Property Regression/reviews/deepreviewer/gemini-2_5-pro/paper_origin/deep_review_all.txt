@@ -1,0 +1,163 @@
+Here are four distinct reviews of the paper "SPECTRA: SPECTRAL TARGET-AWARE GRAPH AUGMENTATION FOR IMBALANCED MOLECULAR PROPERTY REGRESSION".
+
+***
+
+### **Review 1**
+
+**Summary**
+This paper introduces SPECTRA, a novel graph augmentation framework designed to address imbalanced regression problems in molecular property prediction. The core idea is to generate synthetic molecules by interpolating existing ones in the spectral domain. The method involves aligning pairs of molecules using Gromov-Wasserstein transport, interpolating their Laplacian eigensystems and node features, and then reconstructing new, chemically plausible graphs. A rarity-aware sampling scheme is used to focus augmentation on sparse regions of the target distribution. The authors show that when paired with a spectral GNN, SPECTRA improves prediction error on rare target values across several benchmark datasets while remaining computationally competitive.
+
+**Soundness**
+The methodology appears sound and is a creative combination of several advanced techniques (optimal transport, spectral graph theory, KDE). The pipeline, from SMILES to graph representation, alignment, interpolation, and reconstruction (Sections 3.1-3.4), is logical. The use of (Fused) Gromov-Wasserstein for node alignment is well-justified for comparing graphs of different sizes and structures. The subsequent interpolation in the spectral domain is an elegant way to generate intermediates. The validation of generated molecules using RDKit (Section 3.6) adds a crucial layer of chemical plausibility to the method. The experimental setup is standard, using well-known benchmarks and metrics (MAE, SERA). The ablation study (Table 6) provides evidence for the importance of the alignment and KDE-based budgeting components.
+
+**Presentation**
+The paper is well-written and clearly structured. The introduction effectively motivates the problem of imbalanced regression for molecular graphs. Figure 2 provides an excellent, high-level overview of the entire SPECTRA pipeline, which is very helpful for understanding the complex workflow. The results are presented with clear tables and figures. Figure 4, which breaks down MAE by target range, is particularly effective at demonstrating the method's primary benefit. The inclusion of an efficiency analysis (Figure 5) is also a welcome addition.
+
+**Contribution**
+The main contribution is a novel, spectral-domain augmentation method specifically designed for imbalanced graph regression. While spectral methods and graph augmentation are not new in themselves, their combination in this manner, using OT for alignment and a rarity-aware budget for targeted synthesis, is novel and significant. The focus on generating interpretable and chemically valid molecules (Table 1) distinguishes it from many latent-space augmentation techniques. The work makes a solid contribution to the growing field of imbalanced learning on graphs, particularly by tackling the under-explored regression setting.
+
+**Strengths**
+1.  **Novel Methodology:** The core idea of performing graph interpolation in the spectral domain, guided by Gromov-Wasserstein alignment, is highly innovative and elegant. It provides a principled way to generate intermediate graph structures.
+2.  **Targeted Augmentation:** The rarity-aware budgeting scheme (Section 3.5) is a smart and simple way to focus computational effort on the tail ends of the distribution, directly addressing the problem of imbalance.
+3.  **Interpretability and Validity:** The method generates new, valid SMILES strings (100% validity in Table 1), which is a major advantage over methods that generate abstract embeddings. This allows for direct inspection and analysis of the augmented data, as shown in the t-SNE plots (Figure 3, though the caption is mislabeled) and property distributions (Figure 3, main plot).
+4.  **Strong Empirical Results in Target Regions:** The method consistently reduces error in underrepresented regions of the target space (Figure 4), which is the paper's central claim.
+
+**Weaknesses**
+1.  **Performance vs. SOTA:** While SPECTRA is competitive, it is outperformed by the SGIR baseline on most MAE and SERA metrics across the three datasets (Table 4). The paper acknowledges this but could benefit from a deeper analysis of why SGIR performs better and in what specific scenarios SPECTRA might be preferred despite the slightly weaker aggregate metrics.
+2.  **Limited Scale of Datasets:** The experiments are conducted on relatively small datasets (ESOL, FreeSolv, Lipo). It is unclear how the method, particularly the computationally intensive FGW alignment step, would scale to larger molecular datasets with tens or hundreds of thousands of compounds.
+3.  **Complexity:** The pipeline is quite complex, involving multiple sophisticated steps (FGW, eigendecomposition, Procrustes, reconstruction). This might pose a barrier to adoption and makes it difficult to isolate the exact source of performance gains without more detailed ablations.
+
+**Questions**
+1.  In Table 4, the SGIR baseline consistently outperforms SPECTRA on both MAE and SERA for ESOL and FreeSolv, and is only marginally worse on Lipo. Could you elaborate on the potential reasons for this and discuss the trade-offs between your approach and SGIR's semi-supervised one?
+2.  The Gromov-Wasserstein matching can be computationally expensive. What is the runtime complexity of the augmentation phase, and how do you see this method scaling to much larger datasets common in drug discovery?
+3.  The uniqueness of generated molecules for FreeSolv is notably lower (0.568) than for other datasets (Table 1). The paper suggests this is due to a smaller chemical space. Could you expand on this? Does this imply the method is more likely to generate duplicates when the source molecules are structurally similar?
+
+**Rating**
+- Overall (10): 8 — The paper presents a highly novel and well-motivated spectral augmentation method that effectively addresses imbalanced regression, though its performance does not consistently beat the state-of-the-art baseline (Table 4).
+- Novelty (10): 9 — The combination of Gromov-Wasserstein alignment with spectral interpolation for targeted graph augmentation is a genuinely new and creative approach to this problem (Section 3).
+- Technical Quality (10): 8 — The technical pipeline is sophisticated and well-executed, with strong validity checks (Section 3.6), but the reconstruction step seems heuristic and the comparison to SOTA could be stronger (Table 4).
+- Clarity (10): 9 — The paper is very clearly written with excellent figures (e.g., Figure 2) that aid understanding of a complex method.
+- Confidence (5): 5 — I am highly confident in my assessment as I am familiar with graph neural networks, optimal transport, and imbalanced learning.
+
+***
+
+### **Review 2**
+
+**Summary**
+The paper proposes SPECTRA, a framework for augmenting molecular graph data to improve performance in imbalanced regression tasks. The method works by selecting pairs of molecules, aligning their nodes using Fused Gromov-Wasserstein (FGW) optimal transport, and then interpolating their Laplacian spectra (eigenvalues and eigenvectors) and node features. The resulting interpolated spectral components are used to reconstruct a new graph, with a corresponding interpolated target value. This process is guided by a rarity-aware budget to generate more samples in low-density regions of the label distribution. The authors evaluate SPECTRA on three molecular property prediction datasets, showing it improves performance in these rare regions.
+
+**Soundness**
+The methodological soundness has some strong points but also raises concerns. The use of FGW to find a node-to-node correspondence (Section 3.2) is a principled approach for aligning graphs. However, the subsequent steps are more heuristic. The linear interpolation of eigenvalues and the orthonormalization of interpolated eigenvectors (Section 3.3) lack strong theoretical justification for producing valid molecular structures. The graph reconstruction process (Section 3.4), which involves thresholding and removing self-loops from the interpolated Laplacian, seems ad-hoc and may not preserve fundamental chemical constraints like atom valency until the post-hoc RDKit sanitization step (Section 3.6). While the 100% validity reported in Table 1 is impressive, it relies on RDKit to fix the generated graphs, and it's unclear how much "fixing" is required. The ablation study in Table 6 is useful but could be more comprehensive; for example, it doesn't isolate the effect of the Procrustes alignment.
+
+**Presentation**
+The presentation is generally clear, but some parts are confusing. The overall pipeline is well-summarized in Figure 2. However, there are several presentation issues. The caption for Figure 1 appears in Block #4, but the plots themselves are scattered as separate image blocks ([6], [7], [8]), which is disorienting. There is a caption for a "Table 3" in Block #28 that actually describes the t-SNE plots, which are themselves not labeled consistently (the text refers to them as Figure 3, but the images are not labeled as such). The main Figure 3 (Block #36) is extremely dense and difficult to parse, with many overlapping points. The text in Section 4.2 contains a duplicated sentence: "improving coverage and mitigating distributional imbalance. This broader coverage helps reduce bias toward overrepresented regions and supports better generalization to underrepresented subspaces." These issues detract from the paper's professionalism and readability.
+
+**Contribution**
+The paper's primary contribution is a new technique for graph data augmentation that operates in the spectral domain. This is a novel idea for the problem of imbalanced regression on molecular graphs. The framework is ambitious in its attempt to synthesize chemically plausible molecules by manipulating their spectral properties. While the idea is interesting, the practical realization relies heavily on post-hoc validation and correction, which slightly tempers the contribution's impact. It contributes a new, complex tool to the imbalanced regression toolbox, but its superiority over existing methods is not definitively established.
+
+**Strengths**
+1.  **Ambitious and Novel Idea:** The central concept of interpolating entire molecular graphs via their Laplacian spectra is creative and technically interesting.
+2.  **Focus on Imbalanced Regression:** The paper correctly identifies and tackles the important but under-studied problem of imbalanced regression for graphs.
+3.  **Chemical Validity Check:** The authors rightly prioritize and evaluate the chemical validity of the generated molecules (Section 3.6, Table 1), a critical step often overlooked in graph generation literature.
+
+**Weaknesses**
+1.  **Heuristic Reconstruction:** The graph reconstruction from an interpolated Laplacian (Section 3.4) is a critical step that appears heuristic. It's not guaranteed to produce graphs that obey chemical rules (e.g., valency), and the method relies on RDKit's sanitization function to enforce this. The paper would be stronger if it discussed the nature and extent of the corrections made during sanitization.
+2.  **Computational Cost:** The pairwise FGW alignment is known to be computationally intensive, likely cubic in the number of nodes. This cost is not thoroughly analyzed but could make the method impractical for large-scale industrial datasets. The efficiency plot in Figure 5 shows total runtime, but doesn't break down the cost of augmentation vs. training.
+3.  **Unclear Justification for Interpolation:** The paper uses linear interpolation for eigenvalues, node features, and target labels. While simple, it's not obvious that this is the optimal or most physically meaningful choice. For instance, interpolating properties like hydration free energy (FreeSolv) linearly may not correspond to a linear change in molecular structure.
+4.  **Presentation Flaws:** As noted under "Presentation," the paper suffers from several confusing figure/table captions and layout issues that need to be addressed.
+
+**Questions**
+1.  Regarding the graph reconstruction (Section 3.4) and validation (Section 3.6): What percentage of generated graphs fail the *strict* RDKit sanitization and require the relaxed mode or are ultimately discarded as invalid before achieving the 100% rate? How significantly are graphs altered during sanitization?
+2.  Could you provide a more detailed breakdown of the computational cost? Specifically, what is the cost of the augmentation phase (dominated by FGW) relative to the GNN training phase?
+3.  The ablation study (Table 6) combines alignment and KDE. What happens if you use alignment (FGW) but with a uniform (non-KDE) sampling budget? This would help isolate the benefit of the geometry-aware matching from the rarity-aware sampling.
+
+**Rating**
+- Overall (10): 6 — The paper presents a novel but complex method with some heuristic steps; its empirical performance is competitive but not superior, and the presentation has notable flaws.
+- Novelty (10): 8 — The core idea of spectral interpolation for graph augmentation is highly novel, even if some implementation details are heuristic (Section 3.3).
+- Technical Quality (10): 6 — The reliance on post-hoc sanitization for validity and the un-analyzed computational complexity of the FGW step are significant technical weaknesses.
+- Clarity (10): 6 — The paper is hindered by confusing figure/table numbering and captions (e.g., Figure 1, "Table 3" caption) and dense figures (Figure 3), which impede understanding.
+- Confidence (5): 5 — I am very confident in my evaluation, having expertise in graph machine learning and chemical informatics.
+
+***
+
+### **Review 3**
+
+**Summary**
+This paper presents SPECTRA, a data augmentation method to improve GNN performance on imbalanced molecular regression tasks. The key idea is to generate new molecular graphs by interpolating between pairs of existing molecules in the graph spectral domain. The process involves aligning two graphs with Gromov-Wasserstein matching, performing a linear interpolation of their Laplacian eigenvalues, eigenvectors, and node features, and then reconstructing a new graph from the interpolated spectrum. The method prioritizes augmenting data in sparse regions of the target property distribution. Experiments on three benchmark datasets show that this approach improves prediction accuracy on these rare values while maintaining overall performance and generating chemically valid molecules.
+
+**Soundness**
+The methodology is technically involved but follows a logical progression. The use of Gromov-Wasserstein to align molecular graphs is a sound choice for establishing structural correspondence. The spectral interpolation is the core technical step; while the linear combination is straightforward, its effect on the resulting graph structure is non-trivial. The most critical step for practical soundness is the graph reconstruction and validation (Sections 3.4, 3.6). The authors are transparent about using RDKit to ensure chemical validity, which is a pragmatic and necessary choice. The experimental design is reasonable, using standard datasets and evaluation metrics like MAE and SERA that are appropriate for imbalanced regression. The Pareto plot (Figure 5) provides a practical assessment of the accuracy/efficiency trade-off.
+
+**Presentation**
+The paper is clearly written and organized. The introduction provides good context for the problem. The method section is detailed, and Figure 2 serves as a very helpful visual guide to the complex pipeline. The results are presented systematically, addressing molecule quality (RQ1), predictive performance (RQ2), error distribution (RQ3), and efficiency (RQ4). The figures are generally informative, although Figure 3 (joint property distributions) is quite cluttered and hard to read. The analysis of generated molecules (Tables 1 and 2) is a strong point, giving confidence in the practical utility of the augmented data.
+
+**Contribution**
+The paper's main contribution is a practical, interpretable, and effective data augmentation technique for a challenging and important problem. Unlike many black-box augmentation methods, SPECTRA generates realistic and valid molecules that can be inspected, which is a significant contribution from a practical standpoint. It successfully bridges the gap between theoretical spectral graph methods and the applied problem of drug discovery. By demonstrating a favorable balance between accuracy (especially in rare regions) and computational cost (Figure 5), the work provides a valuable new tool for practitioners.
+
+**Strengths**
+1.  **Practicality and Validity:** The method's ability to generate 100% chemically valid molecules (Table 1) is a major strength. This makes the augmented data directly usable and trustworthy for downstream tasks.
+2.  **Excellent Performance/Efficiency Trade-off:** SPECTRA consistently lies on or near the Pareto frontier in the time vs. MAE analysis (Figure 5), demonstrating that it is not just accurate but also computationally efficient compared to alternatives like Molformer.
+3.  **Improved Performance Where It Counts:** The method's primary goal is to improve accuracy on rare values, and Figure 4 clearly shows that it succeeds in this, reducing MAE in the tail-end bins compared to most baselines.
+4.  **Good Analysis of Generated Molecules:** The paper goes beyond just reporting validity and novelty, analyzing atom/ring counts (Table 2) and property distributions (Figure 3) to show that the generated molecules are diverse yet realistic.
+
+**Weaknesses**
+1.  **Modest Overall MAE Improvement:** While SPECTRA excels on rare samples, its overall MAE is not state-of-the-art. As seen in Table 4, SGIR achieves better overall MAE and SERA on two of the three datasets. This suggests SPECTRA is a strong, but not dominant, solution.
+2.  **Synthetic Accessibility Not Analyzed:** The paper reports the SA score in Figure 3 but does not analyze it in detail. For a method aimed at drug discovery, the synthetic accessibility of the generated molecules is a key practical concern. Are the novel molecules generated by SPECTRA actually synthesizable?
+3.  **Comparison to Simpler Baselines:** The paper compares against sophisticated GNNs and self-supervised methods. A comparison against a simpler, more traditional baseline for imbalanced regression, such as SMOGN (Branco et al., 2017) adapted for graph features, would have been useful to better contextualize the performance gains from the complex spectral machinery.
+
+**Questions**
+1.  The augmentation budget is controlled by the `perc` hyperparameter (Section 3.5). How sensitive is the model's performance (both overall MAE and improvement in rare regions) to the choice of this parameter? Is there a risk of "over-augmenting" and distorting the original distribution?
+2.  Have you performed any analysis on the synthetic accessibility (SA) scores of the generated molecules? While they are chemically valid, are they practically useful from a synthetic chemist's perspective?
+3.  How does SPECTRA compare to applying a simpler oversampling method like SMOTE/SMOGN directly on the GNN embeddings of the training data, and then decoding those interpolated embeddings back to graphs (if possible)? This would help clarify the specific benefits of the spectral domain interpolation.
+
+**Rating**
+- Overall (10): 8 — A strong paper with a practical and novel method that shows a great balance of performance, interpretability, and efficiency, making a solid contribution to the field.
+- Novelty (10): 8 — The approach of using spectral interpolation for targeted molecular augmentation is novel and well-motivated for the imbalanced regression problem.
+- Technical Quality (10): 8 — The method is technically solid and the experiments are well-designed, particularly the analysis of generated molecules and efficiency (Tables 1-2, Figure 5).
+- Clarity (10): 9 — The paper is very well-written and easy to follow, with helpful figures and a logical structure.
+- Confidence (5): 4 — I am confident in my review. My expertise is in machine learning applications, and the paper is clear enough for me to assess its practical impact.
+
+***
+
+### **Review 4**
+
+**Summary**
+This paper introduces SPECTRA, a new data augmentation method for imbalanced regression on molecular graphs. The method generates new data points by finding correspondences between pairs of molecules using Gromov-Wasserstein matching, interpolating their graph Laplacian spectra and node features, and reconstructing new molecular graphs. The augmentation is targeted at under-represented regions of the label distribution using a KDE-based budgeting scheme. The authors demonstrate on three benchmark datasets that their method improves prediction error on rare target values and generates chemically valid and novel molecules.
+
+**Soundness**
+The methodology is sound in principle, though some details could be clarified. The pipeline described in Section 3 is logical. The choice of Fused Gromov-Wasserstein for graph matching is appropriate. The spectral interpolation step (Section 3.3) is the technical core; while the equations are clear, the intuition behind why this specific form of interpolation (linear for eigenvalues, Procrustes-aligned and QR-decomposed for eigenvectors) leads to meaningful intermediate graphs could be better explained. The experimental validation is mostly thorough, with ablations (Table 6) and analysis of generated molecules (Tables 1, 2). However, the main results table (Table 4) shows that a baseline, SGIR, outperforms the proposed method on 4 out of 6 primary metrics, which slightly weakens the claims of the paper.
+
+**Presentation**
+The paper is generally well-written, but suffers from several significant presentation and formatting issues that detract from its quality.
+-   **Figure/Table Numbering and Captions:** There is considerable confusion here.
+    -   The caption for "Figure 1" is in Block #4, but the plots it describes are in Blocks #6, #7, and #8 and are not labeled as Figure 1.
+    -   Block #28 contains a caption for a "Table 3" which is clearly describing the t-SNE plots shown in Blocks #30, #31, and #32. These plots are not labeled as Table 3. The main results table is Table 4. This is very confusing for the reader.
+    -   The main plot for property distributions is labeled as Figure 3 (Block #36), but the text also seems to refer to the t-SNE plots as Figure 3.
+-   **Clarity of Figures:** Figure 3 (Block #36) is extremely cluttered, with thousands of points plotted on top of each other, making it very difficult to discern any trends, especially for the Lipo dataset. The marginal distributions are helpful, but the main scatter plots are not. Figure 5 is good, but the legend is crowded.
+-   **Textual Errors:** There is a copy-paste error in Section 4.2, where the sentence "improving coverage and mitigating distributional imbalance. This broader coverage helps reduce bias toward overrepresented regions and supports better generalization to underrepresented subspaces" is repeated.
+-   **Clarity of Method:** Section 3.3 (Spectral Alignment and Interpolation) is very dense. While mathematically precise, it would benefit from more textual explanation and intuition. For example, why is the Procrustes map necessary, and what is the geometric interpretation of orthonormalizing the interpolated eigenvector matrix?
+
+**Contribution**
+The paper's contribution is a novel spectral augmentation framework for a specific and important problem. The novelty lies in the complete pipeline that combines OT, spectral interpolation, and rarity-aware sampling to generate valid molecules. This is a non-trivial technical achievement. The contribution's impact is slightly diminished by the fact that it doesn't consistently outperform the current state-of-the-art (SGIR) and by the presentation issues that make the paper difficult to parse correctly.
+
+**Strengths**
+1.  **Well-Structured Narrative:** The paper follows a logical flow from problem definition to method, results, and conclusion. The research questions (RQ1-4) provide a clear framework for the experiments section.
+2.  **Good Visual Overview:** Figure 2 is a very effective diagram that clearly communicates the entire complex workflow at a high level.
+3.  **Thorough Motivation:** The introduction and related work sections do a good job of situating the work within the existing literature and motivating the need for a new approach.
+
+**Weaknesses**
+1.  **Major Presentation Flaws:** As detailed above, the inconsistent and incorrect labeling of figures and tables is a major weakness that needs to be fixed. This suggests a lack of careful proofreading.
+2.  **Dense and Unintuitive Method Description:** Key parts of the method, especially Section 3.3, are presented in a "math-dump" style without sufficient intuition to help the reader understand the reasoning behind the specific mathematical operations chosen.
+3.  **Underwhelming SOTA Comparison:** The main results in Table 4 are not as strong as the text suggests. Being "competitive" is good, but being consistently beaten by a recent baseline (SGIR) on the paper's own chosen metrics raises questions about the method's practical advantages. The narrative should be more balanced in light of these results.
+
+**Questions**
+1.  Could you please revise the manuscript to fix the numerous issues with figure and table numbering and captions? Specifically, please ensure all figures and tables are numbered sequentially and that their captions accurately describe their content.
+2.  Can you provide more intuition for the spectral interpolation steps in Section 3.3? For example, what is the geometric meaning of applying a Procrustes alignment to the eigenvectors before interpolation, and what does the QR decomposition of the interpolated basis achieve?
+3.  The text in Section 4.2 contains a duplicated sentence. Please correct this. Also, given that SGIR performs better in Table 4, could you tone down the claims of superiority and instead provide a more nuanced discussion of the relative strengths of SPECTRA (e.g., interpretability, efficiency) versus SGIR?
+
+**Rating**
+- Overall (10): 5 — The paper has a novel idea but is significantly hampered by poor presentation, including incorrect figure/table labeling, and results that don't fully support the claims of outperformance.
+- Novelty (10): 8 — The core concept of spectral interpolation for molecular augmentation is innovative (Section 3).
+- Technical Quality (10): 7 — The technical approach is interesting, but the empirical results are not consistently state-of-the-art (Table 4), and the method's complexity is high.
+- Clarity (10): 4 — The paper is difficult to read due to major errors in figure/table referencing, textual repetition, and overly dense mathematical descriptions without sufficient intuition (Sections 3.3, 4.2, Figures 1/3).
+- Confidence (5): 5 — I am highly confident in my assessment, as my review focuses on the clarity and structure of the paper, which are directly observable.

@@ -1,0 +1,162 @@
+Summary
+The paper proposes Bernoulli-LoRA, a unified theoretical framework for parameter-efficient fine-tuning that randomizes which low-rank factor (A or B) is trained at each update via a Bernoulli trial. The authors reformulate LoRA-style updates as projected gradient steps in the full parameter space (Sec. 6.1; Eq. 7–8), derive convergence guarantees for multiple algorithmic instances (GD, SGD, MVR, PAGE; Sec. 6.2; Thms. 1–4) and federated extensions with compression and error-feedback (QGD, MARINA, EF21; Sec. 6.3; Thms. 5–7). They also present the first analysis for non-smooth convex objectives with constant and Polyak-type stepsizes (Sec. C.1.3; Thm. 10). Empirically, they test linear regression with non-convex regularization and an MNIST MLP transfer setup (Sec. 8; Fig. 1; Table 3), showing variance-reduction gains and accuracy competitive with RAC-LoRA.
+
+Soundness
+The core derivation that a one-step subproblem solve yields a projected gradient update is correct for both Left and Right sketches (Sec. 6.1; Lemma 3; Eqs. for H_B and H_A are standard orthogonal projections). The convergence results follow classical smoothness and PL analyses, with dependence on the expected projector’s spectrum captured via λ_min^p and λ_max^p (Sec. 7; Table 1; Thms. 1–4, 5–7). Assumption 1 (positive expected projection) is justified by Gaussian sketching (Appendix B; Lemma 2 gives E[H] = (r/n)I). The SGD/MVR/PAGE analyses use expected smoothness, bounded variance, and Lyapunov arguments in line with prior literature (Assumptions 4–6; Lemmas 5–7; Theorems 11–16 in Appendix). For non-smooth convex functions, the subgradient formulation and rates with constant/Polyak stepsizes are consistent with standard results adapted to projected updates (Thm. 10; Sec. C.1.3). One methodological caveat is the repeated use of independence between the random sketches H_A^t/H_B^t and the current iterate W^t (e.g., Eq. 97, 98), which is natural if sketches are drawn independent of data/iterate, but is not explicitly stated as an assumption; making this explicit would strengthen the rigor. Another check is the stronger Assumption 10 (E[H] = αI) for non-smooth convex analysis; it holds for Gaussian sketches (Appendix B) but could be restrictive for other distributions. Overall, the proofs are internally consistent, and the rates align with the summaries in Table 1.
+
+Presentation
+The manuscript is clearly organized: framework, reformulation, variants, and convergence theorems (Sec. 6–7), followed by experiments (Sec. 8) and detailed appendices with proofs (Appendix C–D). Tables 1–2 concisely summarize rates and estimators; algorithms are enumerated (Algs. 1–9). The notation section (Sec. 5) is adequate. There are minor duplications/numbering overlaps (e.g., Theorem 1 appears in both main text and Appendix C.1.1) and occasional typographic inconsistencies (H_B vs HB in Table 1; Sec. C headings mix RAC-LoRA label in one sentence, Sec. C.1) that could be cleaned. Figures (Fig. 1; Fig. 2a,b in Appendix E.1) are informative though sparse. The Impact Statement is minimal (Sec. 17). Code URL is provided (Sec. 8.2). Overall clarity is good.
+
+Contribution
+The paper advances LoRA theory by: (i) introducing Bernoulli randomization that unifies training A-only, B-only, and alternating strategies (Alg. 1; Sec. 6), (ii) providing convergence guarantees for multiple gradient and variance-reduced estimators under non-convex smooth and PL settings (Thms. 1–7; Table 1), (iii) extending LoRA-style PEFT to federated learning with quantization, gradient-difference compression, and EF21, with explicit rates (Sec. 6.3; Thms. 5–7), and (iv) analyzing non-smooth convex cases including Polyak stepsizes (Thm. 10). To my knowledge, the VR and FL convergence results tailored to LoRA-style projected updates are new relative to RAC-LoRA (Malinovsky et al., 2024). The experimental validation is limited but illustrates the variance-reduction benefit (Sec. 8; Fig. 1) and competitive MNIST transfer accuracy (Table 3). Novelty is solid on the theory side; empirical breadth is modest.
+
+Strengths
+- Elegant reformulation of LoRA updates as projected gradient steps enabling tractable analysis (Sec. 6.1; Lemma 3; Eq. 7–8).
+- Broad suite of methods with unified proofs and clean rates, including VR (PAGE, MVR) and federated extensions (QGD, MARINA, EF21) (Sec. 6.2–6.3; Table 2; Thms. 4–7).
+- Clear spectral characterization of convergence via λ_min^p and λ_max^p; Gaussian sketches yield simple constants (Appendix B; Lemma 2).
+- First non-smooth convex analysis for LoRA-type updates with constant and Polyak stepsizes (Sec. C.1.3; Thm. 10).
+- Experiments verify variance reduction advantages and provide a practical MNIST PEFT comparison against RAC-LoRA and COLA (Sec. 8; Fig. 1; Table 3).
+
+Weaknesses
+- Empirical scope is limited to a synthetic regression and small MNIST MLP; no large-scale LLM or transformer tasks to test practical impact and FL variants (Sec. 8; no Sec. D empirical FL results).
+- The Bernoulli mechanism is relaxed in practice (Sec. 8.2, footnote ^1), using deterministic initial assignment, which partially undermines the claim of strict randomization from the outset; more ablations across p and sketch distributions would help (Table 3 uses p=0.99 only).
+- Independence between sketches and iterates is used in proofs (e.g., Eq. 97, 98, 111, 123) but not explicitly formalized as an assumption; clarify whether sketches are independent of W^t and data.
+- Assumption 10 (E[H] = αI) is stronger than Assumption 1; its practical validity beyond Gaussian sketches is not discussed (Sec. C.1.3).
+- Minor presentation issues: overlapping theorem numbering and small notational inconsistencies (e.g., “HB” vs “H_B” in Table 1; Sec. C.1 comment “RAC-LoRA with GD” under Bernoulli-LoRA heading).
+
+Questions
+- Can you explicitly state the independence assumption between the random sketches (A_S^t, B_S^t) and the current iterate W^t/data, used in proofs like (97), (98)? Would dependent sketching (e.g., data-dependent) break rates?
+- How sensitive are the rates and practice to non-Gaussian sketch distributions (e.g., sparse or structured sketches)? Do Assumption 1 or 10 hold for such choices?
+- Can you provide empirical FL experiments for Fed-Bernoulli-LoRA-* variants (QGD, MARINA, EF21), including communication/accuracy trade-offs (Sec. 6.3; Thms. 5–7)?
+- In Table 3, Bernoulli-LoRA uses p=0.99 and a deterministic initial assignment (footnote ^1). How does performance vary across p and fully randomized operation? Any stability issues for small p?
+- For large models (e.g., transformer layers), how are H_A/H_B projections implemented efficiently? Any numerical issues with pseudoinverses ((B^T B)^\dagger) at small rank r?
+
+Rating
+- Overall (10): 8 — Strong and broad theoretical development with clear convergence guarantees (Sec. 6–7; Table 1), but empirical validation is limited (Sec. 8; Table 3; Fig. 1).
+- Novelty (10): 8 — New unified Bernoulli randomization and first VR/FL LoRA analyses with rates (Sec. 6.2–6.3; Thms. 4–7), extending RAC-LoRA.
+- Technical Quality (10): 8 — Sound projected-gradient derivations and careful Lyapunov proofs (Sec. 6.1; Lemmas 3,5–7; Thms. 1–4,5–7); clarify independence and Assumption 10 scope.
+- Clarity (10): 7 — Well-structured with helpful tables (Table 1–2), but minor numbering/notation inconsistencies and sparse empirical sections (Sec. 8; Appendix C headings).
+- Confidence (5): 4 — High confidence in theoretical assessments based on detailed reading of Sec. 6–7 and Appendices B–D; lower confidence on practical impact due to limited experiments.
+
+
+Summary
+This work introduces Bernoulli-LoRA, a probabilistic scheme for selecting which low-rank factor (A or B) to update in LoRA-style fine-tuning. The authors show that a single-step subproblem solve yields a projected gradient step on W (Sec. 6.1), enabling a unified update form (Eq. 7–8). They analyze GD/SGD/VR methods (PAGE, MVR) and federated variants (QGD, MARINA, EF21) under smooth non-convex and PL conditions (Sec. 7; Table 1), and provide non-smooth convex rates (Thm. 10). Experiments demonstrate variance-reduction benefits on synthetic regression and competitive accuracy on MNIST transfer against RAC-LoRA and COLA (Sec. 8; Fig. 1; Table 3).
+
+Soundness
+The projection formulation rests on standard properties of pseudoinverse-based projectors H_B and H_A (Sec. 6.1; Lemma 3), and the convergence analysis properly accounts for the expected projector spectrum (Assumption 1; λ_min^p/λ_max^p in Table 1). The use of expected smoothness and bounded variance aligns with modern SGD theory (Assumptions 4–5; Thms. 2–4). Federated results derive from compressor definitions and gradient-difference/EF21 machinery (Defs. 3–4; Lemma 8–10; Thms. 5–7). The non-smooth convex proof follows subgradient descent with projected updates (Sec. C.1.3; Lemma 4; Thm. 10). I checked key steps: the equality ⟨XH, XH⟩ = ⟨X, XH⟩ used repeatedly (Eqs. 37, 74–75) is valid for symmetric idempotent H; independence of sketches from gradients is assumed implicitly in expectations (e.g., (*), Sec. C.2), and should be stated formally. Assumption 10 (E[H] = αI) is justified for Gaussian sketches (Appendix B), but broader distributions may not satisfy it; this affects Thm. 10.
+
+Presentation
+The paper is thorough, with clear algorithms (Algs. 1–9), summarized rates (Table 1) and estimator definitions (Table 2). The structure is logical: framework, reformulation, variants, convergence, experiments. Minor presentation issues: duplicated theorem numbering in main text and appendix (Thm. 1 in Sec. 7 and Sec. C.1.1), and occasional mismatches in notation (e.g., λ_min^{HB} vs λ_min^{H_B} in Table 1). The experimental sections are concise; more plots or ablations would help. Proofs are well-detailed in the appendices.
+
+Contribution
+The main novelty lies in introducing Bernoulli randomization to unify LoRA update strategies and in extending LoRA theory to advanced stochastic and federated algorithms with explicit rates (Sec. 6.2–6.3; Thms. 4–7). Providing non-smooth convex analysis with Polyak stepsizes (Thm. 10) is also valuable. Compared to RAC-LoRA, the present work broadens scope to variance-reduced non-convex optimization and federated compression/EF, filling an acknowledged gap (Sec. 3; 4). The empirical scope is modest but supportive of the variance-reduction claims.
+
+Strengths
+- Unified probabilistic framework with clean projected-gradient interpretation (Sec. 6.1; Eq. 7–8).
+- Comprehensive convergence analyses for multiple algorithms and settings, including federated compression and EF21 (Sec. 6.3; Thms. 5–7).
+- Clear spectral dependence via expected projection eigenvalues; Gaussian sketches yield simple constants (Appendix B; Lemma 2).
+- Inclusion of non-smooth convex rates and Polyak stepsizes, which are rarely addressed in LoRA contexts (Sec. C.1.3; Thm. 10).
+- Empirical verification of VR gains (Fig. 1) and competitive MNIST performance with parameter efficiency (Table 3).
+
+Weaknesses
+- Limited experiments: small-scale tasks only; no transformer/LLM fine-tuning or federated benchmarks to demonstrate practical benefits at scale (Sec. 8).
+- The Bernoulli mechanism is not deeply ablated; MNIST uses p=0.99 and deterministic initial assignment (Sec. 8.2, footnote ^1), which reduces the difference from RAC-LoRA in practice.
+- Independence of sketches and iterates is used implicitly in proofs; formalizing this as an assumption would improve rigor (e.g., Sec. C.2, Eq. (*)).
+- Stronger Assumption 10 for non-smooth convex case narrows applicable sketch distributions; more discussion of non-Gaussian sketches is needed.
+- Minor editorial/notation inconsistencies as noted.
+
+Questions
+- Could you provide ablations over p and over sketch distributions (Gaussian, orthogonal, sparse) to test robustness and validate Assumption 1/10 empirically?
+- For FL variants, what are the communication/accuracy trade-offs on real federated datasets? Can you report end-to-end communication counts with QGD/MARINA/EF21 (Sec. 6.3)?
+- How do the constants λ_min^p, λ_max^p scale empirically with rank r in deep networks, and are there practical heuristics to choose p to optimize these constants?
+- Does the framework support adaptive p over time (e.g., curriculum over A/B updates)? Would the proofs extend straightforwardly?
+- In practice, how do you stabilize pseudoinverse computations for (B^T B)^† at small r? Any regularization used?
+
+Rating
+- Overall (10): 8 — Robust theory across many variants (Sec. 6–7; Table 1) but limited empirical breadth (Sec. 8).
+- Novelty (10): 8 — Bernoulli randomization plus first VR/FL LoRA analyses (Sec. 6.2–6.3; Thms. 4–7) go beyond RAC-LoRA.
+- Technical Quality (10): 8 — Solid proofs; small caveats around independence and Assumption 10 scope (Sec. C.2; Sec. C.1.3).
+- Clarity (10): 7 — Generally clear with good tables, though minor numbering/notation issues and brief experiments (Table 1–3; Sec. 8).
+- Confidence (5): 4 — High confidence in the theoretical review; moderate on empirical impact due to limited experiments.
+
+
+Summary
+The authors present Bernoulli-LoRA, which performs a sequence of low-rank updates by randomly choosing to train A or B at each step (Alg. 1). They reformulate this as a projected gradient step on W (Sec. 6.1), enabling unified analysis of GD, SGD, PAGE, and MVR (Sec. 6.2) and federated extensions (QGD/MARINA/EF21; Sec. 6.3). Convergence results are provided under smooth non-convex, PL, and non-smooth convex settings (Sec. 7; Appendix C–D; Table 1). Experiments on synthetic regression and MNIST demonstrate VR advantages and competitive accuracy vs. RAC-LoRA/COLA (Sec. 8; Fig. 1; Table 3).
+
+Soundness
+The projected step derivation is correct and leverages standard projection identities (Sec. 6.1; Lemma 3). The convergence proofs consistently use Lipschitz smoothness (Assumption 3), expected smoothness (Assumption 4), bounded variance (Assumption 5), and the PL inequality (Assumption 6). The spectral dependence on E[H] is sound; Gaussian sketches justify Assumption 1 and 10 (Appendix B; Lemma 2). Federated results use unbiased and contractive compressor models properly (Defs. 3–4; Lemmas 8–10). I cross-checked the stepsize constraints: they align with the stability requirements in the Lyapunov inequalities (e.g., Sec. C.4.1; Theorem 15; bound 1/(L(1+√(((1−q)/q) λ_max^p))). One caveat is the mixture of main-text and appendix theorem numbering, which complicates cross-reference but not correctness. Another is that independence of sketches and gradients is repeatedly invoked (Sec. C.2, (97),(98)) but not declared as a formal assumption.
+
+Presentation
+The writing is clear and precise, with detailed appendices supporting the main text. Tables 1–2 effectively summarize rates and base estimators. Some minor editorial issues remain: inconsistent notation in Table 1 (HB vs H_B), an occasional leftover mention of “RAC-LoRA” in Bernoulli-LoRA sections (Sec. C.1 title line), and overlapping theorem numbers between main text and appendix. The experiments section is concise with useful plots but lacks breadth and FL results.
+
+Contribution
+This is a meaningful extension of LoRA theory: it unifies different update strategies via Bernoulli selection, delivers convergence guarantees for modern VR methods and federated algorithms with compression and error feedback, and includes non-smooth convex analysis. These go beyond RAC-LoRA’s scope (Sec. 3–4). The empirical impact remains to be demonstrated at scale.
+
+Strengths
+- Unified framework and projected gradient reformulation (Sec. 6.1) that sidestep non-smoothness of direct LoRA parameterization (Sec. 7, Sec. 33).
+- Extensive theoretical coverage across stochastic/VR/federated settings with clear dependence on projection spectra (Table 1; Thms. 1–7).
+- First non-smooth convex treatment for LoRA-like updates with Polyak stepsizes (Thm. 10).
+- Clean Gaussian sketch justification (Appendix B; Lemma 2).
+- Reproducibility via code and detailed appendices (Sec. 8.2; Appendix C–D).
+
+Weaknesses
+- Limited empirical validation: small models/datasets only; no FL experiments or LLM-scale tests (Sec. 8).
+- Practical Bernoulli mechanism is not fully stress-tested; MNIST uses p=0.99 and deterministic initialization (Sec. 8.2, footnote ^1).
+- Independence assumptions for sketches are implicit; a formal statement would strengthen proofs (Sec. C.2).
+- Assumption 10 may be restrictive for non-Gaussian sketches; broader characterization of E[H] would improve applicability.
+- Minor notation/numbering issues reduce readability.
+
+Questions
+- Could you characterize E[H] and λ_min^p/λ_max^p for non-Gaussian, structured sketches (e.g., orthonormal, sparse, low-coherence), and extend Lemma 2 beyond i.i.d. Gaussian?
+- What are recommended heuristics for p and rank r in practice? Can p be adapted over time to optimize λ_min^p or reduce variance?
+- Can you include federated experiments demonstrating communication savings and accuracy across the three FL variants (Sec. 6.3)?
+- How do the VR methods compare in wall-clock and data passes when implemented in deep nets with realistic batch sizes?
+- Are there scenarios where dependent sketching (e.g., data-driven) improves convergence, and would your analysis extend?
+
+Rating
+- Overall (10): 7 — Strong theoretical framework and breadth (Sec. 6–7; Table 1), but modest empirical validation (Sec. 8).
+- Novelty (10): 7 — Unifying Bernoulli mechanism with VR/FL analyses is new over RAC-LoRA (Sec. 4; Sec. 6.2–6.3), though conceptually close to projected updates.
+- Technical Quality (10): 8 — Solid derivations and convergence proofs (Sec. 6.1; Lemmas 3,5–7; Thms. 1–7); clarify independence assumption.
+- Clarity (10): 7 — Generally clear with good summaries (Tables 1–2), but minor notation/numbering issues and brief experimental section.
+- Confidence (5): 4 — Confident in theoretical assessment after reading proofs; less confident on empirical impact due to limited experiments.
+
+
+Summary
+Bernoulli-LoRA introduces randomized selection of low-rank factors in LoRA updates, reformulated as projected gradient steps (Sec. 6.1; Eq. 7–8). The authors provide convergence rates for GD/SGD/VR methods (PAGE, MVR) and federated extensions (QGD, MARINA, EF21) under smooth non-convex and PL conditions (Sec. 7; Table 1; Thms. 1–7), and extend to non-smooth convex objectives with constant/Polyak stepsizes (Thm. 10). Empirical results on synthetic regression and MNIST show advantages of variance reduction and accuracy comparable to RAC-LoRA (Sec. 8; Fig. 1; Table 3).
+
+Soundness
+The analysis is methodologically sound: the projection matrices are valid orthogonal projectors derived via pseudoinverse (Sec. 6.1; Lemma 3), and the convergence proofs rely on standard assumptions and inequalities (Assumptions 1–6; Lemmas 5–7). The spectral conditions are explicit and justified under Gaussian sketches (Appendix B; Lemma 2), enabling clean bounds in Table 1. Federated results correctly use compressor models (Defs. 3–4) and quantify dissimilarity via Δ* (Assumption 11; Thm. 5). I checked the consistency between Table 1 rates and theorems: the dependence on γ, T, λ_min^p aligns, though QGD’s PL bound uses L^2 in Table 1 vs theorem (Thm. 18) — consistent (γ L^2 ω/(M μ)). One assumption used throughout is independence of sketches and iterates/gradients (e.g., Eq. (*), Sec. C.2), which should be made explicit. Assumption 10 is stronger than necessary but facilitates non-smooth convex analysis.
+
+Presentation
+Overall clear and comprehensive, with a useful contents outline (Sec. 1–4), method tables (Table 2), and rate summary (Table 1). Minor editorial issues include mixed notation (HB vs H_B; λ superscripts), duplicated theorem numbering (Thm. 1 in main text and Appendix), and a stray reference to RAC-LoRA in a Bernoulli-LoRA section (Sec. C.1). The experimental section is brief; Appendix E fills in some details. Figures are legible but few.
+
+Contribution
+The work meaningfully extends theory for LoRA-type PEFT by unifying update strategies under Bernoulli selection and providing the first convergence analyses for VR (PAGE/MVR) and FL (QGD/MARINA/EF21) within this context. The non-smooth convex analysis with Polyak stepsizes is a notable addition. Empirical evidence is limited but illustrates variance reduction efficacy.
+
+Strengths
+- Unified theoretical framework via projected gradient interpretation (Sec. 6.1).
+- Broad set of convergence results across stochastic, variance-reduced, and federated settings (Sec. 6.2–6.3; Thms. 1–7).
+- Clear spectral characterization; Gaussian sketches yield simple constants (Appendix B).
+- Inclusion of non-smooth convex analysis with adaptive stepsizes (Thm. 10).
+- Practical narrative tying to PEFT/FL needs (Sec. 3; 4), with code release (Sec. 8.2).
+
+Weaknesses
+- Empirical scope is narrow; no large-scale benchmarks or FL experiments (Sec. 8).
+- Reliance on implicit independence of sketches from iterates/gradients; should be formalized (Sec. C.2).
+- Assumption 10 may limit non-Gaussian sketches; discuss applicability to structured sketches.
+- Limited ablation on Bernoulli parameter p and sketch distributions; MNIST uses p=0.99 with deterministic initialization (Sec. 8.2).
+- Minor presentation inconsistencies (notation/numbering).
+
+Questions
+- Can the framework support adaptive or learned p (e.g., balancing left/right sketches based on λ_min estimates)? Would convergence proofs extend?
+- For structured sketches (orthonormal, sparse), can you characterize E[H] and produce bounds akin to Lemma 2?
+- Could you add federated experiments quantifying communication savings and accuracy for QGD/MARINA/EF21 (Sec. 6.3)?
+- In practice, how do you choose γ given λ_max^p is unknown? Any empirical tuning heuristics?
+- Does the framework interact with popular PEFT variants (e.g., adapters, prefix-tuning) via similar projections?
+
+Rating
+- Overall (10): 7 — Strong theoretical contribution with unified framework and multiple convergence results (Sec. 6–7; Table 1), but empirical validation is limited (Sec. 8).
+- Novelty (10): 7 — New randomization plus first VR/FL analyses in LoRA context (Sec. 6.2–6.3), building on RAC-LoRA.
+- Technical Quality (10): 8 — Rigorous, internally consistent proofs (Sec. 6.1; Lemmas and Theorems); clarify independence assumptions.
+- Clarity (10): 7 — Generally clear and well-organized; minor notation/numbering issues and brief experiments.
+- Confidence (5): 4 — High confidence in theoretical assessment; moderate on practical impact due to limited experiments.

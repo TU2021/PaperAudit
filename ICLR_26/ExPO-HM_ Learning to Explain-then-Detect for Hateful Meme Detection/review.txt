@@ -1,0 +1,43 @@
+### Summary
+
+The paper introduces **ExPO-HM (Explain-then-Detect Policy Optimization for Hateful Memes)**, an advanced framework designed for **hateful meme detection**. The method addresses key challenges in current detection systems: missing relevant cues in explanations and weak binary reward signals for guiding reasoning. ExPO-HM integrates **SFT warmup**, **GRPO with curriculum learning**, and **Conditional Decision Entropy (CDE)** as a reward metric to improve both **classification** and **reasoning quality**. The framework has been evaluated on three hateful meme benchmarks, achieving **state-of-the-art performance** in binary detection, fine-grained classification, and reasoning quality. ExPO-HM demonstrates up to **15% and 17% improvement in F1 scores** over existing methods like **GRPO** and **DPO**.
+
+---
+
+### Strengths
+
+1. **Important and Timely Task**: Hateful meme detection is a critical issue in **content moderation**, and the transition from simple detection to **explanation-driven detection** adds practical value by providing **contextual and actionable explanations**.
+
+2. **Comprehensive Evaluation**: The method is evaluated on **three datasets** (HatefulMemes, MAMI, and PrideMM) and consistently outperforms existing methods across these benchmarks. **Ablation studies** validate the effectiveness of each component of the approach.
+
+3. **Innovative Approach**: By leveraging **human annotation processes** and **curriculum learning**, ExPO-HM introduces a novel perspective in the explain-then-detect framework.
+
+4. **Strong Results**: ExPO-HM shows improvements in performance across different types of classification (binary, fine-grained) and reasoning quality.
+
+5. **Clear and Structured Presentation**: The paper is well-organized, and results are presented clearly, with extensive experimental setup and analysis.
+
+---
+
+### Weaknesses
+
+1. **LLM-as-Judge Reliability and Reproducibility**:
+
+   * While using LLMs for **explanation evaluation** is becoming common, it poses **reproducibility challenges**. The paper addresses this by using multiple **open-source models** and **GPT-4o mini** for evaluation, ensuring consistent results.
+   * There is also concern about **prompt sensitivity** affecting reproducibility. The authors tested **paraphrased prompts**, which showed consistent performance, strengthening the case for reproducibility.
+
+2. **Explanation Faithfulness**:
+
+   * **Explanation faithfulness** is crucial—does the rationale provided by the model align with the features it used for decision-making? The paper presents **human evaluations** of the rationale’s coherence and helpfulness. The evaluations show that **ExPO-HM's rationale** is both **coherent** and **helpful** compared to the GRPO baseline.
+
+3. **CDE Calibration**:
+
+   * While **CDE** penalizes confident errors, its **calibration** could be further explored. The authors included an **empirical calibration analysis** (ECE, Brier score) to show that ExPO-HM performs better in **calibration** than the baselines, suggesting that it provides more reliable predictions.
+
+4. **Dependency on Policy Manual**:
+
+   * The approach relies on **policy manuals** that translate annotation guidelines into structured formats. While this is effective, it requires expert effort to create the manuals. The authors clarified the **policy manual construction process**, highlighting its efficiency in generating instruction-following data.
+
+5. **Limited Discussion of Failure Cases**:
+
+   * The **failure cases** of ExPO-HM were not initially discussed, but the authors added an analysis of representative failure cases in the **revised version** of the paper.
+

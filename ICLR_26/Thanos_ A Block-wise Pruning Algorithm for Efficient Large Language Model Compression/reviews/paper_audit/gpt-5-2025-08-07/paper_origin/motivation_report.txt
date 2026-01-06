@@ -1,0 +1,62 @@
+# Innovation & Motivation Report
+
+## 1. The Authors' Claimed Contribution
+- Core Problem: Reduce the memory and inference cost of large language models via post-training pruning of linear layers without retraining.
+- Claimed Gap: “Thanos: novel block-wise pruning algorithm; addresses optimal/fast updates of weight blocks; complexity comparison in Table 1.” The authors argue existing post-training methods either rely on diagonal approximations with no weight updates (Wanda) or sequential single-weight/column updates with higher complexity (SparseGPT), and underperform especially for structured and n:m sparsity. They further claim a new structured pruning approach that “introduces outlier-row preservation (parameter α) to improve perplexity and zero-shot results,” and an “extension to semi-structured n:m sparsity (e.g., 2:4 on NVIDIA Ampere).”
+- Proposed Solution: Formulate pruning as minimizing output distortion of linear layers f(Ẇ) = ||(Ẇ − W) X||_F^2 under a sparsity mask, select masks via a data-aware Wanda/OBD score ψ_X(W, r) = smallest |W_ij|·||X_j:||_2, and reconstruct remaining weights by solving small linear systems for multiple weights at once within blocks. Provide variants for unstructured, structured (column removal with outlier-row preservation α), and semi-structured n:m sparsity, executed in a sequential block-wise scheme.
+
+## 2. Comparative Scrutiny (The "Trial")
+Here, we analyze how the paper stands against the identified similar works.
+
+### vs. IG-Pruning: Input-Guided Block Pruning for Large Language Models
+- Identified Overlap: Both use a mask-driven, data-informed and block-wise/prioritized pruning paradigm to reduce inference cost without extensive retraining; IG-Pruning prunes layers (depth), Thanos prunes weights/columns (within layers).
+- Manuscript's Defense: The manuscript focuses explicitly on intra-layer weights: “Focus: Post-training pruning of linear layer weights (majority of LLM parameters). Uses calibration data; aims for compressed weights via sparsity and/or quantization.” It also frames a generic block-by-block workflow: “Generic pruning paradigm: sequential, block-by-block pruning… prune each linear layer independently to target sparsity.”
+- Reviewer's Assessment: The overlap is conceptual (masking, data-guided, deployment efficiency) but at clearly different granularity and mechanisms. IG-Pruning’s dynamic inference-time layer selection via semantic clustering/L0 differs substantially from Thanos’s least-squares multi-weight reconstruction within linear layers. This similarity does not undermine Thanos’s motivation in the weight-level post-training pruning space.
+
+### vs. LAMP: Layer-Adaptive Magnitude-based Pruning
+- Identified Overlap: Both use global, distortion-aware magnitude-style importance for allocating sparsity; LAMP for layerwise allocation in vision, Thanos for weight/column/n:m selection within LLM linear layers.
+- Manuscript's Defense: The authors adopt a data-aware magnitude proxy and make it explicit: “Wanda: diagonal Hessian assumption; pruning metric equals OBD (|W_{ij}| ||X_{q:}||_2)^2,” and operationalize it as a global selection: “Unstructured mask ψ_X(W, r): selects r smallest |W_{ij}| ||X_{j:}||_2 (Eq. 11).” They then go beyond selection with multi-weight least-squares updates and outlier-row preservation: “New structured pruning approach with detection/preservation of outlier rows (parameter α).”
+- Reviewer's Assessment: At the selection stage, Thanos follows well-trodden diagonal/OBD-style metrics akin to LAMP’s distortion-aware scoring. The novelty is not in the importance metric per se but in (i) the multi-weight, per-row least-squares reconstruction within a block, (ii) the structured column-removal pipeline with α-based outlier row preservation, and (iii) post-training n:m enforcement. Relative to LAMP, the contribution is an LLM-focused, reconstruction-augmented instantiation rather than a new theory of importance.
+
+### vs. Training Recipe for N:M Structured Sparsity with Decaying Pruning Mask
+- Identified Overlap: Both target hardware-aligned n:m sparsity; the training recipe optimizes accuracy/FLOPs during training, while Thanos enforces n:m post-training to accelerate deployment without retraining.
+- Manuscript's Defense: The manuscript explicitly claims “Extension to semi-structured n:m sparsity (e.g., 2:4 on NVIDIA Ampere)” and provides an algorithmic variant (Algorithm 8) tailored for post-training enforcement with batched operations and calibration-driven reconstruction. They position this as part of a unified framework: “supports unstructured, structured (column removal), and semi-structured n:m sparsity.”
+- Reviewer's Assessment: Different operating regime (training-time vs post-training). Thanos fills a specific gap for zero-shot, training-free deployment under n:m constraints, combining selection with reconstruction and α-protection. The overlap validates relevance but does not diminish the paper’s motivation for the post-training setting.
+
+### vs. LLM-BIP: Structured Pruning for LLMs with Block-Wise Forward Importance Propagation
+- Identified Overlap: Both are post-training, block-aware structural pruning methods for LLMs, deriving importance from forward behavior and aiming to control block output perturbation.
+- Manuscript's Defense: The authors distinguish by explicit least-squares reconstruction to minimize per-layer output deviation: “Problem formulation… minimizing f(Ẇ) = ||(Ẇ − W) X||_F^2… Two-step strategy: choose a pruning mask (metric-based) and reconstruct remaining weights via least squares.” They also introduce a specific structured pipeline: “Remove entire columns… outlier rows… select ⌈α c⌉ rows to preserve… choose columns to remove by v_j… structured update simplifies (Eq. 13).”
+- Reviewer's Assessment: While both methods are block-aware and forward-signal driven, Thanos’s core technical move is multi-weight OBS-style reconstruction within linear layers and the α-based row preservation for structured pruning. LLM-BIP focuses on a distinct importance propagation/upper-bound framework. Given the manuscript’s strong structured/n:m results and explicit reconstruction, the distinction is technically meaningful; however, the manuscript (as provided) does not cite LLM-BIP, which weakens the positioning.
+
+### vs. Is Oracle Pruning the True Oracle?
+- Identified Overlap: Thanos embodies oracle-style, second-order/diagonal selection and compensation without retraining (OBS/OBD/Wanda lineage).
+- Manuscript's Defense: The method is explicitly in this paradigm: “OBS/OBD: classical second-order pruning… OBD diagonal approximation… Two-step strategy: choose a pruning mask… and reconstruct remaining weights via least squares.” The paper’s focus is pre-/no-retraining performance using calibration: “Focus: Post-training pruning… Uses calibration data.”
+- Reviewer's Assessment: The critique questions the predictive value of oracle criteria for after-retraining performance. Thanos targets the no-retraining deployment regime, so the critique is not a direct rebuttal. Still, this raises a motivational expectation: justify why the calibration-based objective generalizes across tasks. The manuscript addresses this empirically with comprehensive zero-shot and perplexity evaluations across many models/tasks. Conceptually, however, the paper stays within the well-known oracle pruning framework, so theoretical novelty is limited.
+
+### vs. NAP: Network Automatic Pruning (K-FAC Hessian)
+- Identified Overlap: Both are curvature-aware, data-driven pruning frameworks aiming to automate global decisions and minimize output distortion without heavy hyperparameter tuning.
+- Manuscript's Defense: The paper grounds itself in OBS/OBD and provides multi-weight updates using rows of H^{-1} within a block: “Updating several weights at a time… optimal row update: … ẐΔ_{k:} = −u Ṙ^{-1} R,” and contrasts complexity with baselines (Table 1), claiming a practical scheme with batched solvers and vertical blocking. It also unifies unstructured, structured, and n:m in an LLM-specific workflow.
+- Reviewer's Assessment: Methodological overlap exists at the level of curvature-based selection. Thanos’s specific engineering for LLM linear layers (multi-weight least-squares within column blocks, structured α-preservation, and n:m enforcement) is a distinct instantiation. Lack of explicit citation to NAP is a gap, but the technical differences and LLM-centric scope support motivation.
+
+## 3. Novelty Verdict
+- Innovation Type: Application-Oriented with incremental algorithmic innovations.
+- Assessment:
+  The manuscript’s motivation is credible: it addresses a practically important gap—training-free, post-training pruning of LLM linear layers with strong empirical performance in structured and n:m regimes—using a principled output-distortion objective and multi-weight reconstruction. The closest thematic overlaps (curvature- and forward-based structural pruning, distortion-aware global scoring, and n:m sparsity) largely operate at different granularities (depth vs weight; training-time vs post-training) or adopt different mechanisms (importance propagation vs least-squares reconstruction). The paper’s main technical novelty lies in combining (i) block-wise multi-weight least-squares updates, (ii) structured column removal with α-based outlier row preservation, and (iii) a unified post-training extension to n:m, backed by broad LLM evaluations.
+  - Strength:
+    - Clear, principled objective f(Ẇ) = ||(Ẇ − W) X||_F^2 and explicit multi-weight reconstruction that goes beyond diagonal/selection-only baselines (Wanda).
+    - Substantive empirical gains in structured and n:m settings, with comprehensive evaluations across many LLMs and tasks.
+    - Practical engineering (batched solvers, vertical blocking) and hardware-aware sparsity support (2:4, 4:8).
+  - Weakness:
+    - Core selection metric and second-order rationale align with established OBS/OBD/Wanda paradigms; theoretical novelty is limited.
+    - Several closely related lines (e.g., LAMP/NAP/LLM-BIP) are not cited in the provided text; the paper would benefit from a clearer positioning against these, especially in its claims of “novel block-wise” pruning.
+    - In unstructured sparsity, gains over SparseGPT/Wanda are inconsistent; the manuscript itself notes “SparseGPT often surpasses Thanos on zero-shot tasks,” which tempers broad SOTA claims.
+
+## 4. Key Evidence Anchors
+- Contribution summary (Introduction): “Thanos: novel block-wise pruning algorithm… New structured pruning approach with detection/preservation of outlier rows (parameter α)… Extension to semi-structured n:m sparsity… Thanos significantly outperforms existing methods for structured pruning…”
+- Objective and method (Method): “minimizing f(Ẇ) = ||(Ẇ − W) X||_F^2… Two-step strategy: choose a pruning mask… and reconstruct remaining weights via least squares.”
+- Multi-weight update (Method): “Updating several weights at a time… optimal row update: ẐΔ_{k:} = −u Ṙ^{-1} R.”
+- Mask selection (Method): “Unstructured mask ψ_X(W, r): selects r smallest |W_{ij}| ||X_{j:}||_2 (Eq. 11).”
+- Structured pruning and α (Method): “Outlier rows: define h_i = ||W_i X||_2^2 (Eq. 14); select ⌈α c⌉ rows to preserve… v_j = ||W_{1:c−⌈α c⌉, j} ⊗ X_j||_F^2 (Eq. 15) to choose columns to remove.”
+- Related Work distinctions: “Wanda: diagonal Hessian assumption… selects per-row masks at once; no weight updates.” “SparseGPT: sequential, column-wise pruning with dynamic masks; updates remaining weights via inverse Hessian.”
+- Empirical claims (Experiments): Structured/n:m highlights showing large gaps over SparseGPT/Wanda (e.g., LLaMA-2 70B structured 30%: zero-shot avg 57.58 vs 52.00/42.25; LLaMA-3 70B 2:4 PPL 7.39 vs 9.44/9.22).
+- Limitations (Appendix A): “SparseGPT often better on unstructured zero-shot… computational complexity is high in unstructured and semi-structured settings… GPU memory constraints require vertical blocking.”

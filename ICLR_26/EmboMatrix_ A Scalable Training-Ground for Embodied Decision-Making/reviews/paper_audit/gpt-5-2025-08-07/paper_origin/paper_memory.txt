@@ -1,0 +1,131 @@
+# Global Summary
+- Problem: Embodied decision-making requires agents to map high-level goals to executable actions via interaction with physical environments. LLMs lack embodied grounding when trained only on language.
+- Core approach: EmboMatrix, a “training ground” infrastructure with (i) a multi-agent automated data factory for task and scene generation, (ii) a scalable, distributed simulation backend with semantic abstraction and architectural decoupling, and (iii) a hierarchical reward architecture. EmboBrain is an LLM trained within EmboMatrix using GRPO.
+- Evaluation scope: Two benchmarks with 100 held-out task–scene pairs each (Internal-Verified agent-generated; Embodied Agent Interface (EAI)). Models are queried 10 times per task and averaged. Tasks span Pick and Place, Appliance Usage, Kitchen Operations, and Compound Tasks. Training leverages 45 BEHAVIOR-1K scenes to procedurally generate data.
+- Key findings:
+  - EmboBrain-7B surpasses the 671B DeepSeek-R1 baseline by “9.5% on average” across two embodied decision-making benchmarks (claimed).
+  - EmboMatrix post-training boosts a 7B base model by “+58.8 percentage points” success rate on EAI (Figure 1).
+  - On the agent-generated benchmark, EmboBrain-7B outperforms GPT-4o and DeepSeek-R1 by “18.2” and “14.8” percentage points in overall success rate (Table 1 statement).
+  - Data generation quality: Multi-level layout tree achieves Generation Rate “71.43%”, Aesthetic Score “8.11”, Verification Pass Rate “98.00%”, vs W/o Tree (“49.29%”, “7.30”, “47.83%”) and LayoutGPT (“45.72%”, “7.22”, “25.00%”).
+  - Simulation efficiency: Average per-rollout latency reduced from “3.48s” (naive) to “0.07s” with pre-cached execution + scheduler + dispatcher (over 50× reduction).
+  - Reward ablation: Semantic relevance reward markedly improves learning curves; goal-oriented reward rises rapidly vs stagnation without it (Figure 7).
+- Explicit caveats and notes:
+  - 1.5B model shows limited performance on EAI due to base model constraints.
+  - System overhead constitutes “about 20%” of total training time in distributed setup.
+  - Some training hyperparameters (e.g., GRPO ε, batch sizes B, sequences per group G, training steps) Not specified.
+
+# Abstract
+- Proposes EmboMatrix, a comprehensive training ground for embodied decision-making that integrates task/scene simulation, embodied interaction, and multi-level feedback.
+- Novel components:
+  - Multi-agent data engine for large-scale task and scene generation.
+  - Distributed heterogeneous hardware system for scalable simulation.
+  - Multi-level reward architecture for precise supervision.
+- Trains EmboBrain via extensive embodied interaction.
+- Claimed results: EmboBrain-7B surpasses DeepSeek-R1 (671B) by “9.5%” on two embodied decision-making benchmarks.
+- Code to be released: https://github.com/EmboMaster/EmboMatrix.
+
+# Introduction
+- Motivation: Hierarchical paradigm decouples high-level reasoning from low-level control, enabling LLMs to orchestrate sub-goals while low-level controllers execute skills.
+- Limitations of non-interactive fine-tuning (“brain in a vat”): LLMs trained on curated QA lack physical dynamics understanding; interactive learning in simulation is preferred for safety and scalability.
+- EmboMatrix concept: A training ground offering data diversity, system scalability, and informative supervision via:
+  - Multi-agent automated data factory for task generation.
+  - Distributed, heterogeneous backend with semantic abstraction and pre-caching.
+  - Hierarchical reward architecture.
+- EmboBrain emerges from EmboMatrix interaction; EmboBrain-7B achieves substantial gains and “surpasses DeepSeek-R1 by 9.5% on average.”
+- Figure 1(b): EmboMatrix training boosts a 7B base model by “+58.8 percentage points” success rate on EAI, outperforming domain-specialized baselines and larger LLMs.
+
+# Related Work
+- Embodied decision-making with LLMs: direct action sequence generation; code-as-policies; intermediate representations; knowledge-augmented variants; reactive agents; physics reasoning and anomaly detection.
+- Simulators and data generation: Existing benchmarks (Behavior1K, VirtualHome, ALFRED, iGibson, Meta-World, RLBench, Habitat, BEHAVIOR, robosuite, TDW Transport, SAPIEN, ManiSkill, RFUniverse, SoftGym, EmbodiedBench) largely rely on manual scene authoring, limiting scale; ProcTHOR broadens via procedural generation but is rule-bound; scene generation tools (HOLODECK, ARCHITECT, DiffuScene, WorldCraft) often ignore task constraints; RoboGen ties to simple layouts. Claims a multi-agent automated data factory produces diverse, task-aware scenarios at scale (see Table 4 in Appendix).
+- RL for LLMs: Safety-aware feedback, RLHF analyses, reward modeling improvements (Nash learning, uncertainty), sample-efficient optimizers (GPO/GRPO). Closest related work: RL post-training for embodied decision-making (Fei et al., 2025); this work instantiates a physics-based system with larger-scale data and more informative reward design.
+
+# Preliminaries
+- Embodied decision-making model B_θ maps scene S, instruction I, and skill library A to an action sequence a = (a_1, …, a_H), with a_i ∈ A.
+- Training ground F_{D_task, M, R} parameterized by task set D_task, simulator M, and reward architecture R; each task T_i = (S_i, I_i, G_i) with initial scene configuration S_i, instruction I_i, and target conditions G_i.
+- Optimization: θ* = argmax_θ E_{T∼D_task}[R(M(T, B_θ(S, I, A)))], maximizing expected reward across tasks.
+- EmboMatrix is the concrete realization of this training ground (details in Method).
+
+# Method
+- Overview: EmboMatrix orchestrates a loop across Data Level (task generation), System Level (simulation execution), and Algorithm Level (reward evaluation) to update EmboBrain via RL.
+- Multi-Agent–Driven Automated Data Factory:
+  - Instruction generation: Bootstraps from BEHAVIOR pre-defined scenes; extracts scene info and images; VLM distills description; multi-agent social simulation generates characters and dialogues producing semantically diverse instructions I; LLM summarizes to BDDL containing goals G, objects O, and initial conditions IC.
+  - Multi-level scene generation: Agents distribute objects across rooms, design a multi-scale layout tree with relations (under, inside, ontop refined, plus constraints like faceto, insideof) to ensure plausibility; sampling agents place objects to yield executable tasks T.
+- Scalable Simulation Backend:
+  - Semantic abstraction via a pre-cached language–physics interface: For common interactions, bypass full dynamics by instantiating valid post-conditions from pre-computed outcomes; preserves semantic consequences and accelerates throughput (details in Appendix B).
+  - Architectural decoupling: Distributed, service-oriented backend separates LLM training from simulation workers; Resource-Scheduler preloads future scenes; Task-Dispatcher maps action sequences to pre-warmed simulators to maximize utilization (details in Appendix B).
+- Hierarchical Reward Architecture:
+  - Total reward r_s = r_f + r_r + r_g.
+  - Format adherence r_f: binary rule-based reward for well-formed outputs.
+  - Semantic relevance r_r: r_r = β × |O_goal ∩ O_a|, rewarding interaction with goal-relevant objects.
+  - Goal-oriented success r_g: r_g = α × sum over satisfied goal predicates g_k at final state.
+- Learning Algorithms:
+  - Group Relative Policy Optimization (GRPO): For each task–scene pair in a mini-batch, sample G complete action sequences, execute once, record episode-level rewards.
+  - Group-normalized advantage: Within each group j, A_{j,i} = (r_{j,i} − mean_j) / std_j.
+  - GRPO surrogate objective with ratio clipping and KL regularization to a reference model. Specific GRPO hyperparameters (ε, β values for KL) Not specified in this section.
+
+# Experiments
+- Goals: Evaluate (1) effectiveness of EmboMatrix for end-to-end embodied training, (2) scalability (data diversity, system throughput), (3) algorithmic efficiency (reward design).
+- Setup:
+  - Models: EmboBrain-1.5B and EmboBrain-7B initialized from DeepSeek-R1 distilled Qwen-1.5B and 7B (“1.5B base”, “7B base”), trained with GRPO in EmboMatrix.
+  - Prompts include task description, agent capability profile, simulator scene state, and output formatting instruction.
+  - Compute: LLM training on “8 × A100” GPUs; parallel simulation on “16 graphics GPUs”.
+  - Training data: Entirely procedurally generated via the automated factory, leveraging “45” diverse BEHAVIOR-1K scenes.
+  - Evaluation benchmarks (each “100” task–scene pairs): Internal-Verified agent-generated set; EAI benchmark (BEHAVIOR-based).
+  - Querying: “10” queries per task; report averaged success rates.
+- Overall performance:
+  - Claimed EmboMatrix gains: For 1.5B, EmboMatrix improves performance by “44.9%” (agent-generated) and “8.7%” (EAI); for 7B, by “60.3%” (agent-generated) and “58.8%” (EAI).
+  - EmboBrain-7B outperforms larger models (GPT-4o, DeepSeek-R1) on embodied tasks (qualitative claim).
+  - Strongest gains in Kitchen Operations.
+  - Table 1 highlights:
+    - DeepSeek-R1 (671B): Our benchmark overall “51.6%”; Pick/Place “67.1%”; Appliances “56.1%”; Kitchen “36.6%”; Compound “58.7%”. EAI overall “58.2%”; Pick/Place “61.8%”; Appliances “79.5%”; Kitchen “32.0%”; Compound “58.6%”.
+    - GPT-4o: Our overall “45.0%”; EAI overall “44.8%”.
+    - Statement: On the agent-generated benchmark, EmboBrain-7B surpasses GPT-4o and DeepSeek-R1 by “18.2” and “14.8” percentage points (overall).
+    - 1.5B Base vs EmboBrain-1.5B: Our overall “3.8%” vs “48.7%”; EAI overall “0.2%” vs “8.9%”.
+    - Additional baselines reported (GPT-o1-mini, GPT-oss-20b, DeepSeek-V3/V3.1, Kimi-K2, Qwen2.5-Max, RoboBrain2-7B, Cosmos-Reason1, Llama-4-Scout) with detailed category scores.
+  - Qualitative example (Heat Chicken): EmboBrain-7B produces correct sequence (open, place inside, close, toggle_on) achieving score “1”; GPT-4o omits opening; DeepSeek-R1 omits toggle_on (scores “0” and “0.5”, respectively).
+- Scalability (Data: diversity and quality):
+  - Task diversity ablation on “45” scenes, “10” tasks per method: Social simulation increases average diversity score to “8.42” vs “4.70” without social simulation (GPT-4 evaluator).
+  - Scene quality ablation on “140” tasks: Multi-level layout tree vs baselines:
+    - Our method: Generation Rate “71.43%”, Aesthetic “8.11”, Verification Pass “98.00%”.
+    - W/o Tree: “49.29%”, “7.30”, “47.83%”.
+    - LayoutGPT: “45.72%”, “7.22”, “25.00%”.
+- Scalability (System: simulation efficiency):
+  - Latency ablation (average per-rollout):
+    - Naive: “3.48s”.
+    - + Pre-cached Execution: “0.85s”.
+    - + Resource Scheduler: “0.14s”.
+    - + Task Dispatcher: “0.07s”.
+  - Reported overhead reduction >50×; architecture overlaps loading and execution to saturate hardware.
+- Algorithmic efficiency (reward architecture):
+  - Ablation shows training with semantic relevance reward yields rapid and stable increases in goal-oriented reward; without it, the agent stagnates at low reward (Figure 7). Specific numeric curves Not specified beyond visual trend.
+
+# Conclusion
+- Argues for interactive, environment-grounded learning for embodied agents rather than language-only training.
+- EmboMatrix is presented as the first scalable training ground addressing data, system, and algorithm design.
+- EmboBrain models demonstrate strong gains; EmboBrain-7B is reported to achieve a “14.2% performance gain over a strong baseline” (claimed).
+- EmboMatrix supports continuous improvement via simulated experience.
+
+# References
+- Cites embodied decision-making systems (PaLM-E, RT-2, Code as Policies, VIMA, ProgPrompt), knowledge-augmented and reactive agents, and planning/physics reasoning works.
+- Benchmarks/simulators referenced include BEHAVIOR/BEHAVIOR-1K, ALFRED, iGibson/Habitat, Meta-World, RLBench, robosuite, TDW, SAPIEN, ManiSkill/RFUniverse, SoftGym, EmbodiedBench, ProcTHOR, HOLODECK, ARCHITECT, DiffuScene, WorldCraft, RoboGen.
+- RL for LLMs: RLHF/RLAIF, DPO, Nash learning, GRPO (Group Preference Optimization variants), and Flow-GRPO.
+
+# Appendix
+- Multi-agent data factory details:
+  - Stage 1: Role Playing Agent crafts characters; Social Simulation Agent creates tasks within scene contexts; Summarization Agent converts to BDDL with explicit goal conditions; post-processing validates asset matches and filters duplicates.
+  - Stage 2: Multi-level scene generation with Scene-level distribution, Room-level layout tree (nine relations such as ontop, under, inside), Planar-level constraints (face to, next to, aligned with; grid optimization; collision and robot access constraints), and Object-level sampling via OmniGibson APIs; final validation ensures manipulability and task executability.
+- Scalable simulation backend:
+  - Pre-Cached Language–Physics Interface: Pre-computed valid terminal poses for quasi-static interactions; reported speedups “5× to 100×”.
+  - Distributed Simulation System: Heterogeneous worker cluster (servers/PCs/cloud VMs) managed by a central scheduler and dispatcher; proactive scene preloading; continuous resource reuse; system overhead “about 20%” of total training time.
+- Reward coefficients:
+  - Unparseable output penalty: “−1”.
+  - Parsed sequence base reward: “0.5”.
+  - Semantic relevance coefficient β: “0.2”, capped at “1”.
+  - Goal-oriented success total reward per task: “30”; α = 30 / N_sub (N_sub is number of sub-tasks).
+- Action primitives (13 total) include navigation/manipulation/state changes/cooking operations (e.g., move, pick_up, place with relation, open/close, toggle_on/off, heat/cook/freeze with source, go_to_room).
+- Comparison of embodied data generation (Table 4): The proposed system is fully automated, uses multi-agent social simulation for tasks, generates scenes from tasks, supports multi-room, is interpretable, and self-verifies; contrasts with Behavior-1K, ProcTHOR, Holodeck, Architect, RoboGen.
+- Evaluators:
+  - Task diversity evaluator prompt (GPT-4-based).
+  - Scene aesthetic evaluator prompt (GPT-4-based) with scoring rules and deductions.
+- LLM usage statement: LLMs used only for auxiliary text polishing and summarization; core research by authors.
+- Additional figures show scene generation comparisons across methods with and without the layout tree.

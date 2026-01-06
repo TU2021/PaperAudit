@@ -1,0 +1,73 @@
+{
+  "paper": "ObjexMT_ Objective Extraction and Metacognitive Calibration for LLM-as-a-Judge under Multi-Turn Jailbreaks",
+  "runs": [
+    {
+      "config": {
+        "judge_model": "gpt-5-2025-08-07",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "baseline_file": "baseline_review.txt",
+        "final_file": "final_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 600,
+        "metric": "regression_v2_minimal",
+        "prompt_hash": "2142c04332"
+      },
+      "config_key": "1a46f14f5902ebb0fc2c14773cec6644d2fa5338",
+      "inputs": {
+        "baseline_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/baseline_review.txt",
+        "final_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/final_review_all.txt"
+      },
+      "regression": {
+        "score_delta": {
+          "baseline_score": 7.0,
+          "final_score": 7.0,
+          "delta": 0.0,
+          "scale_hint": "1-10"
+        },
+        "differences": [
+          {
+            "diff_type": "new_critique",
+            "summary": "New inconsistency flagged in risk–coverage table vs curves/AURC",
+            "paperaudit_types": [
+              "METHOD_LOGIC_CONSISTENCY",
+              "RHETORICAL_PRESENTATION_MANIPULATION"
+            ],
+            "why_impacts_score": "undermines validity and interpretability of selective prediction metrics",
+            "evidence": {
+              "baseline_quote": "Appendix Fig. 6 reports 'Mean Score Attack600=0.34' while Table 4’s 'Avg. Accuracy' is 24.3%",
+              "final_quote": "risk–coverage numeric table lists decreasing risk with increasing coverage ... inconsistent with the plotted curves and AURC interpretation"
+            }
+          },
+          {
+            "diff_type": "intensified_critique",
+            "summary": "Stronger emphasis on conflicting length vs. turn-count narratives",
+            "paperaudit_types": [
+              "CONTEXT_MISALIGNMENT_INCOHERENCE",
+              "RHETORICAL_PRESENTATION_MANIPULATION"
+            ],
+            "why_impacts_score": "signals unresolved methodological narrative contradictions, reducing clarity",
+            "evidence": {
+              "baseline_quote": "Transcript-length analysis states 'accuracy increases monotonically' while Appx. B describes a mid-turn dip and rebound; item-level r≈−0.15",
+              "final_quote": "'degradation' narrative and item-level r≈−0.15 need clearer reconciliation with the binwise results"
+            }
+          },
+          {
+            "diff_type": "score_rationale_shift",
+            "summary": "Clarity subscore lowered due to ‘multiple internal inconsistencies’",
+            "paperaudit_types": [
+              "RHETORICAL_PRESENTATION_MANIPULATION"
+            ],
+            "why_impacts_score": "explicitly justifies a lower clarity rating in Final",
+            "evidence": {
+              "baseline_quote": "Clarity (10): 6 — Clear task/prompt definitions ... with some reporting inconsistencies",
+              "final_quote": "Clarity (10): 5 — Clear task/prompt definitions ... but multiple internal inconsistencies in reporting"
+            }
+          }
+        ]
+      },
+      "generated_at": "2026-01-05T20:39:39"
+    }
+  ]
+}

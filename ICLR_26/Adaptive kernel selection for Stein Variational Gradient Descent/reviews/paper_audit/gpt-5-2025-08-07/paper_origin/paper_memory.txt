@@ -1,0 +1,190 @@
+# Global Summary
+Problem: SVGD’s approximation quality and convergence are highly sensitive to the choice of RKHS kernel, with the median bandwidth heuristic often performing poorly, especially in higher dimensions. The paper proposes Adaptive SVGD (Ad-SVGD), which alternates between SVGD particle updates and adaptive kernel parameter updates by gradient ascent on the kernelized Stein discrepancy (KSD).
+
+Core approach: For a parameterized kernel family {k_θ}, at each iteration, select θ to maximize KSD(μ_n‖π) via one or more gradient ascent steps using the same ∇ log π evaluations as SVGD, then update particles with SVGD under k_θ. The method targets the worst-case KSD over the kernel class to maximize instantaneous KL decrease.
+
+Theory: Under Assumptions on the target potential V, Talagrand’s T1 inequality, and bounded feature maps, they extend SVGD mean-field convergence results to the adaptive setting. With exact maximization, they show a descent condition implying lim_n→∞ max_θ KSD_θ^2(μ_n‖π) = 0. With approximate maximization (Assumption 4: suboptimality ε_n → 0), they prove lim_n→∞ max_θ KSD_θ(μ_n‖π) = 0. Under a generalized Stein logarithmic Sobolev inequality (only one kernel in the class needs to satisfy it), they derive KL iteration complexity bounds and quantify bias when KSD maximization is solved to fixed accuracy ε̄.
+
+Evaluation scope: Toy 1D Gaussian mixture; a linear inverse problem from an ODE with Gaussian process priors; Bayesian logistic regression (BLR) on Covertype; scaling experiments with multivariate Gaussians (d = 2–8) and GP inference of increasing dimension. Metrics include Wasserstein-1 and -2 distances, marginal variances, prediction accuracy, MMD^2 to MCMC reference, and covariance trace.
+
+Key findings:
+- Ad-SVGD outperforms the median heuristic across tasks and dimensions, alleviating variance collapse.
+- In the ODE inverse problem (N_x = 16), Ad-SVGD captures posterior uncertainty; Med-SVGD underestimates. Aggregated over “56” seeds, W2 to the posterior decreases more with M for Ad-SVGD; bandwidths stabilize and are negatively correlated with marginal variances.
+- In BLR on Covertype subsets of size 1000 (10 seeds), Ad-SVGD yields higher test accuracy and much lower MMD^2 to MCMC samples than Med-SVGD; bandwidths adapt by orders of magnitude from uninformed initialization.
+- In multivariate normal targets (d = 2–8), Ad-SVGD matches target marginal variances closely; Med-SVGD underestimates, with explicit numbers reported (Tables 1–2). For d = 8 and M = 200, Med-SVGD marginal variances are [0.4753, 0.1077, 0.0430, 0.0215, 0.0122, 0.0074, 0.0047, 0.0032] vs targets [1.0000, 0.2500, 0.1111, 0.0625, 0.0400, 0.0278, 0.0204, 0.0156]; Ad-SVGD yields [0.9691, 0.2409, 0.1085, 0.0611, 0.0390, 0.0268, 0.0196, 0.0150].
+- In GP inference of increasing dimension (M = 100, 25 runs), the trace of particle covariance is close to the theoretical posterior for Ad-SVGD (e.g., N_x=16,N_y=64 theoretical 0.086; median 0.022; Ad-SVGD 0.074), while the median heuristic severely underestimates.
+
+Caveats explicitly stated: The analysis relies on Assumption 4 (approximate maximization guarantees); conditions for gradient ascent to satisfy Assumption 4 are not proven. Convergence is established in the mean-field limit; finite-particle behavior is not analyzed here. Ad-SVGD’s kernel optimization frequency and steps introduce computational overhead (mitigated by subsampling and infrequent updates).
+
+# Abstract
+- Proposes Adaptive SVGD (Ad-SVGD): alternating SVGD particle updates with adaptive kernel parameter tuning via gradient ascent on KSD over a kernel class.
+- Motivates KSD maximization by the relation that the instantaneous KL decrease under SVGD equals −KSD^2 (Equation (2)).
+- Provides simplified theoretical analysis extending fixed-kernel KSD convergence to the adaptive setting, showing convergence of the maximal KSD over the class.
+- Empirically, Ad-SVGD consistently outperforms standard median heuristic across tasks, particularly in high-dimensional settings.
+
+# Introduction
+- Problem framing: SVGD uses RKHS-constrained updates; performance is highly sensitive to kernel choice and commonly underestimates posterior variance, contributing to the belief SVGD fails in higher dimensions.
+- Proposed mechanism: adaptively select kernel parameters during inference by maximizing KSD, improving transport in complex/high-dimensional spaces.
+- Contributions:
+  (i) Adaptive kernel selection method optimizing multiple continuous parameters by maximizing KSD, beyond single bandwidth median heuristic.
+  (ii) Theoretical analysis in discrete-time mean-field, extending fixed-kernel results: shows sup_θ KSD converges to zero as μ approaches π; under Stein logarithmic Sobolev inequality, derive iteration complexity.
+  (iii) Empirical validation: adaptive selection outperforms median heuristic; helps alleviate variance collapse.
+
+# Related Work
+- SVGD theory: mean-field convergence (continuous-time and discrete-time), finite-particle rates, gradient flow interpretations.
+- Kernel choice critical; KSD convergence and its relation to weak convergence depends on kernel. Median heuristic is simple but degrades in high dimensions.
+- High-dimensional mitigation and algorithmic variants include sliced SVGD, Grassmann SVGD, Newton-type, matrix-valued kernels, learned directions.
+- Closest approach: Ai et al. [1] learning kernel weights in a multiple-kernel KSD framework with finite bases; differs by enabling continuous parameter optimization over kernel families.
+
+# Preliminaries
+- Mathematical setup: symmetric positive definite kernel k: ℝ^d×ℝ^d→ℝ, RKHS ℋ_0 and ℋ=ℋ_0^d, feature map Φ_k(x)=k(·,x).
+- KSD definition: for Stein operator S_π f = ∇ log π · f + ∇·f, KSD(μ‖π) = sup_{f∈B(ℋ)} |∫ S_π f dμ|, solved by f* = ψ/‖ψ‖_ℋ with ψ = ∫ 𝒜_π^k dμ ∈ ℋ, yielding KSD(μ‖π) = ‖ψ‖_ℋ (Equation (1)).
+- SVGD: transforms μ_n via pushforward T(x)=x+γ ψ^{μ_n}(x). Direction ψ^{μ}/‖ψ^{μ}‖ minimizes the directional derivative of KL at γ=0, with d/dγ KL((Id+γ ψ^{μ_n})# μ_n‖π)|_{γ=0} = −KSD^2(μ_n‖π) (Equation (2)).
+- Particle updates (Equation (3)): X_{n+1}^i = X_n^i + (γ/M) Σ_{j=1}^M [k(X_i,X_j) ∇ log π(X_j) + ∇_{X_j} k(X_i,X_j)].
+
+# Method
+- Adaptive kernel selection: parameterize kernels {k_θ}, define KSD_θ, ψ_θ^μ, Φ_θ. At each iteration, choose θ_n ∈ argmax_θ KSD_θ(μ_n‖π) to maximize instantaneous KL decrease (via Equations (2) and (7)).
+- Algorithm 1: Alternate kernel parameter updates (paramupdate decision; nstepstheta gradient ascent steps with step size s on KSD_θ^2 using Equations (4)–(5)) and SVGD particle updates with step size γ under k_{θ_n}.
+  - KSD^2(μ‖π) = ∫ u_π^k d(μ⊗μ) (Equation (4)), where u_π^k(x,y) has four terms involving k(x,y), ∇ log π, and kernel derivatives (Equation (5)).
+  - Computational notes: kernel ascent reuses ∇ log π(X_n^i); can reduce cost via few nstepstheta or infrequent θ updates; can subsample particles for KSD when M is large.
+- Convergence analysis under Talagrand’s inequality T1 (Assumptions 1–3):
+  - Inequality (6): 𝓕(μ̃) ≤ 𝓕(μ) + γ⟨ψ_θ^μ, g⟩_{ℋ_θ} + (γ^2 K/2)‖g‖^2 with K=(α^2+L)B.
+  - Descent with fixed θ (Equation (7)): 𝓕(μ_{n+1}) ≤ 𝓕(μ_n) − γ(1 − γB(α^2+L)/2) KSD_θ^2(μ_n‖π), for γ ≤ bound (Equation (8)).
+  - With adaptive θ_n, same descent holds replacing KSD_θ^2 by KSD_{θ_n}^2.
+- Exact KSD maximization case (Equation (9)): θ_n maximizes KSD_θ^2(μ_n‖π), yielding Lemma 1 and Corollary 2: for γ under bound, 𝓕 decreases by c_γ max_θ KSD_θ^2, implying lim_n→∞ max_θ KSD_θ^2(μ_n‖π)=0.
+- Approximate maximization (Algorithm 1 viewed as θ_n = Ψ_n(θ_{n-1}, μ_n)):
+  - Assumption 4: max_θ KSD_θ^2(μ_n‖π) − KSD_{θ_n}^2(μ_n‖π) ≤ ε_n, with ε_n→0.
+  - Theorem 3: Under Assumptions 1–3 and 4, for γ under the bound, lim_n→∞ max_θ KSD_θ(μ_n‖π) = 0 in the mean-field limit.
+- Refined analysis (Appendix B) under generalized Stein log-Sobolev inequality (Assumption 5):
+  - Only one kernel in {k_θ} needs to satisfy it: 2λ KL(μ‖π) ≤ max_θ KSD_θ^2(μ‖π).
+  - Theorem 4: For γ with c_γ = γ(1 − γB(α^2+L)/2) and ρ=1−2λ c_γ∈(0,1), the recursion 𝓕(μ_{n+1}) ≤ ρ 𝓕(μ_n) + c_γ ε_n holds, yielding iteration complexity:
+    - If ε_n ≤ ε̄, 𝓕(μ_n) ≤ ρ^n 𝓕(μ_0) + (c_γ ε̄)/(1−ρ).
+    - If ε_n ≤ c_ε q^n, 𝓕(μ_n) ∈ O(max{ρ,q}^n) (or O(tilde{q}^n) for ρ=q).
+    - If ε_n ≤ c_ε/(n+1)^p, 𝓕(μ_n) ≤ ρ^n 𝓕(μ_0) + [2^p c_γ c_ε/(n^p)]·[1/(1−ρ)] + c_γ c_ε [ρ^{⌊n/2⌋}/(1−ρ)].
+
+# Experiments
+## 5.1 Kernel parameterization
+- Standard kernels: k_h(x,y) = exp(−‖x−y‖_p^p / h); median heuristic h = med^p / log(M−1).
+- Ad-SVGD uses product kernels: k_h(x,y) = ∏_{i=1}^d exp(−|x_i−y_i|^p / h_i), optimizing dimension-dependent bandwidths h=(h_1,…,h_d).
+- Naive per-dimension median performed poorly (variance collapse).
+- Notes: suggests scalable parameterizations (spectral, low-rank, Matérn, mixed-product).
+
+## 5.2 Toy example
+- 1D Gaussian mixture π = (1/3) N(−2,1) + (2/3) N(2,1).
+- Particles: M ∈ {50, 200, 500}, initial μ_0 = N(0,1).
+- SVGD: 10^4 steps, step size γ=1, kernels with p=1 and different fixed bandwidths h.
+- Quality metric: Wasserstein-1 distance W_1(μ, ν) via ∫ |F_μ−F_ν| dx; computed with exact sample of size 10^5.
+- Result: W_1 is highly sensitive to h; algorithm performs well only for bandwidths in a certain range (Figure 1). No exact numeric W_1 values provided.
+
+## 5.3 Linear inverse problem based on ODE
+- PDE/ODE: −f''(s) + f(s) = u(s), s∈(0,1), Dirichlet boundary f=0 at {0,1}. Observations y = Φ(u) + ε with Φ=𝒪∘H^{-1}, H(f)=−f''+f, 𝒪(f) = (f(s_k))_{k=1}^{N_obs}, s_k=k/N_obs.
+- Prior: GP with truncated KL u(s,x)=Ax=∑_{k=1}^{N_x} x_k ψ_k(s), ψ_k=√2 sin(π k s), x_k∼N(0,λ_k), λ_k=50 k^{-2}. Posterior density: π(x) ∝ exp(−½‖Γ^{-1/2}(y − ΦAx)‖^2 − ½‖Γ_0^{-1/2} x‖^2).
+- Implementation details:
+  - Discretize H on grid with mesh size 2^−8; fully observed system N_obs = 2^8.
+  - KL terms N_x = 16; noise covariance Γ = 10^−3 Id.
+  - Reference observations ŷ from x̄∼N(0,Γ_0) and ŷ = ΦA x̄.
+- Compared Med-SVGD vs Ad-SVGD for M ∈ {50, 100, 200}. Kernels: p=1.
+- Training:
+  - Iterations: 4·10^5.
+  - Particle step size: 10^−3 with AdaGrad variant (as in [18]).
+  - Ad-SVGD bandwidth ascent step size: 10^−5; update bandwidths once per 100 particle updates.
+  - Runtime difference: no significant difference reported between methods.
+- Metrics:
+  - Wasserstein-2 distance W_2(𝒩(μ̂, Σ̂), π) for particle mean μ̂ and covariance Σ̂; explicit formula used.
+  - Marginal variances per dimension against posterior.
+- Results:
+  - Both methods approximate posterior mean; only Ad-SVGD captures posterior uncertainty (Figure 2).
+  - Aggregated over 56 seeds: Ad-SVGD yields lower W_2 and improves with M beyond 50; Med-SVGD underestimates uncertainty and shows less improvement with M (Figure 3).
+  - Bandwidth behavior: per-dimension h_i stabilize earlier than W_2; final h_i negatively correlate with posterior marginal variances (Figure 4).
+
+## 5.4 Bayesian logistic regression
+- Task: BLR on Covertype dataset (UCI [4]).
+- Model: w | α ∼ N(0, α^−1), α ∼ Gamma(1, 0.01); infer posterior of x=[w, α].
+- Reference: NUTS [13] used to generate MCMC samples; evaluation follows Liu et al. [21].
+- Data: random subsets of size 1000; aggregated over 10 draws.
+- Metrics:
+  - Test prediction accuracy using particle mean.
+  - Posterior approximation accuracy via MMD^2 to MCMC samples.
+- Results (Figure 5):
+  - Ad-SVGD achieves higher test accuracy across most seeds and lower MMD^2 to MCMC than Med-SVGD; numeric values not specified in text.
+  - Covariance matrices (Figure 7) averaged over 10 seeds: Med-SVGD severely underestimates uncertainty; Ad-SVGD aligns better with MCMC reference.
+  - Bandwidth evolution (Figure 6): from uninformed initialization (1 per component), Ad-SVGD learns bandwidths that differ by several orders of magnitude over SVGD iterations.
+
+# Conclusion
+- Limitations: The theoretical analysis relies on Assumption 4 (approximate maximization quality of θ updates); conditions for Algorithm 1’s alternating gradient ascent to satisfy Assumption 4 are not yet established. The analysis focuses on original SVGD dynamics; finite-particle guarantees are not provided here.
+- Outlook: Potentially combine adaptive kernel selection with SVGD variants (sliced SVGD, Grassmann SVGD, Stein transport).
+
+# References
+- Core references underpinning the work:
+  - [18] Liu & Wang: original SVGD and median heuristic.
+  - [32] Salim et al.: mean-field SVGD convergence under Talagrand’s T1 (used to derive descent bounds (6)–(8)).
+  - [11, 6, 20] Gorham & Mackey; KSD foundations and goodness-of-fit tests (KSD formulation).
+  - [8] Duncan et al.: geometry of SVGD; Stein log-Sobolev inequality (used in refined analysis).
+  - [1] Ai et al.: multiple-kernel SVGD; closed-form θ updates in convex combinations (related to exact maximization scenario).
+  - [21] Liu et al.: Grassmann SVGD; BLR evaluation protocol adopted.
+  - [29] Panaretos & Zemel: explicit Wasserstein formulas (used for W_1 and W_2 computations).
+  - Additional applied/theoretical SVGD works [3, 5, 16, 33, 37, 39] cited for context.
+
+# Appendix
+A More numerical experiments
+
+A.1 Gaussian mixture models
+- Setup: 1D mixture from Section 5.2; compare Med-SVGD vs Ad-SVGD for M = 10, 20, 50, 100, 200, 500.
+- Training: 10^4 iterations, step size γ=1.
+- Metric: W_1(μ_final, π).
+- Result: Approximation quality improves with M for both; both methods achieve W_1 < 0.01 for M = 500; no significant advantage of Ad-SVGD in 1D (Figure 8; Figure 9 shows histograms for fixed h ∈ {0.001, 1, 1000}).
+
+A.2 Scaling dimension: multivariate normal distribution
+- Targets: π_d = N(0, Σ_d), Σ_d = diag(1, 1/2, …, 1/d), d ∈ {2,…,8}.
+- Initialization: N(0, 1/4)^{⊗ d}.
+- Training: 10^4 iterations, step size 0.1 (adjusted if needed for stability).
+- Metrics:
+  - Bures Wasserstein distance W_2(𝒩(μ̂, Σ̂), π_d) (explicit Gaussian formula).
+  - χ^2 statistic mean: (1/M) Σ_i X_i^⊤ Σ_d^{−1} X_i (expected value d for X ∼ N(0, Σ_d)).
+- Results (Figure 10):
+  - Ad-SVGD significantly outperforms Med-SVGD across d for M ∈ {50, 100, 200} in W_2; exact values not specified.
+  - For M=200, Med-SVGD’s χ^2 statistic mean deviates increasingly from d as dimension grows; Ad-SVGD remains close to d.
+- Marginal variances (M = 200) versus target (Tables 1 and 2):
+  - Target variances for d=1..8 first row: [1.0000, 0.2500, 0.1111, 0.0625, 0.0400, 0.0278, 0.0204, 0.0156].
+  - Med-SVGD:
+    - d=1: [0.9285]
+    - d=2: [0.7921, 0.1943]
+    - d=3: [0.6803, 0.1625, 0.0697]
+    - d=4: [0.6089, 0.1440, 0.0593, 0.0311]
+    - d=5: [0.5532, 0.1275, 0.0526, 0.0271, 0.0157]
+    - d=6: [0.5190, 0.1190, 0.0481, 0.0243, 0.0140, 0.0089]
+    - d=7: [0.4900, 0.1122, 0.0449, 0.0228, 0.0131, 0.0081, 0.0052]
+    - d=8: [0.4753, 0.1077, 0.0430, 0.0215, 0.0122, 0.0074, 0.0047, 0.0032]
+  - Ad-SVGD:
+    - d=1: [0.9953]
+    - d=2: [0.9907, 0.2472]
+    - d=3: [0.9867, 0.2459, 0.1095]
+    - d=4: [0.9881, 0.2467, 0.1095, 0.0610]
+    - d=5: [0.9840, 0.2433, 0.1096, 0.0616, 0.0392]
+    - d=6: [0.9858, 0.2459, 0.1090, 0.0611, 0.0392, 0.0269]
+    - d=7: [0.9856, 0.2463, 0.1086, 0.0613, 0.0390, 0.0269, 0.0199]
+    - d=8: [0.9691, 0.2409, 0.1085, 0.0611, 0.0390, 0.0268, 0.0196, 0.0150]
+- Normalized marginal histograms and Q-Q plots (Figures 11–14) for d=8, M=200 show Ad-SVGD closely matches standard normal marginals; Med-SVGD deviates, especially in lower-variance dimensions.
+
+A.3 Gaussian process inference
+- GP on [0,1]: truncated KL u(s,x) = ∑_{k=1}^{N_x} x_k ψ_k(s), ψ_k(s)=√2 sin(kπ s), x_k∼N(0,k^−2).
+- Forward model: Y = AX + ε, A ∈ ℝ^{N_y×N_x} with columns (ψ_k(s_i))_{i=1}^{N_y}, s_i=i/N_y; prior X∼N(0,Σ) with diag entries k^−2, noise ε∼N(0,I_{N_y}). Reference observations ŷ constructed by drawing x̄ and setting ŷ=A x̄.
+- SVGD setups:
+  - Median heuristic: k(x,y)=exp(−‖x−y‖_1/h).
+  - Ad-SVGD: product kernels k(x,y)=∏_{i=1}^{N_x} exp(−|x_i−y_i|/h_i) with per-dimension bandwidths; AdaGrad for step-size when N_x=16.
+- Configurations: N_x ∈ {4, 8, 16}, N_y ∈ {64, 128, 256}.
+- Results (Figure 15; Table 3, averaged over 25 runs, M=100):
+  - As dimension increases, median heuristic underestimates posterior variance; Ad-SVGD captures variance better across N_y.
+  - Trace of covariance of final particle distribution:
+    - N_x=4, N_y=64: theoretical 0.056; median 0.026; Ad-SVGD 0.055
+    - N_x=8, N_y=64: theoretical 0.083; median 0.023; Ad-SVGD 0.072
+    - N_x=16, N_y=64: theoretical 0.086; median 0.022; Ad-SVGD 0.074
+    - N_x=16, N_y=128: theoretical 0.051; median 0.012; Ad-SVGD 0.044
+    - N_x=16, N_y=256: theoretical 0.029; median 0.006; Ad-SVGD 0.026
+
+B Refined theoretical analysis
+- Generalized Stein log-Sobolev inequality (Assumption 5): 2λ KL(μ‖π) ≤ max_θ KSD_θ^2(μ‖π) for all μ.
+- Theorem 4: For γ satisfying bound and ρ=1−2λ c_γ∈(0,1), derive 𝓕(μ_{n+1}) ≤ ρ 𝓕(μ_n) + c_γ ε_n with explicit iteration complexity cases:
+  - ε_n ≤ ε̄: 𝓕(μ_n) ≤ ρ^n 𝓕(μ_0) + (c_γ ε̄)/(1−ρ)
+  - ε_n ≤ c_ε q^n: 𝓕(μ_n) ∈ O(max{ρ,q}^n) (or O(tilde{q}^n) if ρ=q)
+  - ε_n ≤ c_ε/(n+1)^p: 𝓕(μ_n) ≤ ρ^n 𝓕(μ_0) + [2^p c_γ c_ε/(n^p)]·[1/(1−ρ)] + c_γ c_ε [ρ^{⌊n/2⌋}/(1−ρ)].

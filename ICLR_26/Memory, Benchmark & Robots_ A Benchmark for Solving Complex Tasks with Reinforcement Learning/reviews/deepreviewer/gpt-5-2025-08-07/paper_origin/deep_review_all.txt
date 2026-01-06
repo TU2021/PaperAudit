@@ -1,0 +1,198 @@
+Review 1
+
+Summary
+The paper proposes MIKASA, a unified benchmark suite for memory-intensive reinforcement learning. Its contributions are: (1) a four-way taxonomy of memory tasks (Object, Spatial, Sequential, Capacity; Section 4.2); (2) MIKASA-Base, a Gymnasium-based consolidation of diverse memory benchmarks under a common API (Section 5; Table 7); (3) MIKASA-Robo, a set of 32 tabletop manipulation tasks explicitly requiring memory (Table 1; Section 6); and (4) curated offline datasets for all 32 tasks (Appendix B). The authors validate the suite using online RL baselines (PPO-MLP/LSTM, SAC, TD-MPC2; Section 6.2; Figs. 5, 9–10), offline RL (DT, RATE, BC, CQL, Diffusion Policy; Section 6.3; Table 6; Fig. 27), and VLA models (Octo and OpenVLA; Section 6.4; Table 4). They argue current methods struggle on their tasks, demonstrating the benchmark’s challenge and necessity.
+
+Soundness
+- Methodological design: The benchmarking philosophy is sound—diagnostics via vector-based tasks in MIKASA-Base and higher-fidelity RGB manipulation tasks in MIKASA-Robo (Section 5, “Benchmark Design Principles”). The separation helps attribute failure to memory vs perception.
+- Task validity: The claim that tasks are solvable without memory when full state is available is substantiated (Figures 4, 7–8, 24), supporting calibration. The correlation horizon notion (Section 3.2) provides a formal rationale for memory demand.
+- Baseline selection: Online RL baselines include memory-less (MLP) and memory-enhanced (LSTM), plus SAC and TD-MPC2 (Section 6.2). Offline RL covers common families including Transformers (DT, RATE) and diffusion (DP) (Section 6.3). VLA setups are reasonable and transparently limited (Section 6.4; Section 7 Limitations).
+- Experimental rigor: Reporting includes success rates, returns, confidence intervals (SEM), multiple seeds (Appendix G), and consistent configurations (RGB+joints vs state; dense vs sparse rewards).
+- Potential weaknesses: 
+  - The evaluation of “memory mechanisms” is narrow: primarily LSTM in online RL; no stronger memory architectures like GTrXL, HCAM, SSMs (S4/Mamba) or retrieval-augmented methods (Table 2 lists them but they are not experimentally included).
+  - The extent to which memory is disentangled from perception remains partially confounded in RGB tasks (e.g., color recognition and occlusion; Figures 2, 14, 17). Although MIKASA-Base addresses diagnostics, MIKASA-Robo results sometimes attribute low performance to “lack of memory” when visual recognition and control may bottleneck (Section 6.2; Fig. 5).
+  - Offline datasets are generated via oracle PPO policies in state mode (Appendix B), introducing a potential distribution shift when training vision-only policies that must infer latent state from images; the paper acknowledges the challenge but does not characterize this shift quantitatively.
+
+Presentation
+The manuscript is clearly structured: an introduction motivating the benchmark gap (Section 1), related work coverage with comparison matrix (Table 2; Figures 1, 8), taxonomy (Section 4.2; Figure 3), benchmark descriptions (Sections 5–6; Table 1; Table 3), and extensive appendices detailing tasks and code (Appendix H; Code 1–3). Visual aids are informative (Figures 2, 14–22), and the tables concisely summarize tasks and baselines (Table 1, Table 4, Table 6, Table 7). Reproducibility details (Appendix G) and installation notes (pip install mikasa_robo_suite; Intro footnote) are welcome. Minor clarity issues: the taxonomy’s theoretical grounding could be tightened (Section 4.1–4.2), and some figures are small, limiting readability of axes in the collage plots (e.g., Figures 75–76).
+
+Contribution
+- Significance: A needed unification of memory evaluation in RL, bridging diagnostic tasks and realistic manipulation, with public datasets and code (Section 8 Conclusion).
+- Novelty: 
+  - The taxonomy is conceptually simple but broadly covers common memory facets; several prior works adopt subsets (Section 2; Table 2), yet MIKASA combines them into one coherent suite.
+  - MIKASA-Robo provides 32 atomic, memory-targeted tabletop tasks built on ManiSkill3 (Section 6.1; Table 1), filling a robotics manipulation gap (Table 3).
+  - The release of RGB sparse-reward datasets for all tasks is practically valuable (Appendix B).
+- Impact: The benchmark can standardize memory evaluation and stimulate development of stronger memory architectures for manipulation and VLA agents (Section 6.4, Section 8).
+
+Strengths
+- Clear problem framing and need (Section 1; Figure 1).
+- Taxonomy spanning object/spatial/sequential/capacity (Section 4.2; Table 7 mapping).
+- Well-specified MIKASA-Robo tasks with multiple difficulty modes and reward variants (Table 1; Appendix H).
+- Rigorous calibration showing tasks are solvable under full observability (Figures 4, 7–8).
+- Broad baseline coverage across online, offline, and VLA; transparent reporting with multiple seeds and SEM (Section 6.2–6.4; Appendix G).
+- Reproducibility and practical tooling (Code 1–3; wrappers; Appendix A–D).
+
+Weaknesses
+- Limited experimental coverage of advanced memory architectures despite referencing them (Table 2), weakening claims about general memory difficulty beyond LSTM/DT/RATE.
+- Memory vs perception confounds remain in RGB+joints settings; no ablation quantifying the contribution of visual recognition errors vs temporal recall (Section 6.2; Fig. 5).
+- Offline datasets collected with state-mode policies may not represent trajectories produced by vision-only learners, potentially skewing difficulty (Appendix B).
+- No real-robot validation; sim-to-real considerations and robustness to sensor noise/domain randomization are not evaluated (Table 3 notes lack of low-level real tasks in other suites).
+- Taxonomy justification could include quantitative task properties (e.g., correlation horizon ξ, occlusion duration, sequence length) to more formally differentiate categories (Section 3.2; Section 4.2).
+
+Questions
+- Can you quantify correlation horizons and occlusion durations per task and report them (e.g., in Table 1 or Appendix H) to formalize “memory demand” beyond qualitative categories (Section 3.2)?
+- How much of the failure in RGB+joints is due to perception vs memory? Have you run controlled ablations (e.g., perfect color classification oracle + temporal memory module; Section 6.2; Fig. 5)?
+- Why exclude stronger memory baselines (GTrXL, HCAM, SSMs like S4/Mamba, retrieval-augmented RL) that are cited (Table 2)? Do you plan to include them in future leaderboards?
+- For offline datasets (Appendix B), did you analyze distribution shift between oracle-state trajectories and vision-only policies? Any diagnostics like behavior cloning accuracy on intermediate states?
+- Are there plans for sim-to-real transfer or real-robot trials to demonstrate applicability in physical settings (Section 6)?
+
+Rating
+- Overall (10): 8 — A timely, well-executed benchmark suite with careful calibration and broad baselines, though advanced memory models and memory–perception disentanglement are limited (Sections 5–6; Table 1; Figures 4–10; Table 6).
+- Novelty (10): 7 — The taxonomy and unified suites are useful and coherent; while components are inspired by prior work, the robotics focus with 32 memory tasks is a substantive addition (Section 4.2; Table 1; Table 3).
+- Technical Quality (10): 7 — Solid engineering and evaluation with seeds/SEM; missing stronger memory baselines and perception-memory ablations temper methodological completeness (Section 6.2–6.4; Appendix G).
+- Clarity (10): 8 — Generally clear, with comprehensive appendices and figures; minor readability issues and taxonomy grounding could be tightened (Sections 4–6; Appendix H; Code 1–3).
+- Confidence (5): 4 — High confidence based on thorough reading and cross-checking claims across figures/tables and appendices; some reservations due to absent baselines and ablation details.
+
+
+Review 2
+
+Summary
+The paper introduces MIKASA, addressing fragmented evaluation of memory in RL by: (i) proposing a four-category taxonomy (Section 4.2); (ii) aggregating open-source memory tasks in MIKASA-Base (Section 5; Table 7); (iii) designing MIKASA-Robo, 32 tabletop manipulation tasks that operationalize memory requirements (Table 1; Section 6.1; Figures 2, 14–22); and (iv) releasing vision datasets for offline RL (Appendix B). The authors benchmark classic online RL (PPO-MLP/LSTM, SAC, TD-MPC2), offline RL (DT, RATE, BC, CQL, DP), and VLA models (Octo, OpenVLA) and show these systems often fail on higher-difficulty memory tasks (Figures 5, 9–10; Table 6; Table 4).
+
+Soundness
+- Benchmark construction: The suite is designed to isolate memory through task structure (occlusion, delayed selection, sequence recall) while offering multiple observation modes (state, RGB, joints, prompts) and reward variants (dense/sparse) (Section 6.1; Table 1; Appendix H).
+- Validation strategy: Authors establish solvability via full-state PPO-MLP (100% SR; Figures 4, 7–8), then demonstrate difficulty under partial observability (RGB+joints) and sparse rewards (Figures 5, 10).
+- Comparative baselines: Inclusion of common robotics algorithms (SAC, TD-MPC2) highlights sample efficiency vs memory deficits (Section 6.2). Offline RL evaluation on sparse rewards with image inputs exposes challenges even for sequence models (Table 6; Fig. 27).
+- Experimental controls: Reproducibility and compute details (Appendix G) and reporting (mean ± SEM over 100 episodes) are adequate.
+- Caveats: The paper does not quantify task-specific memory metrics (e.g., required recall length; Section 3.2 mentions correlation horizon but does not report ξ per task). Also, while the taxonomy draws from cognitive science (Section 4.1), distinctions between Capacity vs Sequential tasks may overlap (e.g., SeqOfColors vs ChainOfColors both involve sequence length; Table 1).
+
+Presentation
+The manuscript is well-organized, with clear tables and figures: Table 1 (task summary), Table 2 (benchmark usage across prior methods), Table 3 (robotics framework comparison), Table 4 (VLA results), Table 6 (offline RL), Table 7 (taxonomy mapping). Figures 2, 14–22 provide step-by-step task visuals. Code snippets (Appendix A–C) ease adoption. Minor issues: some figure panels are small and busy (e.g., Figure 75 collage), and references to figures/tables could be more consistently captioned (e.g., Figure numbering vs textual references in Section 6.2).
+
+Contribution
+The work substantially advances standardized evaluation of memory in RL/robotics:
+- A coherent taxonomy spanning common memory constructs (Section 4.2).
+- A unified Gym-like API consolidating diverse memory environments (Section 5; Table 7).
+- A novel, sizable set of robotic manipulation tasks explicitly constructed to require memory via occlusion, delayed matching, ordered recall, and multi-item retention (Table 1, Appendix H).
+- Public datasets enabling image-based offline RL on sparse rewards (Appendix B).
+These contributions collectively address gaps identified in Section 1 and Table 3.
+
+Strengths
+- Strong calibration and clear evidence of difficulty under realistic conditions (Figures 4, 5, 7–10; Table 6).
+- Systematic breadth spanning object, spatial, sequential, and capacity tasks (Section 4.2; Table 7).
+- Practical relevance to manipulation with low-level actions (Table 3; Section 6).
+- Transparent limitations of VLA models without explicit memory (Section 6.4; Table 4).
+- Good documentation and reproducibility (Appendix A–D, G; pip install instructions).
+
+Weaknesses
+- Limited diversity of online memory baselines beyond LSTM; transformers or SSM-based methods are not evaluated despite citation (Table 2), reducing generality of conclusions.
+- Lack of formal per-task memory metrics (e.g., ξ, occlusion length, sequence length-to-time gap ratios), which would improve interpretability and task selection (Section 3.2; Table 1).
+- Potential perception-memory entanglement not ablated (e.g., controlled experiments with oracle perception but partial observability for temporal aspects; Section 6.2).
+- No generalization tests (e.g., camera changes, domain randomization) or real-robot trials; sim-only results may not reflect field robustness (Table 3 discussion).
+- Offline dataset generation relies entirely on oracle-state policies, which may bias action sequences toward full-observability policies (Appendix B).
+
+Questions
+- Can you release per-task correlation horizons and formal memory metrics to guide method selection and interpret results (Section 3.2; Table 1)?
+- Would you consider adding stronger memory baselines (e.g., GTrXL, HCAM, S4/Mamba, memory-augmented retrieval) to the leaderboard for a more representative sweep (Table 2)?
+- For RGB+joints failure modes, have you measured classification accuracy and action noise to separate perception from temporal recall challenges (Figures 5, 10)?
+- Are there plans for domain randomization or real-world validation to assess sim-to-real feasibility (Section 6)?
+- How sensitive are results to reward shaping; could alternative sparse reward designs (e.g., shaped terminal signals) aid learning without compromising realism?
+
+Rating
+- Overall (10): 7 — A valuable benchmark suite and taxonomy with strong engineering and evidence of difficulty, tempered by limited memory baselines and missing formal task metrics (Sections 4–6; Table 1; Figures 4–10).
+- Novelty (10): 7 — The integration of a taxonomy with a sizable, memory-centric robotic task suite and unified API is a meaningful addition beyond prior fragmented benchmarks (Section 4.2; Table 3; Table 7).
+- Technical Quality (10): 6 — Solid experimental practice and reproducibility, but absent advanced memory baselines, quantitative task metrics, and perception-memory ablations (Section 6.2–6.4; Appendix G).
+- Clarity (10): 8 — Clear structure and extensive appendices; minor figure readability issues in multi-panel plots (Table 1; Appendix H; Figures 75–76).
+- Confidence (5): 4 — Confident based on thorough cross-checking of claims across figures/tables and implementation details; reservations concern breadth of baselines and missing ablations.
+
+
+Review 3
+
+Summary
+MIKASA targets the lack of standardized evaluation for memory in RL and robotic manipulation. The paper defines a four-part taxonomy (Section 4.2), aggregates existing memory tasks in MIKASA-Base (Section 5; Table 7), and creates MIKASA-Robo—32 manipulation tasks with occlusions, sequential recall, and multi-object memory (Table 1; Appendix H). It provides online RL results (PPO-MLP/LSTM, SAC, TD-MPC2), offline RL results (RATE, DT, BC, CQL, DP), and VLA baselines (Octo, OpenVLA), showing clear performance drops as memory demands increase (Figures 5, 9–10; Table 6; Table 4). Datasets and code are released.
+
+Soundness
+- The benchmark construction is coherent, with state-mode serving as an MDP sanity check (Figures 4, 7–8; Figure 24). The authors’ conclusion—that tasks demand memory under partial observability—is supported by LSTM outperforming MLP in easier cases and both failing as difficulty rises (Section 6.2; Fig. 5).
+- The taxonomy is plausible and grounded in cognitive science (Section 4.1–4.2), and the mapping of tasks (Table 7) shows coverage across domains.
+- Baseline selection is fair for validation but not exhaustive for claiming method weaknesses broadly; most advanced memory approaches are discussed but not tested (Table 2; Section 6.2–6.3).
+- Metrics and reporting (success rate, return, SEM, multiple seeds; Appendix G) are appropriate; reward structures are documented (dense/sparse; Appendix H).
+- Concerns: The benchmark conflates perception and memory in RGB tasks; while this reflects real practice, more targeted measurement could better isolate memory contributions (Section 5 design tries to do this, but results and discussion attribute failures primarily to memory). Also, datasets (Appendix B) depend on oracle-state trajectories—this may reduce diversity in visual inputs encountered by learning agents.
+
+Presentation
+The manuscript is thorough and readable. Figures illustrate tasks clearly (Figures 2, 14–22), and tables synthesize prior benchmarks and new tasks (Tables 1–3, 6–7). Appendices provide detailed task specs and runnable code (Appendix A–D, H). Some plots are compact, hindering label readability (multi-panel Figures 75–76), and the taxonomy’s connection to experimental outcomes could be highlighted more explicitly (e.g., per-category summaries in Section 6).
+
+Contribution
+This work’s main value is infrastructural: an end-to-end benchmark suite bridging diagnostic memory tasks and realistic vision-based manipulation, plus ready-to-use datasets and wrappers. The 32 memory-focused manipulation tasks are novel within the robotics benchmarking landscape (Table 3 comparison). The taxonomy is a usable lens for selecting evaluation scenarios across object, spatial, sequential, and capacity memory. The evaluations establish baselines indicating the gap between current methods and the benchmark’s demands.
+
+Strengths
+- Strong practical utility: unified API, datasets, wrappers, reproducible scripts (Appendix A–D; Code 1–3).
+- Comprehensive manipulation scenarios and difficulty tiers (Table 1; Appendix H).
+- Convincing calibration and negative results that motivate future research (Figures 4–10; Table 6; Table 4).
+- Clear articulation of the motivation and gap (Section 1; Figure 1).
+
+Weaknesses
+- Limited inclusion of advanced memory architectures (transformers with recurrence, hierarchical memory, SSMs), which are central to the paper’s motivation (Table 2).
+- No quantification of per-task memory demand (e.g., ξ) beyond qualitative description; the paper references correlation horizon (Section 3.2) but does not report it for tasks.
+- Potential perception confounds (color detection, shape recognition, wrist camera viewpoint) not isolated via controlled experiments (Section 6.2; Fig. 5).
+- No assessment of generalization robustness (domain randomization, camera shift), or real-robot trials.
+- Some datasets may encode biases from oracle policies that exploit full-state signals absent in RGB modes (Appendix B).
+
+Questions
+- Could you provide per-task measured ξ (correlation horizon), occlusion lengths, and sequence lengths to quantify memory demands (Section 3.2; Table 1; Appendix H)?
+- Have you considered adding controlled perception-oracle variants (e.g., ground-truth object properties + partial observability) to isolate memory components (Section 5; Section 6.2)?
+- Will you expand baselines to include contemporary memory agents (GTrXL, HCAM, S4/Mamba, retrieval-augmented RL) listed in Table 2?
+- Any plans to evaluate domain randomization and real hardware to assess sim-to-real translation (Table 3; Section 6)?
+- For offline datasets, did you examine whether action distributions differ systematically between state-mode and vision-mode policies?
+
+Rating
+- Overall (10): 7 — Strong benchmark and tooling with clear motivation and evidence; limitations in baseline breadth and memory quantification reduce impact (Sections 4–6; Table 1; Figures 4–10; Table 6).
+- Novelty (10): 8 — The 32-task memory-centric tabletop suite and unified base benchmark provide new, substantive evaluation infrastructure (Section 6.1; Table 3; Table 7).
+- Technical Quality (10): 6 — Good experimental hygiene and calibration; lack of advanced memory baselines and ablations on perception-memory interaction (Section 6.2–6.4; Appendix G) weaken completeness.
+- Clarity (10): 8 — Clear exposition and detailed appendices; minor figure readability issues (Appendix H; Figures 75–76).
+- Confidence (5): 4 — High confidence from extensive cross-verification across figures/tables and code descriptions; residual uncertainty on untested baselines.
+
+
+Review 4
+
+Summary
+The paper presents MIKASA, a benchmark suite to assess memory in RL across diagnostic tasks (MIKASA-Base; Section 5; Table 7) and realistic robotic manipulation (MIKASA-Robo; 32 tasks; Table 1; Section 6.1). It introduces a taxonomy of memory tasks (Object, Spatial, Sequential, Capacity; Section 4.2) and datasets for all manipulation tasks (Appendix B). Extensive experiments show: tasks are solvable in MDP (state) mode (Figures 4, 7–8); memory-demanding settings (RGB+joints, especially with sparse rewards) cause failures in online RL, offline RL, and VLA baselines (Figures 5, 9–10; Table 6; Table 4).
+
+Soundness
+- The benchmark design follows good principles: progressive difficulty, multi-modal observations, sparse/dense rewards, and atomic task construction to isolate memory mechanisms (Section 5; Section 6.1; Appendix H).
+- Calibration is credible: PPO-MLP achieves 100% SR in state mode across tasks (Figures 4, 7–8; Section 6.2), confirming task solvability.
+- Experimental results consistently show degradation with increasing complexity (RememberColor 3→5→9; Fig. 5; offline tasks with Capacity/Sequential unsolved; Table 6).
+- Limitations are acknowledged (Section 7), especially VLA fine-tuning constraints; reproducibility setup is detailed (Appendix G).
+- Methodological gaps: Absence of stronger memory models (transformer variants, SSMs) weakens claims about “current methods” broadly; lack of task-level quantitative memory metrics (ξ, delays, occlusion lengths) reduces interpretability; no perception-memory ablation.
+
+Presentation
+The manuscript is well written and supported by comprehensive figures and tables: task specs (Table 1, Appendix H with figures 11–22), prior benchmark mapping (Table 2; Figure 8), robotics framework comparison (Table 3), and baseline results (Figures 5, 9–10; Tables 4, 6). Code examples and wrapper descriptions (Appendix A–D) aid adoption. A few plots are cramped and might benefit from larger fonts or per-task panels (e.g., Figure 75).
+
+Contribution
+MIKASA advances the state of benchmarking in memory-centric RL, particularly filling a gap in tabletop manipulation with low-level actions. The four-category taxonomy provides a concise organizing principle. The suite’s breadth and the release of sparse-reward RGB datasets are likely to catalyze method development, especially in memory-augmented RL and VLA.
+
+Strengths
+- Comprehensive and coherent benchmark across diagnostics and robotics (Sections 5–6; Table 7; Table 1).
+- Strong calibration and clear experimental evidence across online, offline, and VLA agents (Figures 4–10; Tables 4, 6).
+- Practical usability: installation, wrappers, datasets, reproducible scripts (Appendix A–D, G).
+- Clear articulation of scope and limitations (Section 7).
+
+Weaknesses
+- Baseline coverage underrepresents modern memory architectures that could perform better (Table 2 cites many).
+- No task-level memory quantification; correlation horizon is discussed but not reported per task (Section 3.2).
+- Perception-memory confounds not ablated; stronger claims about memory difficulty would benefit from controlled perception or oracle features (Section 6.2).
+- No generalization assessments (e.g., camera shift) or real-robot deployment.
+- Offline datasets obtained via state-mode PPO may bias trajectories and occlusion handling relative to vision-only agents (Appendix B).
+
+Questions
+- Will you publish per-task metrics (ξ, occlusion windows, sequence lengths, distractor counts) to support principled algorithm selection and benchmarking (Section 3.2; Table 1)?
+- Can you add “oracle perception + partial observability” variants to quantify memory difficulty independent of vision (Section 5; Section 6.2)?
+- Are advanced memory baselines (GTrXL, HCAM, SSMs, retrieval-augmented RL) planned for inclusion on a public leaderboard (Table 2)?
+- How do results change under domain randomization or sensor noise; any plans for real-robot validation (Table 3)?
+- For VLA models, did you explore architectures with explicit recurrent state or memory tokens; how sensitive were results to chunk sizes beyond K=4/8 (Section 6.4; Table 4)?
+
+Rating
+- Overall (10): 8 — A strong and timely benchmark with substantial practical value and clear experimental evidence; lacks breadth in tested memory architectures and quantitative task metrics (Sections 4–6; Table 1; Figures 4–10; Table 6).
+- Novelty (10): 8 — The 32-task robotic memory suite and unified base benchmark constitute new infrastructure that addresses a recognized gap (Table 3; Section 6.1; Table 7).
+- Technical Quality (10): 7 — Good calibration, reporting, and reproducibility; missing advanced baselines and perception-memory ablations constrain methodological completeness (Section 6.2–6.4; Appendix G).
+- Clarity (10): 8 — Clear writing, extensive visuals and appendices; some multi-panel figure readability issues (Appendix H; Figures 75–76).
+- Confidence (5): 4 — Confident after cross-verifying claims in tables/figures/appendices; remaining uncertainty pertains to untested algorithms and ablations.

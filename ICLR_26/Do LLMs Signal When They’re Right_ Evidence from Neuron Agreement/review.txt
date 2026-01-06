@@ -1,0 +1,79 @@
+### Summary
+
+The paper investigates whether *internal neuron activation patterns* in LLMs can signal when a generated answer is likely correct, and leverages this to design a new **unsupervised best-of-N decoding method**, **Neuron Agreement Decoding (NAD)**. Empirically, the authors report that (i) **correct generations activate fewer unique neurons** than incorrect ones, and (ii) **correct generations exhibit stronger cross-sample agreement** in which neurons are active, while incorrect traces diverge. NAD uses these internal signals¡ªactivation sparsity and neuron-set Jaccard agreement¡ªto select a candidate among multiple sampled traces, and to **prune low-quality trajectories early** (e.g., after the first 32 tokens). On math/science benchmarks (AIME-style reasoning, GPQA), NAD is reported to **match majority voting**, while on open-ended coding tasks (where majority voting is ill-posed) NAD **outperforms simple averaging (Avg@64)** and delivers **substantial token savings** via early stopping.
+
+---
+
+### Strengths
+
+* **Novel use of internal activations for answer selection.**
+  Reviewers appreciate the central idea of using **neuron-level signals** (activation sparsity, cross-sample agreement) rather than external quantities like token probabilities, entropy, or self-evaluations. This link between **internal activation structure and correctness** is viewed as intellectually interesting and relatively unexplored.
+
+* **Unsupervised, label-free and methodologically simple.**
+  NAD is **unsupervised at test time** and does not require ground truth or extra training; it is built from **simple, cheap set operations** (activated-neuron sets, Jaccard similarity, kNN/medoid/DBSCAN clustering, or a MinAct rule). Reviewers highlight that **implementation is conceptually straightforward and parameter-light**, which helps adoption.
+
+* **Applicability beyond majority voting regimes.**
+  A key strength noted is that NAD **does not require comparable textual outputs**, unlike majority voting. This makes it suitable for **open-ended code generation**, where normal self-consistency or vote-based schemes are less meaningful. On coding benchmarks, reviewers note that NAD **improves over Avg@64**, which is non-trivial.
+
+* **Empirical gains with strong token-efficiency story.**
+  Across math/science tasks, reviewers see that NAD **matches majority voting** while enabling **aggressive early stopping (e.g., after 32 tokens)**, leading to **large token savings (up to ~99% fewer tokens)** with only modest accuracy loss. The early-stop analysis is seen as particularly interesting to the **efficient inference / deployment** community.
+
+* **Insightful empirical analysis of internal dynamics.**
+  Beyond the method itself, reviewers like the **diagnostic analysis** showing that:
+
+  * External signals like entropy / ¡°self-certainty¡± can be viewed as **low-dimensional projections** of richer internal dynamics.
+  * Correct traces tend to be **sparser** (fewer unique neurons) and **more clustered** in activation space than incorrect ones.
+    This is viewed as a useful contribution at the intersection of **mechanistic interpretability and decoding**.
+
+---
+
+### Weaknesses
+
+* **Limited external validity and model diversity.**
+  Several reviewers question how general the reported regularities and NAD¡¯s gains are:
+
+  * Core analyses and experiments are mostly on **small/medium open models (Qwen3 4¨C8B, DeepSeek variants)**; there are **no results on frontier-scale or closed models** at review time, making it unclear whether ¡°correct ¡ú fewer neurons + higher agreement¡± holds for larger systems.
+  * Reviewers also worry about **behavior in regimes where base accuracy is very high or very low** (e.g., GSM8K-level 90%+ models, or extremely hard/new benchmarks). The presented experiments sit in a mid-accuracy band (~50¨C70%), and reviewers are skeptical whether NAD still helps¡ªor may even degrade performance¡ªoutside that regime.
+
+* **Baseline coverage and positioning against existing methods are initially weak.**
+  Multiple reviewers emphasize that the original experiments **lack direct, matched comparisons** to strong existing **test-time reasoning / selection methods**:
+
+  * **Confidence- and entropy-based selection** (Self-Certainty, DeepConf, PiCSAR, etc.),
+  * **Length-based methods** like Short-1@k (¡°don¡¯t overthink it¡±),
+  * Other **test-time reasoning and decoding schemes** (e.g., TTRL, factuality decoding like DoLa / SLED, etc.).
+    Given the claim that internal neuron signals capture more structure than these ¡°external¡± behaviors, reviewers expect **head-to-head comparisons under matched budgets (accuracy + wall-clock + tokens)**, and view the absence of such baselines as a major weakness of the original submission.
+
+* **Insufficiently justified claim that neuron patterns add value beyond entropy / confidence.**
+  One reviewer finds the argument that **activation patterns capture ¡°structure beyond entropy¡±** not convincingly supported:
+
+  * The paper itself shows **correlation between number of activated neurons and entropy**, suggesting the clustering may be driven by a scalar that entropy already reflects.
+  * Demonstrating that a high-dimensional representation has more structure than a single scalar is **trivial in principle**; what¡¯s missing is stronger evidence that this structure is **meaningfully predictive beyond simple entropy/confidence baselines**, especially with statistical rigor.
+
+* **Methodological sensitivity and hyperparameter robustness under-explored.**
+  Several aspects of NAD¡¯s design are seen as under-analyzed:
+
+  * The **definition of ¡°activated neuron set¡±** depends on **thresholds / top-k per token, chunk size B, and layer subsets**, but reviewers feel the sensitivity analysis is limited and somewhat ad hoc.
+  * The empirical results are mostly reported for a specific sampling regime (**T=0.6, top-p=0.9, N=64**); reviewers ask for more systematic robustness checks over **different temperatures, top-p values, and sample sizes N**, and better understanding of **when signals degrade or flip**.
+  * The **early-stopping position** (B=32) is chosen heuristically; reviewers point out that the claim ¡°early correctness prediction within 32 tokens¡± needs clearer operational definition, and question if / how that hyperparameter could be set automatically.
+
+* **Experimental setup and statistical rigor.**
+  Some reviewers find the experimental methodology **not fully motivated or statistically rigorous**:
+
+  * The **choice of specific model variants** (exact Qwen and DeepSeek versions) is not clearly justified beyond availability/precedent.
+  * The work deals heavily with **sampling**, but initial experiments appear to use **few random seeds**, with limited reporting of variance or significance; reviewers explicitly call for **multiple seeds, bootstrap, or statistical tests** to distinguish signal from noise.
+  * Certain plots (e.g., t-SNE visualizations, neuron-count vs. performance curves) are seen as **suggestive but not conclusive**, and questions about power-law behavior, confidence intervals, and metrics for separation are left open.
+
+* **Scope and generality of claims may be overstated.**
+  While math-style benchmarks show clear benefits, some reviewers observe that:
+
+  * On **open-ended code tasks**, the advantages of neuron agreement vs. simple baselines appear **smaller and more fragile**, with MinAct sometimes underperforming or behaving differently than in math settings.
+  * There is **no evidence on broader open-ended tasks** (e.g., free-form scientific reasoning, retrieval-augmented tasks), so claims about NAD¡¯s applicability to ¡°open-ended¡± settings are seen as **preliminary**.
+  * Overall, a reviewer characterizes the framework as **promising but not yet a fully convincing, general decoding principle**, and urges more diverse tasks, models, and baselines before treating it as a robust, broadly applicable technique.
+
+* **Computational cost and practical overhead not fully characterized.**
+  Although token savings are emphasized, reviewers point out that **overall efficiency must also include**:
+
+  * The overhead of **recording intermediate activations**,
+  * Building **pairwise Jaccard matrices** (O(N2) in N) and storing bitsets,
+  * The **wall-clock runtime and memory footprint** compared to external confidence-based baselines.
+    In the initial version, these aspects are not quantified in enough detail, leaving the **real-world cost¨Cbenefit trade-off of NAD somewhat unclear**.

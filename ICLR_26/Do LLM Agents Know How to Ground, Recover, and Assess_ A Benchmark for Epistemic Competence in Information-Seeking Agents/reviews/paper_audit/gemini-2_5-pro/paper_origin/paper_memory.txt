@@ -1,0 +1,87 @@
+# Global Summary
+This paper introduces SeekBench, a benchmark for evaluating the epistemic competence of Large Language Model (LLM) search agents. The authors argue that traditional final-answer accuracy metrics (like F1 score) are insufficient as they overlook the process of how agents reason with and act on external evidence. SeekBench consists of 190 expert-annotated traces with over 1,800 steps, designed to analyze agent behaviors at a granular level. The core of the benchmark is a framework that assesses three epistemic competencies: (1) Groundedness, whether reasoning is supported by evidence; (2) Recovery, the ability to adapt search strategies after poor results; and (3) Calibration, correctly assessing when evidence is sufficient to provide an answer. The paper defines quantitative metrics for each competency: Reasoning Quality Index (RQI), Evidence Recovery Function (ERF), and Calibration Error (CE).
+
+The authors evaluate several state-of-the-art RL-trained search agents (ASEARCHER, Search-R1, etc.) against a base model (Qwen-2.5-7B-Instruct) and its few-shot version across seven QA datasets. A key finding is that while RL training improves final answer accuracy and calibration (reducing overconfident answers from 63.1% to 35.3%), it fails to improve, and sometimes degrades, evidence-grounded reasoning (Few-shot RQI=0.27 vs. RL agents <0.2). The analysis reveals agent-specific strengths, such as Search-R1's superior evidence synthesis capabilities, which are masked by accuracy-only evaluations. The work concludes that epistemic competence is a critical and measurable aspect of agent reliability, and their framework provides a path for developing more capable and trustworthy information-seeking agents.
+
+# Abstract
+The paper introduces SeekBench, a benchmark for evaluating the epistemic competence of LLM search agents beyond final answer accuracy. It analyzes agent response traces at the step level to assess three key competencies: (1) generating reasoning grounded in evidence, (2) recovering from low-quality search results via adaptive reformulation, and (3) proper calibration to assess evidence sufficiency before answering. The benchmark is built on 190 expert-annotated traces with over 1,800 response steps. Analysis of state-of-the-art LLM search agents reveals critical behavioral gaps that traditional metrics miss. For instance, it highlights specialized skills like Search-R1's synthesis capabilities. The findings suggest that accuracy-only evaluations are insufficient and that focusing on epistemic competencies can guide the development of more reliable agents.
+
+# Introduction
+- The paper critiques the current evaluation paradigm for LLM search agents, which relies on final-answer metrics like exact match and F1 score. This approach fails to assess "epistemic competence"—the ability to acquire, evaluate, and act upon knowledge in a justified manner.
+- Agents can achieve high scores while exhibiting poor epistemic behaviors like hallucination or failing to recognize knowledge gaps.
+- The paper introduces SeekBench, a benchmark to address these limitations by evaluating agents at the process level.
+- SeekBench is composed of 190 expert-annotated traces with over 1,800 steps. The annotation schema achieves high human agreement (Cohen's Kappa κ > 0.8) and strong alignment with LLM judges (κ > 0.7).
+- The framework formalizes three core epistemic competencies and associated metrics (Table 1):
+    - **Groundedness (Reasoning)**: Generating reasoning supported by retrieved information. Metric: Reasoning Quality Index (RQI).
+    - **Recovery (Search)**: Adaptively reformulating queries when results are insufficient. Metric: Evidence Recovery Function (ERF).
+    - **Calibration (Answer)**: Accurately assessing if current information is sufficient to answer. Metric: Calibration Error (CE).
+- A large-scale evaluation was conducted on 28,493 traces, revealing that RL agents excel at evidence gathering but struggle with reasoning. The framework uncovers agent-specific strengths, like Search-R1's synthesis vs. the Base model's reasoning.
+
+# Related Work
+- **Reasoning Quality Assessment**: Existing work focuses on structural alignment with golden reasoning chains or graph-based dependencies, rather than epistemic competence like reasoning about uncertainty and evidence.
+- **Search Agent Evaluation**: Current evaluations use final-answer metrics (EM, F1, LLM-as-Judge) and do not assess if agents can ground reasoning, adapt to poor search results, or calibrate confidence based on evidence.
+- **Process-Level Analysis Frameworks**: Prior frameworks lack formal definitions and quantitative metrics for epistemic competencies. This work aims to fill that gap by formalizing groundedness, recovery, and calibration with precise mathematical definitions.
+
+# Method
+The methodology is a three-phase process based on Content Analysis principles.
+
+- **Phase 1: Observable Features and Schema Construction**:
+    - An annotation schema was developed iteratively by three expert annotators on 190 agent traces.
+    - The schema captures functional types of steps (e.g., InformationSynthesis, PlanFormation, StateAssessment for reasoning) and quality attributes (e.g., groundedness).
+    - The initial 12 annotation fields were refined to 8, achieving high inter-annotator reliability (overall Cohen's Kappa κ = 0.811).
+    - The schema was validated with LLM judges (GPT-4.1, GPT-4.1-mini, GPT-5), which showed strong alignment with human experts (κ = 0.693, 0.731, and 0.754, respectively).
+
+- **Phase 2: Latent Constructs and Competency Definition**:
+    - From observed behavioral patterns, three latent epistemic competencies were defined:
+        - **Groundedness**: Alignment between reasoning and evidence.
+        - **Recovery**: Ability to adapt search strategies after failures.
+        - **Calibration**: Appropriateness of answering based on evidence quality.
+
+- **Phase 3: Competency Metrics and Operationalization**:
+    - **Evidence State (E)**: A formal definition to quantify evidence quality at each turn `t`. `E_i,t = C_i,t + Q_i,t`, where `C` is clarity and `Q` is quality (sufficiency). The state can be 0 (poor), 1 (partial), or 2 (good).
+    - **Groundedness Metric (RQI)**: The Reasoning Quality Index measures the proportion of reasoning steps supported by evidence. It can be calculated at the model level (`RQI_model`) or broken down by reasoning type (`RQI_type`).
+    - **Recovery Metric (ERF)**: The Evidence Recovery Function `ERF(t)` measures the cumulative proportion of traces that have successfully recovered (reached `E=2` or a correct answer) by turn `t`.
+    - **Calibration Metric (CE)**: Calibration Error measures the deviation of an agent's answering behavior from an ideal policy that answers if and only if evidence is good (`E=2`). A perfect agent has `CE = 0`.
+
+# Experiments
+- **Experimental Setup**:
+    - Models: Qwen-2.5-7B-Instruct ("Base"), its "Few-shot" version, and RL-trained agents (SEARCH-R1, RESEARCH, ASEARCHER, DEEPRESEARCHER).
+    - Datasets: Seven QA benchmarks (NQ, TriviaQA, PopQA, HotpotQA, 2Wiki, MusiQue, Bamboogle).
+    - Scale: 28,493 traces and 283,950 steps were annotated using GPT-4.1-mini as the judge.
+    - Aggregate F1 ranking: ASEARCHER > Search-R1 > RESEARCH > Few-shot ≈ DEEPRESEARCHER > Base.
+
+- **Evaluating Justified Reasoning via Evidence Grounding (RQI)**:
+    - RL training fails to improve evidence-grounded reasoning. The Few-shot model achieves the highest RQI (0.27), outperforming all RL agents.
+    - Plan Formation is the biggest weakness for all agents (RQI < 0.2). Information Synthesis is a relative strength (e.g., ASEARCHER RQI=0.56 for this type).
+
+- **Recovery Analysis (ERF)**:
+    - ASEARCHER, the model with the highest F1 score, shows the best recovery performance. DEEPRESEARCHER shows the poorest.
+    - "Refine" and "Follow-up" search strategies are most effective for recovery, while "Repeat" provides minimal benefit.
+
+- **Evidence-Aligned Calibration (CE)**:
+    - Evidence quality is strongly correlated with answer accuracy. RL-trained models achieve 31.6% accuracy when answering with good evidence (`E=2`) vs. 8.4% without.
+    - RL training improves calibration. RL-trained models reduce overconfident answering from 63.1% (Base) to 35.3% and achieve the lowest overall Calibration Error (0.309).
+
+- **Exploiting Epistemic Competencies for Performance Gains**:
+    - An "agent synthesis" experiment was conducted where one agent generates an answer based on evidence collected by another.
+    - SEARCH-R1 is the most effective synthesizer, improving F1 scores by +1.27 on average.
+    - The Base model's collected evidence, when used by other agents, yields the highest F1 gains (+2.42 on average), suggesting its evidence collection is strong but its synthesis is weak, a nuance missed by accuracy-only metrics.
+
+# Conclusion
+- The paper introduces SeekBench to evaluate the epistemic competence of LLM search agents, moving beyond accuracy-only metrics.
+- The proposed framework, with its metrics (RQI, ERF, CE), reveals that RL training improves accuracy and calibration but not evidence-grounded reasoning.
+- The benchmark uncovers agent-specific strengths, like Search-R1's proficiency in evidence synthesis and the Base model's strong reasoning capabilities, which are masked by traditional evaluations.
+- The work establishes epistemic competence as an essential quality for reliable AI and provides a framework for developing better information-seeking agents. Future work could explore modular architectures and training methods that improve higher-order reasoning.
+
+# References
+This section contains the bibliography for the paper, citing works related to LLMs, agents, reinforcement learning, question answering datasets, and evaluation methodologies.
+
+# Appendix
+- **Data Sanitization**: Test sets were sanitized by removing ambiguous/unanswerable questions and questions likely affected by data contamination (i.e., answered correctly without any search queries).
+- **Inter-Annotator Agreement Analysis**: Provides detailed Cohen's Kappa (κ) scores. Human-human agreement was high (κ > 0.8 for functional type, κ > 0.75 for quality attribute, overall κ = 0.811). LLM judges showed strong alignment with humans: GPT-5 (κ=0.754), GPT-4.1-mini (κ=0.731), GPT-4.1 (κ=0.693).
+- **LLM-as-Judge for SeekBench**: Includes the prompts used for LLM-based annotation of reasoning type, grounding, search behavior, and search result quality.
+- **Accuracy-level performance**: Table 3 shows F1 scores: ASearcher (39.77%), Search-R1 (39.29%), ReSearch (38.30%), Few-shot (36.04%), DeepResearcher (36.00%), Base (33.5%).
+- **Evidence-Grounded Reasoning Analysis**: Provides deeper analysis. Base and Few-shot models show better epistemic alignment, with groundedness increasing with better evidence (from 0.49 at E=1 to 0.64-0.68 at E=2). Search-R1 performs poorly on this. A case study shows an agent answering correctly despite ungrounded reasoning.
+- **Evidence Calibration Analysis**: Details calibration for individual RL agents. ASEARCHER has the lowest CE (0.302). SEARCH-R1 is the most conservative, with the lowest overconfident answering rate (0.226) but the highest overcautious rate (0.187). Analysis shows all models tend to answer overconfidently before sufficient evidence is found.
+- **Agent Synthesis**: Table 5 details F1 improvements from agent synthesis. Search-R1 as a synthesizer improves F1 by +1.27 on average. Using Base's evidence with the Search-R1 synthesizer yields a +3.50 F1 improvement.
+- **Discussion: Understanding Metric Trade-offs**: Highlights an inverse relationship between accuracy (F1) and reasoning quality (RQI) for RL-trained agents. It also notes that better calibration (lower CE) does not imply better reasoning (higher RQI), emphasizing the need to evaluate these competencies separately.

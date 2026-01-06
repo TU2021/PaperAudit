@@ -1,0 +1,194 @@
+Here are four independent reviews of the research paper.
+
+***
+
+### **Review 1**
+
+#### Summary
+
+This paper introduces the Two-Way Garment Transfer Model (TWGTM), a novel, unified diffusion-based framework designed to handle both virtual try-on (VTON) and its inverse task, virtual try-off (VTOFF). The core idea is to treat these two tasks as complementary, bidirectional processes within a single model. The authors propose a dual-conditioned guidance mechanism operating in both latent and pixel spaces to facilitate this unification. To address the asymmetry in mask availability between the two tasks, a phased training strategy is devised. The paper validates its approach through extensive experiments on the VITON-HD and DressCode datasets, demonstrating competitive or state-of-the-art performance.
+
+#### Soundness
+
+The methodology appears sound and is well-motivated. The initial analysis presented in Figure 1, which shows significant parameter and feature similarity between existing VTON and VTOFF models, provides a strong logical foundation for pursuing a unified framework. The proposed architecture, while complex, logically combines several powerful concepts: a diffusion backbone for generation, dual-space conditioning to inject rich reference information (semantic via SAM, spatial via SRM), and an extended attention mechanism for effective feature fusion. The two-stage training strategy is a pragmatic solution to the practical problem of mask asymmetry between VTON (mask-guided) and VTOFF (mask-free). The ablation studies systematically validate the contributions of the key architectural components.
+
+#### Presentation
+
+The paper is well-written and clearly structured. The introduction effectively frames the problem and motivates the unified approach. The architecture is complex, but the overview in Figure 11(b) and the detailed block diagram in Figure 10(c) are helpful aids for understanding the data flow. The experimental results are presented clearly in tables and are supported by strong qualitative examples in Figures 23 and 30, which effectively highlight the advantages of the proposed method over existing SOTA approaches. The writing is generally of high quality, though the methodology section is quite dense and may require careful reading.
+
+#### Contribution
+
+The primary contribution of this paper is significant and novel. To my knowledge, this is the first work to successfully frame and implement a unified model for both VTON and VTOFF. This shifts the paradigm from treating them as isolated problems to viewing them as two sides of the same coin (i.e., forward and inverse deformation). This conceptual contribution is powerful and opens up new research directions. The paper also makes a strong technical contribution through the design of the TWGTM architecture and the phased training strategy, which are shown to be highly effective. Furthermore, the strong results on the under-explored VTOFF task are a valuable contribution in their own right.
+
+#### Strengths
+
+1.  **Novel Conceptual Framework:** The unification of VTON and VTOFF is an elegant and insightful idea that fundamentally reframes the problem. The initial analysis in Figure 1 provides a compelling justification for this approach.
+2.  **Strong Empirical Performance:** The model achieves state-of-the-art or highly competitive results on both VTON and VTOFF tasks across multiple datasets and metrics, as shown in Tables 1, 2, and 3. The qualitative results (Figures 23, 30) are particularly impressive in terms of detail preservation.
+3.  **Comprehensive Architecture:** The dual-space guidance mechanism, combining a Semantic Abstraction Module (SAM) and a Spatial Refinement Module (SRM), is a sophisticated and effective way to condition the diffusion model.
+4.  **Thorough Ablation Studies:** The paper includes extensive ablation studies (Table 4) that rigorously validate the design choices, such as the necessity of the SRM and the spatial concatenation strategy.
+
+#### Weaknesses
+
+1.  **Architectural Complexity:** The proposed model is a composite of many advanced components (Swin-T, QFormer, multiple attention blocks), which may raise concerns about computational cost and reproducibility.
+2.  **Dense Methodology Section:** While the components are described, the "Methodology" section is very dense. A higher-level overview of the information flow before diving into the equations for each module could improve readability.
+
+#### Questions
+
+1.  The motivation from Figure 1 is a key starting point. After joint training, have you analyzed the weights of the unified TWGTM model? Do certain layers or attention heads specialize for VTON vs. VTOFF, or do the parameters become truly task-agnostic?
+2.  The "Zero Linear Layer" (ZLL) is an interesting component for gradual feature fusion. How was this design chosen over simpler alternatives, such as a learnable scalar gate or a simple weighted sum that starts with a weight of zero?
+3.  How does the framework handle more complex scenarios, such as multi-layer clothing (e.g., trying on a jacket over a shirt) or garments with extreme transparency or intricate lace patterns?
+
+#### Rating
+
+-   Overall (10): 9 — The paper introduces a highly novel and impactful unified framework for VTON and VTOFF, supported by a robust methodology and excellent empirical results (Tables 1-3).
+-   Novelty (10): 10 — To my knowledge, this is the first work to successfully unify VTON and VTOFF into a single bidirectional model, which is a significant conceptual leap (Abstract, Section 1).
+-   Technical Quality (10): 9 — The proposed architecture is sophisticated and well-designed, and the experiments, including extensive ablations (Table 4), are technically rigorous.
+-   Clarity (10): 8 — The paper is mostly well-written, but the methodology section is very dense and could be challenging for readers not deeply familiar with all prerequisite models (Section: Methodology).
+-   Confidence (5): 5 — I am an expert in this area and am confident in my assessment of the paper's strengths and weaknesses.
+
+***
+
+### **Review 2**
+
+#### Summary
+
+The paper proposes a unified diffusion model, TWGTM, for performing both virtual try-on (VTON) and virtual try-off (VTOFF). The method is built upon a latent diffusion model and introduces a complex conditioning mechanism involving dual-space (latent and pixel) guidance. Key components include a Semantic Abstraction Module (SAM) and a Spatial Refinement Module (SRM) for feature extraction, an Extended Attention Block for feature fusion, and a two-stage training strategy to handle the different mask requirements of VTON and VTOFF. The authors claim state-of-the-art performance on both tasks.
+
+#### Soundness
+
+The soundness of the methodology has several questionable points. The central claim of learning an "implicit unified deformation field" (Abstract) is an overstatement; the model is a conditional image generator and does not explicitly model or infer any geometric deformation field. The architecture is excessively complex, bolting together numerous heavy components (CLIP, QFormer, Swin Transformer, Mask2Former-like blocks) without sufficient justification for why this level of complexity is necessary over simpler alternatives.
+
+The training strategy also raises concerns. The input processing (Section "Processing in Latent Space") concatenates nine channels into the U-Net, which is non-standard and potentially inefficient. The justification for using "morphologically augmented square-shaped masks" in Stage 2 is weak; this seems like an arbitrary and potentially biasing prior that may not generalize well. The description of the "TaskFormer" module is convoluted, and its necessity over a more standard feature pyramid network or attention-based decoder is not clearly argued. While the ablation studies are present, they primarily justify the authors' own complex components rather than comparing against simpler, more established baselines for those components.
+
+#### Presentation
+
+The presentation of the methodology is a significant weakness. The "Methodology" section is extremely dense, poorly organized, and difficult to follow. For instance, the description of the input tensor `I_t` is confusing, and the role of `ones(M)` is not immediately clear. The paper introduces bespoke terms like "TaskFormer" and "Extended Attention Block" but fails to provide clear, high-level intuition before burying the reader in low-level implementation details and equations. Figure 11(b) is intended as an overview but is cluttered with lines and icons, making it hard to trace the overall data flow. Several figures have incorrect captions; for example, Figure 4 is labeled as a "VTON" comparison but clearly shows VTOFF results. This lack of care in presentation undermines the credibility of the work.
+
+#### Contribution
+
+The paper's contribution is mixed. The idea of unifying VTON and VTOFF is novel. However, the proposed solution is a "kitchen-sink" approach that lacks elegance and is of questionable practical value due to its complexity. The performance gains, while present, may not justify the massive increase in model complexity and engineering effort compared to training two separate, streamlined models. The contribution to the VTOFF task is notable, but it is intertwined with the overly complex unified framework.
+
+#### Strengths
+
+1.  **Addresses an Under-explored Task:** The paper provides a strong contribution to the nascent field of VTOFF, with results that significantly outperform prior work (Table 3).
+2.  **Extensive Ablation Study:** The authors performed a wide range of ablations (Table 4), which helps in understanding the role of different components within their proposed architecture.
+3.  **Joint Training Analysis:** The analysis in Figures 38 and 39, showing mutual performance benefits from joint training, is an interesting finding that supports the core hypothesis.
+
+#### Weaknesses
+
+1.  **Overly Complex Architecture:** The model is an amalgamation of numerous large, pre-existing models, making it difficult to analyze, reproduce, and practically deploy. The justification for this complexity is insufficient.
+2.  **Poor Clarity in Methodology:** The methodology section is exceptionally difficult to parse, hindering a clear understanding of the model's inner workings (Section: Methodology).
+3.  **Unsubstantiated Claims:** The paper claims to learn an "implicit unified deformation field" (Abstract), which is not supported by the generative nature of the method.
+4.  **Careless Errors:** There are multiple errors in figure captions (e.g., Figure 4, Figure 6/40), which suggests a lack of careful proofreading.
+
+#### Questions
+
+1.  In the "Processing in Latent Space" section, can you clarify the rationale for concatenating the guidance feature `E(h_f)` and mask `resize(h_m)` to the noisy latent `Noise_t(E(h_i))` as input channels to the U-Net, instead of using a more standard cross-attention mechanism for conditioning?
+2.  The use of "square-shaped masks" in Stage 2 of training seems arbitrary. How sensitive is the model's performance to this specific choice? Have you experimented with other generic mask shapes or a curriculum that gradually moves from precise masks to no masks?
+3.  Could you provide a clearer, higher-level justification for the Mask2Former-inspired design of the "TaskFormer" module? What specific properties of this architecture make it uniquely suited for this problem compared to, for example, a simpler transformer decoder operating on Swin Transformer features?
+4.  Variant 1 (w/o SRM) in Table 4 shows that the SRM is critical for VTOFF but has a much smaller impact on VTON. Does this suggest that the unified architecture is asymmetric, with the SRM primarily serving the VTOFF task?
+
+#### Rating
+
+-   Overall (10): 5 — The novel idea of unifying VTON/VTOFF is undermined by an overly complex, poorly explained methodology and questionable design choices.
+-   Novelty (10): 8 — The core concept of a unified bidirectional framework is highly novel (Abstract), but the architectural components are mostly borrowed from prior work.
+-   Technical Quality (10): 5 — The model is technically overwrought, and key design choices lack rigorous justification (Section: Methodology, Section: Training Strategy). The experimental results are strong but cannot fully compensate for the methodological weaknesses.
+-   Clarity (10): 3 — The methodology section is extremely difficult to understand, and there are multiple errors in figure captions, severely hindering the paper's readability (Section: Methodology, Figure 4 caption).
+-   Confidence (5): 5 — I am highly confident in my assessment, having significant experience with generative models and image synthesis.
+
+***
+
+### **Review 3**
+
+#### Summary
+
+This paper proposes TWGTM, a unified diffusion model for bidirectional garment transfer, encompassing both virtual try-on (VTON) and virtual try-off (VTOFF). The authors motivate this unified approach by highlighting the complementary nature of the two tasks. The model architecture features a dual-guidance mechanism that leverages semantic and spatial features from a reference image, which are injected into a U-Net backbone via a novel "Extended Attention Block". A two-stage training curriculum is introduced to bridge the gap in mask dependency between VTON and VTOFF. The method is evaluated on VITON-HD and DressCode datasets, where it shows strong quantitative and qualitative performance.
+
+#### Soundness
+
+The overall approach is methodologically sound. The core idea of treating VTON and VTOFF as reversible operations and handling them with a single model by swapping inputs is clever and logically consistent. The use of a diffusion model as the generative backbone is appropriate for this high-fidelity synthesis task. The dual-branch feature extraction (SAM and SRM) to capture different aspects of the reference image is a well-established and effective strategy. The phased training approach is a reasonable heuristic to tackle the problem of generating masks for VTOFF. The ablation studies presented in Table 4 are thorough and provide convincing evidence for the effectiveness of the main components, such as the Spatial Refinement Module and the use of spatial concatenation.
+
+#### Presentation
+
+The paper's presentation has both strengths and weaknesses. On the positive side, the introduction provides clear context, the related work is comprehensive, and the experimental section is well-supported with extensive tables and compelling visual results (e.g., Figures 23, 30). The qualitative comparisons clearly demonstrate the model's ability to preserve fine details.
+
+However, the presentation of the methodology is a major drawback. The section is dense and filled with jargon, making it very difficult to follow the intricate details of the architecture and training process. Figure 11(b), the main architectural diagram, is overly complex and fails to provide a clear, intuitive overview. There are also noticeable errors, such as the caption for Figure 4, which incorrectly labels a VTOFF comparison as "VTON results". Similarly, the text refers to Figure 6 for VTOFF ablations, but the corresponding image is Figure 40. These issues significantly detract from the paper's quality and require careful revision.
+
+#### Contribution
+
+The paper makes a solid contribution to the field. The primary contribution is the novel formulation of VTON and VTOFF as a single, unified problem, which is a valuable conceptual advance. The proposed TWGTM model, despite its complexity, serves as a strong proof-of-concept for this unified approach, delivering state-of-the-art results, especially on the challenging and less-studied VTOFF task (Table 3). The work successfully pushes the boundary of what is possible in clothing-centric image synthesis.
+
+#### Strengths
+
+1.  **Excellent Quantitative and Qualitative Results:** The method demonstrates SOTA performance on VTOFF (Table 3) and very competitive results on VTON (Tables 1, 2). The visual examples in Figures 23 and 30 are convincing and showcase superior detail preservation.
+2.  **Novel Unification of Tasks:** The paper is the first to propose and successfully implement a unified framework for VTON and VTOFF, which is a significant conceptual contribution.
+3.  **Thorough Experimental Validation:** The experiments are comprehensive, covering multiple datasets, strong baselines, and a detailed ablation study (Table 4) that justifies the architectural design.
+4.  **Effective Handling of VTOFF:** The paper makes a strong contribution to the VTOFF task, proposing a method that clearly outperforms existing work in preserving garment structure and texture.
+
+#### Weaknesses
+
+1.  **Clarity of Methodology:** The methodology section is poorly written, making the proposed architecture and training process very difficult to understand (Section: Methodology). This is the most significant weakness of the paper.
+2.  **Inconsistent Performance and Explanation:** On the DressCode dataset (Table 2), the model's LPIPS score is worse than some baselines. The paper's explanation—"inherent color and texture inconsistencies"—is speculative and lacks supporting analysis.
+3.  **Presentation Errors:** The paper contains several distracting errors, such as incorrect figure captions (e.g., Figure 4) and inconsistent figure numbering in the text, which should be corrected.
+
+#### Questions
+
+1.  Could you please revise the methodology section to improve its clarity? Specifically, a simplified diagram illustrating the input tensor construction (`I_t` in "Processing in Latent Space") would be highly beneficial.
+2.  The caption for Figure 4 reads "Qualitative comparison of VTON results," but the figure shows VTOFF. Please correct this and other similar errors throughout the manuscript.
+3.  Regarding the mixed results on DressCode (Table 2), can you provide a more concrete analysis of why your method might have a higher LPIPS score than IDM-VTON, despite having better FID and SSIM scores? Is it possible your model prioritizes structural realism over perceptual texture similarity in some cases?
+
+#### Rating
+
+-   Overall (10): 7 — A strong paper with a novel idea and excellent results, but it is held back by a very poorly written methodology section and several presentation errors.
+-   Novelty (10): 9 — The unified VTON-VTOFF framework is a genuinely new and valuable concept for the field (Abstract, Section 1).
+-   Technical Quality (10): 8 — The model is technically sound and the experimental validation is rigorous (Table 4, Figures 38, 39), though the architecture is very complex.
+-   Clarity (10): 4 — The paper's clarity is severely hampered by the impenetrable methodology section and careless errors in figure captions and references (Section: Methodology, Figure 4 caption).
+-   Confidence (5): 5 — I am confident in my evaluation, as I have expertise in generative models for image editing and synthesis.
+
+***
+
+### **Review 4**
+
+#### Summary
+
+This paper introduces TWGTM, a single diffusion-based model that unifies two related tasks: virtual try-on (VTON) and virtual try-off (VTOFF). The authors argue that these are inverse processes that can be modeled jointly. Their method employs a complex architecture with dual-space conditioning from reference images and a phased training strategy to accommodate task-specific requirements (like input masks). The paper demonstrates strong performance on both tasks, particularly advancing the state of the art in the less-explored VTOFF domain.
+
+#### Soundness
+
+The technical approach is sound in that it combines several powerful, proven components into a coherent, albeit very complex, system. The logic of reversing inputs to switch between VTON and VTOFF is simple and elegant. The dual-space guidance (SAM and SRM) is a reasonable way to provide rich conditioning information to the diffusion model. The phased training is a practical, if somewhat heuristic, approach to a real problem. However, the soundness of the overall system from a practical standpoint is questionable. The sheer number of large, pre-trained models being combined (CLIP, Swin-T, etc.) suggests that the resulting model is enormous and computationally expensive, which may not be a practical trade-off for the observed benefits of joint training.
+
+#### Presentation
+
+The paper is structured logically, moving from motivation to method to experiments. The core idea is communicated well in the introduction. However, the presentation of the method itself is overly complicated and dense. It reads more like an engineering report detailing every component rather than a scientific paper motivating design choices from first principles. The architectural diagram (Figure 11b) is too busy to be easily understood. While the results are presented with clear tables and good qualitative examples, the overall narrative could be simplified to focus more on the "why" behind the design rather than just the "what".
+
+#### Contribution
+
+The paper's main contribution is the conceptual reframing of VTON and VTOFF as a unified, bidirectional task. This is a valuable contribution that could inspire future work in multi-task learning for related generative problems. The paper also makes a notable contribution to the VTOFF task by establishing a new state-of-the-art baseline. However, the contribution of the specific TWGTM architecture is less clear. It feels like an incremental, albeit powerful, combination of existing techniques rather than a fundamental architectural innovation. The practical contribution is limited by the model's likely high computational cost and complexity, which could be a barrier to adoption.
+
+#### Strengths
+
+1.  **Conceptual Novelty:** The idea of a unified, bidirectional model for VTON and VTOFF is the paper's strongest point and a genuine intellectual contribution.
+2.  **Strong VTOFF Performance:** The paper significantly advances the state of the art on the VTOFF task (Table 3), which has practical applications in fashion design and e-commerce.
+3.  **Demonstrated Synergy:** The experiments showing that joint training or fine-tuning on one task can benefit the other (Figures 38, 39, Variants 4 & 5 in Table 4) provide evidence supporting the unified model hypothesis.
+4.  **Controllability:** The exploration of using bounding boxes for VTOFF (Variant 3) is a nice touch that demonstrates a path toward more controllable generation, which is practically useful.
+
+#### Weaknesses
+
+1.  **Extreme Complexity and Practicality:** The model is a "kitchen sink" approach, combining many large and computationally intensive components. The paper lacks any discussion of computational costs (parameters, FLOPs, training/inference time), which is a critical omission for assessing its practical value.
+2.  **Weak Justification for Unification over Specialization:** While the paper shows some mutual benefit from joint training, the gains appear marginal (e.g., Figure 39 shows very small improvements). It is not convincingly argued that this small benefit outweighs the engineering complexity of building one massive unified model versus two simpler, specialized ones.
+3.  **Ad-hoc Training Strategy:** The two-stage training process, particularly the use of square masks in Stage 2, feels like a brittle, hand-designed heuristic rather than a principled solution.
+
+#### Questions
+
+1.  Could you provide a detailed breakdown of the computational costs of TWGTM? Specifically, what is the total number of parameters, the training time on the specified hardware, and the inference latency per image for both VTON and VTOFF? How does this compare to running two separate SOTA models like CatVTON and TryOffAnyone?
+2.  The ablation study shows that Variant 3 ("w/ Mask2BBox") significantly improves all VTOFF metrics over the main model (e.g., FID drops from 10.393 to 9.201). Why is this superior method presented as an ablation variant rather than the main result for VTOFF? Does it have any qualitative disadvantages?
+3.  Given the model's complexity, have you considered whether a simpler approach could achieve similar results? For example, could two separate, simpler models be trained and then cross-fine-tuned on each other's tasks to achieve the observed synergistic benefits without the need for a complex unified architecture from the start?
+4.  How does the VTOFF model perform on challenging real-world cases with significant self-occlusion (e.g., a person crossing their arms) or when the garment is partially out of frame? The examples shown are relatively clean.
+
+#### Rating
+
+-   Overall (10): 6 — A conceptually interesting paper with strong results, but its extreme complexity and lack of discussion on practical costs limit its impact.
+-   Novelty (10): 8 — The unified framework concept is highly novel (Abstract), but the implementation relies heavily on combining existing architectural blocks.
+-   Technical Quality (10): 7 — The model is technically functional and achieves good results, but its design feels more brute-force than elegant, and the lack of computational analysis is a major flaw (Section: Experiments).
+-   Clarity (10): 6 — The core idea is clear, but the methodology is presented in a convoluted way that obscures the details and design rationale (Section: Methodology).
+-   Confidence (5): 4 — I am confident in my assessment, though I am not a specialist in the absolute minutiae of all the combined components (e.g., QFormer).

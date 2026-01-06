@@ -1,0 +1,46 @@
+Based on a critical review of the manuscript, several significant internal inconsistencies and discrepancies have been identified that affect the trustworthiness and scientific validity of the reported results.
+
+### Integrity Risk and Inconsistency Report
+
+**1. Contradictory Datasets in Appendix Results Tables**
+
+This is the most critical issue identified. The detailed, per-task numerical results presented in the appendix tables are inconsistent with the experimental setup described in the main body of the paper.
+
+*   **Evidence:**
+    *   **Section 4.1 (Block #15)** explicitly defines the 15 datasets comprising the "Large Number of Tasks" (LNT) benchmark. These are: AG News, DBPedia, Yelp, Yahoo, MNLI, QQP, RTE, SST-2, WiC, CB, COPA, BoolQ, MultiRC, and IMDB.
+    *   The heatmap figures in the appendix (e.g., Figure 4, visualized in Block #43) correctly label their axes with tasks from this LNT benchmark set (e.g., `multirc`, `boolq`, `wic`, `mnli`, etc.).
+    *   However, the text-based tables that supposedly provide the raw data for these heatmaps list a different set of tasks. For example, the table for "Surprise Buffer" (**Block #41**, corresponding to Figure 4) lists tasks such as `wsc`, `rc`, `squad`, and `drop`, which are not part of the LNT benchmark defined in Section 4.1. Simultaneously, it omits required LNT tasks like `multirc`, `qqp`, and `imdb`. The same discrepancy exists for the "Surprise Dual Learners" table (**Block #42**).
+*   **Problem:** The detailed numerical evidence provided in the appendix tables (**Blocks #41, #42**) does not correspond to the experiment the paper claims to have run. While the final average scores reported in these tables (e.g., 72.13) match the summary results in the main paper (Table 1, LNT avg for Surprise Replay is 72.1), the underlying per-task data is based on a mismatched and undefined set of tasks. This is a major contradiction that undermines the credibility of the detailed results.
+
+**2. Flawed and Incomplete Pseudocode**
+
+The pseudocode provided for the core method is critically flawed and does not accurately represent the algorithm described in the text.
+
+*   **Evidence:**
+    *   **Algorithm 1 (Block #13)** is titled "Dual-LoRA with Surprise Replay". However, the algorithm is missing the central replay mechanism.
+    *   The algorithm describes selecting surprising samples from the *current* task `D_t` (Line 4) and then sampling batches only from `D_t` (Line 6: `Sample batch ℬ_cur ⊂ D_t`).
+    *   It fails to show how the memory buffer `M` is updated with these surprising samples or, more importantly, how batches are sampled from `M` for replay, a step explicitly described in **Section 3.3 (Block #12)**: "The fast adapters are then updated by minimising the cross-entropy on the union batch ℬ_t ⊂ D_i ∪ M".
+*   **Problem:** The provided pseudocode omits the defining feature of a replay method, making it an incorrect and incomplete representation of the work. This prevents replication and suggests a lack of care in the paper's preparation.
+
+**3. Inconsistent Presentation of the Main Method vs. Ablation Results**
+
+The paper presents a specific version of its method as the primary "Surprise Replay" approach, yet the ablation study shows this version is suboptimal compared to other variants the authors tested.
+
+*   **Evidence:**
+    *   The method description in **Section 3.3 (Block #12)** states that surprise is computed and the buffer is updated *before* training on a new dataset. This corresponds to the "Surprise Before Update Before" (SB-UB) variant in the ablation study.
+    *   **Table 1** reports the LNT average for "Surprise Replay" as 72.1%. This matches the score for the SB-UB variant in **Table 3 (Block #25)**.
+    *   However, Table 3 also shows that the "Surprise After" (SA) variant achieves a superior LNT average of 73.1%. The text acknowledges this, stating that updating after training yields "significant gains" (**Block #23**).
+*   **Problem:** The main results are reported using a method (SB-UB) that the paper's own ablations demonstrate is inferior for the LNT setting, where the method's primary contribution is claimed. While not a direct contradiction, this is a logical inconsistency in the presentation and framing of the main results.
+
+**4. Mismatched References to Tables**
+
+There are several incorrect cross-references to tables within the text, which adds to the overall impression of sloppiness.
+
+*   **Evidence:**
+    *   **Section 4.2 (Block #19)** refers to "Table 11" when discussing results that are clearly presented in **Table 2**.
+    *   **Section 4.3 (Block #26)** refers to "Table 5 and 10" when discussing buffer size and replay ratio. The correct tables are **Table 4** (buffer size) and **Table 5** (replay ratio).
+*   **Problem:** These errors hinder readability and suggest a lack of careful proofreading.
+
+### Conclusion
+
+The manuscript contains a critical internal contradiction regarding the datasets used for the detailed results presented in the appendix. This discrepancy between the defined experimental setup and the provided evidence is a serious issue that fundamentally compromises the trustworthiness of the reported findings. Combined with flawed pseudocode and other inconsistencies, these issues warrant significant scrutiny and require thorough clarification and correction before the work can be considered scientifically sound.

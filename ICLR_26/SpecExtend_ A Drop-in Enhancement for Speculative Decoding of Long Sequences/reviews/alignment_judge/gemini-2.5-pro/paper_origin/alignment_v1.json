@@ -1,0 +1,104 @@
+{
+  "paper": "SpecExtend_ A Drop-in Enhancement for Speculative Decoding of Long Sequences",
+  "runs": [
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "deepreviewer",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "deep_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180
+      },
+      "config_key": "24b66d75b94c155df325f4e5f2603b40312e4469",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/deepreviewer/gpt-5-2025-08-07/paper_origin/deep_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "motivation_strength_alignment": 0.95,
+        "weakness_error_alignment": 0.5,
+        "overall_alignment": 0.6,
+        "explanation": {
+          "strength": "Both reviews identify the same core strengths: the novelty of the training-free Cross-model Retrieval (CMR) strategy, its practicality, and the strong empirical speedups for long sequences. The alignment is very high, with both emphasizing that the paper successfully addresses a critical problem in speculative decoding.",
+          "weakness": "There is partial overlap, with both reviews critiquing the unfair baseline comparisons and the reliance on last-layer attention without sufficient justification. However, Review B identifies a major weakness completely missed by Review A: the lack of end-task quality metrics (e.g., ROUGE, accuracy) to validate the speedups.",
+          "overall": "The reviews align very well on the paper's strengths and core contribution, but diverge significantly on the weaknesses, as the AI review raises a critical concern about missing task-quality metrics that the human review overlooks. This leads to a moderate overall alignment, where the general positive judgment is similar but the key reservations differ in focus and importance."
+        }
+      },
+      "generated_at": "2025-12-27T20:04:26"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "baseline_review.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180
+      },
+      "config_key": "a14d937ebf873b90a820c8cb44da768956431bd4",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/baseline_review.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "motivation_strength_alignment": 0.9,
+        "weakness_error_alignment": 0.55,
+        "overall_alignment": 0.65,
+        "explanation": {
+          "strength": "Both reviews identify the same core strengths: the novel, training-free \"Cross-model Retrieval\" strategy, strong empirical speedups, and the practical nature of the solution for a critical problem. The alignment is very high, with both emphasizing the same key contributions and positive results.",
+          "weakness": "There is clear overlap on several weaknesses, including unfair baseline comparisons, lack of justification for using last-layer attention, and the fixed retrieval frequency. However, Review B introduces a major, distinct criticism completely absent from Review A: the lack of any output quality evaluation (e.g., ROUGE, pass@1), creating a significant gap.",
+          "overall": "The reviews are highly aligned in their positive assessment of the paper's core contribution and empirical results. However, they diverge on the evaluation of its flaws, as Review B provides a more comprehensive critique that includes the crucial missing point of quality assessment, leading to a less consistent overall judgment on the paper's rigor."
+        }
+      },
+      "generated_at": "2025-12-27T20:08:38"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "final_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180
+      },
+      "config_key": "565dcfbed8e348ba365acb8ebe44bf867f3cd0c2",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/final_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "motivation_strength_alignment": 0.75,
+        "weakness_error_alignment": 0.5,
+        "overall_alignment": 0.55,
+        "explanation": {
+          "strength": "Both reviews identify the core strengths as the novel, training-free Cross-model Retrieval (CMR) strategy, its effectiveness in addressing performance degradation on long sequences, and the strong empirical speedups. Review B adds more detail on experimental rigor, but the primary contributions highlighted are the same.",
+          "weakness": "The reviews overlap in criticizing the lack of justification for using last-layer attention, the fixed retrieval frequency, and issues with baseline comparisons. However, Review B identifies several major, distinct weaknesses missed by Review A, including the complete absence of output quality evaluation and numerous internal consistency errors.",
+          "overall": "The reviews align well on the paper's positive contributions, judging it to be a novel and practical solution with strong results. However, they diverge significantly in their assessment of weaknesses, with Review B providing a much more comprehensive and critical analysis that includes major points absent from Review A, resulting in only a moderate overall alignment in judgment."
+        }
+      },
+      "generated_at": "2025-12-27T20:12:25"
+    }
+  ]
+}

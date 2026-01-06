@@ -1,0 +1,115 @@
+{
+  "paper": "ChemBOMAS_ Accelerated Bayesian Optimization for Scientific Discovery in Chemistry with LLM-Enhanced Multi-Agent System",
+  "runs": [
+    {
+      "config": {
+        "judge_model": "gpt-5-2025-08-07",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "baseline_file": "baseline_review.txt",
+        "final_file": "final_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 600,
+        "metric": "regression_v2_minimal",
+        "prompt_hash": "2142c04332"
+      },
+      "config_key": "1a46f14f5902ebb0fc2c14773cec6644d2fa5338",
+      "inputs": {
+        "baseline_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/baseline_review.txt",
+        "final_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/final_review_all.txt"
+      },
+      "regression": {
+        "score_delta": {
+          "baseline_score": 7.0,
+          "final_score": 7.0,
+          "delta": 0.0,
+          "scale_hint": "1-10"
+        },
+        "differences": [
+          {
+            "diff_type": "new_critique",
+            "summary": "Contradiction in UCB traversal policy (top-5 vs greedy)",
+            "paperaudit_types": [
+              "METHOD_LOGIC_CONSISTENCY",
+              "CONTEXT_MISALIGNMENT_INCOHERENCE"
+            ],
+            "why_impacts_score": "Contradictory algorithm policy undermines technical soundness and reproducibility",
+            "evidence": {
+              "baseline_quote": "UCB formulation and layer-wise top-5 node selection are described (Section 3.4 Step 3).",
+              "final_quote": "Section 3.4 says 'top-5 nodes'; Algorithm 1 greedily selects a single child per layer."
+            }
+          },
+          {
+            "diff_type": "new_critique",
+            "summary": "Notation inconsistency for exploration constant (κ vs C_p)",
+            "paperaudit_types": [
+              "RHETORICAL_PRESENTATION_MANIPULATION",
+              "METHOD_LOGIC_CONSISTENCY"
+            ],
+            "why_impacts_score": "Notation ambiguity and unexplained constants reduce clarity and reliability",
+            "evidence": {
+              "baseline_quote": "Sensitivity to UCB exploration constant (κ=20) is not analyzed (Section 4.2).",
+              "final_quote": "Exploration constant is denoted C_p in Section 3.4 and κ in Section 4.2 without equivalence."
+            }
+          },
+          {
+            "diff_type": "new_critique",
+            "summary": "Missing edge-case handling for UCB (ln(n_parent) at zero)",
+            "paperaudit_types": [
+              "EXPERIMENTAL_DESIGN_PROTOCOL",
+              "METHOD_LOGIC_CONSISTENCY"
+            ],
+            "why_impacts_score": "Missing edge-case handling impedes correct implementation and trust",
+            "evidence": {
+              "baseline_quote": "Pseudocode of the full algorithm (Appendix F, Algorithm 1) is provided.",
+              "final_quote": "Algorithm 1 uses ln(n_parent) in UCB without describing initialization for n_parent=0."
+            }
+          },
+          {
+            "diff_type": "new_critique",
+            "summary": "Initialization fairness discrepancies despite claims of identical prior",
+            "paperaudit_types": [
+              "EXPERIMENTAL_DESIGN_PROTOCOL",
+              "CLAIM_RESULT_DISTORTION",
+              "CONTEXT_MISALIGNMENT_INCOHERENCE"
+            ],
+            "why_impacts_score": "Unfair or inconsistent initialization compromises baseline comparisons",
+            "evidence": {
+              "baseline_quote": "clustering comparison explicitly states 'identical, fixed pseudo-data' across methods (Table 2).",
+              "final_quote": "Table 2 shows different 'Initial (%)'; Table 4 Arylation initial varies 45.40 to 78.71."
+            }
+          },
+          {
+            "diff_type": "intensified_critique",
+            "summary": "Overstated efficiency claims and wet-lab iteration/sample inconsistencies",
+            "paperaudit_types": [
+              "CLAIM_RESULT_DISTORTION",
+              "EVIDENCE_DATA_INTEGRITY",
+              "RHETORICAL_PRESENTATION_MANIPULATION"
+            ],
+            "why_impacts_score": "Overstated/unclear efficiency and wet-lab reporting weaken credibility",
+            "evidence": {
+              "baseline_quote": "claims 'up to a 34-fold improvement' vs BO w/o tree; table shows 26×/29×.",
+              "final_quote": "Largest reductions appear 13× and 8×; wet-lab '2 iterations, 43 samples' conflicts with 14 per round."
+            }
+          },
+          {
+            "diff_type": "score_rationale_shift",
+            "summary": "Technical Quality score lowered due to new contradictions and fairness issues",
+            "paperaudit_types": [
+              "METHOD_LOGIC_CONSISTENCY",
+              "EXPERIMENTAL_DESIGN_PROTOCOL"
+            ],
+            "why_impacts_score": "Added issues justify lower technical quality assessment",
+            "evidence": {
+              "baseline_quote": "Technical Quality (10): 6 — Sound algorithmic design, yet limited statistical testing and sensitivity analyses.",
+              "final_quote": "Technical Quality (10): 5 — contradictions in UCB traversal, fairness/initialization discrepancies, limited statistical testing."
+            }
+          }
+        ]
+      },
+      "generated_at": "2026-01-05T20:38:34"
+    }
+  ]
+}

@@ -1,0 +1,63 @@
+{
+  "scores": {
+    "per_reviewer": [
+      {
+        "overall": 7,
+        "novelty": 8,
+        "technical_quality": 7,
+        "clarity": 7,
+        "confidence": 4
+      },
+      {
+        "overall": 6,
+        "novelty": 7,
+        "technical_quality": 6,
+        "clarity": 6,
+        "confidence": 4
+      },
+      {
+        "overall": 6,
+        "novelty": 8,
+        "technical_quality": 6,
+        "clarity": 6,
+        "confidence": 3
+      },
+      {
+        "overall": 7,
+        "novelty": 8,
+        "technical_quality": 6,
+        "clarity": 7,
+        "confidence": 3
+      },
+      {
+        "overall": 7,
+        "novelty": 8,
+        "technical_quality": 6,
+        "clarity": 7,
+        "confidence": 3
+      }
+    ],
+    "avg": {
+      "overall": 6.6,
+      "novelty": 7.8,
+      "technical_quality": 6.2,
+      "clarity": 6.6,
+      "confidence": 3.4
+    },
+    "max": {
+      "overall": 10,
+      "novelty": 10,
+      "technical_quality": 10,
+      "clarity": 10,
+      "confidence": 5
+    },
+    "counts": {
+      "overall": 5,
+      "novelty": 5,
+      "technical_quality": 5,
+      "clarity": 5,
+      "confidence": 5
+    },
+    "num_reviewers": 5
+  }
+}

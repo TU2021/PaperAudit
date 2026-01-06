@@ -1,0 +1,55 @@
+### Summary of "Thanos: A Block-wise Pruning Algorithm for Efficient Large Language Model Compression"
+
+The paper introduces **Thanos**, a novel post-training pruning algorithm for large language models (LLMs). Thanos targets **memory reduction** and **computational efficiency** by using a **block-wise pruning strategy** that prunes weights in blocks rather than individually. This method incorporates **adaptive masking** and **joint weight updates** to better capture the impact of pruning while preserving model performance. Thanos supports various sparsity patterns, including **unstructured**, **structured**, and **semi-structured (n:m)** sparsity, which are optimized for hardware acceleration. The algorithm outperforms existing methods like **SparseGPT**, **Wanda**, and **magnitude pruning**, achieving **state-of-the-art performance** in terms of perplexity and **zero-shot accuracy**. The paper provides extensive experiments demonstrating the effectiveness of Thanos across multiple model scales, including **OPT** and **LLaMA**.
+
+---
+
+### Strengths
+
+1. **Block-Wise Pruning Approach**:
+
+   * The proposed **block-wise pruning** approach, where multiple weights are pruned together in blocks, offers a more efficient way to remove redundant parameters while maintaining model accuracy. This is a key innovation that improves upon earlier methods like **SparseGPT**.
+
+2. **Flexibility with Sparsity Patterns**:
+
+   * Thanos supports multiple sparsity types (**unstructured**, **structured**, and **n:m sparsity**), making it adaptable to various hardware and use cases. The method¡¯s **outlier row preservation** mechanism ensures stability in high-sparsity settings.
+
+3. **Hardware Optimization**:
+
+   * The algorithm is tailored for hardware acceleration, making it suitable for deployment in **resource-constrained environments**, a critical aspect for scaling LLMs.
+
+4. **State-of-the-Art Results**:
+
+   * Experiments show that Thanos achieves **superior perplexity and zero-shot accuracy** in comparison to **SparseGPT**, **Wanda**, and magnitude-based pruning methods. This demonstrates its effectiveness in pruning while retaining performance.
+
+5. **Comprehensive Experimental Evaluation**:
+
+   * The paper includes detailed evaluations across several models (**LLaMA** and **OPT**) and metrics. It also provides a **sensitivity analysis** for hyperparameters like the block size, contributing to the understanding of Thanos¡¯ performance.
+
+---
+
+### Weaknesses
+
+1. **Limited Model Generalization**:
+
+   * The experiments focus mainly on **OPT** and **LLaMA** models, leaving some uncertainty about **generalization** to other, newer model families like **Qwen3**. A more diverse evaluation across different architectures would strengthen the claim of broad applicability.
+
+2. **Lack of Detailed Ablation Studies**:
+
+   * The paper lacks a **comprehensive ablation study** to isolate the contributions of key algorithm components such as the block size, **adaptive masking**, and **outlier row preservation**. This makes it difficult to fully understand the individual impact of each component on performance.
+
+3. **Efficiency Claims Need More Support**:
+
+   * While the paper claims improved **efficiency**, particularly in terms of memory and computation, the authors **do not provide detailed runtime or memory analyses** to substantiate these claims. Including **runtime** and **memory usage comparisons** would provide a clearer picture of Thanos' practical benefits.
+
+4. **Limited Evaluation on Inference Time**:
+
+   * The paper focuses on metrics like perplexity and accuracy but **does not include practical metrics** such as **pruning time** or **inference-time memory usage**, which are crucial when deploying pruning methods in real-world scenarios.
+
+5. **Missing Clear Model Size Reduction Information**:
+
+   * While the paper mentions that Thanos reduces model size, it **does not quantify the actual reduction** in model size or compare it with baseline methods in terms of **model size reduction** and computational **inference speedup**.
+
+6. **Confusion Around Model Names**:
+
+   * There is some confusion regarding the **models used** in the experiments. The paper mentions ¡°LLaMA-2-1.1B¡± and ¡°LLaMA-3-1B,¡± which do not correspond to officially released versions of **Meta¡¯s LLaMA models**. This ambiguity needs clarification.

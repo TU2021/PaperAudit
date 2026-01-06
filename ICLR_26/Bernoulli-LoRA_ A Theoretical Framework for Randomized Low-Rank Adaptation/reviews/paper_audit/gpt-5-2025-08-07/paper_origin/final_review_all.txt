@@ -1,0 +1,103 @@
+Summary
+- The paper proposes Bernoulli-LoRA, a unified theoretical framework for parameter-efficient fine-tuning that randomly selects which of the two LoRA factors (A or B) to optimize at each step (Algorithm 1, Section 6; Definitions 1–2). The update is reformulated as a projected gradient step in the full parameter space (Section 6.1; Equations (7)–(8), Lemma 3), enabling analysis under standard non-convex smooth, PŁ, and non-smooth convex settings. Multiple algorithmic variants are analyzed: GD, SGD, MVR, PAGE, and federated extensions with quantization (QGD), gradient-difference compression (MARINA), and error feedback (EF21) (Section 6.2–6.3; Table 2). Convergence rates are established and summarized (Table 1; Theorems 1–7, 10, 12–22). Experiments on a linear regression with non-convex regularization and on MNIST with an MLP provide empirical validation, including a variance-reduction advantage for Bernoulli-LoRA-PAGE (Figure 1) and competitive accuracy on MNIST (Table 3; Appendix E).Strengths
+- Bold unified projected-gradient formulation
+  • Reformulating left/right sketch updates as projected gradient steps in the full parameter space (Section 6.1; Equations (7)–(8), Lemma 3; Equations (24), (30)) demonstrates technical soundness and avoids smoothness issues of the LoRA parameterization (Section 7, “A significant challenge...”; Section 6.1), enabling rigorous analysis.
+  • The definition and use of projection matrices H_B^t and H_A^t (Section 6.1; H_B^t and H_A^t definitions) provide a clean analytical handle via spectral properties, which is critical for non-convex convergence proofs (Theorem 1; inequalities (40)–(42)).
+  • The probability-weighted eigenvalue λ_min^p and λ_max^p unify left/right sketches and the Bernoulli mixing (Section 7; Table 1), aiding clarity and generality.
+- Broad algorithmic coverage with convergence
+  • The framework instantiates GD, SGD, variance-reduced (MVR, PAGE), and federated extensions (QGD, MARINA, EF21) with projected estimators (Section 6.2; Table 2), showing breadth and practical relevance.
+  • Convergence is provided under smooth non-convex and PŁ conditions for all core variants (Theorems 1–7, 12–22; Table 1), evidencing technical completeness.
+  • Non-smooth convex analysis with both constant and Polyak-type stepsizes (Algorithm 3; Assumptions 7–10; Theorem 10) broadens applicability beyond differentiable objectives.
+- Sound treatment of projection assumptions
+  • Assumption 1 (positive expected projection; Section 7) is justified through Gaussian sketches, with proof that E[H]= (r/n) I (Appendix B; Lemma 2; Remark 1), aiding tractability and providing explicit λ_min bounds.
+  • The use of rotational invariance and Schur-type arguments (Appendix B; Lemma 1 and Lemma 2) is technically correct and strengthens the framework’s foundations.
+  • Assumption 10 (E[H]=α I; Section C.1.3) enables clean non-smooth analysis (Theorem 10), highlighting the value of symmetric sketching distributions.
+- Federated learning extensions with compression and EF
+  • The paper adapts quantization (QGD), gradient-difference compression (MARINA), and error feedback (EF21) to LoRA-style projected updates (Section 6.3; Algorithms 7–9), filling a gap between PEFT and communication-efficient FL.
+  • Convergence results explicitly quantify the impact of compression parameters ω and β (Table 1; Theorems 5–7; Assumption 11; Definition 3–4), demonstrating technical depth and practical relevance for distributed systems.
+  • MARINA and EF21 analyses reuse PAGE/MVR Lyapunov techniques adapted to projected estimators (Appendix D; Lemmas 9–10; Theorems 19–22), evidencing methodological maturity.
+- Empirical evidence consistent with theory
+  • Bernoulli-LoRA-PAGE reduces variance and converges to tight tolerances in the stochastic linear regression setting (Figure 1), matching the theoretical advantage of variance-reduced estimators (Theorem 4; Table 1).
+  • In MNIST PEFT, Bernoulli-LoRA achieves competitive accuracy vis-à-vis RAC-LoRA while training one matrix per block (Table 3; discussion), aligning with the framework’s resource-efficiency goals (Section 4).
+  • Appendix E.1 provides implementation details for the linear regression setting (Appendix E.1; hardware; stepsize policy γ=c/ĤL), contributing to reproducibility for that experiment.
+- Clear notation and organization
+  • Notation is defined upfront (Section 5) with consistent use of Frobenius norms, inner products, and pseudoinverses, helping technical clarity across proofs (e.g., Lemma 3; Lemmas 5–7).
+  • The content map (Section 1, Contents) and summary table of rates (Table 1) aid navigability and comprehension.Weaknesses
+- Limited empirical scope and mismatch with large-scale/FL scenarios
+  • Experiments are restricted to a synthetic linear regression and an MNIST MLP (Section 8.1–8.2), which may not reflect behavior on large models central to PEFT (impact; generalization).
+  • No federated experiments are reported for QGD/MARINA/EF21 variants despite extensive theory (Section 6.3; Algorithms 7–9; Theorems 5–7); No direct evidence found in the manuscript, limiting practical validation of communication savings and robustness.
+  • MNIST experiments use AdamW (Section 8.2) rather than the theorized update forms (e.g., GD/SGD/PAGE with W^{t+1}=W^t−γĜ^t in Equations (7)–(8)), introducing potential mismatch between theoretical guarantees and empirical setup (technical soundness).
+- Unstated independence assumptions in proofs
+  • The SGD analysis explicitly uses independence between H_B^t/H_A^t and G^t (Appendix C.2, step (97): “in (*) we used that H_B^t, H_A^t and G^t are independent”), but such independence is not formalized as an assumption (clarity; rigor).
+  • Algorithm 1 (Section 6) does not state whether the Bernoulli variable c^t, sketches A_S^t/B_S^t, and stochastic gradients are mutually independent across time and sources (technical soundness).
+  • Federated analyses implicitly assume independence between compressors, local gradients, and sketches (Appendix D, Lemmas 8–10), but this is not stated explicitly; No direct evidence found in the manuscript (rigor).
+- Strong projection assumptions and practical alignment
+  • Assumption 1 and Lemma 2 hinge on Gaussian sketches to obtain E[H]= (r/n) I (Appendix B; Remark 1), while in practice LoRA often uses zero-initialized B or structured A (Section 6; Table 3 footnote ^1 indicates deterministic assignment), potentially misaligning assumptions and deployments (impact; realism).
+  • Assumption 10 (E[H]=α I; Section C.1.3) may be restrictive beyond Gaussian/rotationally invariant designs; the manuscript does not discuss non-isotropic sketches (clarity; generality).
+  • Stepsize conditions depend on λ_min^p, λ_max^p (Table 1; Theorems 2–7, 10, 12–22), but practical estimation strategies for these quantities are not provided (reproducibility; guidance).
+- Limited theoretical/empirical comparison to RAC-LoRA/COLA
+  • While the framework claims to unify and extend LoRA approaches (Section 4), there is no formal complexity comparison to RAC-LoRA/COLA (e.g., tighter bounds or oracle complexity), beyond qualitative discussion; No direct evidence found in the manuscript (novelty positioning).
+  • Empirically, Bernoulli-LoRA-GD and RAC-LoRA-GD perform similarly in linear regression (Appendix E, Figure 2a–b), which does not substantiate clear advantages in this setting (impact).
+  • COLA is included in MNIST accuracy comparison (Table 3), but without analysis of chaining vs Bernoulli updates or convergence guarantees; No direct evidence found in the manuscript (completeness).
+- Sparse guidance on choosing p, sketch distributions, and T
+  • The probability p influences λ_min^p and λ_max^p (Table 1; Section 7), yet the manuscript offers no principled strategy for selecting p (clarity; practical utility).
+  • Sketch distributions 𝒟_S^A/𝒟_S^B are left general (Algorithm 1), and Gaussian is discussed (Appendix B), but alternative distributions (e.g., orthonormal, data-informed) are not analyzed empirically (impact).
+  • Chain length T appears in rates (Table 1) but its interaction with p, variance, and convergence speed is not studied beyond Figure 1; No direct evidence found in the manuscript (practical guidance).
+- Minor clarity and editorial issues
+  • Appendix C.1 contains a residual mention of “RAC-LoRA” in the heading text (“… main convergence result for RAC-LoRA with Gradient Descent updates.”), which seems unintended (Appendix C.1, before C.1.1) (clarity).
+  • Notational inconsistencies around hats in Definitions 1–2 (Section 6, Equations (5)–(6)) can momentarily confuse what is sampled vs optimized (clarity).
+  • Table 3 footnote ^1 states a deterministic assignment at initialization “yielded better performance,” which deviates from the Bernoulli prescription and could be clarified as an implementation detail vs methodological change (Section 8.2; Table 3) (clarity).
+- Internal inconsistencies in stepsize bounds and summary rates
+  • For Bernoulli-LoRA-SGD, the main-text stepsize bound (Theorem 2, Section 7; “0 < γ ≤ min{ 1/(√(L A1 λ_max^p) T), … }”) differs materially from the appendix bound (Theorem 11, Appendix C.2: “0 < γ ≤ min{ 1/√(L A1 λ_max^p T), … }”), changing the scaling with T (anchors: Section 7, Theorem 2; Appendix C.2, Theorem 11).
+  • For Fed-Bernoulli-LoRA-QGD, the main-text stepsize bound (Theorem 5, Section 7: “1/(L√(ω/M) λ_max^p T)”) does not match the appendix (Theorem 17, Appendix D.1: “1/(L √((ω/M) λ_max^p T))”) (anchors: Section 7, Theorem 5; Appendix D.1, Theorem 17).
+  • For Fed-Bernoulli-LoRA-MARINA, the main-text bound (Theorem 6, Section 7) places λ_max^p inside an inverse under the square root (“(1/λ_max^p) · ((1−q)/q) · (ω/M)”), while the appendix uses λ_max^p without inversion (Theorem 19, Appendix D.2) (anchors: Section 7, Theorem 6; Appendix D.2, Theorem 19).
+  • For Fed-Bernoulli-LoRA-EF21, the stepsize form in the main text (Theorem 7, Section 7) differs from the constants and factors used in the detailed proof (Theorem 21, Appendix D.3; e.g., additional √2-type terms in bounds) (anchors: Section 7, Theorem 7; Appendix D.3, Theorem 21).
+  • Table 1 omits λ_max^p/λ_min^p dependence in the variance terms for PAGE/MVR/EF21 compared to the detailed theorems (Table 1 vs Theorem 4, Section 7; Theorem 3, Section 7; Theorem 21, Appendix D.3), which can mislead readers regarding rate constants (anchors: Table 1; Section 7, Theorems 3–4; Appendix D.3, Theorem 21).
+- Algorithmic specification errors and missing details
+  • Algorithm 3 (non-smooth setting) flips the branch semantics (“If c^t = 1 then (Right sketch)”) relative to Algorithm 1 (“if c^t = 1 then Left sketch”), creating an internal contradiction (anchors: Algorithm 1, Section 6; Algorithm 3, Appendix C.1.3).
+  • Algorithm 6 (Bernoulli-LoRA-PAGE) samples i_{t+1} from [n], whereas the finite-sum formulation defines N samples (Equation (2), Section 2), causing a definition mismatch (anchors: Algorithm 6, Appendix C.4; Equation (2), Section 2).
+  • Lemma 10 (EF21) references an equation (131) that does not appear in that vicinity, undermining traceability of the proof (anchors: Appendix D.3, Lemma 10).
+  • The MNIST section states that detailed configurations are provided in Appendix E (Section 8.2), but Appendix E includes details only for the linear regression experiments (Appendix E.1), not MNIST, impeding reproducibility (anchors: Section 8.2; Appendix E.1).
+  • Minor presentational and bibliography issues: Figure 1 caption mentions curves for multiple p values while the legend exemplifies p=0.5 for Bernoulli variants (Section 8.1; Figure 1/legend), and Appendix B cites “Schur, 2024” whereas the references list includes Schur (1905) (anchors: Appendix B; References).Suggestions for Improvement
+- Broaden empirical validation and align with theory
+  • Add federated experiments for QGD/MARINA/EF21 to demonstrate communication savings and robustness under data heterogeneity (Section 6.3; Algorithms 7–9; Theorems 5–7), measuring gradient bytes, compression parameters ω/β, and convergence traces.
+  • Include larger-scale PEFT tasks (e.g., higher-dimensional layers or more complex datasets) and assess variance-reduction benefits consistent with Figure 1 and Theorem 4 (Section 8.1; Table 1).
+  • For MNIST, run ablations using SGD and PAGE (Equations (7)–(8)) in addition to AdamW to align with theoretical updates and report accuracy vs convergence diagnostics (Section 8.2).
+- Formalize and relax independence assumptions
+  • Introduce an explicit assumption detailing independence between c^t, A_S^t/B_S^t and stochastic gradients g(W^t), and between client compressors and sketches (Appendix C.2 step (97); Algorithm 1; Appendix D).
+  • Discuss and, where possible, extend proofs to handle mild dependencies (e.g., conditioning on sketches), noting where bounds change (Appendix C.2; Lemmas 5–7).
+  • For federated variants, specify independence between client-side randomness and server-side sketching to make Lemmas 8–10 fully rigorous (Appendix D).
+- Strengthen practicality of projection assumptions and parameter estimation
+  • Empirically verify Assumption 1 and Assumption 10 under commonly used LoRA initializations (e.g., zero-initialized B, Gaussian A) by estimating E[H] and eigenvalues on real layers; compare against Lemma 2 (Appendix B; Section 7).
+  • Provide guidance or bounds to estimate λ_min^p and λ_max^p in practice (Table 1; Theorems 2–7, 10, 12–22), perhaps via Monte Carlo sketching diagnostics over 𝒟_S^A/𝒟_S^B.
+  • Discuss non-isotropic sketches and offer relaxed results that assume only lower-bounds on the minimal eigenvalue of E[H] (Section C.1.3; Theorem 10), improving generality beyond α I.
+- Deepen comparisons to RAC-LoRA and COLA
+  • Add theoretical discussion contrasting rates or constants under common assumptions, indicating when Bernoulli mixing improves λ_min^p or variance control relative to RAC-LoRA/COLA (Section 4; Table 1).
+  • Expand experiments beyond Appendix E Figure 2 to scenarios where variance-reduction and Bernoulli mixing should shine (e.g., higher noise), quantifying advantages vs RAC-LoRA (Appendix E).
+  • Include analyses or ablations that explain MNIST results vis-à-vis COLA (Table 3), e.g., parameter counts, chaining length vs Bernoulli probability p, and convergence behavior.
+- Provide practical tuning guidance for p, sketches, and T
+  • Derive or suggest heuristics to choose p (e.g., maximizing λ_min^p subject to λ_max^p constraints; Section 7; Table 1), and validate experimentally across a grid, extending Figure 1.
+  • Evaluate alternative sketch distributions (orthonormal, data-dependent) beyond Gaussian (Appendix B), adding empirical results to show their effect on λ_min^p/λ_max^p and performance.
+  • Study the interaction of chain length T with p and variance (Table 1), reporting diminishing returns or optimal regimes on both tasks and in federated settings.
+- Resolve clarity and editorial issues
+  • Correct the “RAC-LoRA” mention in Appendix C.1 to “Bernoulli-LoRA” and check for similar residual references.
+  • Standardize hat notation in Definitions 1–2 to clearly distinguish sampled vs optimized matrices (Section 6; Equations (5)–(6)).
+  • Clarify Table 3 footnote ^1 to indicate whether deterministic assignment at initialization modifies the method or is an implementation detail, and report results with fully Bernoulli selection for completeness (Section 8.2).
+- Align stepsize bounds and Table 1 with detailed theorems
+  • Reconcile the stepsize bound in Theorem 2 (Section 7) with Theorem 11 (Appendix C.2), ensuring consistent T-scaling; update the main text or appendix accordingly.
+  • Make Theorem 5 (Section 7) consistent with Theorem 17 (Appendix D.1) by placing ω/M, λ_max^p, and T inside the square root as in the detailed proof.
+  • Fix Theorem 6 (Section 7) to match Theorem 19 (Appendix D.2) regarding λ_max^p placement (remove the inversion inside the square root if unintended).
+  • Harmonize Theorem 7 (Section 7) with Theorem 21 (Appendix D.3), clarifying constants (e.g., √2-type factors) used in sufficient conditions for γ.
+  • Update Table 1 to include the λ_max^p/λ_min^p dependence in the variance terms for PAGE, MVR, and EF21 (compare Table 1 against Theorem 4, Section 7; Theorem 3, Section 7; Theorem 21, Appendix D.3).
+- Fix algorithmic specifications and add missing experimental details
+  • Make the c^t branch condition consistent across Algorithm 1 (Section 6) and Algorithm 3 (Appendix C.1.3), preserving left/right sketch semantics.
+  • Correct the sampling in Algorithm 6 to draw i_{t+1} from [N] per Equation (2) (Section 2) for finite-sum; adjust notation accordingly.
+  • Repair Lemma 10 (Appendix D.3) to reference existing equations (e.g., (130)) and remove or define (131) as needed for traceability.
+  • Align Figure 1 caption and legend regarding p values, or add a panel/legend showing curves for the stated p grid (Section 8.1).
+  • Correct “Schur, 2024” in Appendix B to match the references list (Schur, 1905), or add the missing reference entry.
+  • Provide MNIST experiment configurations in Appendix E (architecture, preprocessing, hyperparameter ranges, seeds) to match the statement in Section 8.2.Score
+- Overall (10): 6 — Strong theoretical unification and breadth (Section 6.1; Table 2; Theorems 1–7, 10, 12–22), but multiple internal inconsistencies in stepsize bounds and summary rates (Section 7 Theorems 2, 5–7 vs Appendix C.2/D.1–D.3) and missing MNIST details in Appendix E (Section 8.2; Appendix E.1).
+- Novelty (10): 7 — Randomized Bernoulli selection unifying left/right sketches with VR and FL extensions (Algorithms 1, 5–9; Table 2) constitutes a meaningful synthesis, though formal advantages vs RAC-LoRA/COLA remain mostly qualitative (Table 3; No direct complexity comparison).
+- Technical Quality (10): 7 — Projected-gradient analysis and convergence proofs are substantial (Lemma 3; Lemmas 5–7; Theorems 1–7, 10, 12–22), but unaligned stepsize conditions and Table 1 discrepancies with detailed theorems reduce rigor (Section 7; Appendix C/D).
+- Clarity (10): 6 — Generally clear notation and organization (Section 5; Table 1; Table 2), yet branch inconsistency between Algorithms 1 and 3, PAGE index mismatch (Appendix C.4), EF21 lemma equation reference, and editorial artifacts (Appendix C.1; Appendix B citation) hinder readability (anchors: Algorithms; Appendix C/D; References).
+- Confidence (5): 4 — High confidence in the overarching framework and many proofs (Table 1; Appendices C–D); moderate confidence reduced by internal inconsistencies and missing experimental details (Section 7; Appendix E).

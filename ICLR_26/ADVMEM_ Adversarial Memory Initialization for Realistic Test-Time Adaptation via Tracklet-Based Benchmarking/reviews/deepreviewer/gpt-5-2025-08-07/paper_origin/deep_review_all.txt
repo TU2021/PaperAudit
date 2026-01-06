@@ -1,0 +1,191 @@
+Summary
+The paper introduces ITD, a tracklet-based benchmark for Test-Time Adaptation (TTA) that captures temporal dependencies and realistic distribution shifts by extracting object-centric sequences from TrackingNet. It evaluates several TTA methods across frame-wise and tracklet-wise i.i.d. and non-i.i.d. scenarios, and proposes ADVMEM, an adversarial memory initialization that populates the memory bank with targeted adversarial examples to stabilize adaptation under temporally correlated streams. Reported results suggest strong degradation of many TTA methods in tracklet-wise settings and improvements from ADVMEM, especially in severe non-i.i.d. conditions.
+
+Soundness
+- Dataset construction is conceptually sound: tracklets are a natural way to induce temporal dependencies (Section 3.1; Figures 2–3; Figure 16). Preprocessing choices (crop resizing, frame interval, resizing to 224×224) are reasonable (Section 3.1).
+- Evaluation protocol includes corruption categories and severity control, including dynamic severity within a tracklet (Sections 4.3, 4.5–4.7; Table 3; Appendix Sections 9–10; Figure 62). The label-stream non-i.i.d. control via Dirichlet γ is aligned with RoTTA (Section 4.7; Section 6.1; Figure 41).
+- ADVMEM’s formulation (Sections 5.1–5.2; Algorithm 1) is plausible as a class-diverse confidence-boosting initialization, but technical concerns remain: the stopping condition “while fθ(x) ≠ y” is ill-defined for continuous outputs and risks infinite loops; the optimization ignores norm constraints and may create highly off-manifold, high-confidence artifacts (Figures 64–67), whose role in stabilizing adaptation is not theoretically justified (no analysis of gradient bias or robustness trade-offs).
+- Reported results show major internal inconsistencies and possible methodological issues (see Presentation): e.g., SHOT-IM error with ADVMEM falls from ~91% to ~40% in Appendix Table 4a (dynamic severity), yet in Table 70 (tracklet-wise i.i.d., presumably static severity) the drop is only 94.7%→93.4%; ADVMEM is claimed to reduce RoTTA error “by 4%” (Section 5.2), while Table 68 shows TrainMem (initialization with true training samples) surpasses ADVMEM on average (75.5 vs 78.2, lower is better). These contradictions cast doubt on experimental soundness and the consistency of the evaluation settings.
+- Hyperparameters of memory banks (capacity N, selection policy, replacement strategy), ADVMEM attack parameters (step size α, iterations, norm constraints, per-class allocation), and seeds are insufficiently specified (Section 4.2 only high-level; Algorithm 1 omits critical attack details), which complicates self-verification and reproducibility.
+
+Presentation
+- Clarity of motivation and dataset construction is good (Sections 1–3; Figures 1–3), and the paper is well-structured in its high-level narrative (dataset → evaluation → method → ablations).
+- Cross-referencing and table numbering are inconsistent: “Table 2” is used for both method overview (Section 4.2) and later for results (Section 5.2), “Table 3” refers to corruption types (Section 4.3) and also to results (Section 5.2); this impedes traceability.
+- Numerical inconsistencies across tables are severe (Section 4.6/4.7 vs Appendix Tables 4, 68–71), and several claims are contradicted by reported numbers (e.g., ADVMEM outperforming TrainMem in Section 5.2 vs Table 68; 44% improvement claim in Introduction vs results in Table 70).
+- Many essential details are deferred to the appendix, and figures/tables use different y-axis scales and settings without clear specification; statistical variability (seeds, confidence intervals) is absent.
+
+Contribution
+- ITD is a valuable benchmark concept that incorporates temporal dependencies via tracklets, filling a notable gap in TTA evaluations that typically assume i.i.d. samples or label correlation but limited visual continuity (Sections 1, 3, 4; Figures 2–3).
+- ADVMEM is a novel, simple plug-in memory initialization idea; however, the main claimed benefits are not consistently supported by the reported quantitative evidence, and the method raises concerns about off-manifold bias and adversarial vulnerability in adaptive settings (Sections 5–6; Appendix Figures 64–67; Ref. [8]).
+- The scale and multi-faceted analyses (γ sweeps, batch-size sensitivity, dynamic severity) are promising but undercut by inconsistent reporting and missing experimental detail.
+
+Strengths
+- Strong motivation for tracklet-based benchmarking and a realistic streaming protocol (Sections 1, 4; Figures 1–3).
+- Dataset construction is clearly described, with scale and class diversity (Section 3.1; Dataset properties and Statistics).
+- Comprehensive corruption categories and inclusion of dynamic severity aligned with real-world conditions (Sections 4.3, Appendix 9; Table 3; Figure 62).
+- Systematic comparison of multiple TTA methods and attempted extension of memory mechanisms (Sections 4.2, 4.6–4.7; Tables 5–6, 69–71).
+- Ablation analyses over γ and batch size (Section 6.1–6.2; Figures 41–44, 63).
+
+Weaknesses
+- Contradictory quantitative results and table numbering errors make the empirical conclusions unreliable (Sections 4.6–5.2; Tables 6, 70; Appendix Table 4; Table 68).
+- ADVMEM lacks theoretical grounding; algorithmic details (attack norm, stopping criteria, per-class balancing, memory capacity) are missing, and the adversarial samples are visibly off-manifold (Figures 64–67), risking harmful bias in adaptation (see [8]).
+- Reproducibility is limited: no seeds, no variance, incomplete hyperparameters for memory bank and ADVMEM; unclear fairness in modifying TENT/SHOT-IM with RoTTA’s memory vs keeping RoTTA’s objective (Section 4.5–4.6).
+- Some setups yield implausibly high errors (~94%) for strong baselines (Tables 6, 70–71), suggesting potential implementation pathologies (e.g., BN statistics bias, batch construction errors) that need self-verification.
+- Claims about improvements (e.g., 44% reduction) are not consistently supported or correctly anchored (Intro; Section 5.2 vs Tables).
+
+Questions
+- Can the authors reconcile the discrepancies between Table 6, Table 70, and Appendix Table 4 (dynamic severity) for SHOT-IM/TENT/RoTTA; are these from different severity regimes, model backbones, or batch sizes? Please provide a unified table with clear settings and consistent numbering.
+- What are the exact ADVMEM parameters: attack norm (L∞/L2), step size α, iterations, per-class memory allocation, memory capacity N, replacement policy, and whether labels are stored or only images? Please add these to Section 5.1 or 4.2.
+- Have you evaluated TrainMem vs ADVMEM across identical settings and reported averages with variance over multiple seeds? Appendix Table 68 suggests TrainMem can outperform ADVMEM; please clarify and explain.
+- Can you add a “Source (no adaptation)” baseline for tracklet-wise settings (Sections 4.6–4.7) to contextualize the ~94% errors?
+- Does ADVMEM increase susceptibility to test-time adversarial attacks or distribution shift brittleness (cf. [8])? Any robustness diagnostics?
+- How is memory bank M initialized and updated for TENT/SHOT-IM vs RoTTA in detail; is sample selection identical, and how is redundancy handled?
+- Will ITD be publicly released with licensing and splits; can you include per-class tracklet length statistics and corruption severity schedules?
+
+Rating
+- Overall (10): 6 — Valuable dataset idea and an interesting memory-initialization concept (Sections 3.1, 4, 5.1) but undermined by inconsistent results and cross-referencing errors (Tables 6, 68, 70; Section 5.2).
+- Novelty (10): 7 — Tracklet-based TTA benchmarking and adversarial memory initialization are fresh directions (Sections 1, 3, 5.1; Figures 2–3).
+- Technical Quality (10): 5 — Methodological gaps and contradictory numbers weaken claims (Algorithm 1; Tables 6, 68; Appendix Figures 64–67).
+- Clarity (10): 4 — Misnumbered tables and conflicting statements make interpretation difficult (Sections 4–5; Tables 2–3 vs 69–71).
+- Confidence (5): 4 — I carefully cross-checked sections and tables; inconsistencies prevent higher confidence (Sections 4.6–4.7; Appendix Table 68; Figure 62).
+
+
+Summary
+The paper proposes ITD, a new tracklet-based benchmark for TTA that reflects temporal dependencies and realistic distribution shifts. It evaluates several methods (AdaBN, TENT, SHOT-IM, SAR, EATA, CoTTA, RoTTA) under frame-wise and tracklet-wise i.i.d. and non-i.i.d. protocols, and introduces ADVMEM, an adversarial memory initialization technique intended to prevent forgetting and stabilize adaptation, especially when label streams are highly correlated.
+
+Soundness
+- ITD’s dataset construction pipeline is sound and follows an established tracking source (TrackingNet) with appropriate cropping/resizing and split strategy (Section 3.1).
+- The evaluation grid (frame-wise vs tracklet-wise; i.i.d. vs Dirichlet non-i.i.d.) is well-motivated and practically relevant (Sections 4.5–4.7; Figure 3).
+- ADVMEM is plausible in spirit (balancing classes in memory from the outset), but the choice of adversarial images as “class representatives” is contentious: targeted attacks produce off-manifold, high-confidence inputs that can bias updates (Algorithm 1; Appendix Figures 64–67) and may interact poorly with entropy/mutual-information objectives.
+- Empirical results present major discrepancies: e.g., SHOT-IM+ADVMEM showing >40% error drop in the Introduction and Section 5.2, yet Table 70 reports only ~1.3% drop (94.7%→93.4%); TrainMem (true images) often outperforms ADVMEM in Table 68. Without consistent settings and statistical reporting, it is difficult to assess impact.
+
+Presentation
+- The narrative and visuals for ITD are clear (Figures 1–3, 16; Section 3.1) and corruption categorizations are well summarized (Table 3).
+- Table numbering and references are confusing; “Table 2/3” are reused for distinct content, and claimed improvements are not consistently anchored (Sections 4–5; Tables 5–6, 68–71).
+- Quantitative reporting lacks variance or multiple seeds; crucial method details (memory capacity, replacement, ADVMEM attack parameters) are missing or deferred.
+- Some plots (Figures 41–44) show trends but are too small to inspect details; axes and settings should be standardized.
+
+Contribution
+- The benchmark contribution is useful: few TTA works evaluate visual temporal continuity; ITD can pressure-test adaptation under realistic sequences and dynamic corruption.
+- The proposed memory initialization idea is creative and potentially impactful, but the empirical support is mixed and the method may induce undesirable adversarial bias.
+- The batch-size and γ-sweep analyses are good steps toward understanding TTA under streaming constraints, though they need consolidated reporting to be conclusive.
+
+Strengths
+- Realistic problem formulation linking temporal dependencies to i.i.d. violations (Sections 1–2).
+- Clear dataset pipeline and substantial scale (Section 3.1; Statistics).
+- Comprehensive corruption evaluation, including dynamic severity (Sections 4.3; Appendix 9; Figure 62).
+- Systematic inclusion of memory in baselines and exploration of i.i.d./non-i.i.d. regimes (Sections 4.6–4.7; Tables 6, 70–71).
+
+Weaknesses
+- Internal contradictions among tables and claims (Sections 4.6–5.2; Tables 6, 68–71), making it hard to trust the magnitude of improvements.
+- ADVMEM’s reliance on adversarial examples lacks theory and raises robustness concerns; parameterization is unspecified (Algorithm 1; Figures 64–67).
+- No statistical significance or seed variation; sparsity of hyperparameter details complicates reproducibility (Section 4.2).
+- Extremely high error rates (~94%) for TENT/SHOT-IM in tracklet-wise settings suggest implementation issues or inappropriate adaptation schedules (Tables 6, 70–71).
+
+Questions
+- Can you unify the evaluation tables (static/dynamic severity, backbones, batch sizes) and fix numbering, so the claimed 44% improvement (Intro, Section 5.2) is traceable?
+- What are the exact ADVMEM attack settings (norm, ε, steps, α), memory capacity N, per-class quotas, and replacement policy? Are labels stored in memory or only images?
+- Why do Tracklet-wise results for TENT/SHOT-IM approach ~94% error; is the entropy/mutual-information update disabled, or are BN statistics biased due to sequential frames?
+- Why does TrainMem outperform ADVMEM on average in Table 68; do adversarial samples sometimes harm adaptation?
+- Could you provide multi-seed averages and standard deviations?
+- Will you release ITD with per-tracklet metadata (length, corruption schedule) to support reproducibility?
+
+Rating
+- Overall (10): 6 — Strong benchmark idea (Sections 3–4) but empirical contradictions and incomplete method details weaken the main claims (Tables 6, 68–71; Section 5.2).
+- Novelty (10): 7 — Tracklet-based TTA evaluation and adversarial memory initialization are fresh contributions (Sections 1, 3, 5.1; Figures 2–3).
+- Technical Quality (10): 5 — Methodological gaps and inconsistencies in results diminish confidence (Algorithm 1; Tables 6, 68; Figure 62).
+- Clarity (10): 5 — Good high-level exposition, but misnumbered tables and conflicting statements hamper readability (Sections 4–5; Tables 2–3 vs 69–71).
+- Confidence (5): 4 — I cross-checked tables and figures; inconsistencies prevent a higher confidence rating (Sections 4.6–4.7; Appendix Table 68).
+
+
+Summary
+This submission introduces ITD, a benchmark built from object tracklets to stress-test TTA under realistic sequential dependencies and time-varying corruptions. It evaluates multiple TTA methods in frame-wise and tracklet-wise regimes and proposes ADVMEM—a memory-bank initialization using targeted adversarial samples—to mitigate forgetting and class imbalance when label streams are highly correlated.
+
+Soundness
+- The dataset construction from TrackingNet is appropriate for modeling inherent temporal dependencies (Section 3.1; Figures 2–3).
+- The three evaluation regimes are thoughtful and isolate different sources of difficulty (Section 4; Figure 3; Section 4.7).
+- The claim that memory banks help in non-i.i.d. streams is well-grounded (Section 4.6–4.7), but the reported behavior (e.g., RoTTA dropping from 51.3% to 79.3% in non-i.i.d., Table 6) suggests initialization and sampling are critical.
+- ADVMEM is a reasonable hypothesis to pre-balance memory yet suffers from practical and theoretical concerns: generating off-manifold high-confidence images (Figures 64–67) may bias gradients; Algorithm 1 lacks norm constraints and clear stopping criteria, and may overfit to the current classifier’s idiosyncrasies rather than the data distribution.
+- Empirical support is inconsistent across tables; TrainMem sometimes beats ADVMEM (Table 68), and claimed improvements (Intro; Section 5.2) are not consistently mirrored in consolidated results tables (Tables 70–71).
+
+Presentation
+- The motivation and dataset pipeline are clearly illustrated (Figures 1–3), and the corruption taxonomy is well summarized (Table 3).
+- Cross-referencing errors (reused table numbers) and conflicting numerical claims hinder readability (Sections 4–5; Tables 6, 68–71).
+- The absence of variance and insufficient hyperparameter reporting reduces transparency (Section 4.2).
+- Plots in Section 6 are too compact to parse exact values; some figures lack precise axis labeling.
+
+Contribution
+- ITD fills an important gap in TTA evaluation by providing temporally consistent streams with visual continuity and dynamic corruptions.
+- ADVMEM is a simple, plug-and-play idea, but the evidence for its superiority is mixed and method details are lacking. As a result, the dataset contribution stands stronger than the method contribution.
+
+Strengths
+- Realistic TTA benchmark design with temporal dependencies and dynamic severity (Sections 3–4; Figure 62).
+- Broad method coverage and attempt to equip non-memory methods with memory (Section 4.6).
+- Ablations on label-stream γ and batch sizes (Section 6; Figures 41–44, 63).
+
+Weaknesses
+- Contradictions across tables and overstatements of improvements (Intro; Section 5.2 vs Tables 68–71).
+- ADVMEM’s adversarial prototype approach is under-specified and may introduce undesirable biases; robustness trade-offs are unaddressed (Algorithm 1; Figures 64–67; [8]).
+- Tracklet-wise results for strong baselines appear implausibly poor (~94% error), pointing to potential implementation issues (Tables 6, 70–71).
+- Reproducibility limited by missing parameters and no statistical reporting (Section 4.2).
+
+Questions
+- Please reconcile dynamic vs static severity results and unify tables; specify which backbone, batch size, severity schedule, and γ were used in each table (Sections 4.6–5.2; Tables 6, 70; Appendix Table 4).
+- What is the capacity N and per-class allocation in the memory bank; how is replacement handled when real samples arrive?
+- Can you provide ADVMEM attack parameters and norm constraints, and assess whether adversarial initialization harms robustness under additional perturbations?
+- Why does TrainMem yield better averages than ADVMEM in Table 68; is this due to off-manifold initialization being harder to replace under strong non-i.i.d.?
+- Could you include multi-seed runs and confidence intervals?
+
+Rating
+- Overall (10): 6 — Strong benchmark idea (Sections 3–4) but the method’s empirical support is inconsistent and details are missing (Tables 68–71; Algorithm 1).
+- Novelty (10): 6 — ITD’s tracklet-based TTA evaluation is novel; ADVMEM is a fresh albeit contentious approach (Sections 3, 5.1; Figures 2–3).
+- Technical Quality (10): 5 — Methodological issues and contradictions weaken confidence (Tables 6, 68; Section 5.2; Figures 64–67).
+- Clarity (10): 5 — Good motivation and figures, but misnumbered tables and inconsistent claims reduce clarity (Sections 4–5; Tables 2–3 vs 69–71).
+- Confidence (5): 4 — I verified tables/figures and cross-references; inconsistencies preclude higher confidence.
+
+
+Summary
+The paper presents ITD, a large tracklet-based dataset (≈220K images over 21 classes; ≈23K objects) for realistic TTA evaluation, with temporally consistent and dynamic corruptions. It evaluates multiple TTA baselines in frame-wise and tracklet-wise i.i.d./non-i.i.d. regimes and introduces ADVMEM, an adversarial memory initialization meant to mitigate forgetting and class imbalance in memory-based adaptation.
+
+Soundness
+- Dataset construction aligns with objectives and leverages tracking to encode temporal continuity (Section 3.1; Figures 2–3, 16).
+- Evaluation regimes are well-motivated and capture realistic deployment aspects (Section 4; Figure 3; Section 4.7).
+- The observation that entropy-based updates can be biased under temporally correlated batches is consistent with prior reports (Section 4.6; Table 6).
+- ADVMEM is a pragmatic idea, but Algorithm 1 is under-specified (no norm/iterations/α) and may produce adversarial artifacts that bias adaptation (Appendix Figures 64–67); robustness implications are unaddressed.
+- Major inconsistencies across empirical results (Table 6 vs Tables 70–71; Appendix Table 4 vs Section 5.2 narrative) undermine the soundness of conclusions; TrainMem can outperform ADVMEM (Table 68), contradicting claims of superiority.
+
+Presentation
+- The overall narrative is coherent and the dataset figures are helpful (Figures 1–3).
+- Table numbering and anchors are inconsistent; some claims lack precise references or contradict reported numbers (Intro; Sections 4.6–5.2; Tables 6, 68–71).
+- Many essential details are left unspecified; no variance is reported; plots are small and lack detailed axes.
+- Code link is provided (Intro), but without exact hyperparameters, reproduction is difficult.
+
+Contribution
+- ITD is a meaningful benchmark contribution that can advance realistic TTA evaluation; its scale and design (dynamic severity, tracklet-wise protocols) are valuable.
+- ADVMEM is a simple, potentially useful heuristic; however, without consistent empirical evidence and stronger justification, the methodological contribution is less convincing than the dataset contribution.
+
+Strengths
+- Addresses an important gap: visual temporal dependencies in TTA (Sections 1–3).
+- Large-scale dataset with clear construction and preprocessing (Section 3.1).
+- Diverse corruption settings, including dynamic severity (Section 4.3; Appendix 9).
+- Systematic comparison and ablations (γ, batch size) (Section 6; Figures 41–44).
+
+Weaknesses
+- Contradictory tables and misnumbered references hamper trust in results (Tables 6, 68–71; Section 5.2).
+- ADVMEM lacks theoretical grounding and parameterization; adversarial examples look off-manifold (Figures 64–67) and may introduce unintended biases.
+- Tracklet-wise error rates appear implausibly high (~94%), suggesting possible implementation or evaluation issues needing self-verification (Tables 6, 70–71).
+- Missing statistical robustness (seeds, std) and incomplete hyperparameters for memory and ADVMEM.
+
+Questions
+- Please standardize the evaluation settings across tables (backbone, batch, severity, γ) and fix numbering; reconcile claims such as “44% reduction” with precise anchors.
+- Provide ADVMEM parameters (norm, ε, steps, α), memory size N, per-class quotas, update/replacement policy, and whether labels are stored with memory entries.
+- Include “Source” baseline for tracklet-wise setups and report multi-seed averages with variance.
+- Analyze potential robustness risks introduced by adversarial memory (e.g., sensitivity to further perturbations; Ref. [8]).
+- Explain why TrainMem outperforms ADVMEM on average in Table 68; are off-manifold samples harder to purge under non-i.i.d. streams?
+
+Rating
+- Overall (10): 6 — A strong benchmark contribution (Sections 3–4) weakened by inconsistent empirical evidence for the proposed method (Tables 6, 68–71).
+- Novelty (10): 7 — Tracklet-based TTA evaluation and adversarial memory initialization are original directions (Sections 1, 3, 5.1; Figures 2–3).
+- Technical Quality (10): 5 — Missing details and contradictions diminish rigor (Algorithm 1; Tables 6, 68; Figure 62).
+- Clarity (10): 4 — Misnumbered tables and conflicting claims impair readability (Sections 4–5; Tables 2–3 vs 69–71).
+- Confidence (5): 3 — Despite careful reading, the internal inconsistencies reduce confidence in the empirical conclusions (Tables 6, 68–71; Section 5.2).

@@ -1,0 +1,104 @@
+{
+  "paper": "Timber_ Training-free Instruct Model Refining with Base via Effective Rank",
+  "runs": [
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "deepreviewer",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "deep_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180
+      },
+      "config_key": "24b66d75b94c155df325f4e5f2603b40312e4469",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/deepreviewer/gpt-5-2025-08-07/paper_origin/deep_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "motivation_strength_alignment": 0.9,
+        "weakness_error_alignment": 0.5,
+        "overall_alignment": 0.55,
+        "explanation": {
+          "strength": "Both reviews identify the same core strengths: the method is training-free and widely applicable, it introduces a novel spectral perspective using eRank, and it empirically improves exploration (Pass@k). The alignment is very high, with minor differences only in granularity and phrasing.",
+          "weakness": "There is partial overlap on concerns about computational cost and theoretical gaps. However, Review A uniquely highlights practical issues like moderate gains and dependency on a base model, while Review B finds critical technical errors (implausible figure values, ambiguous method description) that Review A misses.",
+          "overall": "The reviews show high alignment on the paper's strengths but diverge significantly in their critiques, with Review A focusing on practical limitations and Review B on technical errors. This difference in focus leads to a moderate overall alignment, as they prioritize different aspects of the work's flaws."
+        }
+      },
+      "generated_at": "2025-12-27T20:03:21"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "baseline_review.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180
+      },
+      "config_key": "a14d937ebf873b90a820c8cb44da768956431bd4",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/baseline_review.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "motivation_strength_alignment": 0.9,
+        "weakness_error_alignment": 0.55,
+        "overall_alignment": 0.65,
+        "explanation": {
+          "strength": "Both reviews identify the same core strengths: the method is training-free, provides a novel spectral insight via eRank, and empirically improves exploration (Pass@k) across diverse models. Review B adds more granular points about experimental rigor, but the main contributions and their prioritization are almost identical.",
+          "weakness": "There is moderate overlap on weaknesses like computational cost, the small magnitude of gains, and the lack of theoretical justification. However, each review also raises unique major concerns: Review A highlights the dependency on a paired base model, while Review B points to specific figure errors, narrow baseline comparisons, and the absence of a safety evaluation.",
+          "overall": "The reviews show very high alignment on the paper's core contribution and strengths, but only moderate alignment on its weaknesses, with each missing significant points raised by the other. While their overall judgment is similar (a good idea with notable flaws), their focus differs, with Review A emphasizing practical applicability and Review B focusing on technical and experimental rigor."
+        }
+      },
+      "generated_at": "2025-12-27T20:07:20"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "final_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180
+      },
+      "config_key": "565dcfbed8e348ba365acb8ebe44bf867f3cd0c2",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/final_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "motivation_strength_alignment": 0.9,
+        "weakness_error_alignment": 0.55,
+        "overall_alignment": 0.65,
+        "explanation": {
+          "strength": "Both reviews identify the same core strengths: the method is training-free, uses a novel spectral (eRank) perspective, and improves exploration (Pass@k) across various models and tasks. Review B is more granular but the key points are identical to Review A's.",
+          "weakness": "There is moderate overlap on concerns about computational cost, moderate gains, and lack of justification. However, Review A uniquely identifies the critical dependency on a paired base model, while Review B finds specific figure errors, misses safety evaluations, and notes narrow baseline comparisons.",
+          "overall": "The reviews align strongly on the paper's strengths but only moderately on its weaknesses, with each missing significant points raised by the other. Although their final judgment is similar (a novel idea with flaws), their focus differs, with Review A targeting high-level practical limits and Review B emphasizing detailed methodological rigor."
+        }
+      },
+      "generated_at": "2025-12-27T20:10:50"
+    }
+  ]
+}

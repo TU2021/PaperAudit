@@ -1,0 +1,129 @@
+{
+  "paper": "Transformers as Unsupervised Learning Algorithms_ A study on Gaussian Mixtures",
+  "runs": [
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "final_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "0a71ca7d783136ba33fb6b5ec9aad08ece2f0c09",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/final_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 1.0,
+        "weakness_coverage_recall": 0.71,
+        "ai_extra_major_points_rate": 0.3,
+        "symmetric_coverage_similarity": 0.55,
+        "note": "The AI review fully covers the strengths from the human review. However, it raises several distinct and significant weaknesses not mentioned by the human, such as the theory-practice gap in model construction (e.g., ReLU vs. softmax attention) and the lack of generalization tests on unseen K values. The human's unique points, like the lack of error separation, were less central."
+      },
+      "generated_at": "2025-12-27T20:41:00"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "baseline_review.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "b3137abdd5dd456ecfb029f7bed4151251d086e2",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/baseline_review.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 1.0,
+        "weakness_coverage_recall": 0.57,
+        "ai_extra_major_points_rate": 0.6,
+        "symmetric_coverage_similarity": 0.48,
+        "note": "The AI review shows excellent coverage of the strengths but only moderate coverage of the weaknesses. The main divergence is that the AI introduces numerous specific, technical critiques regarding the theory-practice gap and generalization claims not mentioned by the human, while missing human concerns about limited real-data experiments and error separation."
+      },
+      "generated_at": "2025-12-27T20:45:45"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "deepreviewer",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "deep_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "55f39c3e353412551a5ae68e81fc4acc489b4edd",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/deepreviewer/gpt-5-2025-08-07/paper_origin/deep_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 0.86,
+        "weakness_coverage_recall": 0.43,
+        "ai_extra_major_points_rate": 0.47,
+        "symmetric_coverage_similarity": 0.45,
+        "note": "The AI review shows very high coverage of the paper's strengths but only moderate coverage of the weaknesses. The AI misses human concerns about high training costs and certain missing baselines, but raises a distinct and more detailed set of major weaknesses regarding strong theoretical assumptions and unfair empirical comparisons."
+      },
+      "generated_at": "2025-12-27T20:51:39"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "deepreviewer",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "deep_review_merge.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "752f27bc09e656c7d041a880d0c174422eea6ca4",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/deepreviewer/gpt-5-2025-08-07/paper_origin/deep_review_merge.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 0.71,
+        "weakness_coverage_recall": 0.43,
+        "ai_extra_major_points_rate": 0.5,
+        "symmetric_coverage_similarity": 0.33,
+        "note": "The AI review covers most of the human's strengths but misses several key weaknesses, such as incomplete baseline comparisons and training costs. Conversely, the AI introduces numerous specific, technical concerns not raised by the human, including strong theoretical assumptions, unspecified baseline details, and an incomplete spectral equivalence argument."
+      },
+      "generated_at": "2025-12-27T21:21:24"
+    }
+  ]
+}

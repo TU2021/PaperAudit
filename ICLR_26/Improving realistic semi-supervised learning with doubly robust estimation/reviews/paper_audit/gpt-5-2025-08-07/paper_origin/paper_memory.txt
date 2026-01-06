@@ -1,0 +1,150 @@
+# Global Summary
+Problem: Realistic long-tailed semi-supervised learning (RTSSL) where the unlabeled class distribution P(Y|A=0) is unknown and differs from the labeled distribution P(Y|A=1), often long-tailed. Standard pseudo-labeling can be biased, performing poorly on unlabeled data.
+
+Core approach: A 2-stage method. Stage 1 uses a label-shift EM framework to estimate a classifier P(Y|X) and the missingness mechanism P(A|Y), then applies a doubly robust (DR) estimator to obtain an accurate estimate of the combined class distribution P(Y), from which P(Y|A=0) is recovered. Stage 2 incorporates this estimated unlabeled class distribution into existing pseudo-labeling approaches (e.g., SimPro, BOAT) via logit adjustment/EM to improve final classification.
+
+Theoretical guarantees: Under Assumption 3.1 (fourth-root-n convergence of nuisance estimators), the DR estimator Ψ_dr is asymptotically normal and efficient: √N(Ψ_dr(θ)(c) − P(Y=c)) ⇒ 𝒩(0, 𝔼[φ(O)(c)^2]).
+
+Evaluation scope: CIFAR-10-LT, CIFAR-100-LT, STL-10, and ImageNet-127 (32×32, 64×64). Metrics include Total Variation Distance (TVD) between estimated and ground truth unlabeled class distributions and top-1 accuracy. Baselines include Supervised with label-shift estimators (MLLS, RLLS), MLE (IPW/OR/DR), EM (IPW/OR/DR), SimPro, and BOAT.
+
+Key findings:
+- Stage 1 estimation: SimPro + DR (and EM + DR) often yield lower TVD than baselines on CIFAR-10 and ImageNet-127. Example CIFAR-10 consistent (γ_l=150, γ_u=150): SimPro DR TVD = "0.017 ± 0.004"; uniform (γ_l=150, γ_u=1): "0.019 ± 0.002". ImageNet-127: SimPro DR TVD = "0.017 ± 0.000" (32×32) and "0.037 ± 0.004" (64×64).
+- Stage 2 accuracy: Plugging the DR-estimated unlabeled distribution improves SimPro in 9/10 CIFAR-10 settings and BOAT in 8/10 (e.g., consistent γ_l=150, γ_u=150: SimPro "74.4 ± 0.71" → SimPro+ "77.8 ± 1.50"; middle γ_l=100, γ_u=100: SimPro "84.2 ± 0.26" → "85.4 ± 0.66"). ImageNet-127: SimPro "54.8" → "55.1" (32×32) and "63.7" → "64.2" (64×64); BOAT "51.6" → "52.0" and "58.7" → "59.2".
+- Ablations: A 1-stage batch-update DR variant and DR-risk training underperform the proposed 2-stage approach (e.g., CIFAR-10 consistent: SimPro+ "77.8" vs batch-update "71.9" and DR-risk "72.1").
+
+Explicitly stated caveats:
+- Assumes label shift P(X|Y, A)=P(X|Y) and uniform test distribution.
+- DR-risk training can be unstable due to inverse weighting; small P(A|Y) for tail classes causes training issues.
+- For CIFAR-100 stage 1 estimates may be poor, yet accuracy generally does not degrade.
+- Theoretical results rely on sample splitting and boundedness of P(A=1|Y) ≥ ε.
+- ImageNet-127 stage 2 experiments are run once; others are run 3 times; training/hyperparameters largely follow SimPro.
+
+# Abstract
+- Problem: Limited information about the unlabeled class distribution in SSL; long-tailed unlabeled distributions cause pseudo-label bias towards labeled distribution.
+- Prior methods: Assume known unlabeled distribution or estimate it on-the-fly via pseudo-labels; can be biased.
+- Proposal: Explicitly estimate unlabeled class distribution as a finite-dimensional parameter using a doubly robust estimator with strong theoretical guarantees; integrate into pseudo-labeling to improve training.
+- Claim: Incorporating these techniques into common pseudo-labeling approaches improves performance. No explicit quantitative results are presented in the abstract.
+
+# Introduction
+- RTSSL setup: Labeled and unlabeled class distributions P(Y|A=1) and P(Y|A=0); unlabeled distribution often unknown and long-tailed; realistic setting studied by recent work (Du et al., 2024; Kim et al., 2020; Wei et al., 2021; Oh et al., 2022; Wei & Gan, 2023; Ma et al., 2024).
+- Observations: SimPro (Du et al., 2024) overestimates head classes in 4/5 unlabeled distribution settings (Figure 1). The proposed doubly robust estimator is more accurate.
+- Approach: Two-stage algorithm. Stage 1 uses maximum likelihood and EM to estimate a classifier and missingness mechanism; then apply a meta doubly robust estimator to improve P(Y|A=0). Stage 2 plugs this estimate into pseudo-labeling methods.
+- Additional framework: Adapt a maximum likelihood framework with non-ignorable missingness via EM, encoding P(A|Y). This generalizes FixMatch and reparameterizes SimPro (details in Section 3.2).
+- Claim: Experiments demonstrate improvements (details deferred to later sections).
+- Context: Work under review (ICML). Affiliations: Cornell Tech, Google DeepMind.
+
+# Preliminaries
+- Notation: X∈𝒳, Y∈{1,…,C}, labeled set D_l={x_i,y_i}_{i=1}^{N_l}, unlabeled D_u={x_i}_{i=N_l+1}^N, A∈{0,1} indicates labeled/unlabeled. Combined class distribution P(Y)=P(A=0)P(Y|A=0)+P(A=1)P(Y|A=1). P(Y|uniform)=1/C. Test class distribution assumed uniform.
+- Pseudo-labeling (FixMatch): Uses confidence threshold to convert predictions to one-hot pseudo-labels (δ). Example threshold 0.8: [0.1,0.9]→[0,1], [0.4,0.6]→[0,0]. Loss on unlabeled data: L_u = −∑_{i=N_l+1}^N ∑_{c=1}^C δ(P(Y|α(x_i)))_c log P(Y=c|G(x_i)) (Equation (1)). FixMatch suffers under label shift between labeled and unlabeled distributions.
+- Label shift and logit adjustment: Assumes P(X|Y,A)=P(X|Y) (Equation (2)). Adapt classifier via Bayes: P(Y|X,uniform) ∝ P(Y|X,A=1) P(Y|uniform)/P(Y|A=1) (Equation (3)). Methods exist to estimate unknown target distribution for test-time adaptation; when unlabeled data is available for training, semi-supervised EM gives better class distribution estimation.
+- Non-ignorable missingness: A can depend on both X and Y; with label shift assumption (only Y causes A), the true data distribution is identifiable.
+- Doubly robust estimation background: Rooted in semi-parametric efficiency (Kennedy, 2024; Chernozhukov et al., 2018, 2022). Prior SSL works proposed DR losses to guard against bad pseudo labels using correct missingness mechanism; this paper aims to improve label quality via EM and DR estimation of unlabeled class distribution. Notes instability of inverse-weighting in DR losses; details and comparisons in Appendix B and Section 4.3.
+- Empirical observation (Figure 1): SimPro overshoots head classes in consistent, reverse, and head-tail settings; the proposed DR estimate is more accurate in head classes and overall distribution (TVD in Table 1), except in the middle setting.
+
+# Method
+- Overview (Figure 2): Stage 1: EM estimates missingness mechanism P(A|Y) and classifier P(Y|X) from labeled and unlabeled data; these are nuisance components for DR estimation of P(Y) (Equation (13)). Stage 2: Use EM or existing logit-adjusted methods (SimPro) with the estimated unlabeled distribution to train final classifier. Stage 1 network can be equal/smaller than Stage 2 (Section 4.1).
+- 3.1 Label-shift EM:
+  - Likelihood with missing Y for unlabeled: L(θ) = ∑_{i=1}^{N_l} log P(X=x_i,Y=y_i,A=1|θ) + ∑_{i=N_l+1}^{N} log P(X=x_i,A=0|θ) (Equation (4)).
+  - Lower bound via Jensen with posterior weights ω^t(x,y)=P(Y=y|X=x,A=0,θ^t): Q(θ|θ^t) = labeled term + ∑_{i>N_l} ∑_{c=1}^C ω^t(x_i,c) log P(X=x_i,Y=c,A=0|θ) (Equation (5)).
+  - Decomposition uses P(A|Y) P(Y|X) P(X) (avoids modeling P(X|Y)), yielding:
+    - Q(θ|θ^t) = ∑_{i=1}^N ∑_{c=1}^C γ_i(c) log P(Y=c|X=x_i,θ) + ∑_{c=1}^C ∑_{a=0}^1 ζ_c(a) log P(A=a|Y=c,θ) (Equation (6)).
+    - γ_i(c)=1(y_i=c) for i≤N_l, and P(Y=c|X=x_i,A=0,θ^t) for i>N_l. ζ_c(1)=∑_{i=1}^{N_l}1(y_i=c); ζ_c(0)=∑_{i>N_l} P(Y=c|X=x_i,A=0,θ^t).
+    - Posterior weight: ω^t(x,c) ∝ P(Y=c|X=x,θ^t) P(A=0|Y=c,θ^t) (Equation (7)).
+  - EM steps: E-step computes ω^t via (7); M-step maximizes Q to update P(Y|X,θ) and P(A|Y,θ).
+- 3.2 Label-shift FixMatch and SimPro:
+  - Connection: FixMatch’s unlabeled term aligns with Equation (5) when P(Y|A=1)=P(Y|A=0)=P(Y|uniform). SimPro derives a nearly equivalent EM, with E-step applying FixMatch thresholding/augmentation.
+  - SimPro parameterization: Uses (P(X|Y)/P(X)) and P(Y|A=0), equivalent to another decomposition of (5) up to P(A=0) (Equation (8)).
+  - Logit adjustment in SimPro: Loss −∑_{i=1}^{N} ∑_{c=1}^{C} γ_i(c) log{ P(Y=c|X=x_i,uniform,θ) + P(Y=c) } (Equation (9)), with P(Y) maintained as a running estimate. Authors note logit adjustment loss can be slightly better than post-hoc adjustment; they use SimPro for both stages.
+- 3.3 Estimators and 2-stage algorithm:
+  - Target: Estimate combined class distribution P(Y) and recover unlabeled P(Y|A=0) via P(Y)=∑_a P(A=a)P(Y|A=a), given known P(A) and P(Y|A=1).
+  - Estimators:
+    - Outcome regression (OR): Ψ_or(c) = (1/N) ∑_{i=1}^{N} P(Y=c|X=x_i,θ) (Equation (10)).
+    - Inverse probability weighted (IPW): Using identity P(Y=c)=𝔼_O[ 1(A=1)/P(A=1|Y) · 1(Y=c) ], sample estimator: Ψ_ipw(θ)(c) = (1/N) ∑_{i=1}^{N} [1(a_i=1)/P(A=1|Y=y_i,θ)] 1(y_i=c) (Equation (12)).
+    - Doubly robust (DR): Ψ_dr(θ)(c) = (1/N) ∑_{i=1}^{N} [ P(Y=c|X=x_i,θ) + (1(a_i=1)/P(A=1|Y=y_i,θ)) (1(y_i=c) − P(Y=c|X=x_i,θ)) ] (Equation (13)). Unbiased if either P(Y|X) or P(A|Y) is correct.
+- 3.3.1 Theoretical guarantees:
+  - Assumption 3.1: Fourth-root-n convergence rates: ||P(Y|X,θ)−P(Y|X)||_{L_2(P)} = o_p(N^{-1/4}); ||P(A=1|Y,θ)−P(A=1|Y)||_2 = o_p(N^{-1/4}) (Equation (14)).
+  - Theorem 3.2: √N(Ψ_dr(θ)(c) − P(Y=c)) ⇒ 𝒩(0, 𝔼[φ(O)(c)^2]) (Equation (15)). States Ψ_dr attains efficiency (most efficient regular estimator). Proof deferred to supplemental.
+
+# Experiments
+- Setup:
+  - Datasets: CIFAR-10, CIFAR-100, STL-10, ImageNet-127. RTSSL simulation on CIFAR-10/100 with long-tailed labeled and unlabeled sets.
+  - Long-tailed construction: Labeled imbalance ratio γ_l with head class size n_1 and class sizes n_c = n_1 × γ_l^{−(c−1)/(C−1)}; unlabeled similarly with γ_u and m_1.
+    - CIFAR-10: n_1=500, m_1=4000; test configs γ_l=γ_u=150 and γ_l=γ_u=100; 10 datasets by permuting unlabeled distributions across 5 types: consistent, uniform, reversed, middle, head-tail (following Du et al., 2024).
+    - CIFAR-100: n_1=50, m_1=400; γ_l, γ_u ∈ {20, 10}.
+    - STL-10: Use all head-class samples; γ_l∈{10, 20}.
+    - ImageNet-127: Naturally long-tailed; train at 32×32 and 64×64 resolutions.
+  - Training details: Implementation/hyperparameters follow Du et al. (2024) (Appendix C). Stage 1 for ImageNet-127 uses Wide ResNet-28-2; Stage 2 uses ResNet-50 to demonstrate smaller model suffices for distribution estimation. Experiments can be run on 1 A6000 RTX GPU; runs: 3 times (report mean ± std), except ImageNet-127 stage 2 run once. Metrics: TVD between estimated and ground truth unlabeled distribution; top-1 accuracy.
+- 4.1 Better results on label distribution:
+  - Methods compared: Supervised (train on labeled; estimators MLLS, RLLS), MLE (maximize Equation (4); decomposition P(Y|X), P(A|Y); estimators IPW/OR/DR), EM (Section 3.1; use strong/weak augmentations; estimators IPW/OR/DR). Confidence thresholding is omitted in EM for first-stage statistics quality.
+  - CIFAR-10 TVD (Table 1, N_l=500, M_l=4000):
+    - SimPro DR consistently low TVD across settings. Examples:
+      - Consistent γ_l=150, γ_u=150: "0.017 ± 0.004"; γ_l=100, γ_u=100: "0.026 ± 0.001".
+      - Uniform γ_l=150, γ_u=1: "0.019 ± 0.002"; γ_l=100, γ_u=1: "0.018 ± 0.003".
+      - Reversed γ_l=150, γ_u=1/150: "0.039 ± 0.003"; γ_l=100, γ_u=1/100: "0.058 ± 0.025".
+      - Middle γ_l=150, γ_u=150: "0.091 ± 0.007" (SimPro OR is lower: "0.074 ± 0.006"); γ_l=100, γ_u=100: "0.031 ± 0.001".
+      - Head-tail γ_l=150, γ_u=150: "0.015 ± 0.003"; γ_l=100, γ_u=100: "0.019 ± 0.007".
+    - EM DR also strong, e.g., uniform γ_l=150, γ_u=1: "0.014 ± 0.001"; γ_l=100, γ_u=1: "0.027 ± 0.020".
+  - CIFAR-100 TVD (Table 2, N_l=50, M_l=400): Multiple entries reported; some rows truncated.
+    - Supervised MLLS (examples): consistent γ_l=20, γ_u=20: "0.707 ± 0.016"; γ_l=10, γ_u=10: "0.313 ± 0.100".
+    - Supervised RLLS (examples): consistent γ_l=20, γ_u=20: "0.520 ± 0.007"; γ_l=10, γ_u=10: "0.133 ± 0.003".
+    - MLE IPW (examples): consistent γ_l=20, γ_u=20: "0.075 ± 0.000"; γ_l=10, γ_u=10: "0.071 ± 0.001".
+    - MLE OR (partial): consistent γ_l=20, γ_u=20: "0.065 ± 0.002"; subsequent entries truncated; Not specified in this section.
+- 4.2 Two-stage algorithm improves accuracy:
+  - CIFAR-10 top-1 accuracy (Table 3, N_l=500, M_l=4000):
+    - SimPro vs SimPro+: improved in 9/10 settings.
+      - Consistent γ_l=150, γ_u=150: "74.4 ± 0.71" → "77.8 ± 1.50".
+      - Consistent γ_l=100, γ_u=100: "79.7 ± 0.45" → "81.2 ± 0.39".
+      - Uniform γ_l=150, γ_u=1: "93.3 ± 0.10" → "93.7 ± 0.07".
+      - Uniform γ_l=100, γ_u=1: "93.3 ± 0.47" → "93.7 ± 0.24".
+      - Reversed γ_l=150, γ_u=1/150: "83.8 ± 0.80" → "83.3 ± 0.38" (degrade slightly).
+      - Reversed γ_l=100, γ_u=1/100: "84.1 ± 0.24" → "84.7 ± 0.78".
+      - Middle γ_l=150, γ_u=150: "78.7 ± 0.30" → "79.2 ± 0.70".
+      - Middle γ_l=100, γ_u=100: "84.2 ± 0.26" → "85.4 ± 0.66".
+      - Head-tail γ_l=150, γ_u=150: "81.2 ± 0.20" → "81.3 ± 0.27".
+      - Head-tail γ_l=100, γ_u=100: "82.0 ± 1.07" → "82.5 ± 0.56".
+    - BOAT vs BOAT+: improved in 8/10 settings (examples: consistent γ_l=150, γ_u=150: "80.5 ± 0.39" → "81.6 ± 0.15"; middle γ_l=100, γ_u=100: "81.6 ± 0.09" → "83.1 ± 0.45").
+  - CIFAR-100 top-1 accuracy (Table 4, N_l=50, M_l=400): Despite poorer stage 1 estimation, the plug-in generally does not degrade accuracy.
+    - SimPro vs SimPro+ (examples): consistent γ_l=20, γ_u=20: "42.5 ± 0.58" → "42.8 ± 0.49"; γ_l=10, γ_u=10: "49.6 ± 0.22" → "50.1 ± 0.33".
+    - BOAT vs BOAT+ (examples): consistent γ_l=20, γ_u=20: "43.7 ± 0.16" → "44.8 ± 0.13"; γ_l=10, γ_u=10: "51.4 ± 0.32" → "51.4 ± 0.51" (no change).
+    - Some entries truncated; Not specified in this section.
+  - STL-10 and ImageNet-127: Improvements reported. STL-10 improved for 2/2 imbalance ratios (Table 5 referenced; specific numbers not included in the provided text). ImageNet-127 (Table 6): SimPro "54.8" → "55.1" (32×32), "63.7" → "64.2" (64×64); BOAT "51.6" → "52.0" (32×32), "58.7" → "59.2" (64×64).
+- 4.3 Ablation Study: Alternative implementations:
+  - Doubly-robust risk (orthogonal statistical learning) as training loss (Equation (28)), using stage 1 P(A|Y) from SimPro+. Found to be worst overall due to instability (especially reversed setting where P(A|Y) small for labeled tail classes).
+  - Batch-update DR P(Y|A): 1-stage variant updating DR estimate via moving average on-the-fly; worse on consistent/uniform settings.
+  - CIFAR-10 accuracy (Table 8, γ_l=150): SimPro+ vs batch-update vs DR-risk:
+    - Consistent: "77.8" vs "71.9" vs "72.1".
+    - Uniform: "93.7" vs "91.4" vs "89.8".
+    - Reversed: "83.3" vs "82.6" vs "67.1".
+    - Middle: "79.2" vs "78.6" vs "75.6".
+    - Head-tail: "81.3" vs "81.2" vs "79.5".
+- ImageNet-127 TVD (Table 7):
+  - SimPro DR: "0.017 ± 0.000" (32×32), "0.037 ± 0.004" (64×64).
+  - EM DR: "0.024 ± 0.001", "0.042 ± 0.004".
+  - MLE IPW: "0.103 ± 0.034", "0.051 ± 0.000".
+  - MLE OR: "0.153 ± 0.052", "0.041 ± 0.000".
+  - SimPro IPW/OR show higher TVD at 64×64 (e.g., IPW "0.224 ± 0.040"; OR "0.291 ± 0.079").
+
+# Conclusion
+- Summary: Explicit estimation of the unlabeled class distribution via a doubly robust estimator within a label-shift EM framework improves pseudo-labeling for RTSSL.
+- Theoretical contribution: DR estimator with strong guarantees for estimating P(Y), leveraging non-ignorable missingness.
+- Empirical results: Improved distribution estimation and classification accuracy across CIFAR-10, STL-10, and ImageNet-127; even when class distribution estimates are inaccurate (e.g., CIFAR-100), accuracy does not generally degrade.
+- Scope: Plug-in strategy benefits multiple SOTA SSL algorithms (SimPro, BOAT).
+
+# Appendix
+- Impact Statement: Goal is to advance ML; potential societal consequences exist but none specifically highlighted.
+- Supplementary Material: Contains proof of Theorem 3.2 and additional details.
+- A. Proof of Theorem 3.2:
+  - Assumption A.1: (1) C bounded relative to N; (2) P(A=1|Y,θ) and its estimate bounded below by ε>0 (enforced via clipping); (3) Sample splitting—nuisance quantities estimated on auxiliary samples.
+  - Influence function definition φ(O|θ)(c) (Equation (16)), decomposition to show Ψ_dr(θ)(c)−P(Y=c) = (E_N−E)[φ(O)(c)] + o_P(N^{-1/2}) (Equation (18)), leading to asymptotic normality (Equation (26)).
+  - Efficiency: φ lies in the model’s tangent space 𝒯 = 𝒯_X ⊕ 𝒯_{Y|X} ⊕ 𝒯_{A|Y}, implying minimal variance (Equation (27)).
+- B. Further background and related work:
+  - Semi-supervised EM origins (Ibrahim & Lipsitz, 1996) and underuse for label shift; connection to pseudo-labeling and estimation of P(A|Y) for shift correction. Confidence thresholding viewed as sparse EM.
+  - Doubly-robust risk (Equation (28)), rewritten as meta-pseudo-label cross-entropy (Equation (29)); practical issues include instability (large inverse weights) and negative meta-labels requiring stringent assumptions. Empirically worse than 2-stage approach (Section 4.3).
+- C. Training and hyperparameter settings:
+  - Implementations adapt SimPro code for Supervised, MLE, EM. Optimizers: Adam lr=1e-3 for updating P(A|Y) in MLE; momentum update in EM for P(A|Y).
+  - Stage 1 uses Wide ResNet-28-2 across datasets (including ImageNet-127). For ImageNet-127 with WRN-28-2, CIFAR-100 hyperparameters are used with unlabeled batch size reduced (2× labeled instead of 8×) due to memory.
+  - All experiments run on 1 A6000 RTX GPU, repeated 3 times (report mean±std); Stage 2 ImageNet-127 uses ResNet-50 and runs once.
+  - Stage 2: Freeze estimated P(Y|A=0) and plug into SimPro/BOAT; retain running estimate of P(Y) for logit adjustment loss (Equation (9) in SimPro), as using the fixed estimate in this loss lowers accuracy. In BOAT, replace Δ_c=log P(Y|A=1)−log P(Y|A=0) with SimPro+ DR estimate; other settings unchanged.
+
+# References
+- Cited works include foundational SSL and long-tailed learning methods (FixMatch; MixMatch; RemixMatch; ABC), label-shift estimation/adaptation (Saerens et al., 2002; Lipton et al., 2018; Azizzadenesheli et al., 2019; Alexandari et al., 2020; Garg et al., 2020), RTSSL approaches (SimPro; BOAT; DASO; CReST; Wei & Gan, 2023; Ma et al., 2024; Zhao et al., 2022; Duan et al., 2022; 2023; Gan et al., 2024), semiparametric efficiency and doubly robust learning (Chernozhukov et al., 2018; 2022; Kennedy, 2024; Foster & Syrgkanis, 2023), non-ignorable missingness (Rubin, 1976; Tsiatis, 2006; Miller & Futoma, 2023; Sportisse et al., 2023), and instability concerns with inverse weighting (Cui et al., 2019; Ren et al., 2020; Kallus, 2020). Specific dataset references: CIFAR-10/100 (Krizhevsky & Hinton, 2009), STL-10 (Coates et al., 2011), ImageNet-127 (Fan et al., 2022).

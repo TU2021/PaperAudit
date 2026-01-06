@@ -1,0 +1,112 @@
+{
+  "paper": "Noise-Guided Transport for Imitation Learning",
+  "runs": [
+    {
+      "config": {
+        "judge_model": "gpt-5-2025-08-07",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "baseline_file": "baseline_review.txt",
+        "final_file": "final_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 600,
+        "metric": "regression_v2_minimal",
+        "prompt_hash": "2142c04332"
+      },
+      "config_key": "1a46f14f5902ebb0fc2c14773cec6644d2fa5338",
+      "inputs": {
+        "baseline_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/baseline_review.txt",
+        "final_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/final_review_all.txt"
+      },
+      "regression": {
+        "score_delta": {
+          "baseline_score": 7.0,
+          "final_score": 6.0,
+          "delta": -1.0,
+          "scale_hint": "1-10"
+        },
+        "differences": [
+          {
+            "diff_type": "new_critique",
+            "summary": "Asymmetric σ in ℓHLG breaks single-potential assumption, weakening OT-dual alignment",
+            "paperaudit_types": [
+              "METHOD_LOGIC_CONSISTENCY",
+              "CLAIM_RESULT_DISTORTION"
+            ],
+            "why_impacts_score": "Undermines claimed OT-dual equivalence, weakening theoretical soundness",
+            "evidence": {
+              "baseline_quote": "No direct proof or proposition shows that maximizing EMD via hξ, combined with rξ=exp(−hξ), induces gradient directions in SAC.",
+              "final_quote": "ℓHLG is instantiated with different σ on expert vs agent expectations (Section 4.3.2; Appendix Table 1)."
+            }
+          },
+          {
+            "diff_type": "new_critique",
+            "summary": "Equality vs. inequality mismatch for Λ(hξ) between main text and appendix",
+            "paperaudit_types": [
+              "METHOD_LOGIC_CONSISTENCY",
+              "RHETORICAL_PRESENTATION_MANIPULATION"
+            ],
+            "why_impacts_score": "Misstated bound suggests stronger control than proven, reducing trust",
+            "evidence": {
+              "baseline_quote": "the effective Λ(fξ) and Λ(fξ†) under LeakyReLU and SN are not quantified for the full network compositions.",
+              "final_quote": "The main text presents Λ(hξ)=Λ(ℓ)(Λ(fξ)+Λ(fξ†)) as an equality (Eq. 4), while Appendix G only proves an upper bound."
+            }
+          },
+          {
+            "diff_type": "new_critique",
+            "summary": "Claim that SN not needed for prior lacks isolated ablation evidence",
+            "paperaudit_types": [
+              "EXPERIMENTAL_DESIGN_PROTOCOL",
+              "CLAIM_RESULT_DISTORTION"
+            ],
+            "why_impacts_score": "Unsupported claim and incomplete ablation weaken evidence for stability",
+            "evidence": {
+              "baseline_quote": "Spectral normalization on reward networks and orthogonal initialization of the frozen prior are motivated by Lipschitz control and feature spread.",
+              "final_quote": "Section 4.3.1 asserts SN “would not be needed for the prior,” but ablations report collapse without isolating prior-only removal."
+            }
+          },
+          {
+            "diff_type": "intensified_critique",
+            "summary": "Reward normalization asymmetry plus contradiction to claimed [0,1] bounds",
+            "paperaudit_types": [
+              "EXPERIMENTAL_DESIGN_PROTOCOL",
+              "CLAIM_RESULT_DISTORTION"
+            ],
+            "why_impacts_score": "Unfair comparisons and contradictory bounds cast doubt on results",
+            "evidence": {
+              "baseline_quote": "Reward normalization via percentile scaling is applied to NGT and RED* but not to other adversarial baselines.",
+              "final_quote": "this rescaling contradicts the “bounds the reward between 0 and 1” claim stated in Section 4.1."
+            }
+          },
+          {
+            "diff_type": "new_critique",
+            "summary": "Minor clarity issues with appendix cross-references and labeling",
+            "paperaudit_types": [
+              "CONTEXT_MISALIGNMENT_INCOHERENCE"
+            ],
+            "why_impacts_score": "Navigation errors reduce clarity and documentation reliability",
+            "evidence": {
+              "baseline_quote": "Algorithm 1 makes the training loop explicit and shows how rξ integrates with SAC, improving clarity.",
+              "final_quote": "Appendix A references “Eq. ??” and Section 5 points to “APPENDIX O” while labeled “C Extra Environments”."
+            }
+          },
+          {
+            "diff_type": "score_rationale_shift",
+            "summary": "Final explicitly cites theory-implementation mismatches to lower technical score",
+            "paperaudit_types": [
+              "METHOD_LOGIC_CONSISTENCY",
+              "CLAIM_RESULT_DISTORTION"
+            ],
+            "why_impacts_score": "Adds concrete reasons (asymmetric σ; bound mismatch) for lowering score",
+            "evidence": {
+              "baseline_quote": "Technical Quality (10): 6 — ... but the minimax connection and 1‑Lipschitz enforcement are not fully formalized.",
+              "final_quote": "Technical Quality (10): 5 — ... exact OT equivalence not fully justified, with an equality vs. inequality mismatch and asymmetric σ across expectations."
+            }
+          }
+        ]
+      },
+      "generated_at": "2026-01-05T20:38:01"
+    }
+  ]
+}

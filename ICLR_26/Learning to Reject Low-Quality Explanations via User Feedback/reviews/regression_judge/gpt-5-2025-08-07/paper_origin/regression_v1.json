@@ -1,0 +1,100 @@
+{
+  "paper": "Learning to Reject Low-Quality Explanations via User Feedback",
+  "runs": [
+    {
+      "config": {
+        "judge_model": "gpt-5-2025-08-07",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "baseline_file": "baseline_review.txt",
+        "final_file": "final_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 600,
+        "metric": "regression_v2_minimal",
+        "prompt_hash": "2142c04332"
+      },
+      "config_key": "1a46f14f5902ebb0fc2c14773cec6644d2fa5338",
+      "inputs": {
+        "baseline_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/baseline_review.txt",
+        "final_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/final_review_all.txt"
+      },
+      "regression": {
+        "score_delta": {
+          "baseline_score": 7.0,
+          "final_score": 7.0,
+          "delta": 0.0,
+          "scale_hint": "1-10"
+        },
+        "differences": [
+          {
+            "diff_type": "new_critique",
+            "summary": "Ambiguity in Equation 2 covariance (PSD, implementability)",
+            "paperaudit_types": [
+              "METHOD_LOGIC_CONSISTENCY",
+              "RHETORICAL_PRESENTATION_MANIPULATION"
+            ],
+            "why_impacts_score": "Raises technical soundness and reproducibility concerns",
+            "evidence": {
+              "baseline_quote": "The augmentation assumes label preservation under selective Gaussian perturbations (Equation 2; Section 3.1: “we stipulate…”).",
+              "final_quote": "Equation 2’s covariance specification “ε0 s × Σ” ... raising concerns about positive semi-definiteness and unambiguous implementation."
+            }
+          },
+          {
+            "diff_type": "new_critique",
+            "summary": "Undefined Cz in human study augmentation pipeline",
+            "paperaudit_types": [
+              "EXPERIMENTAL_DESIGN_PROTOCOL",
+              "RHETORICAL_PRESENTATION_MANIPULATION"
+            ],
+            "why_impacts_score": "Undermines implementability and fidelity of the human-annotated evaluation",
+            "evidence": {
+              "baseline_quote": "The paper details recruitment, vetting, and interface design for human ratings and per-feature feedback (Section 4.2; Appendix D.3).",
+              "final_quote": "Only incorrect features are annotated; the derivation of Cz is not specified."
+            }
+          },
+          {
+            "diff_type": "new_critique",
+            "summary": "Unclear probability/variance computations for baselines and metrics",
+            "paperaudit_types": [
+              "EXPERIMENTAL_DESIGN_PROTOCOL",
+              "METHOD_LOGIC_CONSISTENCY"
+            ],
+            "why_impacts_score": "Threatens fairness/comparability of baselines and metric validity",
+            "evidence": {
+              "baseline_quote": "Eight baselines span standard LtR and explanation-aware strategies ... ensuring broad coverage and experimental rigor.",
+              "final_quote": "SVC does not provide calibrated probabilities; manuscript does not state how probabilities were obtained."
+            }
+          },
+          {
+            "diff_type": "score_rationale_shift",
+            "summary": "Clarity score reduced due to reporting omissions",
+            "paperaudit_types": [
+              "RHETORICAL_PRESENTATION_MANIPULATION",
+              "EVIDENCE_DATA_INTEGRITY"
+            ],
+            "why_impacts_score": "Missing main-text sample size and implementation details reduce clarity",
+            "evidence": {
+              "baseline_quote": "Clarity (10): 8 — Well-structured with precise definitions ... comprehensive experimental details.",
+              "final_quote": "Clarity (10): 7 — improve reporting on human-study sample size ... and implementation details."
+            }
+          },
+          {
+            "diff_type": "score_rationale_shift",
+            "summary": "Technical Quality score reduced with added methodological concerns",
+            "paperaudit_types": [
+              "METHOD_LOGIC_CONSISTENCY",
+              "EXPERIMENTAL_DESIGN_PROTOCOL"
+            ],
+            "why_impacts_score": "New ambiguities and baseline metric issues justify lower technical quality",
+            "evidence": {
+              "baseline_quote": "Technical Quality (10): 6 — Method is sound and robustly evaluated ... lacks theoretical guarantees.",
+              "final_quote": "Technical Quality (10): 5 — ambiguity in Equation 2’s covariance; unclear probability/variance estimation."
+            }
+          }
+        ]
+      },
+      "generated_at": "2026-01-05T20:43:41"
+    }
+  ]
+}

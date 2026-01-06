@@ -1,0 +1,52 @@
+Based on a critical review of the manuscript, several significant internal inconsistencies and logical contradictions have been identified that affect the validity and trustworthiness of the reported findings.
+
+### Integrity Risk / Inconsistency Report
+
+**1. Contradiction in Curriculum Learning Experiment Results (Section 5)**
+
+There is a major contradiction between the description of the curriculum learning experiments and the results presented in Figure 4a.
+
+*   **Evidence:**
+    *   The experimental setup for the "English-all" and "English-Pivots-all" curricula states that for the first 25% of training (0-25B tokens), the model is trained *exclusively on English data* (Block #16, #20).
+    *   Under this condition, the validation loss on English data (Figure 4a) should be low and decreasing during this initial phase.
+    *   However, Figure 4a (image in Block #23) shows the exact opposite. The curves for "English-all" and "English-Pivots-all" start at an extremely high validation loss (>6.0) and only plummet after approximately 25B training tokens. This graphical result suggests the models had *not* been trained on English during the first phase, directly contradicting the method described in the text.
+
+*   **Impact:** This discrepancy is critical as it undermines the entire premise and conclusion of the curriculum learning experiment (Finding #3). The reported results do not appear to correspond to the experiment that was described.
+
+**2. Contradiction in Cross-Lingual Transfer Experiment Reporting (Appendix D)**
+
+The text description and the figure caption for the cross-lingual transfer experiment in Appendix D are mutually exclusive.
+
+*   **Evidence:**
+    *   The main text in Appendix D (Block #68) states: "...we observe that its [English] validation loss **decreases** as more tokens from **high-resource languages** are included, and **increases** when more tokens from **lower-resource languages** are introduced."
+    *   The caption for Figure 10 (Block #74), which visualizes this experiment, states: "Increasing token allocation for **tail languages reduces** validation loss in English and **improves** English accuracy."
+    *   The plot in Figure 10a (image in Block #76) shows that as the "Proportaion [sic] of top 25 Langs (%)" increases, the LM Loss decreases. This supports the claim in the main text (Block #68) but directly contradicts the figure caption (Block #74).
+
+*   **Impact:** This is a significant reporting error. The conclusion drawn from the experiment depends entirely on which of the contradictory statements is correct. As presented, the reporting is unreliable.
+
+**3. Inconsistency Between LM Loss and Downstream Performance (Section 3)**
+
+The paper claims that increasing the proportion of English data does not harm multilingual downstream performance in the "Fixed Total Budget" setting, but this is inconsistent with the paper's own LM loss results and some of its benchmark plots.
+
+*   **Evidence:**
+    *   **LM Loss:** For the "Fixed Total Budget" setting, Figure 1a (1.1B model) and Figure 7a (3B model, image in Block #66) clearly show that the multilingual validation loss increases (i.e., performance degrades) as the English data proportion rises above 40-50%.
+    *   **Benchmark Claim:** Despite the degrading loss, the text claims downstream performance is unaffected. For the 1.1B model, the text for Figure 2a states, "increasing English data (≥50%) does not hurt downstream performance on the Multilingual group" (Block #7). For the 3B model, the caption for Figure 8 states, "increasing English data (≥50%) does not hurt downstream performance on the other group" (Block #68).
+    *   **Benchmark Plot Contradiction:** While the plot for the 1.1B model (Figure 2a) appears relatively flat, the plot for the 3B model (Figure 8, image in Block #71) shows a visible downward trend in the multilingual benchmark score as the English proportion increases. This contradicts the caption for Figure 8.
+
+*   **Impact:** The claim that downstream performance is unaffected while pre-training loss degrades is a strong and counter-intuitive finding that requires robust evidence. Here, the evidence is contradictory, with the 3B model's benchmark plot directly refuting the claim made in the text and figure captions. This inconsistency weakens Finding #1.
+
+**4. Inconsistent Data Reporting for the "Controlled Growth" Experiment (Section 6)**
+
+The token counts reported for the "Controlled Growth" experiment in Table 8 do not align with the experimental methodology described in the text.
+
+*   **Evidence:**
+    *   The methodology (Block #27) states: "...the data for the original set of languages remains fixed across two consecutive runs. For example, when increasing from 25 to 50 languages, the first 25 languages receive the same amount of training data as before..."
+    *   Table 8 (Block #81) reports the token counts. Following the logic, the token count for the "Top-50" languages in the "100 Langs, Natural-C" experiment should be identical to the total token count for the "50 Langs, Natural" (fixed budget) experiment.
+    *   However, the token count for the Top-50 languages in the "50 Langs, Natural" run is 59.33B tokens. The token count for the Top-50 languages in the "100 Langs, Natural-C" run is reported as 60.08B tokens. These values should be the same according to the experimental description but are not.
+    *   This pattern of mismatched numbers occurs for other rows in the "Natural-C" and "Temp.-C" settings as well, suggesting the data in the table does not reflect the described experimental procedure.
+
+*   **Impact:** This discrepancy raises questions about whether the "Controlled Growth" experiment was executed as described. The conclusions drawn about the curse of multilinguality based on this specific setup are therefore unreliable.
+
+### Summary
+
+The manuscript contains several high-impact inconsistencies, including a direct contradiction between the described methodology and plotted results in a key experiment (Issue 1), mutually exclusive claims in text and a figure caption (Issue 2), and claims that are not fully supported by the provided data (Issues 3 and 4). These issues materially affect the scientific validity of the paper's central findings and must be addressed and clarified before the work can be considered reliable.

@@ -1,0 +1,129 @@
+{
+  "paper": "Timber_ Training-free Instruct Model Refining with Base via Effective Rank",
+  "runs": [
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "deepreviewer",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "deep_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "55f39c3e353412551a5ae68e81fc4acc489b4edd",
+      "inputs": {
+        "human_review": "review_origin.txt",
+        "ai_review": "reviews/deepreviewer/gpt-5-2025-08-07/paper_origin/deep_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 0.83,
+        "weakness_coverage_recall": 0.42,
+        "ai_extra_major_points_rate": 0.38,
+        "symmetric_coverage_similarity": 0.42,
+        "note": "The AI review missed several human concerns about the evaluation, such as the omission of key baselines in plots and the unclear impact on Pass@1 performance. However, the AI identified major technical flaws that the human reviewers missed, including impossible numerical values reported in a key figure and a critical ambiguity in the method's mathematical definition."
+      },
+      "generated_at": "2025-12-27T23:46:33"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "baseline_review.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "b3137abdd5dd456ecfb029f7bed4151251d086e2",
+      "inputs": {
+        "human_review": "review_origin.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/baseline_review.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 0.8,
+        "weakness_coverage_recall": 0.67,
+        "ai_extra_major_points_rate": 0.67,
+        "symmetric_coverage_similarity": 0.48,
+        "note": "The AI review covers most human-identified strengths but misses several key weaknesses, particularly regarding the practical utility of the attenuation factor and the limited novelty. Conversely, the AI review raises many additional, detailed weaknesses not mentioned by the human reviewers, such as statistical significance, computational cost quantification, and mechanistic evidence for exploration."
+      },
+      "generated_at": "2025-12-27T23:50:48"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "final_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "0a71ca7d783136ba33fb6b5ec9aad08ece2f0c09",
+      "inputs": {
+        "human_review": "review_origin.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/final_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 1.0,
+        "weakness_coverage_recall": 0.45,
+        "ai_extra_major_points_rate": 0.5,
+        "symmetric_coverage_similarity": 0.45,
+        "note": "The AI review completely covers the human-identified strengths but misses several key substantive weaknesses, including the structural limitation of requiring a paired base model, the sensitivity of the attenuation factor (which the AI claims is robust), and the lack of evaluation on general NLP tasks beyond reasoning. Conversely, the AI raises unique valid concerns about statistical significance, safety alignment, and specific numeric/notation inconsistencies not mentioned by humans."
+      },
+      "generated_at": "2025-12-28T00:01:34"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "deepreviewer",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "deep_review_merge.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "752f27bc09e656c7d041a880d0c174422eea6ca4",
+      "inputs": {
+        "human_review": "review_origin.txt",
+        "ai_review": "reviews/deepreviewer/gpt-5-2025-08-07/paper_origin/deep_review_merge.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 0.67,
+        "weakness_coverage_recall": 0.33,
+        "ai_extra_major_points_rate": 0.56,
+        "symmetric_coverage_similarity": 0.32,
+        "note": "The AI review misses several major human concerns, including the lack of key baselines, the requirement for a paired base model, and confusing evaluation plots. Conversely, the AI raises multiple unique and specific technical issues not mentioned by humans, such as implausible eRank values in a figure and the lack of safety evaluation."
+      },
+      "generated_at": "2025-12-28T00:17:21"
+    }
+  ]
+}

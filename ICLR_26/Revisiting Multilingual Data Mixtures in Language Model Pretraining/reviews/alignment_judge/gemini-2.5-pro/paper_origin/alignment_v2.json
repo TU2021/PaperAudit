@@ -1,0 +1,129 @@
+{
+  "paper": "Revisiting Multilingual Data Mixtures in Language Model Pretraining",
+  "runs": [
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "final_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "0a71ca7d783136ba33fb6b5ec9aad08ece2f0c09",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/final_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 1.0,
+        "weakness_coverage_recall": 0.67,
+        "ai_extra_major_points_rate": 0.41,
+        "symmetric_coverage_similarity": 0.53,
+        "note": "The AI review fully covers the human's strength points but misses two weaknesses (lack of contextualization in prior work, no 100% English baseline). The main coverage divergence is due to the AI identifying numerous additional, specific methodological weaknesses, such as experimental confounds and unanalyzed discrepancies between metrics."
+      },
+      "generated_at": "2025-12-27T20:39:24"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "baseline_review.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "b3137abdd5dd456ecfb029f7bed4151251d086e2",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/baseline_review.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 1.0,
+        "weakness_coverage_recall": 0.67,
+        "ai_extra_major_points_rate": 0.5,
+        "symmetric_coverage_similarity": 0.35,
+        "note": "The AI review covers all of the human's substantive strengths and most weaknesses, such as tokenizer bias and limited pivot experiments. However, the AI also introduces several major, distinct weaknesses not mentioned by the human, including confounding variables and reporting inconsistencies. The human review uniquely noted the lack of a 100% English baseline and insufficient connection to prior work, resulting in low symmetric coverage."
+      },
+      "generated_at": "2025-12-27T20:43:57"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "deepreviewer",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "deep_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "55f39c3e353412551a5ae68e81fc4acc489b4edd",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/deepreviewer/gpt-5-2025-08-07/paper_origin/deep_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 1.0,
+        "weakness_coverage_recall": 0.33,
+        "ai_extra_major_points_rate": 0.75,
+        "symmetric_coverage_similarity": 0.29,
+        "note": "The AI review perfectly covers the human's high-level strengths but has low alignment on weaknesses. The AI misses several general concerns from the human (e.g., lack of an English-only baseline) but identifies numerous specific, major methodological flaws not mentioned by the human, such as a taxonomy error, an unspecified learning rate schedule, and low evaluation sensitivity."
+      },
+      "generated_at": "2025-12-27T20:49:51"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "deepreviewer",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "deep_review_merge.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "752f27bc09e656c7d041a880d0c174422eea6ca4",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/deepreviewer/gpt-5-2025-08-07/paper_origin/deep_review_merge.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 1.0,
+        "weakness_coverage_recall": 0.33,
+        "ai_extra_major_points_rate": 0.75,
+        "symmetric_coverage_similarity": 0.35,
+        "note": "The AI review perfectly covers the strengths but has low coverage of the human's weaknesses, missing points like the lack of a 100% English baseline and the need to test on larger models. Conversely, the AI review raises numerous specific methodological and evaluation concerns not mentioned by the human, such as reproducibility gaps and low evaluation sensitivity."
+      },
+      "generated_at": "2025-12-27T21:19:26"
+    }
+  ]
+}

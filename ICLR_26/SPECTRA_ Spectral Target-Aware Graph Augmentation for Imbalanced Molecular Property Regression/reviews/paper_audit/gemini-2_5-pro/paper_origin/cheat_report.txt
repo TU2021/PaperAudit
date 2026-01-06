@@ -1,0 +1,43 @@
+Based on a critical review of the manuscript, several clear internal inconsistencies and issues affecting scientific validity have been identified. These problems span the methodology, results, and presentation, and require significant revision.
+
+### **Integrity and Consistency Risk Report**
+
+**1. Contradiction Between Textual Claims and Data in Table 2**
+
+A significant contradiction exists between the textual description of the generated molecules and the data presented in Table 2.
+
+*   **Evidence:** In Section 4.1 [Block 28], the text claims, "Augmented molecules are generally larger and more cyclic". However, the data in Table 2 [Block 28] does not fully support this.
+    *   The mean atom count for the Lipo dataset *decreases* from 27.04 (original) to 22.80 (augmented).
+    *   The maximum atom count for augmented molecules is *smaller* than the original for both FreeSolv (20 vs. 24) and ESOL (28 vs. 55).
+*   **Impact:** This is a direct contradiction between a central claim about the method's output and the evidence provided in the paper's own table. It undermines the credibility of the analysis of the generated molecules.
+
+**2. Inconsistent and Erroneous Figure and Table Referencing**
+
+The manuscript contains numerous errors in figure and table labeling and referencing, which severely impedes the reader's ability to connect claims to their evidence.
+
+*   **Evidence:**
+    *   **Duplicate "Figure 3":** The text refers to two different figures as "Figure 3". In Section 4.1 [Block 27], "Figure 3" is cited for the t-SNE plots of Morgan fingerprints. In the same section [Block 28], "Figure 3" is cited again, this time for the joint distribution plots of molecular properties. The actual images for these are in [Block 30-32] and [Block 36], respectively.
+    *   **Mislabeled Figure Caption:** The caption for the t-SNE plots is incorrectly labeled as "Table 3" in the text [Block 28].
+    *   **Separated Figures and Captions:** The caption for "Figure 1" is provided in [Block 4], but the corresponding (unlabeled) plots appear separately in [Block 6, 7, 8]. Similarly, the caption for "Figure 2" [Block 14] is separated from its image [Block 17].
+*   **Impact:** This disorganization makes the results section extremely difficult to follow and verify. It suggests a lack of care in manuscript preparation and raises concerns about the reliability of the presented evidence.
+
+**3. Factual Mischaracterization of a Key Baseline Method**
+
+The paper incorrectly categorizes a well-known baseline model, which is also foundational to the authors' own architecture.
+
+*   **Evidence:** In Section 4.2 [Block 29], ChebNet (Defferrard et al., 2016) is described as a "language–graph hybrid". This is factually incorrect. ChebNet is a seminal work on spectral Graph Neural Networks. The authors' own model, SPECTRA, uses ChebConv [Block 25], the core operator from ChebNet.
+*   **Impact:** This error demonstrates a fundamental misunderstanding of a key piece of related work and the architectural basis of their own model. This calls into question the authors' expertise and the thoroughness of their literature review.
+
+**4. Ambiguous Mathematical Notation in the Core Method**
+
+The methodology uses the same symbol, `α`, for two different parameters without clarification, creating ambiguity that harms reproducibility.
+
+*   **Evidence:**
+    *   In Section 3.2 [Block 19], `α` is defined as the hyperparameter balancing structural and feature similarity in the Fused Gromov–Wasserstein (FGW) cost function.
+    *   In Section 3.3 [Block 20] and Section 3.4 [Block 21], `α` is used again as the mixing coefficient for interpolating eigenvalues, eigenvectors, node features, and target labels.
+    *   The appendix [Block 51] lists a single hyperparameter "Alpha" being tuned, making it impossible to determine which `α` is being referred to, or if they were erroneously treated as the same parameter.
+*   **Impact:** This notational ambiguity makes the core interpolation method unclear and difficult to reproduce.
+
+**Conclusion**
+
+The manuscript suffers from significant internal inconsistencies, including a direct contradiction between claims and data, a chaotic and erroneous presentation of figures, a factual error in describing a key baseline, and ambiguous notation in the methodology. These issues are not minor and collectively undermine the scientific validity and trustworthiness of the work. Substantial revision and careful proofreading are required to address these fundamental problems.

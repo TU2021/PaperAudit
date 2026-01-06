@@ -1,0 +1,38 @@
+Academic integrity and internal consistency risk report
+
+Summary of high-impact issues observed, with explicit anchors to the manuscript:
+
+1) Condition numbering inconsistency in core theorem
+- Theorem 4.3 cites “Condition 3.1” as a prerequisite for all its results (Block #14). There is no “Condition 3.1” defined in the paper; the only condition stated is Condition 4.1 (Block #12). This incorrect reference affects the logical validity of Theorem 4.3 and any subsequent comparisons with Theorem 4.2 and Proposition 4.4.
+
+2) Training loss notation inconsistencies
+- The paper defines task-specific training losses L_Task1(W) and L_Task2(W) in Section 3 (Block #10). However, Theorem 4.2 (Block #13) claims “The training loss is below ε: L_S(W^{(t)}) ≤ ε,” but L_S is never defined in the manuscript. Theorem 4.3 then uses “L(W^{(T)}) ≤ ε” (Block #14). These inconsistencies in the loss notation (L_S vs. L vs. L_Task1/L_Task2) create ambiguity about what quantity is being bounded and undermine reproducibility and clarity of the main guarantees.
+
+3) Method description vs. algorithm vs. experiments mismatch on parameter selection
+- The method section states “The algorithm used in this work randomly samples weights from the upstream model” (Block #11). Yet Algorithm 1 specifies a deterministic inheritance rule: “w_{j,r}^{D,(0)} = w_{j,r}^{A,(T^*)} if 1 ≤ r ≤ α m, else initialize randomly” (Block #8), which does not implement random sampling over r; it selects a contiguous block of filters by index.
+- The ViT experiment states that specific layers (9th, 10th, 11th) are inherited (Block #29), which again is not random sampling. Moreover, the Figure 4 legend uses “VanillaLG base L12” (Block #113; images in Blocks #115–#116), a method name not defined anywhere in the manuscript, introducing further ambiguity about what was actually transferred and whether it matches the proposed algorithm. These discrepancies between claimed method, formal algorithm, and experimental instantiation materially affect the trustworthiness of the empirical validation.
+
+4) Assumptions on noise orthogonality vs. later statements of correlation
+- The data model explicitly enforces noise to lie in the orthogonal complement of the signal subspace for Task 1 and Task 2 (Definitions 3.1 and 3.2; Block #7). Immediately after, the text says “The noise may have a non-trivial correlation with the signal part” (Block #10). This contradicts the orthogonality constraints embedded in the definitions unless a different regime is explicitly analyzed. All main proofs rely on the orthogonality-based distribution (e.g., Lemma D.3 uses orthogonality of u and v1; Blocks #61–#63). No direct evidence found in the manuscript that the theoretical results extend to correlated noise. This inconsistency undermines the claimed generality and could invalidate statements that rely on orthogonality.
+
+5) Theoretical conditions vs. experimental settings mismatch (material)
+- Condition 4.1 requires, among other things, “d = \tilde{Ω}(max{n σ_p^{-2} ||u + v||_2^2, n^2})” where n = max{N1, N2} (Block #12). In the synthetic experiments, the paper sets d = 2000 and allows N1 up to 1000 (Block #18), hence n = 1000. This violates d = \tilde{Ω}(n^2): 2000 ≪ 10^6. Since multiple lemmas and phase transition results depend on this over-parameterized regime (e.g., κ_A and κ_D bounded by small constants; Blocks #60–#61 and #85–#87), the empirical validation does not test the theory in its stated regime. This is a substantive inconsistency that weakens the empirical support for the theoretical claims.
+
+6) Undefined or ambiguous labels and methods in figures
+- Figure 4 in the appendix uses the label “VanillaLG base L12” (Blocks #113, #115, #116), but the manuscript never defines “VanillaLG.” No direct evidence found in the manuscript that this refers to the proposed parameter transfer scheme. This ambiguity raises integrity concerns about whether the plotted method corresponds to the described algorithm.
+
+7) Minor, but compounding, notation and reference issues in proofs
+- Multiple places switch between bar/underline/x variants (e.g., x̄_t^D, x_t^D, underline{x}_t^D) and sometimes refer to conditions or lemmas with inconsistent indices (e.g., Theorem E.12 re-establishes main bounds with C1*, C2*, and slightly different denominators compared to Theorem 4.2; Blocks #106–#109), which is tolerable, but combined with the incorrect condition reference (Issue 1) contributes to internal confusion.
+
+8) Algorithmic detail missing for real-data experiments
+- In real-data experiments (Section 6), the paper does not specify α (fraction of parameters transferred), the exact mapping of parameters between architectures with different widths/depths (e.g., ResNet-101 to ResNet-34/50; Block #23–#27), nor whether weights are randomly sampled or contiguously inherited as in Algorithm 1. Given differing architectures, these details materially affect correctness and reproducibility. No direct evidence found in the manuscript clarifying these choices.
+
+Actionable recommendations to address the issues:
+- Correct Theorem 4.3’s prerequisite to reference Condition 4.1 (Block #14).
+- Unify and define the training loss notation used in Theorems 4.2 and 4.3 (Blocks #10, #13, #14), explicitly stating whether L_S denotes L_Task2 or a sample-averaged training loss over a specific dataset.
+- Align the textual method description (“random sampling”) with Algorithm 1 (Block #8) or revise Algorithm 1 to implement random selection of inherited filters, and ensure experiments (Blocks #29, #113–#116) use the same strategy; remove or define “VanillaLG” to avoid ambiguity.
+- Clarify and maintain consistency regarding noise assumptions: if proofs assume orthogonality (Blocks #7, #61–#63), avoid statements suggesting correlated noise unless separate results are provided for that regime (Block #10).
+- Either adjust synthetic experiments to satisfy Condition 4.1 (Block #12) or explicitly state that experiments explore regimes outside the theoretical assumptions and do not serve as validation of the stated bounds.
+- Provide full details for real-data parameter transfer: which layers/filters were transferred, the fraction α, the mapping between differing architectures, and whether selection was random or deterministic.
+
+If the above are corrected and clarified, many integrity risks would be mitigated. As it stands, the inconsistencies materially affect the paper’s correctness and the credibility of its empirical support.

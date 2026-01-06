@@ -1,0 +1,47 @@
+# Innovation & Motivation Report
+
+## 1. The Authors' Claimed Contribution
+- Core Problem: The paper targets the inadequacy of answer-level metrics (exact match/F1) to capture whether LLM search agents reliably acquire, evaluate, and act upon external evidence in multi-turn settings.
+- Claimed Gap: “Typical exact-match/F1 evaluations miss epistemic competence—reliable acquisition, evaluation, and action upon knowledge.” (Introduction) and “We introduce SeekBench—the first benchmark for evaluating the epistemic competence of LLM search agents through step-level analysis of their response traces.” (Abstract)
+- Proposed Solution: A process-level benchmark (SeekBench) with an expert-validated annotation schema and formal metrics that operationalize three epistemic competencies—groundedness (Reasoning Quality Index, RQI), recovery (Evidence Recovery Function, ERF via survival analysis), and calibration (Calibration Error, CE)—applied at scale to multi-turn traces across seven QA datasets and several RL-trained agents.
+
+## 2. Comparative Scrutiny (The "Trial")
+Here, we analyze how the paper stands against the identified similar works.
+
+### vs. Do LLM Agents Know How to Ground, Recover, and Assess? A Benchmark for Epistemic Competence in Information-Seeking Agents
+- Identified Overlap: The title, problem framing, and “SeekBench” concept are identical; the resemblance analysis frames Paper A as the operational and scaled realization of Paper B’s benchmark vision, instantiating groundedness, recovery, and calibration as metrics (E-state, RQI, ERF, CE).
+- Manuscript's Defense: The manuscript positions SeekBench as “the first benchmark” and explicitly claims formalization: “Existing trace aggregation and taxonomies lack formal definitions and quantitative metrics for epistemic competencies; this work formalizes groundedness, recovery, and calibration with precise metrics and evaluation protocols.” (Related Work)
+- Reviewer's Assessment: Given the identical title and scope, this similar work appears to be the same artifact rather than independent prior art. Absent evidence of an earlier, distinct version, it does not undermine the novelty claim. If this is a prior vision-only piece by the same authors, the present manuscript’s formal definitions (Defs. 3.1–3.5) and large-scale application would constitute a substantial operational advance.
+
+### vs. An Empirical Study on Reinforcement Learning for Reasoning-Search Interleaved LLM Agents (Search-R1)
+- Identified Overlap: Both study RL-trained reasoning–search agents and open-domain QA; Search-R1 analyzes training design choices and answer-level gains, while the manuscript evaluates internal epistemic behaviors within traces.
+- Manuscript's Defense: The authors explicitly argue that prior evaluations are answer-centric and “stop short of assessing grounding, recovery, or calibration.” (Related Work) They also evaluate the RL agents named (Search-R1, ReSearch, ASearcher, DeepResearcher) under the new metrics, revealing trade-offs (e.g., strong synthesis but weak planning/grounding).
+- Reviewer's Assessment: The distinction is significant. This work provides complementary process-level diagnostics (RQI, ERF, CE) that quantify behavioral qualities RL studies influence but do not measure. The direct evaluation of Search-R1 and peers under these metrics demonstrates clear added value rather than overlap.
+
+### vs. Tree Search for Language Model Agents
+- Identified Overlap: Both address multi-step reasoning, exploration, and adaptive behavior in interactive environments; the tree-search paper proposes an inference-time algorithm, while the manuscript measures trace-level competencies that such algorithms aim to improve.
+- Manuscript's Defense: The manuscript differentiates itself by focusing on evaluation formalization: “Existing trace aggregation and taxonomies lack formal definitions and quantitative metrics for epistemic competencies.” (Related Work) It defines evidence-state E and metrics (RQI/ERF/CE) to make exploration/planning/adaptation observable and quantifiable in QA traces.
+- Reviewer's Assessment: The overlap is thematic, not substantive. One is an algorithmic contribution in web tasks; the other is an evaluation framework for search QA agents. The manuscript’s metrics and validated schema address a different need and fill a recognized measurement gap.
+
+### vs. ManuSearch: Democratizing Deep Search in Large Language Models with a Transparent and Open Multi-Agent Framework
+- Identified Overlap: Both decompose the agent pipeline into planning, search, evidence extraction, and synthesis. ManuSearch introduces a modular multi-agent architecture and a benchmark (ORION); the manuscript introduces formal process-level metrics for epistemic behaviors.
+- Manuscript's Defense: The authors assert novelty specifically in formalizing competencies and metrics: “This work formalizes groundedness, recovery, and calibration with precise metrics and evaluation protocols.” (Related Work)
+- Reviewer's Assessment: The contributions are complementary. ManuSearch is an architectural/system proposal; SeekBench is an evaluative scaffold with construct-valid measurement. The manuscript’s process-level formalization and large-scale application constitute a distinct and useful advancement.
+
+## 3. Novelty Verdict
+- Innovation Type: Substantive
+- Assessment:
+  The manuscript’s core novelty lies in formalizing epistemic competence for LLM search agents and validating a process-level evaluation protocol. The evidence-state construct and associated metrics (RQI, ERF, CE), combined with expert-validated annotation and scalable LLM-judging, go beyond prior answer-level evaluations and qualitative taxonomies. The similar works surveyed are largely orthogonal (algorithms, systems, training paradigms) or the very RL agents the manuscript evaluates. The claim that existing process-level frameworks lack formal definitions and quantitative metrics is supported by the text in Related Work and by the new definitions and measurement procedures introduced in Method.
+  - Strength: Clear formalization (Defs. 3.1–3.5), validated schema (human κ≈0.81; LLM-alignment κ>0.7), and extensive application across seven QA datasets and multiple RL agents, revealing nontrivial behavioral trade-offs that accuracy-only metrics miss.
+  - Weakness: Dependence on LLM-as-judge remains a methodological caveat; while alignment is quantified, conclusions inherit the limitations of automated labeling. Some training and configuration details for evaluated agents are unspecified, which may constrain interpretability of cross-agent comparisons.
+
+## 4. Key Evidence Anchors
+- Abstract: “We introduce SeekBench—the first benchmark for evaluating the epistemic competence of LLM search agents through step-level analysis of their response traces.”
+- Introduction: “Typical exact-match/F1 evaluations miss epistemic competence—reliable acquisition, evaluation, and action upon knowledge.”
+- Related Work: “Existing trace aggregation and taxonomies lack formal definitions and quantitative metrics for epistemic competencies; this work formalizes groundedness, recovery, and calibration with precise metrics and evaluation protocols.”
+- Method:
+  - Definition 3.1: Evidence state E ∈ {0,1,2} via clarity C and quality Q; E = C + Q.
+  - Definitions 3.2–3.3: RQI (model-level and type-level groundedness).
+  - Definition 3.4: ERF (cumulative recovery via survival analysis).
+  - Definition 3.5: CE (deviation from ideal policy π*(E)=I[E=2]).
+- Experiments: Large-scale evaluation (28,493 traces; 283,950 steps) across NQ, TriviaQA, PopQA, HotpotQA, 2Wiki, MusiQue, Bamboogle; agent comparisons revealing synthesis strengths vs planning/grounding weaknesses and calibration effects of RL.

@@ -1,0 +1,56 @@
+### Summary
+
+This paper presents **SuRe** (Surprise-prioritised Replay), a method designed to improve **continual learning (CL)** in **large language models (LLMs)**. The core idea of SuRe is to tackle catastrophic forgetting by prioritizing **surprising sequences** (with high Negative Log-Likelihood) for replay. It combines **surprise-based sample selection** with a **dual-learner framework** using **LoRA adapters** to adapt the model rapidly (fast learner) while stabilizing long-term knowledge via **Exponential Moving Average (EMA)** (slow learner). The authors argue that the combination of surprise-driven selection and dual-learner integration improves both performance and stability in the **Large Number of Tasks (LNT)** setting, with up to **5 accuracy points improvement** over prior methods. Their experiments show that SuRe works efficiently even with **smaller buffer sizes** and **lower replay ratios**, demonstrating its sample efficiency and robustness.
+
+---
+
+### Strengths
+
+1. **Innovative Approach**:
+
+   * **Surprise-based selection** for replay is a novel approach for continual learning. The idea of prioritizing **surprising sequences** addresses the issue of sampling efficiency, ensuring that the model remembers critical examples without needing to retain all data points.
+
+2. **Theoretical Contribution**:
+
+   * The paper provides a **theoretical framework** that unifies **replay** and **dual learners** by decomposing **catastrophic forgetting** into two parts: **Selection Error** and **Integration Error**. The formalization of how these two components interact offers valuable insights into improving continual learning strategies.
+
+3. **Empirical Results**:
+
+   * The paper provides strong experimental results, showing that SuRe outperforms **state-of-the-art** continual learning methods, especially in **long task sequences**. The combination of **surprise-prioritized replay** and **dual learners** (fast and slow) demonstrates consistent improvements across various benchmarks, especially in handling **large-scale tasks**.
+
+4. **Practical Efficiency**:
+
+   * SuRe is **sample efficient**, performing well even with smaller replay buffers and reduced replay ratios. This makes it suitable for resource-constrained settings.
+
+5. **Clear Evaluation**:
+
+   * The paper clearly shows that SuRe is a viable alternative to more complex continual learning strategies, with detailed ablation studies and comparisons to recent baselines like **AimMerging**, **N-LoRA**, and **O-LieRa**.
+
+---
+
+### Weaknesses
+
+1. **Lack of Novelty in Dual-Learner Approach**:
+
+   * The concept of **dual learners** (fast and slow) is not novel, as similar ideas have been proposed in **DualNet** and **Slow-Fast Prompt**. While the combination of these with **surprise-based replay** is useful, the **dual-learner** part could benefit from a more substantial novel contribution or clarification on how it improves over existing approaches.
+
+2. **Surprise Metric and Hallucinations**:
+
+   * The **surprise-based sampling** (measured by **Negative Log-Likelihood**) may be **vulnerable to outliers** and does not account for **hallucinated outputs** (model-generated text). While the authors clarify that surprise is calculated on **ground-truth sequences** during replay and not on model-generated text, further empirical validation on how this impacts real-world settings would strengthen the method's robustness.
+
+3. **Insufficient Comparison to Recent Baselines**:
+
+   * Although the paper includes a variety of **recent methods** in continual learning, it still lacks comparisons with some **newer** and **stronger baseline methods**. For instance, it doesn't compare against methods like **InfoRS**, **MIR**, or others that have emerged recently in the **replay-based continual learning** community.
+
+4. **Lack of Generalization to Language Models**:
+
+   * The paper mentions continual learning for **LLMs**, but the evaluation is primarily on **text classification tasks**, which may not fully represent the challenges faced by LLMs in more complex settings (e.g., **language modeling** or **generation tasks**). The generalization of the method to **LLMs** should be better clarified and demonstrated on more complex tasks.
+
+5. **Theoretical Analysis and Lemma 2**:
+
+   * While the theoretical framework for **Selection** and **Integration errors** is presented, the comparison between **single learners** and **dual learners** in Lemma 2 could be clearer. Specifically, the **effective reduction in variance** from the dual learner compared to a single learner needs more concrete theoretical backing.
+
+6. **Performance on Budget Memory**:
+
+   * Although the paper demonstrates performance with **smaller replay buffers**, it would be helpful to compare SuRe's efficiency in constrained memory budgets against baselines in a more **detailed and fair manner**, especially considering that many of the competing methods have **larger buffer sizes**.
+

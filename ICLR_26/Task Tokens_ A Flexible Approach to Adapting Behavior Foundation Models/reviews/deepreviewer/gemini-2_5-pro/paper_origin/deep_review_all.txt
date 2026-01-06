@@ -1,0 +1,165 @@
+Here are four distinct reviews of the paper "Task Tokens: A Flexible Approach to Adapting Behavior Foundation Models".
+
+***
+
+### **Review 1**
+
+**Summary**
+This paper introduces "Task Tokens," a novel method for adapting large, pre-trained Behavior Foundation Models (BFMs) for specific humanoid control tasks. The core idea is to freeze the powerful BFM (specifically MaskedMimic) to preserve its rich motion priors and train a small, task-specific "Task Encoder" using reinforcement learning. This encoder maps task observations to an embedding vector (the Task Token), which is then fed as an additional input to the BFM, guiding its behavior to maximize a task reward. The authors demonstrate that this approach is highly parameter- and sample-efficient, preserves the naturalness and robustness of the original BFM, and can be flexibly combined with other user-defined prompts like text or joint conditions.
+
+**Soundness**
+The methodology is sound and logically presented. The choice to freeze the BFM and only train a small encoder is well-justified to prevent catastrophic forgetting and maintain motion quality. The use of PPO to train this encoder is a standard and appropriate choice. The experimental evaluation is comprehensive, covering a diverse set of five humanoid control tasks. The baselines chosen are strong and relevant, including pure RL, full fine-tuning of the BFM, and state-of-the-art methods like PULSE and AMP. The four-pronged evaluation strategy—task adaptation, OOD generalization, human-likeness, and multi-modal prompting—provides a convincing and multi-faceted validation of the proposed method's efficacy.
+
+**Presentation**
+The paper is exceptionally well-written and easy to follow. The introduction clearly motivates the problem and situates the work within the context of recent advancements in BFMs. The method is explained clearly, and Figure 1 provides an excellent, intuitive overview of the architecture. The results are presented logically, with tables and figures that are clean and effectively support the claims. The inclusion of a dedicated section (4.4) on multi-modal prompting, complete with qualitative examples (Figures 5 and 6), is particularly effective at showcasing the flexibility and practical utility of the approach.
+
+**Contribution**
+The paper makes a significant and novel contribution to the field of humanoid control and foundation model adaptation. It proposes a new paradigm for adapting BFMs that elegantly balances the need for task-specific optimization with the desire to retain the general-purpose, high-quality motion priors of the base model. This hybrid approach, which combines learned, reward-driven tokens with user-specified prompts, is a novel concept that bridges the gap between pure RL and prompt engineering. The demonstrated parameter and sample efficiency make this a very practical and scalable solution for leveraging large BFMs.
+
+**Strengths**
+1.  **Efficiency:** The method is extremely parameter-efficient (requiring only ~200k parameters per task) and sample-efficient, converging much faster than strong baselines like PULSE (Figure 3). This is a major practical advantage.
+2.  **Motion Quality and Robustness:** The approach successfully preserves the desirable qualities of the BFM. The human study (Table 2) confirms that the generated motions are significantly more human-like than those from fine-tuning or pure RL. The OOD experiments (Figure 4) show that the method retains the BFM's robustness to environmental changes.
+3.  **Flexibility:** A key strength is the ability to combine the learned Task Tokens with other prompting modalities (text, joint conditions), as shown in Section 4.4. This allows for a powerful hybrid control scheme where a user can provide high-level stylistic priors while the system optimizes for the task reward.
+4.  **Simplicity and Elegance:** The core idea is simple yet powerful, seamlessly integrating into the existing token-based architecture of transformer BFMs without requiring changes to the foundation model itself.
+
+**Weaknesses**
+1.  **Dependence on BFM Quality:** The performance of Task Tokens is inherently upper-bounded by the capabilities of the underlying frozen BFM. If the BFM cannot produce a certain type of motion at all, it's unlikely that a Task Token could elicit it. This limitation is acknowledged but is a fundamental aspect of the approach.
+2.  **Analysis of Task Tokens:** The paper demonstrates *that* Task Tokens work, but provides little insight into *how* they work. An analysis or visualization of the learned token embeddings could provide a deeper understanding of what task-relevant information is being captured.
+
+**Questions**
+1.  The human study results in Table 2 are very interesting, particularly that PULSE is rated as more human-like than your method. Do you have any hypotheses for why this is the case? Could it be related to PULSE's use of a discrete skill library versus the continuous optimization space of the Task Token?
+2.  In Section 3.2, you mention that the task encoder is also provided with proprioceptive information to align with the pre-trained representations. Could you elaborate on the importance of this design choice? How does performance degrade if this information is omitted?
+3.  Have you considered applying this method to other token-based BFMs besides MaskedMimic to test the generality of the Task Token concept?
+
+**Rating**
+- Overall (10): 9 — The paper presents a novel, efficient, and effective method for adapting BFMs with strong empirical validation.
+- Novelty (10): 9 — The concept of learning a task-specific token via RL to guide a frozen BFM is a novel and significant contribution.
+- Technical Quality (10): 9 — The experiments are well-designed, the baselines are strong, and the results convincingly support the claims.
+- Clarity (10): 10 — The paper is exceptionally clear, well-organized, and supported by excellent figures and explanations.
+- Confidence (5): 5 — I am highly confident in my evaluation, as I am an expert in this area.
+
+***
+
+### **Review 2**
+
+**Summary**
+The paper proposes "Task Tokens," a method to adapt a pre-trained, frozen Goal-Conditioned Behavior Foundation Model (GC-BFM) to new tasks. The approach involves training a small neural network, the "Task Encoder," via reinforcement learning (PPO) to generate a new input token for the BFM. This token is intended to guide the BFM's output to maximize a task-specific reward, avoiding the need for expensive fine-tuning of the entire BFM. The authors claim this method is sample-efficient, preserves motion quality, and is robust.
+
+**Soundness**
+The methodological soundness has some points of concern. While the core idea is plausible, the experimental validation has several weaknesses that temper the main claims.
+1.  **Inconsistent Performance:** In Table 1, the proposed method is outperformed by baselines on the "Strike" task (PULSE, MaskedMimic Fine-Tune, PPO are all better). This contradicts the general claim of superiority.
+2.  **Limited OOD Evaluation:** The out-of-distribution generalization is only tested on a single task ("Steering") in Figure 4. It is a strong claim to state the method "exhibit[s] strong generalization across diverse environmental conditions" (Abstract) based on one task. These results need to be shown for other tasks, especially more complex ones like Strike or Long Jump.
+3.  **Human-likeness Claim:** The human study (Table 2) shows that PULSE is consistently rated as more human-like across all tasks where it was compared. For example, on the Direction task, Task Tokens only "won" against PULSE 14.8% of the time. This is a major weakness, as preserving the "natural, human-like motion qualities" (Section 1) is a primary motivation for using a BFM in the first place. The paper acknowledges this (end of Section 4.3) but does not sufficiently discuss its implications.
+4.  **Baseline Variance:** Several baselines in Table 1 show extremely high standard deviations (e.g., MaskedMimic Fine-Tune on Long Jump: 47.36 ± 54.78), which makes a fair comparison difficult and suggests potential training instability that is not discussed.
+
+**Presentation**
+The presentation is generally clear, but some figures and descriptions could be improved. The diagram in Figure 1 is helpful. However, the convergence plot in Figure 3 is duplicated as Figure 24, which seems redundant. The OOD plots in Figure 4 (and the larger versions in Figures 27, 28) are quite cluttered, with wide, overlapping confidence bands that make it hard to draw firm conclusions, especially for the gravity experiment. The description of the "Task Token" itself remains abstract; it is a 512-dim vector, but its function is only described by analogy ("specialized 'words'"), which lacks technical depth.
+
+**Contribution**
+The contribution is an application of a parameter-efficient adaptation technique to the domain of BFM-based character control. The idea of using RL to learn a prompt/embedding for a frozen foundation model is related to prior work in other domains (e.g., prompt-tuning for LLMs). While its application here is new, the conceptual novelty is moderate. The main contribution is therefore empirical, demonstrating that this specific recipe works well for the MaskedMimic model.
+
+**Strengths**
+1.  **Parameter Efficiency:** The method's primary strength is its low number of trainable parameters (~200k), making it cheap to adapt the BFM to many tasks.
+2.  **Sample Efficiency:** The convergence curves in Figure 3 show a clear and significant improvement in sample efficiency over several strong baselines, which is a valuable practical result.
+3.  **Hybrid Control:** The demonstration in Section 4.4 of combining learned Task Tokens with manually specified priors (like text prompts) is a compelling feature that highlights the method's flexibility.
+
+**Weaknesses**
+1.  **Sub-par Motion Quality:** The method produces motions that are perceived as significantly less human-like than the SOTA baseline PULSE (Table 2). This undermines one of the core motivations of the work.
+2.  **Inconsistent Task Performance:** Task Tokens does not achieve the best performance on all tasks, being notably beaten on the "Strike" task (Table 1). This suggests the method is not a universally superior solution.
+3.  **Overstated Generalization Claims:** The claims of robustness and OOD generalization are based on limited evidence (a single task) and should be toned down or better supported.
+4.  **Lack of Insight:** The paper does not provide an analysis of what the Task Encoder learns. It is a black box that happens to work, which limits the scientific insight of the work.
+
+**Questions**
+1.  Given that PULSE outperforms your method on the Strike task and is consistently rated as more human-like, what is the key trade-off a practitioner is making when choosing Task Tokens over PULSE? Is it purely sample efficiency?
+2.  Can you provide OOD generalization results for tasks other than Steering? I am particularly interested in how the methods compare on a dynamic task like Long Jump under different physics.
+3.  The fine-tuning baseline for Long Jump has a success rate of 47.36 ± 54.78. A standard deviation larger than the mean suggests that some runs completely failed while others succeeded. Can you explain this instability and how it affects your conclusions?
+4.  What prevents the Task Encoder from learning to produce tokens that exploit the BFM, leading to unnatural but high-reward behaviors? Is the frozen nature of the BFM a sufficient constraint? The "whirlwind" motion mentioned in Section 4.4 suggests this is a real risk.
+
+**Rating**
+- Overall (10): 6 — A solid idea with good efficiency results, but held back by inconsistent performance and lower motion quality compared to a key baseline.
+- Novelty (10): 6 — The idea is a novel application of PEFT-like concepts to BFM control, but not a fundamental breakthrough.
+- Technical Quality (10): 5 — The experimental evaluation has several weaknesses, including limited OOD testing and results that don't fully support the claims of superiority.
+- Clarity (10): 7 — Mostly clear, but some figures are cluttered and the core mechanism of the "Task Token" is not deeply explained.
+- Confidence (5): 5 — I am very familiar with the literature on humanoid control and foundation models.
+
+***
+
+### **Review 3**
+
+**Summary**
+This paper presents "Task Tokens," a practical and efficient method for adapting large, pre-trained Behavior Foundation Models (BFMs) for new control tasks. Instead of costly fine-tuning, the authors propose freezing the BFM and training a lightweight "Task Encoder" with reinforcement learning. This encoder generates a task-specific token that conditions the BFM to produce reward-optimizing behaviors. The experiments show that this approach is highly efficient in terms of both trainable parameters and training samples, while largely preserving the motion quality and robustness of the original BFM.
+
+**Soundness**
+The methodology is sound and well-suited for the problem it aims to solve. The core design choice—freezing the large model and training a small adapter—is a well-established and effective strategy for adapting foundation models, and its application here is executed well. The use of PPO is standard. The experimental setup is thorough, with a good selection of tasks that range from simple locomotion to more complex behaviors like striking. The baselines provide important points of comparison, especially the "MaskedMimic Fine-Tune" baseline, which clearly demonstrates the downside (loss of motion quality) of the most direct alternative. The results appear reliable, with averages and standard deviations reported over multiple seeds.
+
+**Presentation**
+The paper is well-structured and clearly written. The motivation is compelling, and the proposed method is explained with sufficient detail for understanding. Figure 1 is an excellent diagram that clarifies the overall data flow and training process. The results in Section 4 are organized thematically (adaptation, OOD, human study, etc.), which makes the paper easy to navigate. The appendices provide valuable details on the environments and training setup, which aids in reproducibility. The qualitative examples in Section 4.4 are particularly useful for illustrating the practical benefit of combining learned tokens with human priors.
+
+**Contribution**
+The primary contribution of this work is a highly practical and parameter-efficient framework for specializing BFMs. While adapting large models is a general research theme, this paper provides a concrete, effective, and well-validated solution specifically for token-based, physics-simulated character controllers. The demonstration that one can achieve strong performance by only training a tiny (~200k parameter) network is a significant result for practitioners who want to leverage large BFMs without incurring massive computational costs for every new task. The hybrid control paradigm it enables is a valuable contribution to making these models more directable and useful.
+
+**Strengths**
+1.  **Extreme Efficiency:** The standout strength is the method's efficiency. The reduction in trainable parameters by a factor of over 100 compared to fine-tuning (Section 4.1) and the 6x faster convergence compared to PULSE (Figure 3) are massive practical wins.
+2.  **Preservation of Priors:** The method successfully avoids the "catastrophic forgetting" or "unnatural motion" problems associated with fine-tuning or pure RL, as confirmed by the human study (Table 2). This is crucial for applications where motion quality is paramount.
+3.  **Composability:** The ability to use Task Tokens alongside other prompting mechanisms (Section 4.4) is a powerful feature. It allows a developer to use RL for the parts of a task that are hard to specify (e.g., impact force) and use explicit prompts for parts that are easy to specify (e.g., facing direction), offering the best of both worlds.
+4.  **Strong Empirical Results:** The method achieves high success rates across most tasks (Table 1) and shows impressive robustness to physics perturbations (Figure 4).
+
+**Weaknesses**
+1.  **Reward Engineering:** The paper focuses on the learning algorithm but does not discuss the effort required for reward engineering. For each new task, a dense reward function must be designed. This can be a significant practical challenge in itself, and some discussion of the complexity of the reward functions used would be beneficial.
+2.  **Dependence on MaskedMimic:** The method is tightly integrated with the token-based architecture of MaskedMimic. While the authors call it a "flexible approach," its applicability to other types of BFMs (e.g., those not based on token inpainting, like ASE) is unclear. This might limit its generality.
+3.  **Performance on Complex Tasks:** The method's performance drops on the "Strike" task relative to baselines like PULSE and fine-tuning. This may indicate that for tasks requiring a sequence of distinct skills (e.g., approach, then strike), a single, static task token is less effective than a hierarchical approach that can switch between skills.
+
+**Questions**
+1.  Could you provide some insight into the complexity of the reward functions used for the five tasks? How much effort was required to design a reward that led to the desired behavior without causing undesirable artifacts (like the "whirlwind" motion)?
+2.  How sensitive is the training process to the hyperparameters of the Task Encoder (e.g., its size) and the PPO algorithm? The ablation in Appendix C.2 shows some sensitivity, but is the overall training process stable?
+3.  The Task Encoder takes the task goal `g_t^i` as input. How is this goal representation defined for each task? For example, in the "Strike" task, does `g_t^i` simply contain the target's coordinates, or more complex information?
+4.  Do you foresee this approach being applicable to real-world robotics, or is it fundamentally tied to the simulated environment and the specific BFM it was trained with?
+
+**Rating**
+- Overall (10): 8 — A very strong paper presenting a practical, efficient, and well-validated method for adapting BFMs.
+- Novelty (10): 7 — The core idea is an intelligent application and combination of existing concepts, leading to a novel framework for BFM adaptation.
+- Technical Quality (10): 8 — The technical execution is solid, with thorough experiments, though the analysis could be deeper on some points (e.g., reward design).
+- Clarity (10): 9 — The paper is very well-written and easy to understand, with helpful figures and a logical structure.
+- Confidence (5): 4 — I am confident in my assessment based on my experience in reinforcement learning and robotics.
+
+***
+
+### **Review 4**
+
+**Summary**
+This paper introduces "Task Tokens," a method for adapting Goal-Conditioned Behavior Foundation Models (GC-BFMs) like MaskedMimic to downstream tasks via reinforcement learning. The approach keeps the large, pre-trained BFM frozen and learns a small encoder that maps task-specific goal observations to a conditioning token. This "Task Token" is appended to the BFM's input sequence, guiding the model to generate behaviors that optimize a task reward while staying on the manifold of natural motions learned from data. The authors provide extensive empirical evidence showing that their method is parameter- and sample-efficient, generates high-quality motions, and can be composed with other prompting modalities.
+
+**Soundness**
+The methodology is sound and represents a clever point in the design space of BFM adaptation. It can be viewed as a form of lightweight, learned prompting. The experimental setup is rigorous. The choice of baselines is excellent, allowing for a nuanced comparison against key alternative paradigms: training from scratch (PPO), full fine-tuning (MaskedMimic F.T.), hierarchical RL with a skill library (PULSE), and discriminator-based methods (AMP).
+
+The results are mostly convincing but also reveal important trade-offs. The sample and parameter efficiency claims are well-supported (Figure 3, Section 4.1). The OOD generalization results (Figure 4) are promising, demonstrating that leveraging a robust BFM prior is beneficial. However, the results also highlight a key nuance: while Task Tokens outperform fine-tuning in terms of motion quality (Table 2), they are consistently rated as less human-like than PULSE. Furthermore, PULSE achieves a higher success rate on the complex "Strike" task. This suggests that for certain tasks, explicitly modeling a library of skills (as in PULSE) may be more effective than learning a single corrective token. The paper acknowledges this but could benefit from a more in-depth discussion of this trade-off.
+
+**Presentation**
+The paper is very well-written, with clear motivation, a concise method description, and a logically structured experimental section. The figures and tables are informative. Figure 1 clearly illustrates the architecture. The qualitative results in Section 4.4 (Figures 5, 6) are particularly insightful, as they demonstrate the unique capability of the method to blend learned control with explicit human priors, which is a key advantage over purely reward-driven methods. The appendices provide sufficient detail for a knowledgeable reader to understand the experimental conditions.
+
+**Contribution**
+The paper's contribution is a novel and effective method for adapting token-based BFMs. It smartly leverages the transformer architecture's compositional input space to inject learned, task-specific guidance without disturbing the pre-trained weights. This places the work as a significant contribution at the intersection of foundation models, reinforcement learning, and physics-based character animation. It offers a compelling alternative to both full fine-tuning and more complex hierarchical RL methods. The concept of learning a "soft prompt" via RL for a generative motion model is, to my knowledge, novel and impactful.
+
+**Strengths**
+1.  **Elegant Formulation:** The core idea of learning a new token while freezing the main model is an elegant way to solve the adaptation problem, fitting naturally into the transformer paradigm.
+2.  **Hybrid Control:** The ability to combine learned Task Tokens with user-specified "Prior Tokens" (text, joints) is a powerful and distinguishing feature of this work. It provides a spectrum of control from fully autonomous to human-guided.
+3.  **Strong Empirical Grounding:** The paper is backed by a comprehensive suite of experiments on multiple tasks and against strong, relevant baselines, lending high credibility to the results.
+4.  **Efficiency:** The demonstrated gains in parameter and sample efficiency are substantial and represent a key practical advantage of the proposed approach.
+
+**Weaknesses**
+1.  **Limited Analysis of the Learned Token:** The paper treats the Task Token as a black box. There is no analysis of the structure of the learned token space or what semantic information the token encodes. Is it learning a target pose, a velocity command, a style parameter, or something else entirely? This lack of interpretation is a missed opportunity for deeper scientific insight.
+2.  **Discussion of Trade-offs with Hierarchical RL:** The results show a clear trade-off with PULSE (sample efficiency vs. human-likeness/performance on some tasks). The paper would be stronger if it discussed this trade-off more explicitly. For instance, Task Tokens might be better for refining existing behaviors within the BFM's repertoire, while hierarchical methods like PULSE might be better at composing distinct, complex skills.
+3.  **Single BFM Backbone:** The experiments are conducted exclusively on MaskedMimic. While this is a strong and relevant model, the claims about adapting "BFMs" in general would be strengthened by showing the approach works on at least one other token-based model (e.g., MTM).
+
+**Questions**
+1.  Could you perform a simple analysis of the learned Task Tokens, for example, by using t-SNE to visualize the token embeddings for different task goals (e.g., different target directions in the Steering task)? This might reveal if the encoder is learning a meaningful representation.
+2.  How do you interpret the result that PULSE generates more human-like motions? Does this suggest that the motion manifold of the base MaskedMimic model is somehow less "natural" than the discrete motion clips used by PULSE, or is your RL optimization pushing the BFM to the edge of its natural motion distribution?
+3.  The Task Encoder output is concatenated with other tokens. Did you experiment with other ways of integrating the task information, for example, using cross-attention? Why is simple concatenation the right architectural choice?
+4.  For the Strike task, you mention an emergent "whirlwind" motion. Your solution is to add a prior token. Could the reward function be modified to penalize such motions, or is this an example where reward shaping is insufficient and explicit priors are necessary?
+
+**Rating**
+- Overall (10): 8 — A high-quality paper with a novel method, strong results, and important practical implications, with some room for deeper analysis.
+- Novelty (10): 8 — The method introduces a new and elegant paradigm for BFM adaptation that is distinct from prior work.
+- Technical Quality (10): 8 — The experiments are extensive and well-conducted, though the analysis of the core mechanism could be deeper.
+- Clarity (10): 9 — The paper is very clearly written and well-organized.
+- Confidence (5): 5 — I have extensive experience with the topics covered in this paper.

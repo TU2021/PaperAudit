@@ -1,0 +1,99 @@
+Academic integrity and consistency risk report
+
+Summary
+The manuscript proposes the FingerTip 20K benchmark and presents data collection, task formulations, and evaluations. Several high-impact internal inconsistencies, numerical mismatches, and missing details could materially affect reproducibility, validity of results, and the trustworthiness of the dataset and metrics.
+
+Evidence-based issues
+
+1) Inconsistent number of participants and collection duration
+- Evidence:
+  - “We spent two months collecting new diverse data from 91 users...” (Introduction, Block #3).
+  - “We first recruited 91 data collectors...” (Method 4.2, Block #16).
+  - “All 91 contributors live in mainland China...” (Appendix A.1 Limitations, Block #48).
+  - Figure 3 text: “Users: 83 Time: 1month” (Method, Block #20).
+  - “minimum of one month and a maximum of two months” (Method 4.2, Block #17).
+- Why it matters: The discrepancy (83 vs 91 users; 1 month vs 1–2 months) undermines confidence in dataset scale and protocol, which is central to claims of representativeness and longitudinal design.
+- Suggested fix: Correct Figure 3 to match 91 and 1–2 months, or revise text to reflect 83 and 1 month if that is accurate; provide a clear accounting of active contributors and exact collection windows.
+
+2) Action space naming contradictions that affect evaluation reproducibility
+- Evidence:
+  - “terminate() is uniformly added to the last screenshot of all episodes.” (Method 4.2, Block #17).
+  - Table 2 lists “finish()” (Method, Block #22).
+  - Metrics rely on “finished()” (Experiments Metrics, Block #35).
+  - Prompt defines “finished()”, and uses “press_back(), press_home(), press_recent()” (Appendix A.5.2, Blocks #59–60).
+  - Table 2 defines “navigate_back/home/recent” (Method, Block #22).
+- Why it matters: Core action names differ (terminate vs finish vs finished; navigate_* vs press_*). These inconsistencies can break agents, parsers, and evaluation scripts, directly impacting SR2 and Sim2 measurements and any reproduction attempts.
+- Suggested fix: Standardize the action API names across the manuscript, datasets, prompts, and evaluation code; explicitly state the canonical forms used for logging and evaluation.
+
+3) Wrong table reference for data statistics
+- Evidence:
+  - “The summary of data statistics is presented in Table 1.” (Method 4.3, Block #18).
+  - Table 1 is a cross-dataset comparison, not FingerTip statistics (Related Work, Block #7).
+  - Actual dataset statistics are in Figure 4 and the following tables (Method, Blocks #21, #26–#29).
+- Why it matters: Misreferencing the key table for dataset statistics impedes verification of claims and indicates editorial inconsistency.
+- Suggested fix: Point 4.3 to Figure 4 (and its subpanels/tables) rather than Table 1.
+
+4) Validation split shows zero categories
+- Evidence:
+  - Table 3 lists “Val: # Categories = 0” (Method 4.5 Data splits, Block #24).
+- Why it matters: A validation set with zero categories is implausible and contradicts the need for validation coverage. It creates uncertainty about category distribution across splits and may indicate an erroneous entry or data leakage.
+- Suggested fix: Correct the validation category count and provide per-split category counts; confirm no overlap between train/val and the time-based test splits.
+
+5) SR1 mismatch between overall results and difficulty analysis
+- Evidence:
+  - Table 4 (overall proactive suggestion, O=0): Qwen-VL-Max SR1 = 6.9%, DeepSeek-VL2 SR1 = 4.3% (Experiments 5.2, Block #37).
+  - Figure 6(a) / table (Experiments 5.3, Block #38) at “Screenshots=0”: Qwen-VL-Max ~4%, DeepSeek-VL2 ~7%.
+- Why it matters: Quantitative inconsistencies in core metrics call into question the reported performance trends and figures, hindering replication and fair comparison.
+- Suggested fix: Recompute and align SR1 values across tables/figures; clarify whether different subsets or settings were used.
+
+6) Model size/name inconsistency for CogAgent
+- Evidence:
+  - “CogAgent-9B” listed among evaluated GUI-control agents (Experiments 5.1, Block #34).
+  - Table 5 labels “CogAgent-7B” (Experiments 5.2, Block #37).
+  - Figure 6(b) labels “CogAgent-9B” (Experiments 5.3, Block #38).
+- Why it matters: Discrepancies in model variants undermine comparability and may change performance characteristics (7B vs 9B).
+- Suggested fix: Unify the reported CogAgent variant and ensure the reference [15] aligns with the actual model used; update Table 5 or figures accordingly.
+
+7) Potential privacy contradiction: stated avoidance of real location vs profile containing address
+- Evidence:
+  - “To avoid revealing real location information, we use common location categories...” (Preliminaries 3.1, Block #12).
+  - User profile example includes “address: Beijing” (Appendix A.4 Table 7, Block #54).
+- Why it matters: Including city-level address contradicts the stated anonymization approach and impacts ethical compliance and user privacy assurances.
+- Suggested fix: Remove or anonymize address fields; if retained, clarify consent and the privacy rationale.
+
+8) Train/validation/test split procedure clarity and potential overlap risk
+- Evidence:
+  - Test sets are formed from “the last 20% of the data of each user” (Method 4.5, Block #24).
+  - No explicit description of how train and validation sets were selected relative to the time-sorted test sets.
+- Why it matters: Without explicit anti-leakage procedures, temporal proximity or overlap between train/val and test is possible. This affects generalization claims and fine-tuning evaluations (Section 5.4, Blocks #42).
+- Suggested fix: Provide exact split rules ensuring disjointness by time or episode IDs across all splits; state the ranges used per user.
+
+9) Sim2 ratio lacks robustness details
+- Evidence:
+  - Sim2 = SI/SII, where SI and SII are Levenshtein similarities to current user and different-type user, respectively (Experiments Metrics, Block #35).
+  - Section 4.4 says similarities normalized to [0, 100] (Method, Block #23) but Division by SII is undefined if SII≈0, and choice of the “most intent-similar data from different type of users” is under-specified.
+- Why it matters: The ratio can be unstable if SII is small; results (~1.0 in Table 5) are hard to interpret without normalization and variance reporting. This metric underpins the “personalization” claims.
+- Suggested fix: Define tie-breaking and safeguards for low SII (e.g., add epsilon), report distribution of SII values, and justify normalization range; consider alternative metrics (e.g., difference SI − SII).
+
+10) Unquantified data regeneration introduces uncertainty
+- Evidence:
+  - “we use Qwen-VL-Max to observe the two screenshots before and after the action and regenerate the action, then use PaddleOCR to check if the coordinates are correct.” (Method 4.2, Block #17).
+- Why it matters: Synthetic repair of actions may alter ground-truth trajectories; without reporting the proportion of regenerated actions and accuracy checks, downstream evaluation may reflect model artifacts rather than users’ true behavior.
+- Suggested fix: Report the fraction of episodes/actions regenerated, error rates after OCR checks, and conduct sensitivity analysis to demonstrate negligible bias.
+
+11) Anonymization leakage in dataset link
+- Evidence:
+  - Dataset release at a non-anonymized URL (Appendix A.4, Block #51).
+- Why it matters: For blinded review, non-anonymized links can reveal identities and compromise the process.
+- Suggested fix: Replace with an anonymized hosting or suppress until after review.
+
+12) Fine-tuned model naming ambiguity
+- Evidence:
+  - “we trained separately on two tracks and obtained two fine-tuned models” (Experiments 5.4, Block #42).
+  - Table 6 presents a single row “Qwen-2.5-VL-7B-FT” with results for both tracks (Experiments 5.4, Block #42).
+- Why it matters: Ambiguity about which fine-tuned variant produced each metric hinders reproducibility.
+- Suggested fix: List distinct model identifiers per track (e.g., -FT-Suggestion and -FT-Execution) and map each metric to its respective model.
+
+If addressed, these corrections would substantially improve the paper’s internal consistency, reproducibility, and ethical alignment. If no further inconsistencies exist beyond those noted, the technical formulations and high-level contributions appear coherent.
+
+No other clear integrity-related or consistency problems were identified based on the manuscript beyond the issues above.

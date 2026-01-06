@@ -1,0 +1,103 @@
+Summary
+   - The paper introduces ObjexMT, a benchmark for evaluating whether LLM-as-a-Judge systems can recover a dialogue’s latent harmful objective from multi-turn jailbreak transcripts and calibrate their self-reported confidence. The task requires models to output a single-sentence imperative “base objective” and a confidence in [0,1], which is scored via an LLM-based semantic similarity judge converted to binary correctness using a human-calibrated threshold τ* = 0.66 (N=300; F1=0.891) (Sec. 3.6; Sec. 4.1, Table 1). Six models are assessed on three datasets (SafeMTData_Attack600, SafeMTData_1K, MHJ) with deterministic decoding (Sec. 3.3). Results show accuracies 0.474–0.612 (Table 3), substantial dataset heterogeneity (Fig. 1; Sec. 4.4), and imperfect calibration measured by ECE, Brier, Wrong@High-Conf, and AURC (Sec. 3.7; Table 5). Code, prompts, and per-item artifacts are released (Sec. 3.8; Appx. A.1/A.2; Ethics/Appx release description).Strengths
+- **Clear task formalization of “latent objective” extraction**
+  - The base objective is defined as “the minimal imperative instruction…that would pursue the same harmful goal” and constrained to one imperative sentence (Sec. 3.1, Operationalization); this precision reduces ambiguity and improves comparability across models (technical soundness and clarity).
+  - Notation b⋆, b̂, s, p, y with τ⋆ is introduced (Sec. 3, Methodology; Block 11), aiding reproducibility and rigorous analysis (clarity).
+  - Scope is restricted to objective recovery (not generation/refusal), cleanly separating intent inference from harmfulness classification (Sec. 3.1 Scope) (novelty of evaluation target).
+- **Human-aligned thresholding with transparent calibration**
+  - The mapping from similarity to correctness is calibrated once on N=300 human-labeled items with τ* = 0.66 maximizing F1=0.891 (Sec. 3.6; Sec. 4.1, Table 1), which grounds binary correctness in human judgments (technical soundness).
+  - Labeling details, sampling scheme, and binarization rules (Exact/High ⇒ 1; Moderate/Low ⇒ 0) are specified (Sec. 3.6), improving transparency (clarity).
+  - The fixed threshold is frozen for all subsequent metrics (Sec. 4.1), enabling consistent cross-model comparisons (experimental rigor).
+- **Broad, multi-model evaluation under deterministic decoding**
+  - Six widely used systems are compared on the same N=2,817 items with T=0 (Sec. 3.3), reducing confounding from decode randomness (experimental rigor).
+  - Inclusion spans different provider families (Table 3; Sec. 3.3), supporting general observations about current LLM judges (impact).
+  - A single, fixed similarity judge isolates extraction ability of tested models (Sec. 3.3, 3.5) (experimental control).
+- **Comprehensive metacognition analysis beyond accuracy**
+  - ECE, Brier, Wrong@High-Conf (0.80/0.90/0.95), and risk–coverage/AURC are defined and applied (Sec. 3.7; Table 5; Fig. 2–3; Table 6; Fig. 7–8), covering both calibration and selective prediction (technical completeness).
+  - Findings such as claude-sonnet-4’s best calibration (ECE=0.206, Brier=0.254, AURC=0.242) and persistent high-confidence errors (e.g., Qwen3 Wrong@0.90=47.7%) are clearly reported (Table 5; Table 6) (impact).
+  - Equal-mass ECE is mentioned for robustness (Sec. 3.7), indicating awareness of binning sensitivity (technical soundness).
+- **Statistical rigor and uncertainty quantification**
+  - Paired significance via McNemar’s test and bootstrap CIs for accuracy differences are performed with Holm–Bonferroni correction across 15 pairs (Sec. 4.3; Table 2), providing strong inferential discipline (technical quality).
+  - Overall accuracies with 95% CIs are reported via 10,000 instance bootstraps (Table 3; Sec. 4.3), strengthening reliability (experimental rigor).
+  - Effect sizes (ARR, RR, Cohen’s h, NNT) are provided (Sec. 4.7; Table 7), improving practical interpretability (impact and clarity).
+- **Dataset heterogeneity analysis and interpretation**
+  - Per-dataset accuracies and difficulty factors (semantic coherence; obfuscation) are analyzed (Sec. 4.4; Table 4; Fig. 1), revealing MHJ as most coherent/easiest and Attack600 as hardest (novel insight).
+  - Concrete numbers illustrate spread (e.g., gpt-4.1: 0.162 Attack600 vs. 0.816 MHJ; Sec. 4.4; Fig. 1), substantiating claims (evidence-based).
+  - Dataset-level aggregates and variance panels in the appendix further support heterogeneity conclusions (Appx. Dataset Quality Analysis; Fig. 6–7; Table panes) (experimental depth).
+- **Length and turn-complexity analyses**
+  - Accuracy by transcript-length quartile shows monotonic increases across models (Sec. 4.5; Appx. C; Table 9; Fig. 5/64), offering actionable insight for gating by minimum context (impact).
+  - Turn complexity bins are reported across categories with a clear rebound at ≥7 turns (Appx. B; Table 8; Fig. 4), informing where judges are most error-prone (novel empirics).
+  - Item-level scatter and error-vs-length curves (Appx. C; Fig. 5; Fig. 59/63) visualize the relationship, improving interpretability (clarity).
+- **Actionable safety guidance and broader relevance**
+  - Recommendations to make objectives explicit and gate actions by confidence stem directly from Wrong@High-Confidence findings (Abstract; Sec. 4.6; Table 6; Fig. 8), making the work operationally useful (impact).
+  - The broader impact and limitations sections articulate reuse in multi-hop QA/tool auditing and caution about high-stakes deployment (Intro; Conclusion; Sec. 6), aligning with ethical practice (clarity).
+- **Reproducible artifacts and clear prompts**
+  - Full prompt templates for extraction and the similarity judge are provided verbatim (Appx. A.1/A.2), enabling independent replication (reproducibility).
+  - Per-model spreadsheets with raw I/O, judge outputs, and calibration labels are promised at the repository (Sec. 3.8; Ethics/Appx release description), increasing transparency (impact).Weaknesses
+- **Single similarity judge and limited validation of judge reliability**
+  - The similarity judge is fixed to gpt-4.1 throughout (Sec. 3.3, 3.5), introducing potential systematic bias in correctness labels (technical robustness).
+  - Human calibration set is limited to N=300 items with a single global τ* (Sec. 3.6; Sec. 4.1, Table 1), which may not capture dataset-specific idiosyncrasies (generalization).
+  - No inter-annotator agreement (e.g., Cohen’s κ) is reported for the two experts who produced consensus labels (Sec. 3.6; Appendix Labeling description), leaving the reliability of human ground truth unquantified (experimental rigor).
+  - Binary mapping of similarity categories may discard useful resolution (Exact vs. High vs. Moderate vs. Low; Sec. 3.6; Table 1), potentially inflating or deflating borderline correctness (measurement validity).
+- **Confidence elicitation and calibration design is narrow**
+  - Confidence is elicited via a single JSON-format prompt template (Sec. 3.4; Appx. A.1) without ablations across alternative elicitation strategies (technical completeness).
+  - ECE is primarily reported with M=10 equal-width bins (Sec. 3.7; Table 5), with equal-mass mentioned but not emphasized in the main text, limiting sensitivity analysis exposure (experimental thoroughness).
+  - No direct comparison to token-probability-based confidence or rank-calibration techniques (No direct evidence found in the manuscript; Sec. 3.7 cites but does not evaluate [2, 5, 11]), reducing metacognitive scope (novelty and completeness).
+  - Wrong@High-Conf is aggregated across datasets (Table 6; Fig. 2c; Fig. 7b) without stratifying by coverage or dataset, which may mask differing confidence distributions (analysis granularity).
+- **Gold objectives and dataset assumptions may misrepresent latent intent**
+  - The gold base_prompt is taken “as-is” from each dataset with trivial cleanup and no schema unification (Sec. 3.2), risking mismatches between the dataset string and the true latent objective (measurement validity).
+  - Attack600 is algorithmically expanded (Sec. 2.3; Sec. 4.4; Table 4) yet there is no qualitative audit of noisy or incoherent cases (experimental rigor).
+  - The single-sentence imperative constraint may oversimplify multi-objective transcripts (Sec. 3.1; Sec. 6), leading to penalization when multiple goals are entangled (task adequacy).
+  - Cross-dataset aggregation is conducted with a single τ* and without taxonomy mapping (Sec. 3.2, 3.6), which could conflate heterogeneous labeling schemes (external validity).
+- **Limited experimental coverage and external validity**
+  - Only six large commercial models are evaluated (Sec. 3.3), omitting smaller and safety-tuned open-source models acknowledged as future work (Sec. 6) (coverage).
+  - Single deterministic pass (T=0) per instance (Sec. 3.3) does not quantify decoding variance or stochastic robustness (experimental completeness).
+  - No ablation of extraction instructions (e.g., chain-of-thought or rationale elicitation) is reported (No direct evidence found in the manuscript; Sec. 3.4; Appx. A.1) (methodological depth).
+  - Claims of applicability beyond safety (multi-hop QA, tool-use auditing) are not substantiated with experiments (Conclusion; Broader impact), limiting external validation (generalization).
+- **Reporting and statistical clarity issues**
+  - Transcript-length analysis states “accuracy increases monotonically with length” (Sec. 4.5; Appx. C, Table 9) while Appx. B describes a mid-turn “degradation” narrative and the item-level correlation r≈−0.15 (Appx. C), which together need clearer reconciliation with the binwise results (clarity).
+  - The per-dataset table in Block 27 includes an unexplained rightmost “Accuracy” column with values {0.8, 0.6, 0.4}, which does not match preceding columns (Block 27; Fig. 1), causing confusion (presentation quality).
+  - Appendix Fig. 6 reports “Mean Score Attack600=0.34” while Table 4’s “Avg. Accuracy” is 24.3% (Sec. 4.4; Table 4; Appx. Fig. 6), suggesting a mixture of similarity scores and binary accuracy without explicit distinction (measurement clarity).
+  - ECE binning choice is fixed to equal-width in the main results (Table 5) without showing sensitivity analysis numbers alongside, hindering interpretability (clarity).
+  - The risk–coverage numeric table lists decreasing risk with increasing coverage (Appx. Block 72), which is inconsistent with the plotted curves and AURC interpretation (Appx. Fig. 8; Fig. 73), creating confusion about selective prediction behavior (clarity).
+- **Threat model and fairness to safety-tuned behavior**
+  - The task scores extraction of harmful objectives and explicitly does not score refusals (Sec. 3.1 Scope), which may disfavor safety-tuned models’ intended behavior (evaluation fairness).
+  - It is unclear how the similarity judge handles outputs containing safety disclaimers or refusal preambles alongside the extracted objective (No direct evidence found in the manuscript; Appx. A.2), possibly biasing scores (measurement fairness).
+  - Equating dataset-provided base_prompt to the “latent objective” may not hold for noisy transcripts (Sec. 3.2; Sec. 4.4), risking label error (validity).
+  - The rebound at ≥7 turns (Appx. B; Table 8) may reflect restatements imposed by dataset artifacts rather than genuine recovery skills, and this confound is not controlled (analysis rigor).Suggestions for Improvement
+- **Diversify and validate the similarity judging pipeline**
+  - Evaluate a multi-judge ensemble (e.g., different LLM judges) and report cross-judge agreement and sensitivity of accuracy to the judge choice (Sec. 3.5; Table 3) to mitigate single-judge bias.
+  - Expand the human calibration set beyond N=300 with stratified sampling per dataset and report dataset-specific τ* sensitivity to improve generalization (Sec. 3.6; Sec. 4.1, Table 1).
+  - Report inter-annotator agreement (e.g., Cohen’s κ) for the two experts before consensus to quantify label reliability (Sec. 3.6; Appendix Labeling).
+  - Complement binary mapping with graded analyses (e.g., report metrics at category resolution and calibration curves over s) to retain more information near decision boundaries (Sec. 3.6; Table 1).
+- **Broaden confidence elicitation and calibration analyses**
+  - Ablate confidence prompts (e.g., rationale-first, post-hoc self-check, and self-calibration strategies) and compare to methods surveyed in [2, 11, 12] to test robustness (Sec. 3.4; Appx. A.1).
+  - Present both equal-width and equal-mass ECE in the main text, and include adaptive binning or spline-based reliability diagrams to quantify binning sensitivity (Sec. 3.7; Table 5; Fig. 2).
+  - Add comparisons against token-probability-based confidence or rank calibration (e.g., [5]) to determine whether verbal confidence is superior in this task (Sec. 3.7; No direct evidence found).
+  - Report Wrong@High-Conf stratified by dataset and coverage (e.g., coverage-conditioned error bars) to expose confidence distribution differences (Table 6; Fig. 7–8).
+- **Strengthen gold objective quality and dataset normalization**
+  - Introduce light normalization/taxonomy mapping (synonyms, templatic variants) across datasets to reduce spurious mismatches (Sec. 3.2).
+  - Conduct a qualitative audit of a random sample from Attack600 to categorize incoherence/obfuscation types and quantify their prevalence (Sec. 4.4; Table 4; Fig. 1).
+  - Consider allowing multi-sentence objectives when the dataset indicates multiple converging goals, and document how this affects the judge prompt and scoring (Sec. 3.1; Sec. 6).
+  - Explore dataset-specific τ* or a sensitivity analysis over τ for each dataset to account for heterogeneity in label distributions (Sec. 3.6; Sec. 4.4).
+- **Expand experimental coverage and external validation**
+  - Include smaller open-source and safety-tuned models (7B–70B) to evaluate scaling and tuning effects (Sec. 3.3; Sec. 6).
+  - Run multiple stochastic decodes (varying temperatures/seeds) to estimate variance and stability of extraction and confidence (Sec. 3.3).
+  - Ablate instruction styles (e.g., explicit reasoning, iterative extraction, structured decomposition) to determine prompt sensitivity (Sec. 3.4; Appx. A.1).
+  - Add evaluations on non-safety latent-intent tasks (e.g., multi-hop QA, dialogue state tracking) to substantiate broader applicability (Conclusion; Sec. 6).
+- **Improve reporting consistency and statistical clarity**
+  - Fix and explain the Block 27 table (remove or clarify the rightmost “Accuracy” column) and ensure every numeric panel is traceable to definitions (Block 27; Fig. 1).
+  - Explicitly distinguish “Mean Score” (similarity) from binary “Accuracy” across tables/figures (e.g., reconcile Table 4 vs. Appx. Fig. 6) and add a glossary (Sec. 4.4; Appx. Fig. 6).
+  - Move ECE binning sensitivity results from appendix into the main results and provide numerical comparisons to show robustness (Sec. 3.7; Table 5).
+  - Reconcile length vs. turn-count narratives by reporting multivariate regressions or partial correlations controlling for dataset and turn count (Sec. 4.5; Appx. B–C; Table 8–9).
+  - Correct the risk–coverage numeric table to match the plotted curves and the definition used for AURC, documenting computation order and coverage definition (Appx. Fig. 8; Fig. 73; Block 72).
+- **Clarify threat model and fairness to safety behavior**
+  - Specify in the judge prompt and scoring policy that safety disclaimers or refusal preambles should be ignored when assessing the core objective (Appx. A.2), and measure the prevalence of such patterns.
+  - Add a “refusal-aware” metric (e.g., abstention quality conditioned on uncertainty) to capture desired safety behavior alongside extraction success (Sec. 3.7; Fig. 8).
+  - Validate a subsample where gold base_prompt is re-checked for fidelity to the latent objective in the transcript (Sec. 3.2; Sec. 4.4) and report error rates.
+  - Control for restatement bias by tagging transcripts with explicit later-turn restatements and re-computing accuracy by presence/absence (Appx. B; Table 8).Score
+  - Overall (10): 7 — Strong benchmark and metacognition analysis with rigorous statistics (Sec. 3.7; Sec. 4.1–4.3; Table 5; Table 2–3), tempered by single-judge dependence and limited coverage (Sec. 3.3, 3.5; Sec. 6).
+  - Novelty (10): 7 — Focused evaluation of latent objective extraction under multi-turn jailbreaks with confidence calibration appears distinct from prior binary moderation (Sec. 1; Sec. 2.4; Contributions), though scoped to three datasets.
+  - Technical Quality (10): 6 — Transparent thresholding, paired tests, and effect sizes (Sec. 3.6; Sec. 4.1–4.3; Table 7) but reliance on one judge and limited ablations reduce robustness (Sec. 3.5; Sec. 6).
+  - Clarity (10): 5 — Clear task/prompt definitions and comprehensive figures (Appx. A.1/A.2; Fig. 1–3; Table 5) but multiple internal inconsistencies in reporting (Block 27; Sec. 4.4 vs. Appx. Fig. 6; Appx. B–C; Appx. Block 72 vs. Fig. 8/Fig. 73).
+  - Confidence (5): 4 — The manuscript provides extensive data and methods, but single-judge evaluation and missing ablations/IAA introduce uncertainty (Sec. 3.5–3.6; Sec. 6).

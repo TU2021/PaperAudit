@@ -1,0 +1,75 @@
+Academic integrity and internal consistency risk report
+
+Scope: This report flags high‑impact inconsistencies, contradictions, numerical mismatches, or missing details that materially affect the paper’s correctness and trustworthiness. Each point includes explicit anchors to the manuscript.
+
+1) Contradictory definition and usage of the activation time t_on (pure MDLM vs pure Star)
+- Evidence:
+  - Section 4.2: “The sampler operates as a standard MDLM until time t_on, after which it switches to the star-shaped paradigm.” (Block #18)
+  - Same section: “Performance is poor for both pure samplers (t_on = 1.0 for pure Star and t_on = 0.0 for pure MDLM)” (Block #18).
+  - Figure 2 caption/labels: plot suggests “pure MDLM” at t_on ≈ 0.0 and “pure Star” at t_on = 1.0 (Block #15).
+- Why it matters: Given the stated switching rule, t_on = 1.0 implies the Star sampler is never activated (pure MDLM), and t_on = 0.0 implies the Star sampler is used from the start (pure Star). The text asserts the opposite, creating a logical contradiction that undermines the interpretation of Figure 2 and the core scheduling conclusions.
+- Requested fix: Unambiguously define t_on and correct the mapping to pure cases throughout Section 4.2 and Figure 2 annotations.
+
+2) Exact duplication of Table 1 results for two different methods
+- Evidence: Table 1 rows “ReMDM-loop η=0.1” and “Star-loop” contain identical values across all nine metrics (MAUVE/PPL/DIV at 128, 256, 512 steps) (Block #25).
+- Why it matters: This strongly suggests a copy–paste or reporting error, or else an unstated identity between methods that contradicts earlier claims of practical differences. It reduces confidence in the validity of results and comparisons in Section 4.4.
+- Requested fix: Verify and correct the “Star-loop” row. If equivalence was intended, provide a formal justification and make it explicit in text and caption.
+
+3) Implausible and non‑monotonic perplexity values for Star+t_on=0.2 across step budgets
+- Evidence: Table 1, “Star+t_on=0.2” row shows PPL = 11.7 (128 steps), 24.5 (256), 14.7 (512) (Block #25).
+- Why it matters: Perplexity typically decreases or at least does not worsen with more refinement steps. The 128‑step PPL of 11.7 is lower than both 256‑ and 512‑step settings and even comparable to the best 512‑step guided configurations, which is inconsistent with the broader trends in the table and with Section 4.3/4.4 narratives. This indicates likely tabulation/mapping errors.
+- Requested fix: Recompute or recheck the Star+t_on=0.2 perplexities for each step budget; clarify any unusual evaluation conditions if these numbers are correct.
+
+4) Undefined or inconsistent notation in equivalence claim to ReMDM
+- Evidence:
+  - Section 3.1: “our sampler is mathematically equivalent to the ReMDM sampler when its probability is set to σ_t = 1 − α_s” (Block #8). Variable s is not defined.
+  - No formal derivation of this equivalence is present in the main text or Appendix (Appendix C.1 is about sensitivity to η; it does not prove equivalence).
+- Why it matters: The claim of “mathematical equivalence” is strong; an undefined variable and lack of proof make the claim unsupported in its current form.
+- Requested fix: Define s (if t, correct the notation), and provide a formal derivation or a clear pointer to the proof. If the equivalence only holds under additional assumptions, state them explicitly.
+
+5) Inconsistent statements about fine‑tuning vs. no fine‑tuning
+- Evidence:
+  - Abstract: “after a lightweight fine‑tuning of a single layer, significantly improves…” (Block #2).
+  - Section 3.1: “allows our sampler to achieve strong performance without any fine‑tuning.” (Block #9).
+  - Section 3.2 and Algorithms 1–2: a separate error predictor g_φ is trained (even if only a classification head) (Blocks #9–#10).
+- Why it matters: It is unclear whether the main diffusion model f_θ is kept frozen (no fine‑tuning) while only g_φ is trained, or whether any part of f_θ is fine‑tuned. The ambiguity affects reproducibility and the claimed “plug‑in” nature.
+- Requested fix: Explicitly state: (a) whether f_θ is fine‑tuned or always frozen, and (b) that only g_φ’s head is trained in the main experiments, reconciling Abstract and Section 3.1.
+
+6) Algorithmic inconsistencies regarding time conditioning
+- Evidence:
+  - Algorithm 1: Step 6 “t ∼ U(0, 1)” (continuous), Step 7 “x_t ∼ q(· | x_0)” omits dependence on t, and Step 8 uses f_θ(x_t) without t, while elsewhere f_θ(x_t, t) is the model (Blocks #9 and #10).
+  - Algorithm 2: Step 4 uses f_θ(x_t) without t (Block #9).
+- Why it matters: The diffusion model is defined as time‑conditioned f_θ(x_t, t). Omitting t (or mixing continuous vs discrete sampling for t) makes the training/sampling procedures ambiguous, impacting reproducibility and theoretical alignment with Eq. (1)–(6).
+- Requested fix: Specify whether t is discrete (t ∈ {1,…,T}) or continuous; include t in q(·|x_0, t) and f_θ(x_t, t) in both algorithms.
+
+7) Figure 3 panel misreference
+- Evidence:
+  - Section 4.3 text: “The MAUVE scores (left panel)… The perplexity curves (right panel)…” (Block #19).
+  - Figure 3 images: left panel shows Perplexity (Block #20) and right panel shows MAUVE (Block #21).
+- Why it matters: The swapped panel references can mislead interpretation of the results.
+- Requested fix: Correct the text to match the panels or swap figure panels for consistency.
+
+8) Unclear or unsupported “mathematically equivalent” vs “performs on par” claims
+- Evidence:
+  - Section 3.1: “mathematically equivalent to the ReMDM sampler…” (Block #8).
+  - Section 4.4 and Appendix C.1 analyze performance but do not provide a derivation of equivalence; Table 1 contains duplicated rows (see Issue 2) which may be a reporting error rather than evidence of equivalence (Blocks #25, #45).
+- Why it matters: Equivalence vs empirical parity are distinct. In absence of a derivation, the claim should be toned down or proven.
+- Requested fix: Provide a concrete derivation (or move to “empirically performs comparably under specific settings”).
+
+9) Proof of Claim 1 contains explanatory inconsistency
+- Evidence:
+  - Appendix A: The text says “both… are interpolations between a one‑hot vector (the true x_0 or the predicted x̂_0) and the mask” (Block #36), yet the derivation uses x̂_0,k as a probability (not one‑hot), yielding Lt = −α_{t−1} log x̂_0,k (Eq. 13–14).
+- Why it matters: While the final formula aligns with a weighted cross‑entropy, the explanation oscillates between treating x̂_0 as one‑hot vs soft probabilities. This can confuse readers about the exact modeling assumption used in the KL term.
+- Requested fix: Clarify that x̂_0 in the derivation is the model’s soft distribution and explicitly justify the use of q(·|x_0 = x̂_0) with soft x̂_0.
+
+10) Minor but recurrent cross‑reference inconsistencies in Appendix C.3
+- Evidence:
+  - Appendix C.3 text: refers to “best perplexity scores (middle panel)” (Block #58), but the provided panels (Blocks #52–#57) put Perplexity on the rightmost panel, not the middle.
+- Why it matters: Repeated panel misreferences can cause misinterpretation of ablation findings.
+- Requested fix: Align text with panel ordering.
+
+Summary assessment
+- The manuscript contains several high‑impact inconsistencies that should be corrected before the results can be trusted at face value: (i) the t_on definition/mapping contradiction (Section 4.2), (ii) duplicated rows and anomalous perplexities in Table 1, and (iii) an undefined variable in a key equivalence claim (σ_t = 1 − α_s) with no accompanying derivation. In addition, algorithms omit time conditioning, and figure panel references are swapped in multiple places.
+- Addressing these issues (with corrected tables/figures, clarified notation and algorithms, and a proper derivation or a downgraded equivalence claim) would materially improve the paper’s clarity, reproducibility, and integrity.
+
+If these corrections are made and verified, no further clear integrity problems are apparent based on the provided manuscript.

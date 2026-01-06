@@ -1,0 +1,194 @@
+Summary
+The paper proposes Noise-Guided Transport (NGT), an off-policy imitation learning method that learns a reward via a predictor network trained against a frozen random prior. The core objective is the difference of a “potential” hξ(x)=ℓ(fξ(x),f†ξ(x)) evaluated on expert versus agent data (Eq. 2, Section 4.1), with the learned reward rξ(x)=exp(−hξ(x)). The authors argue this adversarial objective is equivalent (via a 1‑Lipschitz constraint) to a dual optimal transport (OT) formulation (Eq. 3, Section 4.2), provide a concentration bound for the empirical loss (Appendix F), and analyze Lipschitz properties of their potential and distributional histogram loss (Sections 4.3.1–4.3.3). Empirically, NGT is benchmarked on MuJoCo and DMC tasks in ultra-low data regimes (as few as 20 transitions via subsampling), showing strong performance—especially on Humanoid-v4—and competitive runtime (Section 5; Figures 1–3, 21; Appendix P).
+
+Soundness
+- Objective and OT link: The formal identity in Eq. 3 correctly relates infh∈H1 Eexpert[h]−Eagent[h] to −W1(Pagent,Pexpert) by symmetry of W1. However, the text’s conclusion—“descending along the gradients of L(ξ)… maximizes the discrepancies between Pag and Pexp” (Section 4.2)—is incorrect: the EMD is a property of the fixed distributions, not of h. Minimizing L optimizes h to achieve the dual optimum and yields a value equal to −W1; it does not “maximize discrepancies.” I rechecked the KR dual: W1(P,Q)=sup||f||Lip≤1 EP[f]−EQ[f]; hence min over f of EQ[f]−EP[f] equals −W1(P,Q). Training h only approaches this optimum; it cannot change the EMD unless the policy changes (self-verification of this claim against Eq. 3 shows the textual conclusion is inconsistent).
+- Reward design: With r=exp(−h), minimizing L pushes h down on expert samples and up on agent samples, incentivizing the policy (via SAC) toward expert-like regions. This is logically sound and consistent with off-policy training (Algorithm 1, Section 4; Section 4.1).
+- Lipschitz control: Theorem 4.1 (Section 4.3.1; Appendix G) gives a compositional bound Λ(h)=Λ(ℓ)(Λ(f)+Λ(f†)), and the use of spectral normalization (SN) plus orthogonal initialization (OI) is reasonable. That said, SN per layer doesn’t strictly ensure 1-Lipschitz for the whole network under arbitrary nonlinearities; the paper acknowledges aiming for “close enough to 1,” which weakens the equality in Eq. 3 to an approximation.
+- Concentration bound: Appendix F provides a McDiarmid-based bound (Eq. 7) with diameter and Λ; derivation is standard and correct in form. Practical tightness may be weak in high-dimensional continuous control (diameter-based bounds commonly loosen), but the argument is technically sound.
+- ℓHLG analysis: The Lipschitz bound for the histogram Gaussian loss (Section 4.3.3; Theorem 4.2, Appendix H) is heuristic (via pmax approximation) yet informative: σ controls sensitivity; σ→∞ drives the bound toward 1. This matches the empirical role of label smoothing.
+
+Presentation
+The paper is clearly structured with a detailed method section, explicit equations, and thorough appendices (Algorithm 1; HL-Gaussian code snippet; proofs). Figures are plentiful and readable (Figures 1–3, 21; Appendices N–P). However:
+- The incorrect OT conclusion in Section 4.2 may mislead readers.
+- Some critical implementation choices (e.g., exact enforcement of 1‑Lipschitz beyond SN, the practical ranges for σ,N, and supports [a,b]) are scattered and could be consolidated.
+- Aggregated Figure 1 excludes Humanoids, which are central to the claims; an explicit rationale would help.
+
+Contribution
+- Conceptual: NGT reframes reward learning as pseudo-density estimation via prediction against random priors, casting adversarial IL in an OT-dual lens without a GAN discriminator (Sections 4.1–4.2).
+- Practical: The use of distributional losses for reward learning (ℓHLG) and the demonstration of strong low-data performance—including Humanoid-v4 with very few transitions and state-only/state-state variants (Figures 2–3)—are significant.
+- Theoretical: Lipschitz composition (Theorem 4.1), input-side Lipschitz bound for ℓHLG (Theorem 4.2), and concentration bound for the empirical loss (Appendix F) add useful, if partly approximate, analysis.
+- Empirical: Large-scale comparisons with consistent actor-critic backbones (Section 5; Appendix L) and speed profiling (Appendix P) increase credibility.
+
+Strengths
+- Strong low-data results across challenging continuous control tasks, notably Humanoid-v4 with subsampling to as few as 20 transitions (Figure 3).
+- Clear, lightweight implementation; no pretraining or specialized architectures; competitive runtime (Appendix P).
+- Robustness via distributional reward losses; detailed ablations supporting design choices (Appendix N).
+- Theoretical grounding for key components (Appendices F–H; Section 4.3), plus code release (Sections 4, 4.3.3).
+
+Weaknesses
+- Conceptual inconsistency in OT interpretation: the claim that minimizing L “maximizes discrepancies” (Section 4.2) contradicts Eq. 3 and the KR dual; I verified the discrepancy against standard W1 dual.
+- Lipschitz enforcement is approximate (“close to 1” with SN and OI), so the equality in Eq. 3 is only approximate in practice; no quantitative certificate that Λ(h)≤1 holds during training (Section 4.3.1).
+- Baseline fairness and tuning: DiffAIL is modified (Appendix L); GP coefficients differ; histogram loss requires environment-dependent hyperparameters (Appendix N). The claim of “no per-task tuning” conflicts with ℓHLG needing task-specific settings (Figure 5; Appendix N).
+- Statistical rigor: Only 4 seeds (Section 5); no formal significance tests; aggregated plots omit Humanoid in Figure 1; normalization choices and percentile reward rescaling (Appendix J) may affect comparability.
+- The concentration bound depends on diam(𝔛) and Λ, which are hard to quantify in high-dimensional RL and may yield vacuous constants.
+
+Questions
+- Please correct or clarify the OT interpretation in Section 4.2: minimizing L optimizes h toward the KR dual optimum; it does not maximize discrepancies. How do you intend this statement to be read?
+- Can you provide empirical monitoring of Λ(h) during training (or a certified upper bound) to substantiate the 1‑Lipschitz assumption used in Eq. 3?
+- How were ℓHLG hyperparameters chosen per environment (Appendix N)? If “no per-task tuning” was claimed, reconcile this with Figure 5 indicating environment-specific settings.
+- What is the impact of the DiffAIL modifications (Appendix L) on fairness? Could you report results with the unmodified configuration or a sensitivity analysis?
+- Can you include Humanoid in the aggregated view (Figure 1) and add statistical tests across seeds?
+- Does NGT’s reward rescaling via percentiles (Appendix J) alter policy entropy dynamics compared to baselines? Any sensitivity analysis?
+
+Rating
+- Overall (10): 8 — Strong low-data IL performance with a clean, practical design and useful theory, but the OT interpretation in Section 4.2 contradicts Eq. 3 and weakens the conceptual narrative.
+- Novelty (10): 8 — Reward learning via random priors with distributional losses in IL, plus an OT-dual framing (Sections 4.1–4.2), is a distinctive combination beyond RED/RND and standard AIL.
+- Technical Quality (10): 7 — Solid empirical work and helpful analysis (Theorems 4.1, 4.2; Appendix F), tempered by the OT claim inconsistency and approximate Lipschitz enforcement.
+- Clarity (10): 8 — Generally well-written with detailed appendices and code; needs correction of the OT claim and tighter consolidation of practical hyperparameters (Sections 4.2, 4.3.2).
+- Confidence (5): 4 — High confidence from re-deriving the KR dual implication (Eq. 3) and checking experimental protocol; moderate uncertainty in exact Lipschitz enforcement and baseline tuning details.
+
+
+
+Summary
+This paper introduces NGT, an off-policy imitation learning algorithm that learns a reward model by contrasting a trainable predictor network against a frozen randomly initialized prior (Section 4.1). The training objective is the expert–agent difference of a potential hξ(x)=ℓ(fξ(x),f†ξ(x)) (Eq. 2), with the reward set to exp(−hξ). The authors argue the objective aligns with the dual of optimal transport under a 1‑Lipschitz constraint (Eq. 3, Section 4.2). They provide concentration guarantees for the empirical loss (Appendix F) and Lipschitz analyses for both the potential and the histogram Gaussian loss used for reward learning (Section 4.3). Experiments across MuJoCo and DMC show competitive performance, especially in ultra-low data regimes and on Humanoid (Section 5; Figures 2–3, 21).
+
+Soundness
+- The learning setup—off-policy SAC with a learned reward based on expert-versus-agent contrast—fits the imitation objective, and the exp(−h) mapping yields a bounded positive reward (Section 4.1).
+- The OT link is plausible via the KR dual (Eq. 3), but the text asserts that minimizing L “maximizes discrepancies” (Section 4.2), which is incorrect: the EMD between fixed distributions is independent of h. Minimizing L finds the dual-optimal potential, and the minimum value equals −W1; it does not change W1. I carefully re-derived this (self-verification against Eq. 3).
+- Lipschitz continuity is treated thoughtfully (Theorem 4.1; Section 4.3.1), and the ℓHLG analysis (Theorem 4.2) correctly emphasizes σ’s stabilizing effect. However, the paper does not certify that Λ(h)≤1 holds during training—SN and OI are helpful but not sufficient guarantees in general networks.
+- The concentration bound (Appendix F) is standard and correct but could be loose in practice due to diameter dependence in high dimensions.
+
+Presentation
+The manuscript is comprehensive (Algorithm 1; clear notation; detailed appendices). Plots are readable and informative (Figures 2–3, 21; Appendix P). Areas to improve:
+- Correct the misleading statement about “maximizing discrepancies” (Section 4.2).
+- Consolidate practical hyperparameters for ℓHLG and provide a single table summarizing settings per task (Appendix N is helpful but scattered).
+- Justify excluding Humanoid from Figure 1’s aggregated view, given Humanoid’s centrality.
+
+Contribution
+- Methodological: A reward-learning mechanism via prediction against random priors—avoiding GAN discriminators—combined with distributional losses (Section 4.3.2) is a useful and pragmatic IL contribution.
+- Theoretical: Composition-based Lipschitz bounds (Theorem 4.1), ℓHLG input-side Lipschitz analysis (Theorem 4.2), and a concentration guarantee (Appendix F) add rigor.
+- Empirical: Strong low-data results, including state-only/state-state settings and Humanoid-v4 with very few transitions (Figures 2–3), and competitive speed (Appendix P).
+
+Strengths
+- Persuasive empirical results and robustness in challenging regimes (Humanoid-v4, state-only/state-state; Figures 2–3).
+- Simplicity and ease of implementation; no gradient penalty required; runtime competitive (Appendix P).
+- Thoughtful ablations supporting core design choices (Appendix N), including the necessity of spectral normalization and benefits of ℓHLG.
+- Reproducibility aided by a shared SAC backbone and open-source code (Sections 5 and 4.3.3).
+
+Weaknesses
+- Incorrect conceptual claim about the OT dual effect (Section 4.2).
+- Lipschitz enforcement is approximate; the theoretical equality in Eq. 3 hinges on a condition not empirically certified.
+- Baseline fairness questions: DiffAIL modifications (Appendix L), GP settings, and environment-specific tuning of ℓHLG (Appendix N) versus the “no per-task tuning” assertion (Section 5).
+- Limited statistical reporting (4 seeds; no significance tests), and aggregation omits Humanoid (Figure 1).
+
+Questions
+- Can you instrument training to report an empirical upper bound on Λ(h) (e.g., via gradient norms or certified Lipschitz estimators) to support the 1‑Lipschitz assumption?
+- Please reconcile “no per-task tuning” with the environment-dependent ℓHLG settings (Appendix N; Figure 5).
+- What is the quantitative impact of the DiffAIL tweaks (Appendix L)? Could you add a sensitivity study demonstrating they do not disadvantage the baseline?
+- Could you include Humanoid in the aggregated comparisons and provide statistical tests?
+- How sensitive is NGT to the output embedding dimension m and σ asymmetry (expert vs. agent sides) beyond Appendix N?
+
+Rating
+- Overall (10): 8 — Strong empirical results and a practical, well-motivated method, marred by a key OT interpretation error in Section 4.2 and approximate Lipschitz enforcement.
+- Novelty (10): 8 — Combining random-prior prediction with distributional losses for reward learning in IL, and an OT-dual perspective, provides fresh angles beyond DAC/SAM, RED, and WGAN-style critics.
+- Technical Quality (10): 7 — Solid experiments and analyses; some conceptual misstatements and missing certificates for critical assumptions (Eq. 3; Section 4.3.1).
+- Clarity (10): 8 — Clear overall, with detailed appendices and code; correct the Section 4.2 claim and concentrate practical guidance (Appendix N).
+- Confidence (5): 4 — Confident after re-deriving the dual relation and scrutinizing experiments; minor uncertainty around baseline modifications and Lipschitz certification.
+
+
+
+Summary
+NGT is a lightweight, off-policy imitation learning method that learns a reward by contrasting a trainable predictor with a frozen random prior (Section 4.1), casting the objective as the expert–agent difference of a potential (Eq. 2). The authors argue the objective aligns with OT duality under 1‑Lipschitz constraints (Eq. 3), introduce a distributional histogram loss to stabilize reward learning (Sections 4.3.2–4.3.3), and present a concentration bound (Appendix F). Experiments across MuJoCo and DMC benchmarks demonstrate superior or competitive performance in low-data settings, including Humanoid with as few as 20 transitions via subsampling (Section 5; Figures 2–3).
+
+Soundness
+- Reward learning via random priors is consistent with pseudo-density estimation (Section 4.1), and exp(−h) yields positive bounded rewards.
+- The OT dual relation is valid mathematically (Eq. 3), but the accompanying statement that minimizing L “maximizes discrepancies” is incorrect; I verified that W1 is constant with respect to h for fixed distributions, and minimizing L finds −W1 (self-verification against KR dual).
+- Lipschitz control via SN, OI, and activation choices (Section 4.3.1) is reasonable but not certifying Λ(h)≤1. The reliance on “close enough” reduces theoretical guarantees to heuristics.
+- The histogram loss analysis (Theorem 4.2) is a useful contribution; the σ dependence is intuitive and consistent with label smoothing.
+- The concentration bound (Appendix F) follows standard bounded differences with i.i.d. sampling; practicality may be limited by diam(𝔛) in high-dimensional spaces.
+
+Presentation
+The manuscript is detailed and well-organized. The appendices add transparency (Algorithm 1; HL-Gaussian code; proofs; ablations). Minor issues:
+- Misleading phrasing in Section 4.2 about discrepancies should be corrected.
+- Baseline configuration changes (Appendix L) and reward rescaling (Appendix J) deserve a consolidated discussion of fairness.
+
+Contribution
+- Methodologically, NGT avoids GAN discriminators by leveraging random priors for reward learning, augmented with distributional losses.
+- Empirically, the method achieves strong low-data performance, including state-only/state-state settings and Humanoid-v4 with very sparse demonstrations (Figures 2–3).
+- Theoretical analyses (Lipschitz composition, ℓHLG bound, concentration) enhance understanding.
+
+Strengths
+- Sample efficiency and robustness on challenging tasks with minimal data (Figures 2–3).
+- Clean design and competitive runtime; no gradient penalty required (Appendix P).
+- Comprehensive ablations and clear code release.
+- State-only and state–state capabilities broaden applicability (Section 5; Figure 3).
+
+Weaknesses
+- Conceptual error in narrating the OT dual effect (Section 4.2).
+- Approximate Lipschitz enforcement; lack of measurement/certification of Λ(h) during training.
+- Baseline fairness concerns (DiffAIL modifications; GP coefficients; ℓHLG per-environment settings despite “no per-task tuning”).
+- Limited statistical rigor (4 seeds; no hypothesis tests), and omission of Humanoid in the aggregated view (Figure 1).
+
+Questions
+- Could you add an online estimate of Λ(h) during training and report it to strengthen the OT claim?
+- Please clarify the extent of environment-specific tuning for ℓHLG and reconcile it with the claim of no per-task tuning.
+- How sensitive are results to percentile-based reward rescaling (Appendix J)? Have you tried mean/std EMA consistently for all methods?
+- What is the performance of DiffAIL without modifications? Provide an ablation to ensure fairness.
+- Can you add Humanoid to the aggregated plot and provide seed-wise statistical comparisons?
+
+Rating
+- Overall (10): 7 — A compelling, practical method with strong empirical results, but the OT claim needs correction and some fairness/statistical aspects need tightening.
+- Novelty (10): 7 — Combining random-prior prediction with distributional losses for reward learning in IL is an interesting twist with practical benefits.
+- Technical Quality (10): 7 — Sound core design and analyses; shortcomings in the Section 4.2 interpretation and lack of Lipschitz certification reduce rigor.
+- Clarity (10): 8 — Generally clear and thorough; fix the OT narrative and consolidate baseline/fairness details.
+- Confidence (5): 4 — Good confidence from rechecking KR dual and reviewing code/appendices; moderate uncertainty about baseline sensitivity and Lipschitz enforcement.
+
+
+
+Summary
+The authors present Noise-Guided Transport (NGT), an off-policy IL approach that learns rewards from random priors via a potential hξ(x)=ℓ(fξ,f†ξ) and trains the policy with SAC using rξ(x)=exp(−hξ) (Section 4.1; Algorithm 1). They frame the objective as an OT dual problem with a 1‑Lipschitz constraint (Eq. 3), analyze Lipschitz constants and a distributional histogram loss (Sections 4.3.1–4.3.3), and provide a concentration bound (Appendix F). NGT achieves strong results on MuJoCo and DMC, including Humanoid-v4 with ultra-low demonstration data (Section 5; Figures 2–3).
+
+Soundness
+- Learning from random priors is sensible and connects to RND/RED while introducing an adversarial term via agent data (Section 4.1–4.2). The exp(−h) reward choice is numerically convenient and bounded.
+- Eq. 3 correctly ties the objective to −W1, but the claim that minimizing L “maximizes discrepancies” is logically false for fixed distributions; I verified via KR dual that minimizing L recovers −W1 and does not change W1 itself (self-verification against Eq. 3).
+- Lipschitz control measures are reasonable heuristics; enforcing Λ(h)≤1 is not guaranteed. The paper appropriately discusses practical control (SN, OI, activations) and recognizes that perfect 1‑Lipschitz may not be achieved (Section 4.3.1).
+- The ℓHLG Lipschitz analysis (Theorem 4.2) is informative and highlights label smoothing’s stabilizing role; the bound depends on approximations (Appendix H) but gives actionable guidance (σ).
+- The concentration bound (Appendix F) is technically correct; practical usefulness may be limited by unknown diam(𝔛) and large Λ in high-dimensional spaces.
+
+Presentation
+The manuscript is thorough, with extensive appendices and reproducibility details (Appendix L; code link). Figures are clear and show both normalized and unnormalized returns (Figures 2–3). Minor issues:
+- The misleading OT statement in Section 4.2 should be corrected.
+- The aggregated view in Figure 1 excludes Humanoids—explain why and/or include them.
+- A compact summary table of ℓHLG hyperparameters per task would help (drawn from Appendix N).
+
+Contribution
+- A practical adversarial reward-learning alternative to GAN-style discriminators, grounded in random priors, combined with distributional losses for reward learning.
+- Demonstrated efficacy in extreme low-data regimes, including high-dimensional humanoid locomotion and state-only/state–state IL.
+- Theoretical analyses (Lipschitz composition, ℓHLG sensitivity, concentration) add value.
+
+Strengths
+- Strong empirical gains under tight data constraints; consistent scaling across numbers of demos and subsampling rates (Figures 2–3).
+- Implementation simplicity and speed; avoids gradient penalties required by many off-policy adversarial baselines (Appendix P).
+- Extensive ablations validating design choices (Appendix N).
+- Applicability to state-only and state–state IL broadens relevance (Figure 3).
+
+Weaknesses
+- Incorrect narrative around the OT dual effect (Section 4.2).
+- No quantitative verification of the 1‑Lipschitz property during training; theoretical guarantees hinge on an assumption not measured.
+- Baseline fairness concerns: modifications to DiffAIL (Appendix L), GP settings, and environment-specific ℓHLG tuning despite claims of no per-task tuning (Section 5 vs. Appendix N/Figure 5).
+- Statistical reporting limited (4 seeds; no significance tests); aggregated results omit a key environment.
+
+Questions
+- Can you instrument training to estimate or bound Λ(h) and report its trajectory to support the OT assumption?
+- Please detail how ℓHLG hyperparameters were selected (grid/search/heuristic) per environment and reconcile with “no per-task tuning.”
+- What is the effect of the percentile-based reward rescaling (Appendix J) on learning stability and comparability? Provide sensitivity analyses.
+- Could you report baseline results with unmodified DiffAIL, or show that modifications improve numerical stability without altering fairness?
+- Include Humanoid in Figure 1 and provide statistical tests or confidence intervals comparing methods across seeds.
+
+Rating
+- Overall (10): 8 — A well-executed, practical IL method with strong low-data performance and useful analysis; needs correction of the OT claim and stronger evidence for Lipschitz enforcement and baseline fairness.
+- Novelty (10): 8 — Reward learning via random priors plus distributional losses in IL, under an OT perspective, is a novel and impactful combination.
+- Technical Quality (10): 7 — Solid design and empirical validation; theoretical parts are helpful but partly approximate and marred by the Section 4.2 misstatement.
+- Clarity (10): 8 — Clear, with excellent appendices and code; fix the OT narrative and centralize practical hyperparameters.
+- Confidence (5): 4 — High confidence after re-deriving KR dual and inspecting methodology; some uncertainty remains regarding fairness and Lipschitz certification.

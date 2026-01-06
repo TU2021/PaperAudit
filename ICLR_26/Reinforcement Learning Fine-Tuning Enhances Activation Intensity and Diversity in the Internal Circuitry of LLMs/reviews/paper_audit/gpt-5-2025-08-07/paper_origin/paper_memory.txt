@@ -1,0 +1,125 @@
+# Global Summary
+Problem: Explain why reinforcement learning (RL) fine-tuning often outperforms supervised fine-tuning (SFT) for LLMs by uncovering how RL reshapes internal computation.
+
+Approach: Adapt Edge Attribution Patching (EAP) to measure edge-level importance across the residual graph of Transformers. Compute gradient-based edge attributions on truncated self-entropy for model-generated solutions to math problems. Compare distributions of edge activations before vs. after RL.
+
+Scope: Four 7B-scale LLM pairs (SFT vs. RL) spanning three families and a DPO variant, evaluated on GSM8K, MATH, and College Math. Metrics: Activation Intensity (mean |edge weight|), Information Complexity (entropy of absolute edge weights), and Distribution Kurtosis (shape of per-sample edge distributions). Multiple truncation scales α ∈ {0.03, 0.1, 0.3, 0.5}.
+
+Key findings:
+- Across DeepSeek-Math (+GRPO), Mistral (+PPO), and Distilled-Qwen (+GRPO), RL increases activation intensity and information complexity while decreasing distribution kurtosis. Representative improvements on MATH at α = 0.1: Act.Intens. (DeepSeek 1.10e-3 → 1.31e-3; Mistral 6.76e-4 → 7.71e-4; Distilled-Qwen 4.51e-4 → 5.59e-4), Info.Complex. (DeepSeek 1.72e-1 → 2.47e-1; Mistral 1.41e-1 → 2.09e-1; Distilled-Qwen 1.11e-1 → 1.96e-1), Dist.Kurt. (DeepSeek 3.57e+2 → 2.23e+2; Mistral 4.51e+2 → 3.07e+2; Distilled-Qwen 1.27e+3 → 9.20e+2).
+- Aggregated diversity gains: “Total Experiments: 41; Average Improvement: 7.6%; Improvement Rate: 95.1%” (Figure 3a).
+- Output entropy diversity examples (Figure 3b): DeepSeek-Math (+1246%, +324%, +656%, +25%), Mistral (+120%, +180%, +13%, +10%), Distilled-Qwen (+49%, +105%, +230%, +11%); Qwen2.5 (+DPO) shows ~no change (“~0.01 → ~0.01”).
+
+Caveats and exceptions:
+- Qwen2.5 trained with DPO exhibits weaker or inconsistent internal changes, attributed to its static, SFT-like data regime compared to online RL (PPO/GRPO).
+- Only problems correctly solved by both models are analyzed; sequences are truncated by α; filtering depends on β, γ, δ (values not specified).
+- Several table cells are missing due to GPU memory overflow.
+- Analyses focus on math benchmarks; generality beyond math is not empirically evaluated here.
+- Code available: https://anonymous.4open.science/r/llm_rl_probing_analysis-F673.
+
+# Abstract
+- Goal: Probe mechanisms by which RL-based post-training enhances LLM capabilities beyond SFT.
+- Method: Use edge attribution patching (EAP) to estimate contributions of internal residual edges from truncated generations on math tasks.
+- Findings: RL post-training (online RL such as PPO/GRPO) causes (i) increased activation intensity (more pathways and stronger signals) and (ii) increased diversity of activation patterns (higher entropy, less concentrated edge distributions). These may underlie improved generalization.
+- Exception: DPO-fine-tuned models show weaker/inconsistent internal changes relative to PPO/GRPO.
+- Code: https://anonymous.4open.science/r/llm_rl_probing_analysis-F673.
+
+# Introduction
+- Context: Post-training (SFT, RL) is key to upgrading pretrained LLMs. RL variants include PPO and GRPO, with reward models ranging from outcome (ORM) to process (PRM). Empirical work reports RL improves writing, reasoning, and coding beyond SFT.
+- Gap: Prior RL studies emphasize external behavior; mechanistic works rarely connect internal circuits to RL methodology. Transferring toy interpretability techniques to real RL post-training on complex tasks is nontrivial.
+- Approach: Build a systematic analysis using efficient EAP (gradient-based) with cross-entropy from partially truncated generations on math tasks to estimate edge-level importance; compare distributions before vs. after RL.
+- Claims: Across multiple LLM families, RL increases activation intensity and diversifies activation patterns during problem-solving. DPO does not consistently show these effects.
+- Implication: Common internal effects induced by online RL across architectures/corpora; bridges performance gains and interpretable shifts in internal pathways.
+
+# Preliminaries
+- 2.1 Large Language Models: Defines standard Transformer layer pipeline with residuals:
+  - Attention: O_attn^ℓ = softmax((X_attn^ℓ W_q^ℓ)(X_attn^ℓ W_k^ℓ)^T/√d_k)(X_attn^ℓ W_v^ℓ) W_o^ℓ; H^(2ℓ−1) = H^(2ℓ−2) + O_attn^ℓ.
+  - FFN: O_ffn^ℓ = (Activation(X_ffn^ℓ W_gate^ℓ) ⊙ (X_ffn^ℓ W_up^ℓ)) W_down^ℓ; H^(2ℓ) = H^(2ℓ−1) + O_ffn^ℓ.
+  - Final logits: L = LayerNorm(H^(2L)) W_emb^T.
+  - Notation includes B (batch), P (seq length), d_model, d_ff, V (vocab).
+- 2.2 Unified view of LLM post-training:
+  - Gradient form: ∇_θ J_A(θ) = E_{(q,o)∼D}[(1/|o|) ∑_{t} GC_A(q, o, t, π_ref) ∇_θ log π_θ(o_t|q, o_<t>)].
+  - Decomposes methods into data source D, evaluation/reward π_ref, and gradient coefficient GC_A, unifying SFT and RL.
+
+# Method
+- Core idea: Represent Transformer residual computation as a DAG whose nodes are attention and FFN sub-modules; edges transmit residual contributions. Use EAP to estimate edge importance efficiently via gradients rather than per-edge ablation.
+- Graph view:
+  - Residual structure implies H^{(2ℓ)} = H^{(0)} + ∑_{i≤ℓ} O_attn^i + ∑_{j≤ℓ} O_ffn^j and H^{(2ℓ+1)} similarly (Equation 5).
+  - Nodes: V = {A^1, F^1, …, A^L, F^L}. Edges E connect outputs O_attn/O_ffn to subsequent H states (Equation 7), forming a DAG.
+- Edge-level attribution:
+  - ACDC importance: I_ACDC(O,H) = L(y; f_{\backslash(O,H)}(x)) − L(y; f(x)) (Equation 8), requiring two forward passes per edge.
+  - EAP approximation: ΔL(O,H) ≈ −⟨∇_H L, O⟩ ≡ I_EAP(O,H) (Equation 9), computable for all edges in a single forward/backward pass under a zeroing perturbation.
+  - Adopt I_EAP for scalability to large LLMs.
+- Sample selection and token truncation:
+  - Keep only questions correctly answered by both models.
+  - Compute mean length across selected items: ȲT = (1/|Q|) ∑ ((T_base^q + T_RL^q)/2) (Equation 10).
+  - Length filter: T_min = βȲT, T_max = γȲT; require T_min ≤ T_base^q, T_RL^q ≤ T_max (Equation 11).
+  - Balance constraint: |T_base^q − T_RL^q| / ((T_base^q + T_RL^q)/2) < δ (Equation 12).
+  - Truncate to T_cut = αȲT with α > 0; compute self-entropy over the model’s own generated tokens up to T_cut (Equation 13).
+  - Values for β, γ, δ are not specified; α ∈ {0.03, 0.1, 0.3, 0.5} in experiments.
+
+# Experiments
+- 4.1 Experimental settings:
+  - Model pairs (~7B each):
+    - DeepSeek-Math: deepseek-math-7b-instruct (SFT on GSM8K, MATH, MathInstruct) vs. deepseek-math-7b-rl (GRPO on GSM8K, MATH).
+    - Mistral: mistral-7b-sft (SFT on MetaMATH) vs. math-shepherd-mistral-7b-rl (step-by-step PPO with MATH-SHEPHERD PRM on GSM8K, MATH).
+    - Distilled-Qwen: DeepSeek-R1-Distill-Qwen-7B (SFT distillation) vs. AceReason-Nemotron-7B (GRPO on curated math/code sets).
+    - Qwen2.5: Qwen2.5-7B-SFT (SFT on MATH, Numina-Math) vs. Qwen2.5-7B-DPO (iterative DPO).
+  - Benchmarks: GSM8K, MATH, College Math. More details in Appendix A–B.
+- 4.2 Metrics:
+  - Activation Intensity (Equation 14): mean absolute edge weight across samples and edges.
+  - Information Complexity (Equation 15): Shannon entropy over histogram bins of |weights|.
+  - Distribution Kurtosis (Equation 16): per-sample kurtosis averaged over samples (−3 adjusted).
+- 4.3 Results and analysis:
+  - Overall trends (Table 1): For DeepSeek-Math, Mistral, and Distilled-Qwen, RL increases Act.Intens. and Info.Complex., and decreases Dist.Kurt.; exceptions reduce as truncation α increases. Qwen2.5 (+DPO) shows unstable or weak changes.
+  - Representative numeric changes (MATH, α = 0.1):
+    - Activation Intensity: DeepSeek 1.10e-3 → 1.31e-3; Mistral 6.76e-4 → 7.71e-4; Distilled-Qwen 4.51e-4 → 5.59e-4; Qwen2.5 6.95e-4 → 6.90e-4.
+    - Information Complexity: DeepSeek 1.72e-1 → 2.47e-1; Mistral 1.41e-1 → 2.09e-1; Distilled-Qwen 1.11e-1 → 1.96e-1; Qwen2.5 1.60e-1 → 1.34e-1.
+    - Distribution Kurtosis: DeepSeek 3.57e+2 → 2.23e+2; Mistral 4.51e+2 → 3.07e+2; Distilled-Qwen 1.27e+3 → 9.20e+2; Qwen2.5 5.44e+2 → 4.83e+2.
+  - Additional examples:
+    - GSM8K Info.Complex. (α = 0.5): DeepSeek 1.37e-1 → 3.23e-1; Mistral 1.69e-1 → 2.66e-1; Qwen2.5 1.14e-1 → 1.28e-1; Distilled-Qwen missing (GPU OOM).
+    - College Math Info.Complex. (α = 0.03): Qwen2.5 8.01e-2 → 2.17e-1.
+  - Diversity evidence (Figure 3):
+    - Inter-sample diversity: “Total Experiments: 41; Average Improvement: 7.6%; Improvement Rate: 95.1%.”
+    - Output entropy diversity (examples): DeepSeek-Math (+1246%, +324%, +656%, +25%); Mistral (+120%, +180%, +13%, +10%); Distilled-Qwen (+49%, +105%, +230%, +11%); Qwen2.5 ~no change (“~0.01 → ~0.01”).
+  - Mechanistic explanation for DPO exception: DPO trains on a static response set sampled once from the SFT policy (q ∼ p_sft(Q), (o^+, o^−) ∼ π_sft(O|q)), akin to SFT; PPO/GRPO are online, continually regenerating o ∼ π_θ(O|q), enabling broader pathway activation.
+  - Visual analysis:
+    - Figure 2: Relative edge-strength changes for Mistral on MATH (α = 0.5) show many strengthened connections after PPO.
+    - Figure 3b: Entropy increases across model–dataset–α combinations primarily for online RL models.
+  - Notes: Some entries in Table 1 are “-” due to GPU memory overflow. α ∈ {0.03, 0.1, 0.3, 0.5} controls truncation length.
+
+- External performance (Appendix C, Table 4): Post-training generally improves benchmark scores (exact values as reported):
+  - DeepSeek-Math Before vs. After: MATH 46.2 → 52.6; GSM8K 82.1 → 87.9; MinervaMath 22.1 → 27.2; OlympiadBench 14.5 → 18.2; CollegeMath 30.8 → 33.5; AIME24 3.3 → 6.7; AMC23 17.5 → 25.0.
+  - Mistral Before vs. After: MATH 29.1 → 32.6; GSM8K 78.2 → 84.2; MinervaMath 12.1 → 11.8; OlympiadBench 5.5 → 9.2; CollegeMath 17.5 → 19.9; AIME24 0.0 → 0.0; AMC23 12.5 → 12.5.
+  - DS-Distill-Qwen Before vs. After: MATH 88.4 → 95.4; GSM8K 90.3 → 93.4; MinervaMath 43.0 → 55.9; OlympiadBench 49.8 → 65.9; CollegeMath 40.0 → 44.6; AIME24 46.7 → 70.0; AMC23 87.5 → 95.0.
+  - Qwen-2.5 Before vs. After: MATH 75.7 → 82.6; GSM8K 92.2 → 92.0; MinervaMath 32.7 → 40.1; OlympiadBench 37.6 → 46.4; CollegeMath 41.9 → 42.5; AIME24 16.7 → 26.7; AMC23 62.5 → 67.5.
+
+# Related Work
+- Interpretability of RL:
+  - Pre-hoc interpretable agents (e.g., neuro-symbolic/logical policies) and post-hoc methods (feature attribution saliency, policy distillation, counterfactual explanations).
+  - Prior work largely targets lightweight RL agents; RL as post-training for LLMs remains underexplored mechanistically.
+- Interpretability of LLMs:
+  - Mechanistic interpretability (e.g., causal tracing, circuit discovery like ACDC, EAP; neuron/FFN analyses such as “Benford’s Curse”).
+  - Representation interpretability (external probes from linear to graph models; steering vectors).
+  - Prior studies analyze given LLMs but rarely link internal mechanisms to RL post-training methodology; this work addresses that gap.
+
+# Conclusion
+- Using EAP on residual graphs, the paper finds two robust internal effects of online RL fine-tuning across multiple 7B LLM families: increased activation intensity and increased diversity of activation patterns (entropy up, kurtosis down), suggesting more redundant and flexible information flow.
+- DPO fine-tuning showed weaker or inconsistent internal changes relative to PPO/GRPO, highlighting differences between static preference optimization and dynamic online RL.
+- Figures summarize diversity gains: “Total Experiments: 41; Average Improvement: 7.6%; Improvement Rate: 95.1%,” with large output entropy gains for DeepSeek-Math, Mistral, Distilled-Qwen; minimal change for Qwen2.5 (+DPO).
+
+# Appendix
+- Ethics: Uses open-source models/datasets; no human subjects or sensitive issues claimed.
+- Reproducibility: General settings in Section 4.1; implementation details in Appendix B; code: https://anonymous.4open.science/r/llm_rl_probing_analysis-F673.
+- Model characteristics (Table 2):
+  - DeepSeek-Math: 7B, 30 layers, 32 heads, ctx 4096, dim 4096, vocab 102400.
+  - Mistral: 7B, 32 layers, 32 heads, ctx 4096, dim 4096, vocab 32000.
+  - Distilled-Qwen: 7B, 28 layers, 28 heads, ctx 131072, dim 3584, vocab 152064.
+  - Qwen2.5: 7B, 28 layers, 28 heads, ctx 8192, dim 3584, vocab 151665.
+- Implementation details (Table 3): Ubuntu 22.04.3; CUDA 12.2; Python 3.11; PyTorch 2.7.0+cu26; hardware: 2× NVIDIA A800 80G.
+- Performance of LLMs (Table 4): See “Experiments” for exact pre/post numbers; overall trend is improved capability after post-training.
+- Use of LLMs: Assisted in writing and literature retrieval; content reviewed by authors; ideation completed by authors.
+
+# References
+- Cites core components: Transformer (Vaswani et al., 2017), ACDC (Conmy et al., 2023), Attribution/Edge Patching (Syed et al., 2023; Nanda, 2023; Hanna et al., 2024), PPO (Schulman et al., 2017), Qwen2.5 (2025), DeepSeek and related RL reasoning works (2024–2025), surveys on RL post-training and LLM interpretability.
+- Full bibliographic list provided in the manuscript; no additional numeric claims beyond those reported above.

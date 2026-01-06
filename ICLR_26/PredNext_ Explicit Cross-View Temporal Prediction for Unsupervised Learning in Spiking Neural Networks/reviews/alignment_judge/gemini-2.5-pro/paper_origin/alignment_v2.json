@@ -1,0 +1,129 @@
+{
+  "paper": "PredNext_ Explicit Cross-View Temporal Prediction for Unsupervised Learning in Spiking Neural Networks",
+  "runs": [
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "final_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "0a71ca7d783136ba33fb6b5ec9aad08ece2f0c09",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/final_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 0.8,
+        "weakness_coverage_recall": 0.8,
+        "ai_extra_major_points_rate": 0.65,
+        "symmetric_coverage_similarity": 0.4,
+        "note": "The AI review covers most of the human's points but is far more comprehensive, raising numerous additional major weaknesses such as limited novelty, lack of standard linear probing, overstated claims, and insufficient statistical rigor. The only substantive point missed by the AI was the lack of comparison to SNN-native baselines like STDP."
+      },
+      "generated_at": "2025-12-27T20:41:32"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "baseline_review.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "b3137abdd5dd456ecfb029f7bed4151251d086e2",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/baseline_review.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 1.0,
+        "weakness_coverage_recall": 0.8,
+        "ai_extra_major_points_rate": 0.61,
+        "symmetric_coverage_similarity": 0.42,
+        "note": "The AI review covers all human-identified strengths and most weaknesses, missing only the point about loss weight sensitivity. However, the AI review is far more comprehensive, raising numerous additional major weaknesses such as limited novelty, lack of linear probing, and insufficient SNN parameter details, resulting in a moderate overall similarity score."
+      },
+      "generated_at": "2025-12-27T20:46:01"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "deepreviewer",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "deep_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "55f39c3e353412551a5ae68e81fc4acc489b4edd",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/deepreviewer/gpt-5-2025-08-07/paper_origin/deep_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 1.0,
+        "weakness_coverage_recall": 0.6,
+        "ai_extra_major_points_rate": 0.38,
+        "symmetric_coverage_similarity": 0.53,
+        "note": "The AI review perfectly covers the human's strengths but misses two key weaknesses: limited long-range temporal modeling and the omission of SNN-native baselines. Conversely, the AI raises several major, distinct concerns not in the human review, such as misleading claims about ImageNet initialization and a lack of ANN baselines, resulting in moderate overall similarity."
+      },
+      "generated_at": "2025-12-27T20:51:57"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "deepreviewer",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "deep_review_merge.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "752f27bc09e656c7d041a880d0c174422eea6ca4",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/deepreviewer/gpt-5-2025-08-07/paper_origin/deep_review_merge.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 1.0,
+        "weakness_coverage_recall": 0.4,
+        "ai_extra_major_points_rate": 0.53,
+        "symmetric_coverage_similarity": 0.33,
+        "note": "The AI review perfectly covers all strengths mentioned by the human. However, there is a significant divergence in weaknesses; the AI misses several human concerns (e.g., limited long-range modeling, computational overhead) while raising numerous distinct and major issues of its own, such as misleading framing of results and limited architectural scope."
+      },
+      "generated_at": "2025-12-27T21:21:52"
+    }
+  ]
+}

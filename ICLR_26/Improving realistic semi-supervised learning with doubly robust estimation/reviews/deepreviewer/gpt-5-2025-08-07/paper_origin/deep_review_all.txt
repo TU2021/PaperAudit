@@ -1,0 +1,175 @@
+Summary
+The paper tackles realistic long‑tailed semi‑supervised learning (RTSSL), where the unlabeled class distribution P(Y|A=0) differs from the labeled one and is unknown. The authors propose a two‑stage pipeline: (i) an EM-based stage that jointly estimates a classifier P(Y|X) and the missingness mechanism P(A|Y), then uses a doubly robust (DR) estimator to estimate the combined distribution P(Y) and recover P(Y|A=0); (ii) a second stage that plugs the estimated unlabeled class distribution into existing pseudo‑labeling methods (SimPro, BOAT). They prove asymptotic efficiency of their DR estimator under standard double machine learning conditions (Assumption 3.1; Theorem 3.2; Appendix A), and present empirical gains in estimating P(Y|A=0) (Table 1, Table 7) and top‑1 accuracy across CIFAR‑10/100, STL‑10, and ImageNet‑127 (Table 3, Table 4, Table 6), with ablations favoring the two‑stage approach (Table 8).
+
+Soundness
+The methodological core is sound and anchored in established theory. The label‑shift EM derivation (Section 3.1; Eq. (4–7)) uses a non‑generative factorization P(A|Y)P(Y|X)P(X), yielding a practical E‑step ω(x,c) ∝ P(Y|X)P(A=0|Y) and an M‑step that decouples into two cross‑entropy terms (Eq. (6)). The DR estimator of P(Y) (Eq. (13)) is standard, and the efficiency result (Theorem 3.2) follows from semiparametric arguments with sample‑splitting/positivity assumptions (Appendix A) and N−1/4 rates (Assumption 3.1). The equivalence explanation between EM and SimPro (Section 3.2; Eq. (8)) is plausible but informal. The empirical evaluation supports the claimed improvements in distribution estimation and downstream accuracy (Table 1, 3, 6, 7, 8).
+
+However, two theoretical–practical gaps merit attention: (i) the proof requires sample splitting/cross‑fitting (Appendix A, Assumption A.1.3), but the experimental protocol does not explicitly state that the nuisance models were trained on data independent of the sample average used in Ψdr (Section 4.1–4.3); (ii) the positivity condition P(A=1|Y)≥ε may be violated in extreme long‑tail reversed settings (Table 1 “reversed”), where inverse weights become large—authors mention clipping (Appendix A) but do not report whether/where it was applied. The unusual formulation of the logit adjustment loss (Eq. (9)) also deserves clarification, as it diverges from the standard additive‑logit prior correction.
+
+Presentation
+The paper is generally clear and well organized: the problem setting (Section 1–2), EM derivation (Section 3.1), relation to SimPro (Section 3.2), DR estimation and guarantees (Section 3.3–3.3.1), and experiments (Section 4) follow a coherent flow. Figures 1–2 help readers grasp the bias issue and pipeline. That said, several presentation issues hinder reproducibility/clarity: (i) Eq. (9) seems to add probabilities inside a log rather than adjust logits by prior ratios, which is atypical and needs correction or justification; (ii) parts of Assumption 3.1 are truncated in the main text (Block 22) and completed later; (iii) Table 2 is cut mid‑row (Block 26), obscuring CIFAR‑100‑LT results; (iv) the conclusion states “even inaccurate class‑label distributions do not lead to degraded accuracy in CIFAR‑10” (Section 5), but Table 3 shows small degradations in some settings (e.g., reversed γl=150: SimPro 83.8 vs SimPro+ 83.3).
+
+Contribution
+The main contribution is bringing a doubly robust estimator with semiparametric efficiency guarantees to estimate the unlabeled class distribution within RTSSL, and explicitly decoupling its estimation from classifier training via a two‑stage EM→DR→plug‑in pipeline. Conceptually, the paper clarifies the connection between EM and pseudo‑labeling under label shift (Section 3.1–3.2), and demonstrates that improving P(Y|A=0) estimation can consistently benefit popular SSL methods (SimPro, BOAT) (Table 3, 4, 6, 8). While DR ideas are known in causal/missing‑data literature, their application to distribution estimation for RTSSL, and the careful integration with SimPro/BOAT, is a useful and timely contribution.
+
+Strengths
+- Clear problem formulation and principled factoring of the joint distribution to avoid generative modeling (Section 3.1; Eq. (6–7)).
+- Solid theoretical backing for the DR estimator’s efficiency (Theorem 3.2; Appendix A, Eq. (16–27)), under plausible modern ML rates (Assumption 3.1).
+- Strong empirical improvements in distribution estimation across settings (CIFAR‑10: Table 1; ImageNet‑127: Table 7) and downstream accuracy boosts via plug‑in (CIFAR‑10: Table 3; STL‑10 and ImageNet‑127: Table 6).
+- Insightful ablations highlighting instability of inverse‑weighted DR risk during training and the benefit of the two‑stage design (Section 4.3; Table 8; Appendix B discussion).
+- Practical consideration that stage‑1 need not use a large backbone (Section 4, Training), yet suffices to estimate finite‑dimensional P(A|Y), P(Y|A=0).
+
+Weaknesses
+- The sample‑splitting requirement for the asymptotic result (Appendix A, Assumption A.1.3) is not documented in the experimental setup, creating a theory–practice mismatch for Ψdr’s guarantees.
+- Positivity/weight clipping (Appendix A, ε>0) is necessary in extreme long‑tail/reversed settings; the paper does not detail its implementation or sensitivity, despite instability concerns (Appendix B; Table 8).
+- Eq. (9) deviates from the standard logit‑adjustment formulation; notation and derivation should be clarified to avoid confusion.
+- Limited breadth of plug‑in baselines: improvements shown for SimPro and BOAT, but not for other strong SSL methods (e.g., DASO, CReST+) in stage‑2; Table 3 includes them as baselines but no plug‑in variants.
+- The conclusion slightly overstates robustness (“no degradation” in CIFAR‑10), contradicting minor drops (Table 3).
+- Some tables/text are truncated or contain minor inconsistencies (Table 2; Block 22), impeding full assessment.
+
+Questions
+- Did you implement sample splitting or cross‑fitting for Ψdr (Appendix A, Assumption A.1.3)? If not, how do you expect the finite‑sample bias to affect Ψdr, and would cross‑fitting change Table 1/7?
+- How is positivity enforced in practice (clipping strategy and ε value)? Can you report sensitivity analyses, particularly for reversed/head‑tail settings (Table 1; Table 8)?
+- Can you clarify Eq. (9): is this a probability‑space surrogate for logit adjustment, or a typo? How does it relate formally to Eq. (3) and Menon et al. (2020)?
+- Why not use the stage‑1 P(Y) estimate in the logit‑adjustment term of SimPro (Section 4, Appendix C)? Could you share results where both E‑step and logit adjustment use the same estimate?
+- Beyond SimPro/BOAT, can you plug Ψdr‑based P(Y|A=0) into DASO/CReST+ or other recent RTSSL methods and report accuracy?
+- How sensitive are gains to the quality of P(A|Y) estimation (e.g., under mild violations of label shift, Eq. (2))? Have you tested scenarios where P(X|Y,A) ≠ P(X|Y)?
+
+Rating
+- Overall (10): 7 — A principled two‑stage EM→DR pipeline with strong theory (Theorem 3.2; Eq. (13)) and practical gains (Table 3, Table 6, Table 8), albeit with presentation gaps and missing cross‑fitting details.
+- Novelty (10): 6 — DR is classic, but its targeted use to estimate P(Y|A=0) in RTSSL and integration into SimPro/BOAT (Section 3.3; Figure 2) adds useful value.
+- Technical Quality (10): 7 — Solid derivations (Section 3.1–3.3.1; Appendix A) and careful experimental support (Table 1, 7), tempered by theory–practice mismatches (sample splitting; positivity handling).
+- Clarity (10): 6 — Generally clear, but Eq. (9) confusion, truncations (Block 22; Table 2), and a slightly overstated conclusion (Section 5) need fixes.
+- Confidence (5): 4 — High familiarity with semiparametric DR and SSL; assessment grounded in cited equations, assumptions, and reported results.
+
+---
+
+Summary
+This paper addresses semi‑supervised learning with unknown, long‑tailed unlabeled class distributions by explicitly estimating P(Y|A=0) in a first stage using label‑shift EM and a doubly robust (DR) estimator, then plugging this estimate into existing pseudo‑labeling algorithms in a second stage. It establishes an efficiency result for the DR estimator (Theorem 3.2) and demonstrates improved distribution estimation and downstream classification on CIFAR‑10/100, STL‑10, and ImageNet‑127, with ablation studies comparing to batch‑updated DR and DR‑risk training losses.
+
+Soundness
+The methodology is well‑grounded. The EM construction for missing labels under label shift (Section 3.1; Eq. (4–7)) is correct and practical, avoiding generative modeling via the P(A|Y)P(Y|X) factorization (Eq. (6)). The recovery of P(Y|A=0) from P(Y) and known P(A) is straightforward; the DR estimator (Eq. (13)) is theoretically justified with asymptotic normality and efficiency (Theorem 3.2; Appendix A). The experimental comparisons (Table 1, 7) show that SimPro+DR and EM+DR reduce total variation distance across diverse unlabeled distributions, consistent with Figure 1.
+
+Potential issues: (i) the link to SimPro (Section 3.2; Eq. (8–9)) is argued informally; the version of the logit adjustment loss in Eq. (9) is unconventional and needs careful derivation relative to Eq. (3); (ii) Assumption A.1.3 on sample splitting is not described in Section 4, so the efficiency claim may not strictly apply to the reported estimates; (iii) extreme long‑tail cases can challenge positivity P(A=1|Y)≥ε (Appendix A), potentially affecting IPW/DR stability, as acknowledged in Appendix B and Table 8.
+
+Presentation
+The paper is readable, with a helpful overview figure (Figure 2) and informative plots (Figure 1). The experimental sections are detailed and cover multiple datasets and settings. However, the presentation has several small but impactful issues: Eq. (9) is unclear vis‑à‑vis standard logit adjustment; Assumption 3.1 is split/truncated across blocks; Table 2 is incomplete (Block 26), making CIFAR‑100‑LT stage‑1 conclusions harder to verify; and some narrative claims (Section 5) slightly overreach relative to tables (Table 3 shows minor accuracy degradations in a few settings).
+
+Contribution
+Bringing a DR estimator—with an explicit efficiency theorem—into the RTSSL pipeline to estimate the unlabeled class distribution, and then plugging it into state‑of‑the‑art pseudo‑labeling algorithms, is a meaningful contribution. The paper also reframes SimPro as an EM variant under label shift, clarifying algorithmic connections. While DR methods are well known, their concrete use for improving pseudo‑label distribution alignment in long‑tailed SSL, with consistent empirical gains and ablations, is a valuable addition to the literature.
+
+Strengths
+- Elegant EM formulation with a practical posterior weight (Eq. (7)) and decoupled cross‑entropy objectives (Eq. (6)).
+- Rigorous semiparametric efficiency guarantee for Ψdr (Theorem 3.2; Appendix A), aligning with modern double ML rates (Assumption 3.1).
+- Clear empirical benefits in estimating P(Y|A=0) (Table 1, Table 7) and robustness in downstream accuracy improvements across methods/datasets (Table 3, Table 6).
+- Thoughtful ablations that surface training instabilities of DR‑risk and the advantage of a two‑stage approach (Section 4.3; Table 8; Appendix B).
+- Practical insight that stage‑1 can use smaller backbones, reducing compute while estimating a finite‑dimensional parameter (Section 4, Training).
+
+Weaknesses
+- Lack of explicit cross‑fitting/sample splitting in experiments despite being required by the theory (Appendix A, Assumption A.1.3).
+- Unclear/nonstandard logit‑adjustment loss form (Eq. (9)), risking confusion and limiting reproducibility.
+- Limited breadth of stage‑2 plug‑ins; DASO and CReST+ are not tested with the proposed distribution plug‑in (Table 3 includes them as baselines only).
+- Minor contradictions/overstatements (Section 5 vs observed slight degradations; Table 3) and truncations (Table 2; Assumption text).
+- No stress tests under label‑shift violations (P(X|Y,A) ≠ P(X|Y)), which can be common with web‑scale unlabeled data.
+
+Questions
+- Did you use cross‑fitting or sample splitting in computing Ψdr (Eq. (13)) to align with Assumption A.1.3? If not, how sensitive are results to re‑estimating nuisances on held‑out folds?
+- For extreme “reversed” cases (Table 1), how often do inverse weights become large, and what clipping/regularization did you apply in practice?
+- Can you provide a derivation reconciling Eq. (9) with the standard logit adjustment based on Eq. (3), or correct the formula if it is a typographical issue?
+- Could you add plug‑in results for DASO and CReST+ (Table 3) to strengthen generality claims of the two‑stage approach?
+- Have you evaluated scenarios where label shift does not strictly hold (e.g., modest conditional shift), and how does Ψdr behave in such cases?
+
+Rating
+- Overall (10): 7 — Strong, principled approach with theory (Theorem 3.2; Eq. (13)) and solid empirical gains (Table 1, Table 3, Table 6), but clarity and theory–practice alignment need polish.
+- Novelty (10): 6 — Combines known DR ideas with RTSSL in a clean pipeline (Figure 2; Section 3.3), offering practical value rather than conceptual novelty.
+- Technical Quality (10): 7 — Correct EM derivations (Eq. (4–7)) and semiparametric analysis (Appendix A), with caveats on sample splitting/positivity in practice.
+- Clarity (10): 6 — Generally clear but hampered by Eq. (9) ambiguity and truncated materials (Block 22; Table 2).
+- Confidence (5): 4 — Confident based on theory and experiments presented; would increase with clarified loss and documented cross‑fitting.
+
+---
+
+Summary
+The paper proposes explicitly estimating the unlabeled class distribution in semi‑supervised learning under label shift and long tails. Stage‑1 uses EM to estimate P(Y|X) and P(A|Y), then applies a doubly robust estimator (Eq. (13)) to estimate P(Y) and thus P(Y|A=0). Stage‑2 plugs this estimate into pseudo‑labeling methods (SimPro, BOAT) to improve training. A semiparametric efficiency theorem supports the DR estimator (Theorem 3.2). Experiments across CIFAR‑10/100, STL‑10, and ImageNet‑127 show improved distribution estimation (Table 1, 7) and consistent accuracy benefits (Table 3, 6), with ablations favoring the two‑stage pipeline over batch‑updated DR and DR‑risk (Table 8).
+
+Soundness
+From a vision/SSL practitioner’s standpoint, the approach is well reasoned. The EM procedure re‑weights unlabeled pseudo‑labels according to estimated missingness (Eq. (7)), and the DR plug‑in provides a stable estimate of unlabeled priors leveraging both labeled and unlabeled data (Eq. (13)). The design decision to keep stage‑1 compact (Wide ResNet‑28‑2) while using larger models in stage‑2 (ResNet‑50 for ImageNet‑127; Section 4, Training) is practical and validated by results (Table 6). The ablations (Table 8) correctly highlight why batch updates and inverse‑weighted DR‑risk can be unstable, especially in reversed long‑tail regimes.
+
+Some practical caveats: (i) the paper assumes the test distribution is uniform (Section 2), which fits long‑tailed benchmarks but may limit generality; (ii) the approach relies on label shift (Eq. (2)); if unlabeled data comes from a different domain, conditional shift may degrade the EM weights and DR estimates; (iii) the presentation of the loss in Eq. (9) deviates from standard logit adjustment, making reproduction harder.
+
+Presentation
+The narrative is clear, and figures/tables substantiate claims—e.g., Figure 1’s SimPro overshoot on head classes, and the TVD tables (Table 1, 7). The overview diagram (Figure 2) is particularly helpful for practitioners. Documentation of training settings (Appendix C) is adequate; using the same codebase/hyperparameters as SimPro aids fairness. Areas for improvement: the logit adjustment loss formula (Eq. (9)) needs correction; Table 2 is truncated; the conclusion slightly overstates non‑degradation in CIFAR‑10 relative to Table 3; and Assumption text is split across blocks.
+
+Contribution
+For vision practice, the contribution is pragmatic: a drop‑in stage‑1 estimator of unlabeled priors that consistently improves downstream training via existing methods. Framing SimPro as an EM reparameterization (Section 3.2) helps unify perspectives. The two‑stage design shows small but reliable gains across diverse unlabeled distributions and datasets (Table 3, 4, 6), and reduces training instabilities relative to DR‑risk (Table 8).
+
+Strengths
+- Practical EM instantiation with augmentation and soft pseudo‑labels retained (Section 4.1), suitable for global class statistics.
+- Consistent improvement when plugging estimated P(Y|A=0) into SimPro and BOAT across CIFAR‑10 and ImageNet‑127 (Table 3, Table 6).
+- Demonstrated estimation accuracy benefits for DR vs alternatives (Table 1; Figure 1; Table 7).
+- Sensible choice of smaller stage‑1 model for efficiency without sacrificing distribution estimation (Section 4, Training).
+- Clear ablations that mimic practitioner concerns (batch updates; stability under reversed tails) (Table 8; Appendix B).
+
+Weaknesses
+- Assumption of uniform test distribution (Section 2) reduces applicability in non‑benchmark scenarios.
+- No experiments probing violations of label shift (Eq. (2)), e.g., domain differences between labeled/unlabeled pools.
+- Limited breadth of stage‑2 integrations (no DASO/CReST+ plug‑ins), and the DR‑risk baseline only on CIFAR‑10 (Section 4.3).
+- Eq. (9) is unclear vis‑à‑vis standard logit adjustment, risking misimplementation by readers.
+- Minor accuracy degradations exist in CIFAR‑10 (Table 3), so the “no degradation” claim (Section 5) should be tempered.
+
+Questions
+- How does the method perform if the test distribution is not uniform? Could your pipeline estimate or adapt to arbitrary test priors at inference?
+- Have you evaluated scenarios where label shift is violated (e.g., different image domains for unlabeled data)? What happens to ω(x,c) (Eq. (7)) and Ψdr (Eq. (13)) under mild conditional shift?
+- Could you add stage‑2 plug‑ins for DASO and CReST+ (Table 3) to demonstrate broader applicability?
+- Can you clarify Eq. (9) and provide implementation details to match Eq. (3) (Bayes correction) precisely?
+- What are the compute/time overheads of stage‑1 across datasets, and do the gains in Table 3/6 justify the added complexity?
+
+Rating
+- Overall (10): 7 — A practical, theory‑backed stage‑1 estimator that reliably improves popular SSL methods (Table 3, 6; Eq. (13)), with some assumptions limiting generality.
+- Novelty (10): 6 — The DR estimator itself is classic, but its targeted plug‑in for RTSSL and EM framing of SimPro (Section 3.1–3.2) provide useful system‑level novelty.
+- Technical Quality (10): 7 — Sound EM setup (Eq. (4–7)) and DR theory (Theorem 3.2), but needs clarified loss (Eq. (9)) and broader stress testing.
+- Clarity (10): 7 — Clear overall, strong figures/tables, marred by Eq. (9) and truncated Table 2.
+- Confidence (5): 4 — Confident as a practitioner; would be higher with clarified loss and tests under label‑shift violations.
+
+---
+
+Summary
+The authors propose estimating the unlabeled class distribution in long‑tailed SSL via a two‑stage approach: EM‑based nuisance estimation (P(Y|X), P(A|Y)) followed by a doubly robust estimator Ψdr (Eq. (13)) to recover P(Y|A=0); this estimate is then used to adjust pseudo‑labels in existing methods (SimPro, BOAT). They prove Ψdr is asymptotically efficient (Theorem 3.2; Appendix A) under N−1/4 convergence of nuisances (Assumption 3.1), and empirically show improved total variation distance (Table 1, 7) and modest but consistent accuracy gains (Table 3, 6), with ablations confirming the stability/benefit of the two‑stage design (Table 8).
+
+Soundness
+From a semiparametric/causal perspective, the estimator is textbook: Ψdr combines outcome regression with inverse probability weighting (Eq. (10–12)) and achieves efficiency when nuisances meet standard rate and orthogonality conditions (Assumption 3.1; Appendix A). The proof correctly characterizes the efficient influence function and leverages sample splitting (Appendix A, Assumption A.1.3). The EM setup under non‑ignorable missingness anchored by label shift (Section 3.1; Eq. (2)) is coherent, and the relationship to SimPro via reparameterization (Section 3.2; Eq. (8)) is plausible.
+
+Two caveats: (i) the experiments do not explicitly implement sample splitting/cross‑fitting for nuisances, which is important to justify the asymptotic linearity claims in finite samples; (ii) positivity may be stretched in reversed long‑tail scenarios (Table 1), necessitating clipping strategies which are not extensively documented. These affect the strict applicability of the theoretical guarantees to the reported practice.
+
+Presentation
+The exposition bridges causal/missing‑data ideas and vision SSL well. The assumptions and theorem are stated cleanly (Section 3.3.1; Appendix A), and background on non‑ignorable missingness is helpful (Section 2). Figures and tables reinforce claims (Figure 1–2; Table 1, 3, 7, 8). Minor presentation issues need attention: truncated text (Block 22; Table 2), ambiguous Eq. (9), and an overly strong conclusion line about “no degradation” in CIFAR‑10 (Section 5) given small observed drops (Table 3).
+
+Contribution
+The key contribution is importing semiparametric DR machinery to estimate unlabeled priors in RTSSL, proving an efficiency result, and validating its practical payoff when plugged into mainstream SSL learners. This is a meaningful bridge between causal inference and computer vision SSL, offering a principled fix to the biased on‑the‑fly pseudo‑prior estimation used by SimPro and related works.
+
+Strengths
+- Correct DR construction with an efficient influence function and asymptotic normality (Theorem 3.2; Appendix A, Eq. (16–27)).
+- Clear EM derivation under label shift with interpretable posterior weights (Eq. (7)).
+- Demonstrated gains in estimating P(Y|A=0) and downstream accuracy (Table 1, 7; Table 3, 6).
+- Honest discussion of instability in inverse‑weighted training losses and motivation for the two‑stage design (Appendix B; Table 8).
+- Practical pipeline that can be adopted by existing SSL methods without heavy redesign (Figure 2; Section 3.3, 4.2).
+
+Weaknesses
+- Missing explicit cross‑fitting/sample splitting in experiments despite its role in the theory (Appendix A), weakening claims of efficiency in practice.
+- Positivity/clipping details are thin; tail classes can yield large weights, potentially biasing finite‑sample estimates.
+- Eq. (9) needs correction/clarification to align with standard logit‑adjustment derivations (Eq. (3)).
+- Limited evaluation under assumption violations (label shift, uniform test distribution), and limited breadth of stage‑2 plug‑ins.
+- Minor inconsistencies/truncations in the text/tables (Block 22; Table 2; Section 5 statement).
+
+Questions
+- Did you use cross‑fitting (e.g., K‑fold) for estimating P(Y|X) and P(A|Y) before computing Ψdr (Eq. (13))? If not, can you share results with cross‑fitting and discuss variance/bias changes?
+- What clipping strategy/ε did you adopt for P(A=1|Y) in practice (Appendix A)? Can you quantify its impact on TVD in reversed/head‑tail settings (Table 1)?
+- Can you align Eq. (9) more closely with Eq. (3) and Menon et al. (2020), and provide the exact implementation used in code?
+- How sensitive are your gains to mild violations of label shift (Eq. (2))? Could you include synthetic experiments where P(X|Y,A) differs modestly?
+- Would plugging Ψdr into additional SSL methods (e.g., DASO, CReST+) corroborate generality? Any constraints you foresee?
+
+Rating
+- Overall (10): 8 — Strong theoretical grounding (Theorem 3.2; Eq. (13)) and practical improvements (Table 1, Table 3, Table 6), with minor gaps in theory–practice alignment and clarity.
+- Novelty (10): 7 — While DR is established, applying it to unlabeled prior estimation in RTSSL and integrating with SimPro/BOAT (Section 3.3; Figure 2) is a meaningful cross‑disciplinary advance.
+- Technical Quality (10): 8 — Solid semiparametric analysis and correct EM setup, tempered by missing cross‑fitting details and positivity handling in practice.
+- Clarity (10): 6 — Generally good but marred by Eq. (9) ambiguity and truncated elements (Block 22; Table 2).
+- Confidence (5): 4 — High confidence in the assessment; would be 5 with clarified implementation of cross‑fitting and loss.

@@ -1,0 +1,198 @@
+Review 1
+
+- Summary
+The paper investigates the connection between membership inference attacks (MIAs) on language models and machine‑generated text detection (MGTD). It claims a theoretical unification via an “optimal” statistic Λ(x) and argues that many published methods are approximations of this quantity. Large‑scale experiments across 15 methods, 13 domains, and up to 10 generators purportedly show strong transferability, with Spearman ρ≈0.66 between cross‑task rankings, and that Binoculars—originally a detector—achieves state‑of‑the‑art performance on MIA. The authors release MINT, a unified evaluation suite.
+
+- Soundness
+The empirical study is extensive and largely reproducible (Appendix B/C, code link). However, the central theoretical claim (Theorem 2.3, §2.3) has issues.
+1) LRT mismatch: Λ(x) is defined as a ratio of negative log‑likelihoods, Λ = L(x;M)/L(x;Q). The uniformly most powerful (UMP) LRT for testing H0:x∼PQ vs H1:x∼PM is a threshold on the likelihood ratio pM(x)/pQ(x), equivalently on log pM(x) − log pQ(x) = L(x;Q) − L(x;M), a difference—not a ratio of NLLs. The proof appeals to Neyman–Pearson but uses a statistic not monotone in the true LRT in general. This undermines the “exactly coincides” claim (Step 1, §2.3).
+2) MI formulation: For membership inference, H1 is “x∈Dtrain” (§2.1/§2.3). The proof asserts that because M is trained with cross‑entropy, L(x;M) “converges to the likelihood of x under H1” (Step 2, §2.3). In standard learning theory, with infinite data and capacity, M converges to PQ, not to the empirical data distribution or to P(x|in); in that idealization there would be no MIA signal. A correct MI LRT requires a model of the training algorithm and inclusion probability (cf. LiRA‑style reasoning). As written, the asymptotic argument is not rigorous and may be false.
+3) Optimality conditions: The claim of “asymptotically highest performance… under standard asymptotic regularity conditions” (§2.3) is vague. Which conditions ensure Λ(x) (properly defined) is UMP for MI? The remark in §2.3 acknowledges real‑world deviations but does not specify assumptions.
+4) Despite these theoretical concerns, the empirical findings are coherent and generally consistent with the intuition that methods approximating a two‑distribution contrast transfer across tasks (Table 1, §2.4–2.5; §3.2–3.3).
+
+- Presentation
+The paper is well organized, with clear motivation (Fig. 1), taxonomy (Table 1), and main results (Fig. 2–3). However, there are inconsistencies and typos that should be corrected:
+- In §3.2 the rankings are said to average over “eight domains and three generators,” while Fig. 3 caption says “eight domains and five models,” and §3.1 lists “5 models” and later focuses on closed‑source in black‑box; this is confusing.
+- Theorem notation uses negative log‑likelihood L but calls Λ a likelihood ratio; clarify sign and transformation.
+- Minor typos: “LLaSDe++” in Table 2 (Appendix C) vs “Lastde++.”
+Figures are informative; the Zlib analysis (Fig. 4) is a nice diagnostic.
+
+- Contribution
+- Conceptual: Argues that MIAs and MGTD share a common optimal contrast and reframes many methods as approximations (Table 1).
+- Empirical: Provides a large‑scale, side‑by‑side evaluation showing strong rank correlation and identifies Binoculars as a strong MIA method (Fig. 2–3; Tables 2–4).
+- Tooling: Releases MINT with implementations of 15 methods.
+
+- Strengths
+- Broad, carefully implemented empirical comparison across tasks (Appendix B/C; §3.1–3.3).
+- Unifying perspective that organizes a diverse literature (Table 1; §2.4–2.5).
+- Practical finding with immediate impact: Binoculars excels on MIAs (§3.2; Fig. 3).
+- Diagnostic analysis revealing failure modes (Zlib; §3.3; Fig. 4).
+- Public code and benchmark suite.
+
+- Weaknesses
+- Core theory has a statistic/optimality mismatch (ratio of NLLs vs LRT difference; §2.3).
+- Membership inference optimality argument is under‑specified and likely incorrect without a training‑process model (Step 2, §2.3).
+- Evaluation imbalance: white‑box MGTD yields near‑ceiling AUROC (≈99–100, Table 3), which may inflate correlation and limit insight into realistic detection.
+- Reporting inconsistencies about generators/models used in averages (§3.1–§3.2; Fig. 3 caption).
+- Some methods outside the “likelihood ratio” frame are not theoretically reconciled (Min‑k%, DC‑PDD; §2.5), though they are tested.
+
+- Questions
+1) Please reconcile Λ with the true LRT: is your intended test statistic LQ−LM (difference) or pM/pQ? If a ratio of NLLs is retained, under what conditions is it monotone‑equivalent to the LRT?
+2) For MI, what precise generative model over datasets and training algorithm yields UMP optimality for your Λ? How does it relate to LiRA‑style derivations?
+3) How sensitive is the rank correlation to excluding near‑ceiling white‑box cases or to stratifying by generator/domain?
+4) For Binoculars on MIAs, how robust is performance to reference‑model choice (Appendix B.2) and to domain shifts?
+5) Can you report per‑length or per‑perplexity analyses to ensure the correlation is not driven by length effects?
+6) Will MINT include standardized perturbation settings for DetectGPT/Neighborhood to avoid confounding?
+
+- Rating
+- Overall (10): 7 — Strong empirical unification and toolkit, but the main theoretical claim needs correction/clarification (§2.3; Fig. 2–3; Table 1).
+- Novelty (10): 8 — First comprehensive cross‑task unification and transfer analysis with new evidence (ρ=0.66; §3.2) and a new finding that Binoculars is SOTA on MIAs (Fig. 3).
+- Technical Quality (10): 6 — Experiments are careful, but the proof of Theorem 2.3 is flawed/underspecified (ratio vs LRT; MI assumptions; §2.3); near‑ceiling evaluations limit insight (Table 3).
+- Clarity (10): 7 — Generally clear with good figures, but inconsistencies and notation issues remain (§3.1–§3.2; §2.3).
+- Confidence (5): 4 — Assessment based on close reading of theory and reported experiments; code link suggests reproducibility, but some ambiguity remains in theoretical claims.
+
+
+Review 2
+
+- Summary
+This work studies whether methods for MIAs transfer to machine‑generated text detection and vice versa. It proposes a unifying perspective grounded in an (alleged) optimal likelihood‑ratio‑like statistic (Λ) and evaluates 7 MIAs and 5 detectors over MIMIR (MIAs) and RAID (MGTD). The main empirical claim is a strong rank correlation (ρ≈0.66 overall, ρ≈0.78 among top‑10; §3.2) and the identification of Binoculars as a top MIA. The paper releases MINT for standardized evaluation.
+
+- Soundness
+The experimental design is thoughtful: white‑box and black‑box detection are separated (§3.1), hyperparameters are documented (Appendix B), and the benchmarks are appropriate (MIMIR, RAID). Statistical reporting includes AUROC and Spearman correlation. However:
+- White‑box MGTD is extremely easy under the setup (access to target logits); many AUROCs are 99–100 (Fig. 3, Table 3). This ceiling can dominate rankings and may exaggerate transferability.
+- Averaging across domains/models/generators obscures variance; per‑domain dispersion and bootstrap confidence intervals are not shown.
+- Reporting inconsistency: §3.2 ranks are “across eight domains and three generators,” while Fig. 3 says “eight domains and five models,” and §3.1 mentions 5 models but then evaluates black‑box on ChatGPT/GPT‑4 only. This complicates interpreting ρ.
+- The theorized Λ is not the standard LRT (ratio of NLLs vs likelihood difference; §2.3), but this mostly affects the theory section; empirically the organization is coherent.
+
+- Presentation
+Clear narrative from motivation to theory to experiments. Figures 1–4 are informative. Table 1 conveniently maps methods to a common form. Minor issues: inconsistent counts of generators/models (§§3.1–3.2, Fig. 3 caption) and a few typos (e.g., “LLaSDe++,” Table 2). Appendix C is dense but comprehensive.
+
+- Contribution
+- Provides the first systematic cross‑task evaluation, demonstrating substantial transferability and surfacing Binoculars as a strong MIA method (Fig. 3).
+- Offers a unifying taxonomy useful for both communities (Table 1).
+- Introduces MINT, which can standardize future comparisons.
+These practical contributions are impactful even without airtight theory.
+
+- Strengths
+- Breadth of empirical coverage: 15 methods, many domains/generators (Tables 2–4).
+- Clear evidence of transferability with concrete metrics (ρ and AUROC; §3.2).
+- Useful qualitative analyses (distributional similarity, Fig. 1; Zlib case study, Fig. 4).
+- Reproducibility via released code and detailed configs (Appendix B).
+
+- Weaknesses
+- Ceiling effects in white‑box detection limit discriminative power and can bias rank correlation (Table 3; Fig. 3).
+- Inconsistent aggregation descriptions obscure exactly what contributes to ρ (§3.2 vs Fig. 3 caption).
+- Lack of uncertainty quantification (CIs for AUROC/ρ).
+- Limited ablations on method hyperparameters (e.g., k for Min‑K%, perturbation strength for DetectGPT/Neighborhood).
+- Theory does not cleanly align with the LRT (ratio vs difference; §2.3), weakening the claimed optimality narrative.
+
+- Questions
+1) Can you recompute rank correlations using (a) only black‑box detection, and (b) per‑domain medians to mitigate ceiling effects?
+2) Please clarify exactly which generators/models are included in each averaged result and in the ranking statistic underlying Fig. 2 (three vs five).
+3) Provide AUROC confidence intervals and significance tests for method pairwise differences.
+4) How sensitive are findings to text length and domain; e.g., are correlations driven by a few domains with large separability?
+5) For black‑box detection, how were surrogates chosen, and what is the effect of surrogate mismatch on each method?
+6) Could you include cross‑model generalization (train on one generator, test on another) to probe practical transferability?
+
+- Rating
+- Overall (10): 7 — Strong empirical evidence and tooling outweigh theoretical gaps; useful to practitioners (§3.2; Fig. 3; Table 1).
+- Novelty (10): 7 — First large‑scale cross‑task analysis with unified framing and toolkit (§§2.4–3.2).
+- Technical Quality (10): 6 — Solid experiments but ceiling effects, unclear aggregation, and missing uncertainty; theory mis‑specification (§2.3).
+- Clarity (10): 7 — Generally clear, but generator/model accounting needs cleanup (§3.1–§3.2).
+- Confidence (5): 4 — Based on detailed reading of experimental sections and appendices with code link; some ambiguity remains in aggregation details.
+
+
+Review 3
+
+- Summary
+The paper posits that MIAs and MGTD exploit the same underlying signal: a contrast between a target model distribution and a reference/“true” distribution. It states that the optimal statistic for both tasks is a (purported) likelihood‑ratio‑like quantity (Λ), shows how popular methods instantiate approximations (Table 1), and empirically demonstrates transferability: many good MIAs are good detectors and vice versa, with Binoculars excelling at both. MINT is presented as unified infrastructure.
+
+- Soundness
+From a security/privacy perspective, the empirical MIA results reflect the recent literature: advantages are small (AUROCs ≈53–63; Fig. 3 top; Table 2), and signals rise with model scale. The cross‑task transfer to black‑box detection against ChatGPT/GPT‑4 is promising (Fig. 3 bottom; Table 4), with Binoculars/Min‑K% competitive. Nonetheless:
+- The theoretical unification for MI is weak. Membership is not “x∼PQ vs x∼PM”; it is “x included in training set,” requiring a generative model over datasets and training dynamics. The text’s Step 2 (§2.3/§2.12) asserts that LM training by cross‑entropy makes L(x;M) a proxy for P(x|in); in the standard asymptotic regime M→PQ, so the signal vanishes, contradicting the premise that Λ is asymptotically optimal for MIAs.
+- The paper’s practical insights (transferability) do not hinge on the contested theorem; they are well supported by experiments (ρ, Fig. 2; Fig. 3; Tables 2–4). The Zlib case study correctly highlights differences in priors between MI and MGTD (§3.3; Fig. 4).
+
+- Presentation
+The exposition is accessible to both security and NLP audiences. The taxonomy in Table 1 helps re‑interpret methods (e.g., DetectGPT and Neighborhood as the same form; §2.2). Implementation details are thorough (Appendix B). Minor clarity issues include the Λ definition (ratio of NLLs vs LRT), inconsistent reporting of generators/models (§3.1–§3.2), and a few typos. Figures 1–4 are compelling.
+
+- Contribution
+- Bridges two communities (privacy and detection) with a shared framework and empirical evidence.
+- Shows detectors (Binoculars) can be strong MIAs, suggesting new baselines for privacy auditing.
+- Provides MINT for reproducible, fair cross‑task evaluation.
+
+- Strengths
+- Comprehensive, carefully engineered experimental suite (methods, datasets, settings).
+- Useful re‑framing of many metrics as approximations to a distributional contrast (Table 1).
+- Practical relevance: advances auditing tools for memorization using detectors (Fig. 3).
+- Diagnostics that explain outliers (Zlib; §3.3).
+
+- Weaknesses
+- The MI optimality claim lacks a precise threat model and may be formally incorrect (§2.3).
+- Lack of error bars/uncertainty, which matters when MIA AUROCs cluster near 0.55–0.60.
+- White‑box detection experiments are near‑trivial; black‑box is more informative but still uses surrogate access.
+- Limited analysis of how factors like sequence length and domain mix affect transfer.
+
+- Questions
+1) Can you instantiate a concrete MI data‑generation/training model (dataset size, inclusion probability, training loss, regularization) and re‑derive an MI‑specific LRT?
+2) How does transferability behave at fixed sequence length, and does Binoculars’ MIA edge persist after matching lengths?
+3) What is the per‑domain ρ if you compute rankings within each domain and then aggregate?
+4) How does Min‑K%(++ ) perform as an MIA when the detector’s generator is out‑of‑distribution relative to Pile domains?
+5) For privacy assessment, can you report calibrated risk (TPR at low FPR like 0.1% or 1%) rather than AUC only?
+6) Will MINT include scripts for confidence intervals and significance testing?
+
+- Rating
+- Overall (10): 6 — Valuable cross‑task evidence and tooling, but theoretical MI optimality is not rigorous and some evaluations are near‑ceiling (§2.3; Fig. 3).
+- Novelty (10): 7 — New cross‑task perspective and systematic evidence (Fig. 2–3; Table 1).
+- Technical Quality (10): 6 — Strong engineering; theory overreach and missing uncertainty quantification (§2.3; Tables 2–4).
+- Clarity (10): 7 — Generally clear; Λ definition and generator/model accounting need fixes (§2.3; §3.1–3.2).
+- Confidence (5): 4 — Based on careful reading of technical and empirical details and cross‑checking tables/figures.
+
+
+Review 4
+
+- Summary
+The paper argues that MIAs and MGTD are two sides of the same coin: both compare a target model’s probability assignment to an estimate of the “true” text distribution. It proposes that the same optimal metric should govern both (Λ), shows how popular methods approximate it (via reference models or sampling, §2.4; Table 1), and empirically demonstrates high cross‑task transfer, including Binoculars as a strong MIA. A new evaluation suite, MINT, is released.
+
+- Soundness
+The empirical evidence is persuasive: consistent rankings across tasks (ρ=0.66 overall; §3.2; Fig. 2), cross‑task performance bars (Fig. 3), and detailed tables (Appendix C). The case study on Zlib is convincing and insightful (§3.3; Fig. 4). However, the theoretical result as stated is not fully correct:
+- For MGTD, the UMP test is on pM(x)/pQ(x) (log‑likelihood difference), not on a ratio of negative log‑likelihoods Λ=L(x;M)/L(x;Q) (§2.3). The paper should either switch to difference or justify monotone equivalence.
+- For MI, the asymptotic argument conflates model fit to PQ with P(x|in) (§2.3). A rigorous proof needs a dataset/algorithm model; otherwise, the claim should be softened to a heuristic alignment.
+Despite this, the unifying “approximate LRT” lens is still useful for organizing methods and anticipating transfer.
+
+- Presentation
+The paper reads well and is visually effective (Figs. 1–4). The taxonomy (Table 1) is a highlight. Nonetheless:
+- There are minor but important inconsistencies in descriptions of what is averaged (three generators vs five models; §3.2 vs Fig. 3 caption).
+- Notation needs tightening around L, p, and Λ.
+- Some labels/typos in Appendix C (“LLaSDe++”) and occasional formatting artifacts.
+
+- Contribution
+- Consolidates disparate methods into a coherent framework (reference vs sampling approximations; §2.4; Table 1).
+- Demonstrates substantial transferability empirically, updating both MIA and MGTD baselines (Fig. 2–3).
+- Provides an evaluation suite likely to be adopted by both communities.
+
+- Strengths
+- Comprehensive comparisons with careful implementation choices (Appendix B).
+- Clear, actionable insights (e.g., use Binoculars for MIAs).
+- Thoughtful analysis of when transfer fails (Zlib outlier; §3.3).
+- Availability of code and a unified benchmark harness.
+
+- Weaknesses
+- Central theorem needs correction/qualification (ratio vs difference; MI assumptions; §2.3).
+- Overreliance on white‑box detection with near‑perfect AUROCs; less informative about realistic constraints (Table 3).
+- Lack of confidence intervals and robustness analyses (e.g., to perturbation schemes, reference models).
+- Some methods that do not fit the LRT template remain theoretically unaccounted for (Min‑k%, DC‑PDD; §2.5).
+
+- Questions
+1) Will you revise Λ to the log‑likelihood difference (LQ−LM) and update Table 1 mappings accordingly?
+2) How does the transferability change when restricting to settings where AUROC<95 (i.e., avoiding ceiling effects)?
+3) Can you add ablations showing sensitivity to perturbation generator φ for DetectGPT/Neighborhood and to k for Min‑k%?
+4) For Binoculars in MIAs, what is the effect of weaker/stronger reference models than your chosen ones (Appendix B.2)?
+5) Could MINT support calibration‑sensitive metrics (e.g., ECE, FPR@TPR) to complement AUROC?
+6) Any qualitative error analysis where MIAs succeed but detectors fail (and vice versa) to refine the unifying story?
+
+- Rating
+- Overall (10): 7 — Strong empirical synthesis and tooling, but theoretical mis‑specification and evaluation ceilings temper the impact (§2.3; Fig. 3).
+- Novelty (10): 8 — New cross‑task unification with extensive evidence and a toolkit (Table 1; §3.2).
+- Technical Quality (10): 6 — Careful engineering; theory needs repair and more robust statistics (confidence intervals, ablations).
+- Clarity (10): 8 — Clear presentation and figures; minor inconsistencies/typos should be fixed (§3.1–3.2; Appendix C).
+- Confidence (5): 4 — High confidence in empirical reading and identification of theoretical issues; code link aids verification.

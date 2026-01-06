@@ -1,0 +1,77 @@
+# Global Summary
+This paper addresses the ambiguity and inconsistent use of the term "memory" in Reinforcement Learning (RL). The authors propose a formal classification of agent memory types, inspired by cognitive science, to create a standardized framework for evaluation. The core contributions include defining declarative vs. procedural memory and short-term memory (STM) vs. long-term memory (LTM) in a quantitative manner. The paper decouples memory-requiring tasks into Memory Decision-Making (Memory DM), which relies on declarative memory, and Meta-RL, which uses procedural memory. A key element is a proposed experimental methodology for rigorously testing an agent's LTM and STM capabilities in Memory DM tasks. This methodology hinges on the relationship between an agent's context length (K) and the environment's "correlation horizon" (ξ), the time delay between a crucial event and the decision it informs. Through experiments on memory-intensive environments (Passive T-Maze, MiniGrid-Memory) with transformer-based agents (DTQN, DQN-GPT-2, SAC-GPT-2), the authors demonstrate that failing to follow their proposed setup can lead to incorrect conclusions. For instance, an agent without LTM mechanisms can appear to have LTM if tested in an environment with variable correlation horizons, a flaw the proposed methodology avoids.
+
+# Abstract
+The paper argues that memory is essential for many RL tasks but lacks a unified definition and validation methodology, leading to erroneous judgments about agent capabilities. To address this, the authors provide precise definitions for memory types in RL, such as long-term versus short-term and declarative versus procedural, drawing from cognitive science. Based on these definitions, they categorize agent memory classes and propose a robust experimental methodology to standardize the evaluation of memory in RL agents. The paper empirically demonstrates the importance of this methodology, showing how its violation can lead to incorrect assessments of an agent's memory.
+
+# Introduction
+The introduction establishes that while RL is effective in Markov Decision Processes (MDPs), it faces challenges in partially observable environments where agents must store and process interaction history. The term "memory" is used inconsistently across the literature: some define it as handling in-context dependencies, others as using out-of-context information, and Meta-RL literature uses it to describe adaptation across tasks. The paper aims to treat memory as an intrinsic agent attribute, classifying it based on temporal dependencies and the nature of the information stored. The authors state their goal is not to replicate human memory but to formalize concepts already intuitively used in the RL community. The paper's contributions are: (1) formalizing definitions for LTM, STM, declarative, and procedural memory; (2) decoupling tasks into Memory Decision-Making (Memory DM) and Meta-RL; (3) proposing a generic experimental methodology for testing LTM and STM in Memory DM tasks; and (4) showing experimentally that violating this methodology leads to incorrect conclusions.
+
+# Preliminaries
+This section introduces foundational concepts.
+- A Partially Observable Markov Decision Process (POMDP) is defined as a tuple $$\mathcal{M}_P = \langle S, \mathcal{A}, \mathcal{O}, \mathcal{P}, \mathcal{R}, \mathcal{Z} \rangle$$. In a POMDP, the agent's policy $$\pi(a_t \mid o_t, h_{0:t-1})$$ depends on the history of observations, actions, and rewards, necessitating memory mechanisms.
+- The paper draws inspiration from cognitive science, which distinguishes memory by temporal scale (short-term vs. long-term) and behavioral manifestation (declarative/explicit vs. procedural/implicit). Declarative memory involves conscious recall of facts and events, while procedural memory relates to unconscious skills.
+- In RL, these concepts are often used loosely. The paper notes that some studies equate memory with handling dependencies within a fixed context (STM), while others focus on dependencies outside the context (LTM). Meta-RL is associated with procedural memory (skill transfer).
+- The paper clarifies its focus on declarative memory (both short-term and long-term forms) used for decision-making within a single environment.
+- The concepts of "memory" (recalling a past event) and "credit assignment" (identifying which past actions deserve credit) are treated as a single entity, as both involve forming temporal dependencies.
+
+# Related Work
+This section notes the significant research interest in memory-enhanced RL agents and benchmarks. However, it reiterates that the term "memory" is used with multiple meanings, and benchmark selection is not always done correctly. The paper provides examples of varying definitions from the literature:
+- Oh et al. (2016): Storing recent observations in an external buffer.
+- Lampinen et al. (2021): Storing and recalling information over long intervals.
+- Fortunato et al. (2020): Working (short-term) and episodic (long-term) memory.
+- Ni et al. (2023): Distinguishing (working) memory from (temporal) credit assignment.
+
+# Method
+This section presents the core formalisms and methodology.
+- **Task Decoupling**: POMDP tasks are divided into Memory Decision-Making (Memory DM), focusing on information retrieval for current decisions, and Meta-RL, involving skill transfer.
+- **Definitions**:
+    - **Definition 1 (Agent context length, K)**: The maximum number of previous steps an agent can process at time t.
+    - **Definition 3 (Declarative vs. Procedural Memory)**: An agent uses declarative memory if knowledge transfer occurs within a single environment and episode (`n_envs` x `n_eps` = 1). It uses procedural memory if skills are transferred across multiple environments or episodes (`n_envs` x `n_eps` > 1). Memory DM tests declarative memory; Meta-RL tests procedural memory.
+    - **Definition 4 (STM vs. LTM)**: For an event `α` and a recall point `β`, the correlation horizon is `ξ = t_r - t_e - Δt + 1`. An agent uses STM if `ξ <= K` (event is within context) and LTM if `ξ > K` (event is out of context).
+    - **Definition 5 (Memory-intensive environments)**: An environment is memory-intensive if the minimum correlation horizon `min(Ξ)` is greater than 1.
+    - **Definition 6 (Memory mechanisms, μ(K))**: A function that allows an agent with context K to process sequences of effective length `K_eff >= K`.
+- **Experimental Methodology**:
+    - **Theorem 1 (Context memory border, K̄)**: There exists a `K̄ = min(Ξ) - 1` such that if an agent's context `K <= K̄`, the environment exclusively tests LTM.
+    - **Validation Intervals**:
+        1. `K ∈ [1, K̄]`: Validates LTM only.
+        2. `K ∈ (K̄, max(Ξ))`: Validates both STM and LTM.
+        3. `K ∈ [max(Ξ), ∞)`: Validates STM only.
+    - To correctly test LTM using a memory mechanism `μ(K)`, the condition `K <= K̄ < ξ <= K_eff` must be met.
+- **Algorithm 1**: A four-step algorithm is proposed for setting up experiments: (1) Check if the environment is memory-intensive, (2) Estimate the context memory border `K̄`, (3) Set agent context `K` appropriately to test either STM (`K > K̄`) or LTM (`K <= K̄`), (4) Analyze results.
+- **Example (Passive T-Maze)**: For a corridor of length L, the episode duration is `T = L + 1`. The correlation horizon is `ξ = T`, and the context memory border is `K̄ = T - 1`. To test LTM, one must set `K <= T - 1`.
+
+# Experiments
+This section empirically validates the proposed methodology.
+- **Environments**: Passive-T-Maze and MiniGrid-Memory.
+- **Agents**: Deep Transformer Q-Networks (DTQN), DQN with GPT-2 (DQN-GPT-2), and Soft Actor-Critic with GPT-2 (SAC-GPT-2).
+
+- **Impact of Experiment Configuration**:
+    - An experiment was run with SAC-GPT-2 in MiniGrid-Memory (map size L=21).
+    - Two environment modes were used: `fixed` corridor length (ξ = L+1 = 22) and `variable` length (ξ ∈ [7, 22]).
+    - Two agent context lengths were tested: `K=22` (for STM) and `K=14` (for LTM).
+    - In `variable` mode, the agent achieved a success rate of nearly 1.0 for both `K=14` and `K=22`, misleadingly suggesting it has LTM.
+    - In `fixed` mode, the agent succeeded with `K=22` (SR ~0.95) but failed with `K=14` (SR ~0.6), correctly revealing its lack of LTM mechanisms. This highlights how a naive experimental setup can misrepresent an agent's capabilities.
+
+- **The Relative Nature of an Agent's Memory**:
+    - DTQN and DQN-GPT-2 were tested in Passive T-Maze by varying both agent context `K` and environment correlation horizon `ξ`.
+    - **STM test (`K=15, ξ=15`)**: Both agents achieved a return of 1.0, confirming STM.
+    - **LTM test (`K=5, ξ=15`)**: Both agents' returns dropped to 0.5, indicating failure and a lack of LTM.
+    - **STM test (`K=5, ξ=5`)**: Both agents' returns went back to 1.0, showing they can succeed when the problem fits within their context.
+    - This demonstrates that LTM/STM validation depends on the relationship between `K` and `ξ`.
+
+# Conclusion
+The paper formalizes memory types in RL (LTM/STM, declarative/procedural) and decouples tasks into Memory DM and Meta-RL. The proposed methodology for validating LTM and STM in the Memory DM framework provides a clear structure for evaluating and comparing memory-enhanced agents. The authors show experimentally that misconfigured experiments can lead to misleading conclusions, blurring the distinction between LTM and STM. The work is presented as a step toward a unified understanding of agent memory, offering practical tools for rigorous and consistent experimental design in RL.
+
+# References
+This section contains the bibliography of works cited in the manuscript.
+
+# Appendix
+- **Glossary**: Defines key symbols used in the paper, such as `K` (agent context length), `K̄` (context memory border), `ξ` (correlation horizon), and `μ(K)` (memory mechanism).
+- **Motivation**: Justifies using neuroscience terms as they are already familiar to the RL community. It emphasizes the framework's practical goal of standardizing memory testing for fair comparisons.
+- **Memory Mechanisms**: Lists various architectures used to implement memory in RL, including RNNs, Transformers, State-Space Models (SSMs), external memory buffers (read-only and read/write), and world models.
+- **Meta Reinforcement Learning**: Provides a formal definition (Definition 7) of the Meta-RL framework, where an algorithm `f_θ` learns to map data from a distribution of tasks to a policy `π_ϕ`.
+- **Experiment Details**:
+    - **Environments**: Provides detailed descriptions. Passive-T-Maze is a T-shaped corridor of length L where a clue at the start dictates the turn at the end. MiniGrid-Memory is a 2D grid world where the agent must find an object in a room, then navigate to a junction and turn towards an identical object.
+    - **Experimental Protocol**: Each experiment was run 3 times with different initializations. Validation was performed with 100 random seeds. Results are reported as mean ± SEM.
+    - **Hyperparameters**: Tables provide specific hyperparameter values for SAC-GPT-2, DQN-GPT-2, and DTQN agents, including layers, attention heads, hidden dimension, batch size, learning rate, and replay buffer size.

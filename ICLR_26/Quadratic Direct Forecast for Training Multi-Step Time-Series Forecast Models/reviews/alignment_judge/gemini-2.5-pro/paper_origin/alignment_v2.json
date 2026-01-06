@@ -1,0 +1,129 @@
+{
+  "paper": "Quadratic Direct Forecast for Training Multi-Step Time-Series Forecast Models",
+  "runs": [
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "final_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "0a71ca7d783136ba33fb6b5ec9aad08ece2f0c09",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/final_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 1.0,
+        "weakness_coverage_recall": 0.75,
+        "ai_extra_major_points_rate": 0.56,
+        "symmetric_coverage_similarity": 0.53,
+        "note": "The AI review fully covers the strengths but misses one weakness from the human review (clarity on data splitting). However, the AI review is substantially more detailed, raising several major technical concerns not mentioned by the human, such as the restrictive treatment of multivariate data, the use of an incomplete NLL objective, and ambiguity in the bilevel optimization."
+      },
+      "generated_at": "2025-12-27T20:41:52"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "baseline_review.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "b3137abdd5dd456ecfb029f7bed4151251d086e2",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/baseline_review.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 1.0,
+        "weakness_coverage_recall": 0.5,
+        "ai_extra_major_points_rate": 0.71,
+        "symmetric_coverage_similarity": 0.47,
+        "note": "The AI review fully covered the strengths but only moderately covered the weaknesses, missing the human's concerns about data leakage and code documentation. However, the AI review identified several additional major weaknesses, such as the restrictive treatment of multivariate data and ambiguity in the bilevel optimization algorithm."
+      },
+      "generated_at": "2025-12-27T20:46:26"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "deepreviewer",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "deep_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "55f39c3e353412551a5ae68e81fc4acc489b4edd",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/deepreviewer/gpt-5-2025-08-07/paper_origin/deep_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 0.6,
+        "weakness_coverage_recall": 0.25,
+        "ai_extra_major_points_rate": 0.83,
+        "symmetric_coverage_similarity": 0.25,
+        "note": "The reviews show high alignment on strengths like the novel method and experiments, but diverge significantly on weaknesses. The human review focuses on reproducibility and data splitting, while the AI review raises a different set of major technical concerns, such as the omission of the log-determinant term and ambiguity in the bilevel optimization algorithm."
+      },
+      "generated_at": "2025-12-27T20:52:21"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "deepreviewer",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "deep_review_merge.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "752f27bc09e656c7d041a880d0c174422eea6ca4",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/deepreviewer/gpt-5-2025-08-07/paper_origin/deep_review_merge.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 0.8,
+        "weakness_coverage_recall": 0.5,
+        "ai_extra_major_points_rate": 0.55,
+        "symmetric_coverage_similarity": 0.36,
+        "note": "The AI review aligns well with the human review on strengths (motivation, experiments, ablations) but diverges significantly on weaknesses. While the human reviewer focuses on external validity (comparative theory, data leakage) and code documentation, the AI prioritizes internal validity (mathematical consistency of the likelihood objective, numerical stability, optimization mechanics), leading to low symmetric similarity."
+      },
+      "generated_at": "2025-12-27T21:22:39"
+    }
+  ]
+}

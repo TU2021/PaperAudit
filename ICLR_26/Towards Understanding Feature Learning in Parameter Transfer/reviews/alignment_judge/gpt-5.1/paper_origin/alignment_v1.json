@@ -1,0 +1,92 @@
+{
+  "paper": "Towards Understanding Feature Learning in Parameter Transfer",
+  "judge_model": "gpt-5.1",
+  "review_agent": "deepreviewer",
+  "ai_model": "gpt-5-2025-08-07",
+  "ai_review_file": "deep_review_all.txt",
+  "inputs": {
+    "human_review": "review.txt",
+    "ai_review": "reviews/deepreviewer/gpt-5-2025-08-07/paper_origin/deep_review_all.txt"
+  },
+  "multi_review": {
+    "detected": false,
+    "num_reviews": 1,
+    "summarize_used": false,
+    "summary_note": null
+  },
+  "ai_review_consolidated": null,
+  "alignment": {
+    "motivation_strength_alignment": 0.9,
+    "weakness_error_alignment": 0.8,
+    "overall_alignment": 0.85,
+    "explanation": {
+      "strength": "Both reviews clearly agree on the core motivation and contributions. They describe the work as a theoretical analysis of partial parameter transfer in transfer learning, focusing on (two-layer) ReLU CNNs where only a subset/α-fraction of filters is inherited. Both emphasize: (i) rigorous theoretical insights and training-dynamics analysis for parameter transfer; (ii) conditions and a criterion that explain when transfer helps or leads to negative transfer, tied to the strength of shared/universal features vs task-specific noise; (iii) the provision of a (scalar) interpretable criterion for predicting positive vs negative transfer; and (iv) empirical validation on standard vision benchmarks (CIFAR-10/100) and common architectures (ResNet, VGG, DeiT/ViT). The AI review gives more technical detail (specific theorems, lemmas, data model), but this is consistent, not divergent, from the human reviewer’s higher-level strengths.",
+      "weakness": "There is substantial overlap in the weaknesses identified, though with different granularity. Both reviews note: (i) a mismatch between the theoretical setup and practical transfer practices—specifically, random filter/parameter inheritance vs layer-wise or learned feature selection in real systems; (ii) strong/stylized assumptions that limit practical generality (the human focuses on random sampling and classification focus; the AI details orthogonality, over-parameterization, small learning rates, and simplified data model); (iii) presentation and clarity issues in the theory sections, especially heavy or complex notation and some confusion/typos that reduce accessibility; and (iv) limited discussion or positioning with respect to practical / broader transfer settings (the human mentions weak related-work positioning and lack of concrete operational guidance; the AI mentions missing empirical details, incomplete specification of α, layer mapping, hyperparameters). The AI review also adds more specific technical-editing concerns (misindexed conditions, σ terms) and emphasizes orthogonality assumptions more than Review A, which reduces but does not negate alignment.",
+      "overall": "In substance and judgment, the two reviews are well aligned. Both see the work as a strong, novel theoretical contribution on parameter transfer with partial reuse, giving a mechanistic account of positive and negative transfer, backed by experiments. Both converge on the main limitations: stylized/strong assumptions (especially about how transfer is modeled), some gap to real-world practice and actionable guidance, and clarity/presentation issues in the technical sections. The AI review provides a more fine-grained technical critique (assumption details, specific typos, exact theorems), whereas the human review stays at a higher level and additionally underscores lack of practitioner-facing recipes and related-work positioning. These differences are largely in emphasis and level of detail rather than in substantive disagreement, so the overall alignment is high but not perfect."
+    }
+  },
+  "generated_at": "2025-12-27T19:28:27",
+  "runs": [
+    {
+      "config": {
+        "judge_model": "gpt-5.1",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "baseline_review.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180
+      },
+      "config_key": "3b28d70d5731760031a4514ebc98b0afd78edf6d",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/baseline_review.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "motivation_strength_alignment": 0.78,
+        "weakness_error_alignment": 0.62,
+        "overall_alignment": 0.7,
+        "explanation": {
+          "strength": "Both reviews agree that the core contribution is a theoretical, dynamics-based analysis of partial parameter transfer in ReLU CNNs, explaining when transfer is beneficial or harmful (including negative transfer) via shared signal vs task-specific noise, and validating predictions with synthetic and CIFAR experiments on multiple architectures. They both highlight an interpretable condition/criterion for predicting positive vs negative transfer and appreciate the breadth of empirical support across ResNet/VGG/ViT. The AI review adds more fine-grained technical detail (specific theorems, proofs, and training-dynamics tools) that the human review does not emphasize, but this is mostly extra granularity rather than a different view of strengths.",
+          "weakness": "Both note that the theoretical setup/assumptions are somewhat misaligned with practical transfer (stylized model, random parameter sampling) and that this limits direct real-world applicability, and both raise issues of clarity/readability of the theory and notation. However, Review A stresses lack of concrete operational guidance for practitioners, limited discussion of other task types and broader transfer methods, whereas Review B instead focuses on missing experimental details for reproducibility, incomplete exploration of α and inheritance strategies, missing explicit Bayes-optimal formalization, and various cross-referencing/notation bugs. Thus, overlap exists on “practical relevance and clarity are limited,” but the concrete weaknesses diverge substantially.",
+          "overall": "In substance, both reviews see the paper as a rigorous and meaningful theoretical treatment of partial parameter transfer with clear insight into positive and negative transfer, supported by experiments, but constrained by idealized assumptions and some clarity issues. The AI review provides a much more detailed and technically oriented criticism set, while the human review focuses more on high-level practical relevance, usability, and positioning with respect to prior transfer-learning work. Overall alignment is high on the core story and main contribution, but only moderate on the specific weaknesses and suggested improvements."
+        }
+      },
+      "generated_at": "2025-12-27T19:50:36"
+    },
+    {
+      "config": {
+        "judge_model": "gpt-5.1",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "final_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180
+      },
+      "config_key": "4569a6a97a67c8e2b360606eb74d6eb53b892d06",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/final_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength": "Both reviews identify the core theoretical contributions related to partial parameter transfer and conditions for positive/negative transfer, emphasizing the experiments and mechanistic understanding. However, the AI review elaborates on technical aspects and formalization while only it mentions the breadth of technical machinery, whereas the human review highlights the scalar criterion separately.",
+        "weakness": "There is overlap regarding unrealistic assumptions, such as random parameter reuse, the stylized model, and clarity/notation issues. However, the human review emphasizes the lack of practical guidance, limited related work, and a classification-only focus, while the AI review highlights missing experimental details, alpha ablations, Bayes references, negative transfer evidence, along with numerous referencing and figure issues.",
+        "overall": "Both reviews see the paper as substantively valuable but limited by assumptions and external validity, aligning on a positive evaluation of experiments supporting theory. However, the AI review provides a broader list of technical and experimental reservations, while the human review focuses more on practical relevance and accessibility."
+      },
+      "generated_at": "2025-12-27T19:53:13"
+    }
+  ]
+}

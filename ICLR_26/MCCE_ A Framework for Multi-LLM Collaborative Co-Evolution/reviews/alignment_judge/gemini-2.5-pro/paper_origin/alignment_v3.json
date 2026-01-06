@@ -1,0 +1,129 @@
+{
+  "paper": "MCCE_ A Framework for Multi-LLM Collaborative Co-Evolution",
+  "runs": [
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "deepreviewer",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "deep_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "55f39c3e353412551a5ae68e81fc4acc489b4edd",
+      "inputs": {
+        "human_review": "review_origin.txt",
+        "ai_review": "reviews/deepreviewer/gpt-5-2025-08-07/paper_origin/deep_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 0.67,
+        "weakness_coverage_recall": 0.67,
+        "ai_extra_major_points_rate": 0.7,
+        "symmetric_coverage_similarity": 0.22,
+        "note": "The AI review covers the human's main points regarding the hybrid design, DPO method, and cost, but is far more comprehensive. The AI identifies numerous additional major weaknesses, such as the ambiguous similarity definition, missing baselines, and unspecified evaluation details, leading to low overall similarity."
+      },
+      "generated_at": "2025-12-27T23:48:35"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "baseline_review.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "b3137abdd5dd456ecfb029f7bed4151251d086e2",
+      "inputs": {
+        "human_review": "review_origin.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/baseline_review.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 1.0,
+        "weakness_coverage_recall": 1.0,
+        "ai_extra_major_points_rate": 0.64,
+        "symmetric_coverage_similarity": 0.36,
+        "note": "The AI review perfectly covers all points from the very brief human review, resulting in maximum recall. However, the AI review is far more comprehensive, adding numerous major points about insufficient baselines, limited ablations, and conceptual ambiguities, which leads to a high extra points rate and low symmetric similarity."
+      },
+      "generated_at": "2025-12-27T23:54:32"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "final_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "0a71ca7d783136ba33fb6b5ec9aad08ece2f0c09",
+      "inputs": {
+        "human_review": "review_origin.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/final_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 1.0,
+        "weakness_coverage_recall": 0.73,
+        "ai_extra_major_points_rate": 0.5,
+        "symmetric_coverage_similarity": 0.55,
+        "note": "The AI Review effectively identifies most methodological and reproducibility flaws found by humans (missing code, baselines, cost analysis), but fails to criticize the limitation to a single domain (molecular design), a key human concern. Conversely, the AI flags several significant internal validity issues missed by humans, such as suspicious identical data means (Top100auc), reduced diversity in the proposed method, and missing results for a model mentioned in the setup."
+      },
+      "generated_at": "2025-12-28T00:06:28"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "deepreviewer",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "deep_review_merge.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "752f27bc09e656c7d041a880d0c174422eea6ca4",
+      "inputs": {
+        "human_review": "review_origin.txt",
+        "ai_review": "reviews/deepreviewer/gpt-5-2025-08-07/paper_origin/deep_review_merge.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 1.0,
+        "weakness_coverage_recall": 0.33,
+        "ai_extra_major_points_rate": 0.83,
+        "symmetric_coverage_similarity": 0.18,
+        "note": "The AI review covers all strengths but misses two of the three specific, practical weaknesses raised by the human (missing code link, synthesizability metric details). The low overall similarity is due to the AI review being substantially more comprehensive, raising numerous major methodological and experimental concerns (e.g., narrow baselines, ambiguous similarity function) that the human review did not mention."
+      },
+      "generated_at": "2025-12-28T00:19:19"
+    }
+  ]
+}

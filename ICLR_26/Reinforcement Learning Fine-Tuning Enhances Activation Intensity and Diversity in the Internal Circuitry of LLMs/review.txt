@@ -1,0 +1,48 @@
+### Summary
+
+This paper investigates the internal changes in Large Language Models (LLMs) resulting from **Reinforcement Learning (RL)** fine-tuning, specifically focusing on how RL impacts the **activation intensity** and **diversity** in the model's internal circuitry. Using **Edge Attribution Patching (EAP)**, the authors analyze models before and after RL fine-tuning and find that **RL fine-tuning (PPO and GRPO)** leads to two main effects:
+
+1. Increased **activation intensity**, indicating more engaged internal pathways and stronger signal strength.
+2. Greater **activation diversity**, meaning more varied and flexible information pathways.
+
+These internal changes, they suggest, contribute to the **superior generalization performance** observed with RL fine-tuned models. However, **Direct Preference Optimization (DPO)**-trained models showed weaker or inconsistent changes in internal dynamics, highlighting a key difference between online RL methods and preference-based approaches.
+
+---
+
+### Strengths
+
+1. **Innovative Mechanistic Insight**:
+
+   * The paper offers an insightful mechanistic exploration of the internal effects of RL fine-tuning on LLMs, with a focus on the **activation intensity** and **diversity**, both of which are crucial for understanding the improvements in performance.
+
+2. **Comprehensive Experimental Design**:
+
+   * Experiments were conducted across multiple model families, RL methods (PPO, GRPO, and DPO), and tasks, providing robust evidence for the observed effects. The **EAP framework** is well-grounded and computationally scalable, making it a valuable tool for this kind of research.
+
+3. **Reproducibility**:
+
+   * The study excels in **reproducibility** with open-source code and detailed specifications, encouraging further exploration and verification of the results.
+
+4. **Clear Communication**:
+
+   * The paper communicates its findings in a clear and structured way, with **intuitive explanations** of how RL fine-tuning impacts internal model dynamics and how these changes may improve performance.
+
+---
+
+### Weaknesses
+
+1. **Lack of Causal Evidence**:
+
+   * While the paper shows a **correlation** between RL fine-tuning and changes in activation patterns, it does not establish a **causal link** between these internal changes and improved performance. Critical experiments, such as **interventions** to induce or suppress these activation patterns in SFT models, are missing. These would be necessary to confirm whether the observed internal changes **cause** the performance improvements, or are merely byproducts of RL fine-tuning.
+
+2. **Descriptive Rather than Explanatory**:
+
+   * The paper provides a detailed description of the internal changes but lacks a **mechanistic explanation** for why these changes arise from RL fine-tuning. It would be helpful to connect these observations to **RL theory**, such as how **exploration**, **credit assignment**, and **reward shaping** might contribute to the increased activation intensity and diversity.
+
+3. **Limited Domain Testing**:
+
+   * The experiments are **focused on mathematical reasoning tasks**, leaving questions about whether the observed internal changes hold in other domains where RL is commonly applied, such as **dialogue systems**, **creative writing**, or **code generation**. The generalizability of the findings to other tasks needs further validation.
+
+4. **Scalability Concerns**:
+
+   * The study is limited to **7B models** due to hardware constraints. While this is a widely used size, testing on **smaller** (e.g., 1B) and **larger** models (e.g., 14B) would help determine whether the observed patterns are **scale-independent** and applicable to models of different sizes.

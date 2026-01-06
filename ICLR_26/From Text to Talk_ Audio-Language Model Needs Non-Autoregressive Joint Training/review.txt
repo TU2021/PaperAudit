@@ -1,0 +1,45 @@
+### Summary
+
+The paper **"From Text to Talk: Audio-Language Model Needs Non-Autoregressive Joint Training"** introduces a unified approach to multimodal audio-language generation, combining **autoregressive (AR)** text generation with **non-autoregressive (NAR)** audio generation in a single Transformer model. The core problem addressed is the mismatch between the **target-target dependencies** (found in text generation) and the **source-target dependencies** (found in audio generation). The authors propose **Text-to-Talk (TtT)**, a framework that integrates **AR** for text and **NAR** for audio diffusion, using **absorbing discrete diffusion** and a **modality-aware attention mechanism**.
+
+The approach is designed to enable **joint training** of both text and audio, overcoming the challenges of **train-test discrepancies** through the introduction of **three specialized training strategies** (BANOM, PPM, and SST). Extensive experiments on **Audio-QA** and **ASR** tasks show that **TtT** outperforms both AR-only and NAR-only baselines.
+
+---
+
+### Strengths
+
+1. **Innovative Hybrid Approach**:
+
+   * The **AR-NAR hybrid** framework is a novel approach for handling **audio-language generation** by treating text and audio with distinct dependency structures. The use of **discrete diffusion** for audio tokens is an interesting technique to improve speech generation efficiency.
+
+2. **Theoretical Grounding**:
+
+   * The paper provides solid **theoretical justification** for the proposed hybrid training objective, showing that it is a valid upper bound on the desired joint distribution. This strengthens the validity of the approach.
+
+3. **Effective Training Strategies**:
+
+   * The introduction of **three training strategies** (BANOM, PPM, SST) addresses the **train-test discrepancy**, improving the **sample quality** and model stability during inference. These strategies are validated through **ablation studies**.
+
+4. **Comprehensive Experimentation**:
+
+   * The paper provides extensive **empirical validation** across multiple tasks (Audio-QA, ASR), showing that **TtT** consistently outperforms AR-only and NAR-only models. Additionally, comparisons to a broad range of **state-of-the-art models** (e.g., Mini-Omni, SLAM-Omni, VITA-Audio) demonstrate the **competitive performance** of the **TtT framework**.
+
+---
+
+### Weaknesses
+
+1. **Lack of Objective Audio Quality Metrics**:
+
+   * While the model is evaluated on **semantic correctness**, there is no **subjective evaluation** of the **audio quality** (e.g., **MOS** or **prosody/naturalness**), which is crucial for evaluating the practical usability of a speech model. The paper includes some **objective metrics** (e.g., **NMOS** and **UTMOS**), but a **human evaluation** would be more informative.
+
+2. **Limited Evaluation Scope**:
+
+   * The paper mainly evaluates the model on **Audio-QA** and **ASR** tasks, but there is no evaluation on other important **speech-to-speech** tasks (e.g., **speech captioning, dialogue**, or **translation**), which are key to understanding the broader applicability of the framework.
+
+3. **Insufficient Comparison with Field SOTA Models**:
+
+   * The comparison is made primarily with the **Qwen2.5** model trained with AR and NAR objectives, but there is a lack of comparison with other recent **speech-language models** (e.g., **GLM-4-Voice**, **Kimi-Audio**, **SpeechGPT**). This absence of comparison makes it hard to determine the true advantages of the **TtT** framework.
+
+4. **Ambiguity in Training Evaluation**:
+
+   * The evaluation lacks clear analysis of the **block-wise diffusion hyperparameters**. Additionally, the **training and deployment analysis** does not explore certain complex scenarios (e.g., **long conversations**, **low-resource languages**), which could affect the model's robustness.

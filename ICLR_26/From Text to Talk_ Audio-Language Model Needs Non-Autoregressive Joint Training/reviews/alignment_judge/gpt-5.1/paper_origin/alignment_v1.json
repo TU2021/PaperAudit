@@ -1,0 +1,97 @@
+{
+  "paper": "From Text to Talk_ Audio-Language Model Needs Non-Autoregressive Joint Training",
+  "judge_model": "gpt-5.1",
+  "review_agent": "deepreviewer",
+  "ai_model": "gpt-5-2025-08-07",
+  "ai_review_file": "deep_review_all.txt",
+  "inputs": {
+    "human_review": "review.txt",
+    "ai_review": "reviews/deepreviewer/gpt-5-2025-08-07/paper_origin/deep_review_all.txt"
+  },
+  "multi_review": {
+    "detected": false,
+    "num_reviews": 1,
+    "summarize_used": false,
+    "summary_note": null
+  },
+  "ai_review_consolidated": null,
+  "alignment": {
+    "motivation_strength_alignment": 0.9,
+    "weakness_error_alignment": 0.7,
+    "overall_alignment": 0.8,
+    "explanation": {
+      "strength": "Both reviews clearly describe the same core contribution: a unified single-Transformer framework (TtT) combining AR text generation with NAR audio diffusion, motivated by the asymmetry between target–target dependencies in text and source–target dependencies in audio. They both highlight (i) the hybrid AR–NAR design, (ii) the use of absorbing discrete diffusion for audio, (iii) the modality-aware attention mask, (iv) the theoretically grounded upper-bound / joint training objective, (v) the three training strategies (BANOM, PPM, SST) aimed at reducing train–test discrepancy, and (vi) strong empirical performance and ablations on Audio-QA and ASR compared with AR-only and NAR-only baselines. The AI review adds more detail on equations and derivations, but its main positive points are fully consistent with the human review’s strengths in scope and emphasis.",
+      "weakness": "There is partial but not complete overlap in the weaknesses. Both reviews criticize the evaluation of audio quality: the human review calls out the lack of human MOS-style evaluation and reliance mainly on semantic/automatic metrics; the AI review similarly notes absence of MOS/naturalness metrics and overreliance on ASR+LLM-as-judge, plus missing latency metrics. They also both raise concerns about the breadth and fairness of evaluation: the human review says the evaluation scope is limited to Audio-QA/ASR and lacks comparison with several contemporary speech-language models; the AI review instead focuses on fairness and strength of the provided baselines (especially a very weak NAR diffusion baseline) and missing details on parity, as well as possible train/test leakage in datasets. The AI review additionally flags theoretical precision (normalization of the joint scoring function), training data formatting (fixed interleaving vs variable length), naming inconsistencies (Algorithm 1), and potential data leakage—issues that the human review does not mention. Conversely, the human review mentions lack of analysis of diffusion hyperparameters and robustness in long conversations/low-resource languages, which are only tangentially related to the AI review’s latency concerns. Thus, there is a shared concern about evaluation quality and completeness, but many of the AI review’s methodological/theoretical criticisms have no counterpart in the human review.",
+      "overall": "Substantively, both reviews agree on what the paper is about, what it contributes, and that it is a meaningful, theoretically grounded hybrid AR–NAR framework with useful attention design and training strategies, empirically validated on Audio-QA and ASR. Their positive assessments are closely aligned. On the negative side, they both find the evaluation incomplete or somewhat unsatisfactory, especially regarding audio quality assessment and broader empirical validation, but they diverge in the specific technical criticisms: the AI review goes into much more detail on probabilistic formalism, baseline parity, data leakage, and pipeline biases, which the human review does not discuss. Taking the overlap in motivations/strengths and the partial overlap in weaknesses together, the overall alignment in review content and judgment is reasonably strong but not complete."
+    }
+  },
+  "generated_at": "2025-12-27T19:27:59",
+  "runs": [
+    {
+      "config": {
+        "judge_model": "gpt-5.1",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "baseline_review.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180
+      },
+      "config_key": "3b28d70d5731760031a4514ebc98b0afd78edf6d",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/baseline_review.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "motivation_strength_alignment": 0.86,
+        "weakness_error_alignment": 0.78,
+        "overall_alignment": 0.82,
+        "explanation": {
+          "strength": "Both reviews agree that the main contribution is a unified AR–NAR audio-language framework (TtT) with absorbing discrete diffusion for audio, modality-aware attention, and three training strategies (BANOM, PPM, SST), supported by a theoretically grounded joint objective and strong results on Audio-QA and ASR. The AI review adds more granular points (block-wise diffusion, data design, reproducibility details), but these elaborate rather than change the core strengths highlighted by the human review.",
+          "weakness": "Both note that evaluation of audio quality is limited: reliance on ASR/LLM-as-a-judge without human MOS or detailed acoustic metrics, which affects the assessment of practical speech quality. They also concur that the evaluation scope is narrow (mainly Audio-QA and ASR, missing other speech tasks and broader multilingual testing). The AI review introduces additional concerns (baseline parity and implementation detail gaps, missing latency/efficiency measurements, theoretical bound tightness, and data transparency), which are not mentioned in the human review but are largely extensions rather than contradictions.",
+          "overall": "Substantively, the reviews are well aligned on the paper’s core idea, main technical contributions, and the central empirical strengths, and they share key reservations about evaluation breadth and especially audio-quality assessment. The AI review covers a wider set of methodological and reproducibility issues, so alignment is not perfect, but the overall focus and judgment are highly consistent."
+        }
+      },
+      "generated_at": "2025-12-27T19:50:12"
+    },
+    {
+      "config": {
+        "judge_model": "gpt-5.1",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "final_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180
+      },
+      "config_key": "4569a6a97a67c8e2b360606eb74d6eb53b892d06",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/final_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "motivation_strength_alignment": 0.75,
+        "weakness_error_alignment": 0.65,
+        "overall_alignment": 0.7,
+        "explanation": {
+          "strength": "Both reviews identify the same core motivations: a unified AR–NAR hybrid model, theoretical justification of the joint objective, modality-aware attention, and strong empirical results backed by ablations. Review B adds much more granular evidence but remains consistent with Review A’s main strength themes.",
+          "weakness": "Both note missing audio-quality evaluations and limitations in evaluation scope. Review B raises many additional concerns (baseline parity, reproducibility, theoretical assumptions, latency metrics), which go beyond Review A’s simpler list, but they do not contradict it.",
+          "overall": "The two reviews share strong substantive alignment on the central contributions and several key weaknesses, although Review B introduces many extra critiques not mentioned in Review A. The overlap is significant but not complete, producing a high–moderate overall match."
+        }
+      },
+      "generated_at": "2025-12-27T19:52:40"
+    }
+  ]
+}

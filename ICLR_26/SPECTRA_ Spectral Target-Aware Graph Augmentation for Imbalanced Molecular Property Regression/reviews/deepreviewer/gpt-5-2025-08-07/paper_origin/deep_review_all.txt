@@ -1,0 +1,260 @@
+Summary
+The paper proposes SPECTRA, a spectral target-aware graph augmentation framework to address imbalanced molecular property regression. It reconstructs multi-attribute molecular graphs from SMILES (3.1), aligns pairs via GW/FGW (3.2), interpolates Laplacian eigenpairs and node features in a shared basis (3.3), reconstructs edges (3.4), applies a rarity-aware augmentation budget via KDE over labels (3.5), validates molecules by round-tripping to SMILES with RDKit (3.6), and trains a spectral GNN with edge-aware Chebyshev convolutions (3.7). Experiments on ESOL, FreeSolv, and Lipo evaluate generation quality (validity/uniqueness/novelty and property trends), predictive performance vs. baselines (MAE and SERA), error across target ranges, and efficiency Pareto fronts (4.1–4.4). Ablations test augmentation, alignment, and KDE prior effects (A.2).
+
+Soundness
+The core idea—geometry-aware alignment plus spectral interpolation—is plausible and grounded in spectral graph theory. Using FGW to obtain node correspondences (3.2) and Procrustes/QR for basis stabilization (3.3) addresses common instabilities. Interpolating eigenvalues maintains nonnegativity, so Lα remains PSD. However, there are several methodological concerns:
+- Laplacian-to-adjacency reconstruction (3.4) via Wα = max(0, -Lα + diag(Lα)) does not guarantee Laplacian structure (row sums zero) nor chemical constraints; subsequent RDKit sanitation (3.6) may correct errors but leaves augmentation dependent on a post-hoc fixer rather than principled constraints.
+- Multi-attribute edge channels (bond type, stereo, conjugation; 3.1) are treated as weighted adjacencies, then “stacked” if any positive weight (3.4). This lacks a clear discretization/thresholding scheme for categorical bond options and could yield ambiguous multi-channel positives per edge.
+- Node feature interpolation is described as in “original node space” (3.3), contradicting earlier claims that features are interpolated in a shared spectral basis (Abstract; Fig. 2 caption), suggesting either an implementation mismatch or unclear exposition.
+- The rarity-aware pairing strictly sorts neighbors by |yi − yj| (3.5), possibly encouraging label smoothing but not necessarily structural similarity; FGW mitigates this, but the pairing choice may create unrealistic intermediates if label proximity does not reflect feasible chemical interpolation.
+- Evaluation fairness: baselines appear trained without augmented data while SPECTRA includes augmentation plus a specific spectral GNN (4.2). It is not stated whether baselines benefit from the same augmented samples or a comparable training size.
+- Statistical rigor: number of runs/splits is unclear; “variance” is reported (Table 4) without specifying seeds or split protocol (A.3 only lists ranges; no splits). Some claims (100% validity in Table 1) seem unusually strong across all datasets and should be scrutinized.
+
+Presentation
+The paper is generally clear and well structured, with a logical pipeline and figures illustrating distribution and coverage. Nevertheless:
+- Inconsistent nomenclature: “Chemb” in Table 4 likely refers to ChebNet (4.2; Table 4).
+- Symbol reuse: α is used both in the FGW objective (3.2) and spectral mixing (3.3), potentially confusing.
+- The text states “projected into the aligned eigenbasis” (Fig. 2 caption), yet 3.3 performs interpolation in node space, creating a confusing mismatch.
+- Some figure/table references are inconsistent: “Table 3: t-SNE visualization…” (4.1; Block #28) while t-SNE plots are figures (30–32).
+- Experimental details such as split protocol, number of runs, and augmentation percentages (perc in 3.5) are not fully specified; runtime accounting in the Pareto plot (4.4; Fig. 5) does not clarify whether augmentation time is included.
+
+Contribution
+The work addresses a relatively underexplored setting: imbalanced molecular regression with a geometry-aware, spectral-domain augmentation. It combines FGW alignment with spectral interpolation, label-density–aware budgeting, and an edge-aware spectral GNN. The novelty lies in using spectral synthesis to create structurally coherent intermediates specifically targeting sparse label regions, and evaluating both generation plausibility and performance in low-density ranges. While related spectral augmentation exists for contrastive learning (2.2), and imbalanced regression techniques exist (2.1), this integrated approach for molecular regression is a meaningful contribution.
+
+Strengths
+- Coherent pipeline combining FGW alignment, spectral interpolation, and RDKit validation (3.2–3.6).
+- Clear focus on imbalanced regression, with density-aware budgeting (3.5) and SERA metric (4.2, Table 4).
+- Empirical results show competitive MAE and improved performance in rare regions (4.2, 4.3; Fig. 4), and favorable efficiency trade-offs (4.4; Fig. 5).
+- Ablation suggests benefit from alignment and KDE prior (A.2; Table 6).
+- Interpretability angle via round-trip to SMILES and property trend analysis (4.1; Fig. 3 and associated discussion).
+
+Weaknesses
+- Chemical validity relies heavily on RDKit sanitation (3.6); edge channel discretization is under-specified (3.4), and 100% validity across datasets (Table 1) seems optimistic without failure case counts or thresholds.
+- Inconsistency between abstract/figure claims and method details for node feature interpolation (Abstract; Fig. 2 vs. 3.3).
+- Fairness of baseline comparisons unclear; augmentation seems unique to SPECTRA (4.2), and baseline training regimes (including augmentation or not) are not stated.
+- Experimental rigor: lack of split/seeds details; “variance” usage without clarification (Table 4; A.3).
+- Symbol reuse and naming inconsistencies (α in 3.2 vs. 3.3; “Chemb” in Table 4; “Table 3” t-SNE mislabel).
+- No analysis of sensitivity to α (both FGW and spectral mixing) or reconstruction thresholds; no chemical constraint guarantees during synthesis beyond post-hoc sanitation.
+
+Questions
+- Can you clarify whether node features are interpolated in the spectral basis or original node space? Abstract and Fig. 2 claim spectral-basis interpolation, but 3.3 states original node space. Which is implemented?
+- How are edge channel weights discretized to categorical bonds/stereochemistry/conjugation during reconstruction (3.4)? What thresholds are used, and how do you avoid multi-channel conflicts per edge?
+- What is the split protocol (random seeds, folds, train/val/test proportions) and number of runs for MAE/SERA (Table 4)? Are reported “variances” across seeds or folds?
+- Do baselines train with the same augmented samples or only original data? If only originals, can you provide baselines with augmentation to ensure fairness?
+- Is augmentation time included in the runtime plotted in Fig. 5 (4.4)? If not, please provide end-to-end time including augmentation.
+- How sensitive are results to α in FGW (3.2) and spectral mixing (3.3), to KDE bandwidth (Scott’s rule in Fig. 1 vs. 3.5), and to perc (3.5)? Please add a sensitivity analysis.
+- Given 100% validity (Table 1), how many generated molecules were attempted per dataset, and what are the sanitation modes (strict vs. relaxed) proportions? Any failure cases?
+- In GW/FGW with zero padding (3.2), how do you handle mappings to padded nodes when |VA| ≠ |VB|? Are unmatched nodes dropped or interpolated?
+
+Rating
+- Overall (10): 7 — Innovative spectral augmentation for imbalanced molecular regression with solid empirical signals, but methodological ambiguities and evaluation details need tightening (3.3, 3.4, 4.2; Table 4; Table 1).
+- Novelty (10): 8 — Geometry-aware spectral synthesis targeted at rare regression regimes is distinctive relative to prior spectral and imbalance work (2.1, 2.2, 2.5).
+- Technical Quality (10): 7 — The pipeline is plausible but reconstruction/discretization and basis interpolation inconsistencies, plus limited sensitivity/fairness analysis, weaken rigor (3.3–3.6; 4.2; A.2).
+- Clarity (10): 7 — Generally clear with helpful figures, but symbol reuse, naming, and reference inconsistencies reduce clarity (3.2–3.3; 4.1–4.2; Table 4; Block #28).
+- Confidence (5): 4 — Reasonable confidence based on detailed reading and cross-checking of sections and tables, though some implementation details are unspecified (3.3, 3.4, 4.2).
+
+
+Summary
+The authors present SPECTRA, a framework for spectral-domain augmentation aimed at improving performance on rare target ranges in molecular property regression. It builds multichannel Laplacians from SMILES (3.1), aligns graphs via GW/FGW (3.2), interpolates spectra and features to synthesize intermediates (3.3–3.4), budgets augmentation by KDE rarity (3.5), validates molecules by round-trip to SMILES (3.6), and trains an edge-aware Chebyshev spectral GNN (3.7). Experiments over ESOL, FreeSolv, and Lipo evaluate molecule validity/novelty, predictive metrics (MAE, SERA), error by target bins, and runtime vs. accuracy (4.1–4.4), with ablations on alignment and KDE (A.2).
+
+Soundness
+The spectral alignment and interpolation approach is grounded in theory, and the use of FGW is appropriate for handling structural and feature alignment. The rarity-aware budget addresses imbalance. However, several soundness issues emerge upon cross-checking:
+- Laplacian reconstruction to adjacency (3.4) via clipping can yield arbitrary positive weights without guaranteeing chemically valid discretization across channels; reliance on RDKit sanitation (3.6) shifts correctness to a post-processing step.
+- The claim of interpolating node features in a shared spectral basis (Abstract; Fig. 2) conflicts with 3.3’s interpolation in original node space; this discrepancy undermines the stated stability advantages.
+- Pair selection by label proximity (3.5) might generate structurally implausible intermediates if label closeness does not correlate with cheminformatic feasibility; FGW alignment helps, but there is no constraint that ensures chemically reasonable paths in spectral space.
+- The evaluation setup lacks details on data splits/seeds and whether baselines use augmentation (4.2); without these, it’s hard to assess fairness and statistical significance.
+
+Presentation
+The manuscript is readable and generally well organized, with a clear pipeline figure and multiple visual analyses. Issues noted:
+- “Chemb” likely a typo for ChebNet in Table 4 (4.2).
+- α is overloaded (FGW objective weight in 3.2 and spectral mixing coefficient in 3.3), creating potential confusion.
+- The t-SNE visualization is referred to as “Table 3” in text (4.1; Block #28) but presented as figures (30–32); figure labeling is inconsistent.
+- Experimental setup (A.3) lacks explicit split strategy, number of runs, and whether augmentation time is included in runtime plots (4.4; Fig. 5).
+
+Contribution
+Target-aware spectral augmentation in molecular regression is a timely and useful contribution. The integration of GW/FGW alignment, spectral interpolation, and a density-aware budget is novel in this domain. The paper also emphasizes interpretability by reconstructing molecules and analyzing property-target trends. These aspects advance practical imbalanced regression on graphs.
+
+Strengths
+- Methodologically coherent use of spectral tools and optimal transport (3.2–3.3).
+- Purpose-built budgeting for sparse label regions (3.5).
+- Competitive performance with improved rare-range errors (4.2–4.3; Fig. 4).
+- Validation via SMILES round-trip and property distributions (4.1; Fig. 3), supporting interpretability.
+- Ablation demonstrating importance of alignment and KDE (A.2; Table 6).
+
+Weaknesses
+- Chemical validity enforcement depends on RDKit sanitation rather than principled constraints in reconstruction; discretization of multichannel edges is under-specified (3.4, 3.6).
+- Abstract/method mismatch on node feature interpolation space (Abstract; Fig. 2 vs. 3.3).
+- Baseline comparison fairness unclear (augmentation only in SPECTRA?) and missing statistical rigor (seeds/splits) (4.2; A.3).
+- No sensitivity analysis for α (both FGW and spectral mixing) or KDE bandwidth/perc (3.2–3.5).
+- Overclaim risk: 100% validity across datasets (Table 1) without reporting failure cases or relaxation rates (3.6).
+
+Questions
+- Please reconcile the node feature interpolation discrepancy: spectral-basis vs. node-space (Abstract/Fig. 2 vs. 3.3). What is implemented?
+- How are bond types/stereo/conjugation discretized from continuous channel weights (3.1, 3.4)? Thresholds, conflict resolution, and mapping details?
+- What train/val/test splits, seeds, and number of runs were used? Are “variances” in Table 4 across seeds or folds?
+- Do baselines train with your augmented data? If not, can you include baselines with augmentation for fair comparison?
+- Is augmentation runtime included in Fig. 5 (4.4)? Please provide end-to-end runtime including augmentation.
+- Sensitivity of results to α (3.2, 3.3), KDE bandwidth, and perc (3.5)? Can you add plots or tables?
+- How many augmented samples per dataset were generated, and what proportion required relaxed sanitation (3.6)?
+- How do you handle node count mismatch during Hungarian assignment with zero padding (3.2)?
+
+Rating
+- Overall (10): 6 — Strong idea and promising results but key methodological/expositional gaps (reconstruction discretization, interpolation space, evaluation fairness) need resolution (3.3–3.4, 4.2; Table 4; Table 1).
+- Novelty (10): 7 — Spectral augmentation for imbalanced molecular regression is a meaningful step beyond prior work (2.1–2.2, 2.5).
+- Technical Quality (10): 6 — Solid foundation yet incomplete treatment of chemical constraints and sensitivity/fairness analyses (3.4–3.6; 4.2; A.3).
+- Clarity (10): 6 — Generally clear but with symbol reuse, typos, and figure/table labeling inconsistencies (3.2–3.3; 4.1–4.2; Block #28; Table 4).
+- Confidence (5): 4 — Good confidence based on cross-checking; missing experimental details limit full verification (A.3; 4.2).
+
+
+Summary
+SPECTRA targets imbalanced molecular regression by augmenting sparse target regions via spectral synthesis. The method constructs multichannel Laplacians from SMILES (3.1), aligns molecules using GW/FGW (3.2), interpolates eigenpairs and features (3.3), reconstructs edges (3.4), and uses KDE-derived rarity weights to budget augmentation (3.5). RDKit-based validation ensures chemical plausibility (3.6). A spectral GNN with edge-aware Chebyshev convolutions is trained on original + augmented samples (3.7). Results show valid/novel molecules (4.1; Table 1), competitive MAE/SERA vs. baselines (4.2; Table 4), lower errors in rare ranges (4.3; Fig. 4), and favorable runtime trade-offs (4.4; Fig. 5). Ablations indicate alignment and KDE benefit (A.2; Table 6).
+
+Soundness
+The approach is soundly motivated: spectral interpolation offers a principled way to create intermediate graphs, and FGW can align disparate molecules. KDE budgeting is a standard technique for label-density awareness. That said, I verified several aspects that require clarification:
+- Edge reconstruction (3.4) transforms Lα to Wα by clipping and then “stacking per-channel features” when any channel is positive; without clear discretization rules, this can produce non-physical multi-attribute assignments. Validity is then enforced by RDKit sanitation (3.6), which is a practical but post-hoc fix that may alter intended structures.
+- A mismatch exists between the claimed feature interpolation in a shared spectral basis (Abstract; Fig. 2) and the described node-space interpolation (3.3). This undermines the claimed stability and interpretability of feature synthesis.
+- Pair selection (3.5) prioritizes label proximity only; combining with FGW helps, but there is no constraint to prevent interpolations that violate feasible chemistry (e.g., drastic scaffold changes).
+- Experimental comparison: If SPECTRA trains on augmented samples and baselines do not (4.2), the comparison could conflate augmentation effects with model architecture. Number of runs/splits is unspecified, and “variance” meanings are unclear (Table 4).
+
+Presentation
+Clear narrative and helpful visualizations, but several presentation issues reduce clarity:
+- Typos and inconsistent labels (e.g., “Chemb” vs. ChebNet in Table 4; 4.2).
+- α overload (FGW balance in 3.2 and spectral mix in 3.3).
+- Mixed figure/table references (t-SNE called “Table 3” in Block #28 vs. figures in 30–32).
+- Missing details in A.3: splits, seeds, run counts; augmentation percentage perc is not instantiated (3.5).
+
+Contribution
+The paper contributes a novel, integrated spectral augmentation approach focused on imbalanced regression in molecular graphs, with interpretability via SMILES reconstruction and property-target analyses. Compared to prior spectral methods (2.2) and imbalance techniques (2.1), the proposed combination is new and potentially impactful for data-scarce regimes in drug discovery.
+
+Strengths
+- Technically interesting pipeline combining FGW and spectral synthesis (3.2–3.4).
+- Rarity-aware augmentation budget (3.5) directly targets sparse label regions.
+- Empirical gains in rare ranges (4.3) with competitive overall MAE and good efficiency (4.4).
+- Ablations echo the importance of alignment/KDE (A.2; Table 6).
+- Interpretability via valid molecules and property trends (4.1; Fig. 3; Table 1).
+
+Weaknesses
+- Reconstruction/discretization of categorical edge attributes is under-specified (3.4), making chemical validity dependent on RDKit sanitation (3.6).
+- Feature interpolation space inconsistency (Abstract/Fig. 2 vs. 3.3).
+- Unclear fairness and statistical rigor in baseline comparisons (4.2; Table 4), and missing split/run details (A.3).
+- No sensitivity analysis for α parameters or KDE bandwidth; no reporting of failure cases despite 100% validity claims (Table 1).
+
+Questions
+- Do node features get projected and interpolated in the spectral basis or in node space? Please align Abstract/Fig. 2 and 3.3 and specify the implementation.
+- How do you map continuous per-channel adjacency weights to discrete bond types/stereo/conjugation? Are thresholds used? How are conflicts handled?
+- What are the data split strategies, number of runs, and seeds? Is variance in Table 4 across runs or folds?
+- Do baselines use the same augmented datasets? If not, can you provide a controlled comparison with augmentation for baselines?
+- Is the augmentation time included in the runtime plotted in Fig. 5? Please clarify end-to-end time.
+- Sensitivity to α (FGW and mixing), KDE bandwidth (Scott’s vs. tuned), and perc need reporting.
+- Given 100% validity in Table 1, how many augmented molecules were generated, and what were sanitation failure or relaxation rates?
+
+Rating
+- Overall (10): 6 — A promising and novel approach with useful empirical improvements, but reconstruction details, feature interpolation consistency, and evaluation rigor need clarification (3.3–3.4; 4.2; Table 1; Table 4).
+- Novelty (10): 8 — Spectral augmentation tailored to imbalanced molecular regression is novel relative to existing spectral and imbalance methods (2.1–2.2).
+- Technical Quality (10): 6 — Solid foundations but missing details on discretization, constraints, and sensitivity/fairness analyses (3.4–3.6; 4.2; A.3).
+- Clarity (10): 6 — Good structure yet marred by symbol reuse, typos, and reference inconsistencies (3.2–3.3; 4.1–4.2; Block #28; Table 4).
+- Confidence (5): 3 — Moderate confidence; several implementation/evaluation details are unclear and need author clarification (A.3; 3.3; 3.4; 4.2).
+
+
+Summary
+This paper proposes SPECTRA, a spectral-domain, target-aware augmentation pipeline for molecular property regression under label imbalance. The method: (i) parses SMILES to multichannel graphs (3.1), (ii) aligns molecules via GW/FGW couplings (3.2), (iii) interpolates Laplacian eigenpairs and features (3.3), (iv) reconstructs graphs and labels (3.4), (v) uses KDE-based rarity weights to allocate augmentation (3.5), (vi) validates molecules by RDKit sanitation (3.6), and (vii) trains an edge-aware Chebyshev spectral GNN (3.7). Experiments over ESOL, FreeSolv, Lipo analyze validity/novelty, property trends, MAE/SERA vs. baselines, error across target ranges, and efficiency (4.1–4.4). Ablations evaluate augmentation, alignment, and KDE prior (A.2).
+
+Soundness
+The methodology leverages appropriate tools (FGW, Procrustes/QR) and addresses imbalanced regression via rarity-aware augmentation. The spectral interpolation of eigenvalues/bases is mathematically coherent, and clipping yields nonnegative adjacencies. Yet, careful verification exposes gaps:
+- The reconstructed adjacencies may not preserve graph-theoretic Laplacian constraints and lack principled discretization from continuous channel weights to categorical chemistry (3.4). RDKit sanitation (3.6) is necessary but could mask structural artifacts.
+- Abstract/Fig. 2 imply spectral-basis interpolation for features, while 3.3 states node-space interpolation; if the implementation is node-space, the claimed spectral stability for features is overstated.
+- Pair selection by label proximity (3.5) risks implausible interpolants; combining label closeness with structural similarity metrics (beyond FGW) could be more robust.
+- Experimental clarity: It’s unclear if baselines see augmented data; number of runs and split protocol are missing (4.2; A.3). The 100% validity claim (Table 1) needs context (sample counts, sanitation mode).
+
+Presentation
+The paper reads well and the visualizations are useful. Issues include:
+- Naming inconsistency (“Chemb” vs. ChebNet; Table 4).
+- α reused across different roles (3.2 vs. 3.3).
+- t-SNE visualization called “Table 3” in text (Block #28) but shown as figures (30–32).
+- Missing specifics on splits/seeds/runs; augmentation percent (perc) is not instantiated.
+- Runtime accounting (4.4) does not clarify inclusion of augmentation cost.
+
+Contribution
+A notable contribution is the explicit use of spectral interpolation for augmentation to handle regression imbalance in molecular graphs, with interpretability via SMILES conversion and property analyses. The blend of GW/FGW alignment, spectral synthesis, and rarity-aware budgeting advances practice in data-scarce scientific regimes.
+
+Strengths
+- Principled spectral alignment/interpolation pipeline (3.2–3.4).
+- Clear focus on imbalanced regression with KDE budgeting (3.5).
+- Competitive MAE/SERA and improved rare-range error (4.2–4.3; Fig. 4).
+- Efficiency gains vs. transformer baselines (4.4; Fig. 5).
+- Ablation supports design choices (A.2; Table 6) and interpretability through property-target plots (4.1; Fig. 3).
+
+Weaknesses
+- Reconstruction specifics for categorical edge attributes are insufficient (3.4), making chemical validity reliant on RDKit sanitation (3.6).
+- Feature interpolation inconsistency (Abstract/Fig. 2 vs. 3.3).
+- Unclear experimental fairness and statistical reporting (4.2; A.3; Table 4).
+- No sensitivity analyses for key hyperparameters (α, KDE bandwidth, perc).
+- Overly strong validity claim (Table 1) without failure analysis or counts.
+
+Questions
+- Please clarify the actual feature interpolation space (spectral vs. node) and update text/figures accordingly.
+- Provide the exact edge discretization process: thresholds for channel weights, mapping to bond types/stereo/conjugation, and conflict resolution.
+- Detail splits, seeds, runs; explain “variance” in Table 4. Are results averaged over multiple random splits?
+- Do baselines receive augmented data? If not, can you supply augmentation-enabled baselines?
+- Is augmentation time counted in Fig. 5? Please report end-to-end time and the cost of GW/FGW alignment.
+- Sensitivity to α parameters, KDE bandwidth (Scott vs. tuned), and augmentation rate perc would strengthen claims.
+- How many augmented molecules were generated per dataset, and what proportion required relaxed sanitation (3.6)? Any examples of failure cases?
+
+Rating
+- Overall (10): 7 — A solid and creative approach with encouraging results, tempered by reconstruction/feature interpolation inconsistencies and evaluation detail gaps (3.3–3.4; 4.2; Table 1; Table 4).
+- Novelty (10): 8 — Spectral, geometry-aware augmentation focused on imbalanced regression is a fresh contribution beyond prior spectral augmentation and imbalance work (2.1–2.2).
+- Technical Quality (10): 6 — Foundations are sound, but missing discretization details, sensitivity studies, and fairness clarifications limit strength (3.4–3.6; 4.2; A.3).
+- Clarity (10): 7 — Well written overall with helpful visuals; minor inconsistencies and missing experimental specifics reduce clarity (Block #28; Table 4; 3.2–3.3).
+- Confidence (5): 3 — Moderate; several key implementation and evaluation specifics need clarification for full verification.
+
+
+Summary
+The paper introduces SPECTRA, a spectral-domain augmentation framework that synthesizes intermediate molecular graphs to densify sparse target regions in imbalanced regression. It builds multichannel Laplacians from SMILES (3.1), aligns pairs using GW/FGW (3.2), interpolates eigenpairs and node features (3.3), reconstructs edges and labels (3.4), allocates augmentation via KDE rarity weights (3.5), validates molecules with RDKit sanitation (3.6), and trains an edge-aware Chebyshev spectral GNN (3.7). Experiments on ESOL/FreeSolv/Lipo report high validity/novelty, competitive MAE/SERA, improved rare-range errors, and favorable runtime (4.1–4.4), with ablations showing benefits of alignment and KDE (A.2).
+
+Soundness
+Conceptually well motivated: spectral interpolation provides a path for generating coherent intermediates, and FGW alignment establishes correspondences. KDE for rarity-aware budgeting is reasonable. Nonetheless, several points deserve scrutiny:
+- The adjacency reconstruction (3.4) from Lα via clipping and channel stacking lacks a principled mechanism to ensure categorical bond/stereo/conjugation validity; reliance on RDKit sanitation (3.6) may correct violations but can alter the augmented graph distribution unpredictably.
+- Inconsistency in feature interpolation description: spectral-basis vs. node-space (Abstract; Fig. 2 vs. 3.3).
+- Pairing by label proximity alone (3.5) may neglect chemical plausibility; no constraint is imposed on chemical distance or scaffold similarity beyond FGW alignment.
+- Comparative evaluation does not state whether baselines receive augmented data (4.2), and reporting of variance lacks split/run details (A.3), which affects interpretability of statistical significance.
+- The 100% validity claim (Table 1) across datasets is unusual; failure counts or sanitation mode breakdowns would help.
+
+Presentation
+Strong visuals and logical structure, but clarity issues remain:
+- Typos/inconsistent labels (Table 4 “Chemb” vs. ChebNet; 4.2).
+- α overload for different roles (3.2, 3.3).
+- Mislabeling t-SNE as “Table 3” (Block #28) with plots shown in Fig. 30–32.
+- Experimental setup does not specify split strategies, seeds, runs, or whether augmentation runtime is included (A.3; 4.4).
+
+Contribution
+The work advances imbalanced molecular regression by proposing spectral, geometry-aware augmentation targeted at rare labels and demonstrating interpretability via reconstruction and property analyses. This integration has practical significance for drug discovery datasets where rare values matter.
+
+Strengths
+- Well-integrated pipeline leveraging FGW and spectral interpolation (3.2–3.4).
+- Rarity-aware augmentation focused on underrepresented targets (3.5).
+- Improved performance in sparse regions with competitive overall MAE and solid efficiency (4.2–4.4; Fig. 4, Fig. 5).
+- Ablation evidence supports design choices (A.2; Table 6).
+- Property-target trend consistency indicates plausible augmentation behavior (4.1; Fig. 3).
+
+Weaknesses
+- Limited detail on discrete edge attribute reconstruction and potential multi-channel conflicts (3.4), making chemical validity heavily dependent on RDKit sanitation (3.6).
+- Feature interpolation inconsistency between sections (Abstract/Fig. 2 vs. 3.3).
+- Fairness and statistical rigor of baseline comparisons are unclear (4.2; Table 4; A.3).
+- Lack of sensitivity analysis to α parameters, KDE bandwidth, and augmentation rate perc (3.2–3.5).
+- Overly strong validity claim without failure analysis (Table 1).
+
+Questions
+- Which feature interpolation is implemented—spectral basis or node space? Please reconcile Abstract/Fig. 2 with 3.3.
+- How do you discretize continuous channel weights into specific bond types/stereo/conjugation, and what thresholds/conflict policies are used (3.4)?
+- What is the exact split protocol (train/val/test), number of runs, and seeds? Are reported variances across runs or folds (Table 4)?
+- Did baselines receive augmented data? If not, can you provide baselines trained with augmentation for fairness?
+- Is augmentation time included in runtime comparisons (4.4; Fig. 5)? Please provide end-to-end timings and alignment costs.
+- Can you provide sensitivity analysis for α (GW/FGW and spectral mixing), KDE bandwidth, and perc, and possibly for neighbor selection criteria in 3.5?
+- How many molecules were augmented per dataset, and what fraction required relaxed RDKit sanitation or failed (3.6)?
+
+Rating
+- Overall (10): 7 — Strong idea with practical impact and promising results, but methodological ambiguities and evaluation details (feature interpolation, edge discretization, fairness/statistics) need clarification (3.3–3.4; 4.2; Table 1).
+- Novelty (10): 8 — Integrating spectral augmentation with rarity-aware budgeting for molecular regression is novel relative to prior art (2.1–2.2, 2.5).
+- Technical Quality (10): 6 — Solid foundations; missing constraints and sensitivity/fairness analyses limit strength (3.4–3.6; 4.2; A.3).
+- Clarity (10): 7 — Clear overall with helpful figures, yet marred by symbol reuse and labeling inconsistencies (Block #28; Table 4; 3.2–3.3).
+- Confidence (5): 3 — Moderate; several implementation and evaluation specifics require author clarification to fully verify claims.

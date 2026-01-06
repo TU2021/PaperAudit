@@ -1,0 +1,78 @@
+# Innovation & Motivation Report
+
+## 1. The Authors' Claimed Contribution
+- Core Problem: Realistic long-tailed semi-supervised learning (RTSSL) where the unlabeled class distribution P(Y|A=0) is unknown and differs from the labeled distribution P(Y|A=1), leading standard pseudo-labeling to be biased and perform poorly on unlabeled data.
+- Claimed Gap: “Existing methods typically assume that the unlabeled class distribution is either known a priori, which is unrealistic in most situations, or estimate it on-the-fly using the pseudo-labels themselves.” (Abstract). The Introduction further motivates that “SimPro (Du et al., 2024) overestimates head classes in 4/5 unlabeled distribution settings (Figure 1). The proposed doubly robust estimator is more accurate.”
+- Proposed Solution: A two-stage method. Stage 1 uses a label-shift EM framework to estimate P(Y|X) and the missingness mechanism P(A|Y), then applies a doubly robust (DR) estimator to accurately estimate the combined class distribution P(Y) and recover P(Y|A=0). Stage 2 incorporates this estimated unlabeled class distribution into pseudo-labeling approaches (e.g., SimPro, BOAT) via logit adjustment/EM. Theoretical guarantees are provided: “Under Assumption 3.1… √N(Ψ_dr(θ)(c) − P(Y=c)) ⇒ 𝒩(0, 𝔼[φ(O)(c)^2]).” (Theorem 3.2). The approach explicitly models non-ignorable missingness: “Adapt a maximum likelihood framework with non-ignorable missingness via EM, encoding P(A|Y). This generalizes FixMatch and reparameterizes SimPro.” (Introduction; Section 3.2)
+
+## 2. Comparative Scrutiny (The "Trial")
+Here, we analyze how the paper stands against the identified similar works.
+
+### vs. Learning to Impute: A General Framework for Semi-supervised Learning
+- Identified Overlap: Both aim to improve SSL by producing better imputed labels/signals for unlabeled data and plugging them into standard training. The manuscript’s Stage 1 EM responsibilities ω^t(x,c) and DR estimate of class priors act as learned imputation signals.
+- Manuscript’s Defense: The manuscript specializes the imputation to label-shift RTSSL with explicit prior estimation and theory: “We propose to explicitly estimate the unlabeled class distribution… using a doubly robust estimator with a strong theoretical guarantee; this estimate can then be integrated into existing methods…” (Abstract). It further formalizes identifiability under label shift: “Assumes label shift P(X|Y, A)=P(X|Y).” (Explicit caveats; Preliminaries Eq. (2))
+- Reviewer’s Assessment: The distinction is substantive. Prior “learning to impute” provides a general plug-in idea; here, the authors deliver a statistically grounded, efficient DR estimator targeted at class-prior shift under non-ignorable missingness, with a concrete EM factorization. This narrows the scope but deepens rigor. The manuscript does not appear to cite this specific work in the provided text.
+
+### vs. InterLUDE: Labeled–Unlabeled Interaction for SSL
+- Identified Overlap: Both emphasize interaction between labeled and unlabeled pools to correct biases; the manuscript’s EM lower bound blends labeled counts with unlabeled posteriors, and Stage 2 aligns predictions via prior-aware logit adjustment.
+- Manuscript’s Defense: The manuscript claims a principled label-shift EM view with explicit modeling of P(A|Y): “Adapt a maximum likelihood framework with non-ignorable missingness via EM, encoding P(A|Y). This generalizes FixMatch and reparameterizes SimPro (details in Section 3.2).” (Introduction) It further provides a DR estimator with efficiency (Theorem 3.2).
+- Reviewer’s Assessment: Methodological overlap exists at a high level (labeled–unlabeled coupling), but the manuscript’s focus on estimating and correcting unlabeled class priors under label shift is a concrete and theoretically anchored contribution beyond InterLUDE’s embedding fusion/consistency heuristics. The manuscript does not appear to cite InterLUDE in the provided text.
+
+### vs. Bayesian Pseudo Labels: EM for Semi-Supervised Segmentation
+- Identified Overlap: Both recast pseudo-labeling as EM with responsibilities; the manuscript also views FixMatch as an EM instance and reparameterizes SimPro accordingly.
+- Manuscript’s Defense: It differentiates via label-shift modeling and explicit estimation of P(A|Y) and P(Y|A=0): “Non-ignorable missingness: A can depend on both X and Y; with label shift assumption… the true data distribution is identifiable.” (Preliminaries) “Label-shift EM… ω^t(x,c) ∝ P(Y|X)·P(A=0|Y).” (Section 3.1, Eq. (7)) and then “apply a meta doubly robust estimator to improve P(Y|A=0).” (Introduction; Section 3.3)
+- Reviewer’s Assessment: The EM framing is shared, but the manuscript’s label-shift identifiability, explicit missingness mechanism P(A|Y), and semiparametric DR estimation of class priors represent a significant technical extension beyond prior EM-as-pseudo-labeling works. The segmentation domain and dynamic thresholds differ in scope. The manuscript does not appear to cite this specific work in the provided text.
+
+### vs. FreeMatch: Self-adaptive Thresholding for SSL
+- Identified Overlap: Common pseudo-labeling backbone (FixMatch/consistency) and concern with imbalanced SSL.
+- Manuscript’s Defense: The manuscript explicitly targets class-prior correction rather than thresholding: “Label shift and logit adjustment… P(Y|X,uniform) ∝ P(Y|X,A=1) P(Y|uniform)/P(Y|A=1).” (Preliminaries Eq. (3)) and “Use… estimated unlabeled distribution to train final classifier.” (Method; Section 3.3; Section 3.2 Eq. (9))
+- Reviewer’s Assessment: While both adapt pseudo-labeling to imbalance, the manuscript’s core novelty is class-prior estimation via EM+DR under label shift with efficiency guarantees. FreeMatch’s adaptive thresholds are orthogonal. The difference is meaningful. The manuscript adheres to FixMatch/SimPro connections but does not appear to cite FreeMatch in the provided text.
+
+### vs. Keep It on a Leash (CPG): Controllable Pseudo-label Generation
+- Identified Overlap: Both aim to mitigate pseudo-label bias under unknown unlabeled distributions and employ logit adjustment informed by class priors.
+- Manuscript’s Defense: It proposes explicit prior estimation as a finite-dimensional parameter with theoretical guarantees: “Explicitly estimate the unlabeled class distribution… using a doubly robust estimator with strong theoretical guarantees; integrate into pseudo-labeling to improve training.” (Abstract) and provides a label-shift EM factorization including P(A|Y) (Section 3.1–3.2).
+- Reviewer’s Assessment: CPG enforces a known distribution via controllable filtering; the manuscript estimates it via an efficient DR estimator within an EM model of missingness. The approaches are close in spirit; however, the manuscript advances a principled estimation-and-proof route that CPG does not. The manuscript does not appear to cite CPG in the provided text.
+
+### vs. Class-Distribution-Aware Pseudo Labeling (CAP) for Multi-Label Learning
+- Identified Overlap: Both estimate the class distribution and feed it back into pseudo-labeling to align with true priors.
+- Manuscript’s Defense: The manuscript focuses on single-label, label-shift SSL with identifiability and DR efficiency: “Assumes label shift P(X|Y, A)=P(X|Y).” (Preliminaries; Explicit caveats) and “Ψ_dr… unbiased if either P(Y|X) or P(A|Y) is correct; asymptotically normal and efficient.” (Section 3.3; Theorem 3.2)
+- Reviewer’s Assessment: Conceptual overlap (distribution-aware pseudo-labeling) is evident, but the setting (single-label under label shift) and the semiparametric efficiency claims are new in this context. The manuscript does not appear to cite CAP in the provided text.
+
+### vs. “Improving realistic semi-supervised learning with doubly robust estimation” (same title/authors)
+- Identified Overlap: The Similar Works list includes a paper with identical title and authors and an abstract that matches the manuscript’s Abstract.
+- Manuscript’s Defense: Not applicable; this appears to be the same work. The Abstract text in the Similar Work matches the manuscript’s Abstract: “We propose to explicitly estimate the unlabeled class distribution… using a doubly robust estimator… integrate into existing methods…”
+- Reviewer’s Assessment: This is not independent prior art but likely the same manuscript or its preprint. It does not weaken motivation or novelty but indicates redundancy within the Similar Works list.
+
+## 3. Novelty Verdict
+- Innovation Type: Substantive
+- Assessment:
+  The manuscript identifies a concrete gap in RTSSL—unknown and long-tailed unlabeled class priors bias pseudo-labeling—and defends a principled remedy: estimate the unlabeled class distribution via a doubly robust estimator embedded in a label-shift EM framework with explicit modeling of non-ignorable missingness P(A|Y). This delivers asymptotic efficiency under fourth-root-n nuisance rates and sample splitting (Theorem 3.2), and then plugs the estimate into existing methods (SimPro, BOAT) to improve training. Compared to similar works that either heuristically adjust thresholds, enforce controlled priors via filtering, or recast pseudo-labeling as EM without label-shift identifiability, the manuscript’s contribution is a statistically grounded, target-parameter–centric approach with theory and empirical validation.
+  - Strength:
+    - Clear, well-articulated gap: “Existing methods… assume… known unlabeled distribution or estimate it on-the-fly via pseudo-labels; can be biased.” (Abstract)
+    - Principled modeling: label-shift identifiability (P(X|Y, A)=P(X|Y)) and non-ignorable missingness via EM (Section 3.1–3.2).
+    - Theoretical guarantees: doubly robust estimator Ψ_dr is asymptotically normal and efficient under Assumption 3.1; influence-function derivation and efficiency in Appendix A (Equations (16)–(27)).
+    - Empirical support: Lower TVD estimates for P(Y|A=0) in CIFAR-10/ImageNet-127, and consistent accuracy improvements when plugging into SimPro/BOAT across multiple settings (Section 4.1–4.2).
+    - Clarifies connections: shows FixMatch as EM and reparameterizes SimPro (Section 3.2), strengthening conceptual coherence.
+  - Weakness:
+    - Reliance on assumptions: “Assumes label shift P(X|Y, A)=P(X|Y) and uniform test distribution.” (Explicit caveats), boundedness of P(A=1|Y) ≥ ε and sample splitting (Appendix A).
+    - Practical instability: “DR-risk training can be unstable due to inverse weighting; small P(A|Y) for tail classes causes training issues.” (Explicit caveats; Section 4.3), and the DR-loss ablation underperforms (Section 4.3).
+    - Estimation quality varies: “For CIFAR-100 stage 1 estimates may be poor, yet accuracy generally does not degrade.” (Explicit caveats), suggesting limited robustness in high-class-count regimes.
+    - Coverage of related work: Several closely related distribution-aware pseudo-labeling works (e.g., FreeMatch, CPG, CAP) are not explicitly cited in the provided text, leaving some overlap unaddressed in the manuscript’s narrative.
+
+## 4. Key Evidence Anchors
+- Abstract: “Existing methods typically assume that the unlabeled class distribution is either known a priori… or estimate it on-the-fly… We propose to explicitly estimate the unlabeled class distribution… using a doubly robust estimator… integrate into existing methods…”
+- Introduction: “SimPro… overestimates head classes… The proposed doubly robust estimator is more accurate.” and “Adapt a maximum likelihood framework with non-ignorable missingness via EM, encoding P(A|Y). This generalizes FixMatch and reparameterizes SimPro.”
+- Preliminaries:
+  - Label-shift assumption: “P(X|Y,A)=P(X|Y)” (Equation (2)).
+  - Bayes correction: “P(Y|X,uniform) ∝ P(Y|X,A=1)·P(Y|uniform)/P(Y|A=1)” (Equation (3)).
+- Method:
+  - EM lower bound and responsibilities: Q(θ|θ^t) decomposition (Equations (5)–(7)).
+  - SimPro EM/logit adjustment link: “Loss … with P(Y) maintained as a running estimate.” (Equation (9); Section 3.2).
+  - Estimators: OR/IPW/DR definitions for P(Y) (Equations (10), (12), (13)); DR unbiasedness if either P(Y|X) or P(A|Y) is correct.
+- Theory:
+  - Assumption 3.1 (fourth-root-n rates) (Equation (14)).
+  - Theorem 3.2: asymptotic normality and efficiency of Ψ_dr (Equation (15)); proof and influence function in Appendix A (Equations (16)–(27)).
+- Experiments:
+  - Distribution estimation (TVD): CIFAR-10/Table 1, ImageNet-127/Table 7 (e.g., SimPro DR TVD “0.017 ± 0.004” in CIFAR-10 consistent; “0.017 ± 0.000” on ImageNet-127 32×32).
+  - Accuracy improvements: CIFAR-10/Table 3 (e.g., SimPro “74.4 ± 0.71” → “77.8 ± 1.50”), ImageNet-127/Table 6 (e.g., SimPro “63.7” → “64.2” at 64×64).
+  - Ablations: DR-risk instability and batch-update DR underperformance (Section 4.3; Table 8).

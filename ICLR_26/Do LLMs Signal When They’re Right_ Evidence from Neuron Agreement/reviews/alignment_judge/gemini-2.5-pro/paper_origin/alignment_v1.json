@@ -1,0 +1,104 @@
+{
+  "paper": "Do LLMs Signal When They’re Right_ Evidence from Neuron Agreement",
+  "runs": [
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "deepreviewer",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "deep_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180
+      },
+      "config_key": "24b66d75b94c155df325f4e5f2603b40312e4469",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/deepreviewer/gpt-5-2025-08-07/paper_origin/deep_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "motivation_strength_alignment": 0.9,
+        "weakness_error_alignment": 0.75,
+        "overall_alignment": 0.8,
+        "explanation": {
+          "strength": "Both reviews identify the same core strengths: the novel use of internal neuron signals (sparsity, agreement) for unsupervised selection, the method's applicability to non-voting tasks like code, and the significant token savings from early stopping. The alignment is very high, with nearly identical emphasis on the key contributions.",
+          "weakness": "There is strong overlap on major weaknesses, including the lack of rigorous baselines, insufficient statistical validation, and unproven claims of superiority over simpler metrics like entropy. Review B adds more specific technical critiques (FFN-only modeling, coarse Jaccard similarity) not present in Review A, which prevents a perfect match.",
+          "overall": "The reviews are highly aligned in their overall judgment, viewing the paper as a novel, promising idea with strong efficiency gains that is held back by a need for more rigorous validation and broader comparisons. While there are minor differences in the specific weaknesses raised, their substantive focus and final assessment are very consistent."
+        }
+      },
+      "generated_at": "2025-12-27T20:03:27"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "baseline_review.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180
+      },
+      "config_key": "a14d937ebf873b90a820c8cb44da768956431bd4",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/baseline_review.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "motivation_strength_alignment": 0.95,
+        "weakness_error_alignment": 0.98,
+        "overall_alignment": 0.96,
+        "explanation": {
+          "strength": "Both reviews identify the same core strengths: the novel use of internal neuron activations for unsupervised selection, the significant token savings from early stopping, and the method's applicability to open-ended tasks where voting fails.",
+          "weakness": "Both reviews highlight an almost identical set of major weaknesses, including the limited model/task diversity, the lack of comparisons to strong baselines (e.g., entropy-based selection), unproven value beyond simpler metrics, and unquantified computational overhead.",
+          "overall": "The reviews show exceptionally high alignment in substance and judgment, agreeing that the paper presents a promising but premature idea whose generality and practical advantages are not yet convincingly demonstrated due to weak baselines and limited scope."
+        }
+      },
+      "generated_at": "2025-12-27T20:07:20"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "final_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180
+      },
+      "config_key": "565dcfbed8e348ba365acb8ebe44bf867f3cd0c2",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/final_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "motivation_strength_alignment": 0.95,
+        "weakness_error_alignment": 0.75,
+        "overall_alignment": 0.78,
+        "explanation": {
+          "strength": "Both reviews identify the same core strengths: the novelty of using internal neuron signals for selection, the applicability to open-ended tasks where voting fails, and the efficiency gains from early stopping. The alignment is nearly perfect, with Review B providing more granular evidence for the same high-level points made in Review A.",
+          "weakness": "There is strong overlap on major weaknesses, including limited model/task scope, weak baseline comparisons, unproven value-add over entropy, and unquantified overhead. However, Review B uniquely identifies concrete numerical inconsistencies between tables, a significant point missed by Review A, which lowers the alignment score.",
+          "overall": "The reviews are highly aligned in their overall judgment, viewing the paper as a promising but preliminary work that needs more rigorous validation. Both focus on the same core contributions and limitations, with the main divergence being Review B's greater detail and its discovery of specific reporting errors."
+        }
+      },
+      "generated_at": "2025-12-27T20:11:05"
+    }
+  ]
+}

@@ -1,0 +1,155 @@
+Here are four distinct reviews of the paper "SuRe: Surprise-Driven Prioritised Replay for Continual LLM Learning".
+
+***
+
+### **Review 1**
+
+**Summary**
+This paper addresses the challenge of catastrophic forgetting in continual learning for Large Language Models (LLMs). The authors propose that forgetting in replay-based methods stems from two complementary issues: selection error (what to replay) and integration error (how to consolidate knowledge). To tackle selection, they introduce Surprise-prioritised Replay (SuRe), which stores and rehearses samples with the highest Negative Log-Likelihood (NLL). To address integration, they employ a dual-learner architecture with fast and slow LoRA adapters updated via an Exponential Moving Average (EMA). The combined method, Slow Surprise Replay, is shown to achieve state-of-the-art performance on continual learning benchmarks, especially in the setting with a large number of tasks (LNT).
+
+**Soundness**
+The methodology is sound and well-motivated. The paper's core claim is supported by a clear theoretical framework that decomposes forgetting into selection and integration errors (Section 3.1, Theorem 1). This decomposition provides a principled motivation for the two components of the proposed solution: SuRe for selection and EMA for integration. The experimental setup is rigorous, employing standard benchmarks (Standard CL and LNT), a strong set of modern baselines (Table 1), and comprehensive ablation studies that validate the key design choices (Section 4.3). The results convincingly demonstrate the effectiveness of both SuRe and the dual-learner system, individually and in combination.
+
+**Presentation**
+The paper is exceptionally well-written and easy to follow. The motivation is clearly established in the introduction, and the proposed method is explained with clarity, aided by a helpful diagram (Figure 1) and algorithm pseudocode (Algorithm 1). The theoretical decomposition in Section 3.1, while technical, is presented intuitively before diving into the formalisms. The results are presented in well-organized tables (e.g., Table 1, Table 2), and the ablation studies systematically dissect the method's components. The inclusion of detailed appendices with proofs (Appendix H) and additional experimental results (e.g., heatmaps in Figures 2-5) further enhances the paper's quality and reproducibility.
+
+**Contribution**
+The paper makes several significant contributions. First, it provides a valuable conceptual framework (selection-integration decomposition) for analyzing replay-based continual learning. Second, it demonstrates that a simple, intuitive, and neuro-scientifically inspired heuristic—prioritizing surprising examples—is highly effective for replay in LLMs, challenging some prior findings in the literature (Section 2). Third, it establishes a new state-of-the-art for non-oracle continual learning on the challenging LNT benchmark (Table 1), significantly closing the gap with multi-task learning. By showing that a well-designed replay method can be a top performer, the paper successfully argues for revisiting and refining this classic approach for modern LLMs.
+
+**Strengths**
+1.  **Elegant Conceptual Framework:** The selection-integration decomposition (Section 3.1) is a clear and powerful way to frame the problem, providing a strong theoretical and intuitive justification for the proposed method.
+2.  **Strong Empirical Results:** The method achieves state-of-the-art performance on the LNT benchmark (Table 1, avg 75.1%), outperforming recent and complex methods. The gains are substantial (+5 points over some prior SOTA).
+3.  **Simplicity and Effectiveness:** Both SuRe (prioritizing by NLL) and the dual-learner EMA are relatively simple to implement, yet their combination is shown to be highly effective.
+4.  **Thorough Ablations:** The paper includes extensive ablation studies that validate the core components, such as the importance of full-sequence surprise (Table 3), and demonstrate the method's robustness to smaller buffer sizes and lower replay ratios (Tables 4 & 5).
+
+**Weaknesses**
+1.  **Task-Boundary Assumption:** The primary weakness, which the authors acknowledge (Section 5), is the reliance on known task boundaries to maintain a balanced buffer. This limits its direct applicability to fully online or task-agnostic continual learning scenarios.
+2.  **Computational Overhead:** The surprise calculation requires an extra forward pass over the data for each new task (Algorithm 1, line 4). While perhaps manageable for the datasets used, the cost could become a concern for much larger datasets or in a truly online setting.
+
+**Questions**
+1.  The ablation on the timing of surprise computation and buffer updates (Table 3) shows interesting differences between the Standard and LNT benchmarks. For instance, "Surprise After" performs best on LNT, while "Surprise Before Update Before" is best on the Standard benchmark. What is your intuition for why this trade-off between plasticity and stability manifests differently across these two settings?
+2.  Could you provide an estimate of the wall-clock time overhead introduced by the surprise calculation step compared to a standard reservoir replay baseline in your experimental setup?
+3.  The paper convincingly shows that replaying high-NLL samples is effective. Have you performed any qualitative analysis on what these "surprising" samples look like? Are they examples with noisy labels, rare concepts, or simply hard-to-classify boundary cases?
+
+**Rating**
+- Overall (10): 9 — The paper presents a simple, well-motivated, and highly effective method backed by strong theory and SOTA empirical results.
+- Novelty (10): 8 — The core ideas (prioritized replay, EMA) are not new, but their application, combination, and the selection-integration framing for LLM CL are novel and impactful.
+- Technical Quality (10): 9 — The theoretical analysis is sound and the experiments are comprehensive, with strong baselines and thorough ablations.
+- Clarity (10): 10 — The paper is exceptionally clear, well-structured, and easy to follow from motivation to conclusion.
+- Confidence (5): 5 — I am highly confident in my assessment as I am an expert in this area and the paper provides extensive evidence.
+
+***
+
+### **Review 2**
+
+**Summary**
+This paper proposes SuRe, a replay-based method for continual learning in LLMs that prioritizes storing samples based on "surprise," defined as high Negative Log-Likelihood. This selection strategy is motivated by a theoretical decomposition of forgetting into "selection error" and "integration error." To address the latter, the authors combine SuRe with a dual-learner architecture using an EMA to merge fast and slow LoRA adapters. Experiments show that this combined approach achieves strong performance, particularly on a benchmark with a large number of tasks (LNT).
+
+**Soundness**
+The paper's soundness is generally good, but some aspects of the theoretical and empirical claims could be strengthened. The selection-integration decomposition (Theorem 1) is presented as a key motivation, but the bound is high-level and involves uncharacterized constants (A, B, C), making it more of a conceptual guide than a tight, predictive tool. The connection between minimizing NLL (the SuRe heuristic) and minimizing the IPM distance in the selection term is asserted (Section 3.2) but not formally proven, relying instead on an importance sampling intuition.
+
+Empirically, the claim that prior work "underestimates" replay (Block 4) is based on the authors' decision to use task boundaries, which is a significant assumption not made by some online replay methods they are implicitly critiquing. While this makes for a fair comparison against other task-boundary-aware methods, it overstates the generality of the finding. Furthermore, the SOTA claim needs qualification: the method is SOTA for *non-oracle* methods but is still outperformed by oracle methods like Progressive Prompts (Table 1), which should be acknowledged more directly in the main results section.
+
+**Presentation**
+The paper is well-structured and clearly written. The core ideas are communicated effectively, and the figures and tables are informative. Figure 1 provides a good overview of the proposed architecture and data flow. The appendices are comprehensive and provide necessary details for the theoretical claims and additional experiments. However, the main results table (Table 1) could be improved by more clearly delineating oracle methods (e.g., ProgPrompt, PerTaskFT, MTL) from non-oracle methods to make the SOTA claim more precise.
+
+**Contribution**
+The main contribution is an empirical demonstration that a well-tuned replay system can be very competitive for LLM continual learning. The SuRe method, while simple, is shown to be effective. The paper's value lies in its thorough empirical investigation and the successful combination of two complementary ideas (surprise replay and EMA smoothing). It provides a strong, new baseline for the field. However, the novelty of the individual components is limited; prioritized replay and EMA are known techniques. The novelty lies in their specific application, combination, and the strong results they yield in the LLM CL context.
+
+**Strengths**
+1.  **Strong Empirical Performance:** The proposed method, Slow Surprise Replay, demonstrates excellent results, especially in the challenging LNT setting (Table 1).
+2.  **Comprehensive Evaluation:** The paper evaluates on multiple benchmarks and task orderings, and compares against a wide range of relevant baselines.
+3.  **Useful Ablations:** The ablation studies in Section 4.3 provide valuable insights into the method's design, such as the impact of buffer size, replay ratio, and the timing of the surprise computation.
+
+**Weaknesses**
+1.  **Theoretical Justification is Loose:** The link between the theoretical bounds in Section 3.1 and the specific design of SuRe is more intuitive than formal. The claim that SuRe "directly reduces D_{F_{loc}}(P, q)" (Section 3.2) is not proven.
+2.  **Contradictory Prior Work Unaddressed:** The paper notes that prior work (Isele & Cosgun, 2018; Araujo et al., 2022) found surprise-based selection to perform poorly (Section 2). It does not explain why its own implementation succeeds where others failed. Is it the use of sequence-level NLL, the LLM context, or the task-boundary-aware buffer? This is a critical point that is left unaddressed.
+3.  **Minor Contradiction in Results:** In the buffer size ablation (Table 4), for the smallest buffer size of 150 samples, the random baseline (`Random-A`, 71.54%) slightly outperforms the surprise-based equivalent (`Surprise-A`, 71.37%). While a minor point, it slightly undermines the otherwise consistent narrative that surprise is always better.
+
+**Questions**
+1.  Can you elaborate on the key differences between your implementation of surprise-based replay and those in Isele & Cosgun (2018) and Araujo et al. (2022) that might explain the conflicting results regarding its effectiveness?
+2.  The theoretical argument hinges on the idea that SuRe reduces the IPM distance $D_{\mathcal{F}_{\text{loc}}}(P, q)$. While intuitive, is it possible to provide a more formal argument or even an empirical measurement to support this claim, for instance by estimating the MMD between the buffer distribution and the true past data distribution?
+3.  In Table 1, your method outperforms the MTL upper bound on the LNT benchmark (75.1 vs 76.3 is close, but in Table 2, 77.9 vs 76.3 is a clear win). How do you interpret this result? Does it suggest a limitation in the MTL setup or a unique benefit of the sequential learning process with your method?
+
+**Rating**
+- Overall (10): 7 — A solid paper with strong empirical results and a useful new baseline, but with some weaknesses in its theoretical claims and positioning against prior work.
+- Novelty (10): 6 — The components are not new, but their combination and application to LLM CL are effective and provide a novel, strong baseline.
+- Technical Quality (10): 7 — Experiments are mostly well-executed, but the theoretical justification is not fully rigorous and key comparisons to prior work are missing.
+- Clarity (10): 8 — The paper is clearly written, though the presentation of results could be more nuanced regarding oracle baselines.
+- Confidence (5): 5 — I am very familiar with the literature on continual learning and replay methods.
+
+***
+
+### **Review 3**
+
+**Summary**
+This paper presents "SuRe," a surprise-driven replay method for continual learning with large language models. The core idea is to populate a replay buffer with samples that the model finds most "surprising," as measured by negative log-likelihood. This sample selection strategy is paired with a dual-learner architecture that uses an exponential moving average (EMA) to create a stable "slow" model from a plastic "fast" model. The authors show through extensive experiments that their method is highly effective, robust to small replay budgets, and achieves state-of-the-art results on a benchmark with a large number of tasks.
+
+**Soundness**
+The paper's methodology is practical and well-grounded. The two main components—surprise-based replay and EMA-based weight consolidation—are both sensible strategies for tackling the plasticity-stability dilemma. The empirical evaluation is thorough and provides strong evidence for the method's effectiveness. The ablation studies on buffer size (Table 4) and replay ratio (Table 5) are particularly valuable from a practical standpoint, as they demonstrate the method's efficiency and robustness under resource constraints. The use of standard benchmarks and a wide array of baselines ensures the results are credible and situated within the current literature.
+
+**Presentation**
+The paper is clearly written and well-organized. The method is presented in a straightforward manner that should be easy for other researchers to implement. Figure 1 provides a clear visual schematic of the training and inference process. The results are presented clearly in tables, and the key takeaways are well-summarized. The discussion of limitations in Section 5 is honest and appreciated, particularly the acknowledgment of the task-boundary requirement and computational overhead.
+
+**Contribution**
+The primary contribution of this work is a simple, scalable, and highly effective replay-based baseline for continual LLM fine-tuning. While prioritized replay is a known concept, this paper successfully adapts it to the modern LLM context and demonstrates its power, particularly for the challenging many-task scenario. The finding that SuRe is robust to small buffer sizes and low replay frequencies (Section 4.3) is a significant practical contribution, as it suggests the method can be applied efficiently. By combining this efficient selection with a simple integration mechanism (EMA), the paper provides a complete and powerful recipe for LLM continual learning.
+
+**Strengths**
+1.  **Practicality and Simplicity:** The proposed method is conceptually simple and architecture-agnostic. Both surprise calculation (NLL) and EMA are standard operations, making the method relatively easy to implement and integrate into existing training pipelines.
+2.  **Sample Efficiency:** The experiments show that SuRe performs well even with small buffers and infrequent replay (Tables 4 and 5). This is a crucial property for real-world applications where storage and compute are limited.
+3.  **Strong Performance:** The method sets a new state-of-the-art for non-oracle CL, demonstrating its practical utility and effectiveness.
+4.  **Transparency about Limitations:** The authors are upfront about the method's reliance on task boundaries and the computational cost of the surprise calculation (Section 5), which is a hallmark of good research.
+
+**Weaknesses**
+1.  **Task-Boundary Requirement:** From a practical standpoint, the need for explicit task boundaries during training is the most significant limitation. Many real-world data streams are not neatly segmented into tasks, which would prevent the direct application of the proposed buffer management strategy.
+2.  **Cost of Surprise Calculation:** The method requires a full forward pass on all new data to calculate surprise scores before training begins on that data (Algorithm 1). For very large datasets, this pre-processing step could be prohibitively expensive. The paper does not explore more efficient approximations.
+
+**Questions**
+1.  Regarding the task-boundary limitation, have you considered how SuRe could be adapted to a fully online setting? For example, could one use a single reservoir buffer and simply replace the sample with the lowest surprise score whenever a new, more surprising sample arrives, regardless of task?
+2.  The surprise calculation adds computational overhead. Did you explore any cheaper proxies for surprise? For example, could you compute the NLL on only a random subset of tokens in a sequence, or use the loss from a smaller, proxy model?
+3.  Could you provide wall-clock time comparisons between your method and the baselines, particularly Reservoir Replay and O-LoRA? This would help practitioners gauge the real-world cost-benefit trade-off.
+
+**Rating**
+- Overall (10): 8 — A very strong and practical paper that introduces a simple, efficient, and SOTA method for LLM continual learning.
+- Novelty (10): 7 — The adaptation and successful application of prioritized replay and EMA to the LLM CL setting is a valuable and novel contribution.
+- Technical Quality (10): 8 — The experiments are well-designed and convincing, though the method's practicality is limited by the task-boundary assumption.
+- Clarity (10): 9 — The paper is very clearly written and easy to understand, with good illustrations and a transparent discussion of limitations.
+- Confidence (5): 5 — I am confident in my review, based on my experience in applied machine learning and MLOps.
+
+***
+
+### **Review 4**
+
+**Summary**
+This paper introduces SuRe, a surprise-prioritized replay strategy for continual learning (CL) in Large Language Models (LLMs). The method is motivated by a selection-integration framework of catastrophic forgetting. SuRe selects samples for the replay buffer based on their sequence-level negative log-likelihood. This is combined with a dual-learner architecture (fast and slow LoRA adapters) where an EMA consolidates knowledge into the slow adapter, which is used for inference. The authors conduct extensive experiments on T5-Large, showing that their method achieves state-of-the-art performance on standard and large-task CL benchmarks, and they provide preliminary results on Llama 3.1 and for continual pre-training.
+
+**Soundness**
+The paper is methodologically sound. The proposed method is a logical and well-motivated combination of existing ideas applied to the LLM domain. The experimental setup is strong, using established benchmarks for LLM continual learning (Standard CL and LNT). The choice of baselines is excellent, including recent, competitive methods like O-LoRA, MoRA, and AimMerging (Tables 1 & 2). The ablation studies are thorough and provide clear evidence for the authors' design choices, such as using full-sequence NLL over label-only NLL (Table 3). The inclusion of preliminary experiments on a different model family (Llama 3.1, Table 7) and a different CL paradigm (Continual Pre-Training, Table 8) strengthens the generality of the findings.
+
+**Presentation**
+The presentation is excellent. The paper is clearly written, logically structured, and the arguments are easy to follow. The connection to neuroscience (Section 5) provides a compelling narrative that enriches the technical contributions. The figures and tables are clear and effectively support the text. The heatmaps in the appendix (Figures 2-5, 39-44) are particularly insightful for visualizing the reduction in catastrophic forgetting compared to sequential fine-tuning. The authors have done a great job of making a technically dense topic accessible.
+
+**Contribution**
+This paper makes a significant contribution to the field of continual learning for LLMs. It convincingly argues for the power of replay-based methods, which have sometimes been overlooked in favor of regularization or architectural approaches in the LLM literature. The main contributions are: 1) SuRe, a simple and effective sample selection strategy for replay that sets a new SOTA for non-oracle methods in the LNT setting. 2) A strong empirical demonstration of the complementarity of an efficient selection mechanism (SuRe) and a stable integration mechanism (EMA). 3) A comprehensive set of experiments that will serve as a strong benchmark for future work in this area. The preliminary results on CPT (Table 8) are also intriguing and open up a promising direction for future research.
+
+**Strengths**
+1.  **State-of-the-Art on Relevant Benchmarks:** The method achieves excellent performance on benchmarks specifically designed for evaluating CL in LLMs, demonstrating its relevance to the NLP community.
+2.  **Strong Connection to LLM Properties:** The method leverages a core property of LLMs—their ability to assign a likelihood to a sequence of text (NLL)—as the basis for its selection mechanism. This is a natural and elegant fit.
+3.  **Broad and Modern Baselines:** The comparison against a wide range of recent PEFT-based CL methods (O-LoRA, MoRA, etc.) makes the results highly credible and impactful.
+4.  **Exploration of Generality:** The inclusion of experiments on Llama 3.1 and in the CPT setting (Appendix B.2, B.3) suggests the findings are not limited to one model or fine-tuning paradigm.
+
+**Weaknesses**
+1.  **Limited Task Diversity:** The experiments, while covering a large number of tasks, are focused exclusively on text classification. It is unclear how the method would perform on generative tasks (e.g., summarization, dialogue) where defining "surprise" or measuring accuracy is less straightforward.
+2.  **Model Scale:** The main experiments are on T5-Large (770M parameters), with preliminary results on Llama 3.1 8B. While good, it remains an open question how these methods and their computational overheads scale to the frontier of 70B+ parameter models that are common today.
+
+**Questions**
+1.  The definition of "surprise" is based on the model's NLL. Did you consider alternative or complementary notions of surprise, such as those based on model uncertainty (e.g., entropy of the predictive distribution, or variance from Monte Carlo dropout)?
+2.  All the evaluation tasks are classification-based. How do you envision applying SuRe to continual learning of generative tasks? Would NLL still be the right metric for surprise, and how would you manage evaluation?
+3.  Could you provide some qualitative examples of the most and least surprising samples from one of the datasets? This would give a more intuitive understanding of what SuRe is prioritizing and help validate the NLL-as-surprise hypothesis. For example, are high-surprise samples just longer sequences, or do they contain specific linguistic features?
+
+**Rating**
+- Overall (10): 9 — An outstanding paper that presents a simple, powerful, and well-evidenced method for a key problem in LLMs, setting a new SOTA.
+- Novelty (10): 8 — While building on known concepts, the paper frames them in a novel way for LLMs and demonstrates their surprising effectiveness, creating a significant new baseline.
+- Technical Quality (10): 9 — The technical quality is very high, with rigorous experiments, strong baselines, and insightful analysis.
+- Clarity (10): 10 — The paper is exceptionally well-written, with a clear narrative and excellent supporting materials.
+- Confidence (5): 5 — I am an expert in NLP and LLMs and am highly confident in my evaluation of this work.

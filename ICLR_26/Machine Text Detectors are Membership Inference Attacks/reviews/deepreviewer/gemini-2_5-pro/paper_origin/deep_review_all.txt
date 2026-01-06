@@ -1,0 +1,165 @@
+Here are four distinct reviews of the paper.
+
+***
+
+### **Review 1**
+
+**Summary**
+This paper presents a compelling argument, backed by both theoretical and empirical evidence, that Membership Inference Attacks (MIAs) and Machine-Generated Text Detection (MGTD) are fundamentally similar tasks. The authors prove that the asymptotically optimal test statistic for both tasks is the same likelihood ratio test. They unify a wide range of existing methods under this framework and conduct a large-scale empirical study involving 12 methods across numerous domains and models. The results show a strong performance correlation between the two tasks and, notably, that a state-of-the-art MGTD method, Binoculars, achieves state-of-the-art performance on MIA benchmarks. The authors conclude by calling for greater collaboration between the two research communities and release a unified evaluation suite, MINT, to facilitate this.
+
+**Soundness**
+The paper's methodology is exceptionally sound. The theoretical contribution in Section 2.3 provides an elegant and unifying foundation for the paper's core claim. The proof that the likelihood ratio test is asymptotically optimal for both tasks is clear and well-grounded in statistical decision theory (Neyman-Pearson lemma). The subsequent framing of existing methods as approximations of this test (Table 1) is insightful and provides a coherent lens through which to view the literature. The empirical evaluation is massive in scale and rigorously designed, using established benchmarks (MIMIR and RAID) and a comprehensive set of recent methods. The use of Spearman's rank correlation is an appropriate measure for quantifying transferability. The analysis of `Zlib` as an outlier (Section 3.3) adds nuance and strengthens the overall argument by acknowledging a key difference between the tasks.
+
+**Presentation**
+The paper is exceptionally well-written, organized, and clear. The introduction (Section 1) effectively motivates the problem by highlighting the parallel evolution and methodological overlap of the two fields. The figures are highly effective; Figure 1 provides a striking visual motivation, Figure 2 clearly illustrates the main rank correlation result, and Figure 3 provides a clean summary of the performance of all methods on both tasks. The structure of the paper, moving from theory to empirical validation to analysis, is logical and easy to follow. The release of the MINT benchmark is a significant contribution to reproducibility and future research, and its mention is well-integrated.
+
+**Contribution**
+The contribution of this work is significant and multi-faceted. The primary conceptual contribution is the formal unification of the MIA and MGTD tasks, which have been largely siloed despite their similarities. This reframing is novel and has the potential to reshape how researchers in both areas approach their work. The empirical discovery that Binoculars, an MGTD method, is a new state-of-the-art for MIAs (Figure 3) is a major practical contribution that immediately demonstrates the value of the paper's thesis. Finally, the MINT benchmark is a substantial practical contribution that will lower the barrier to entry for cross-task research and enable fairer, more comprehensive evaluations in the future.
+
+**Strengths**
+- **Novel Unification:** The paper is the first to comprehensively and formally connect the tasks of MIA and MGTD, moving beyond prior work's brief observations.
+- **Strong Theoretical Grounding:** The proof of a unified optimal metric (Theorem 2.3) provides a solid theoretical backbone for the empirical findings.
+- **Large-Scale Empirical Validation:** The experiments are extensive, covering 12 SOTA methods, 13 domains, and 10 models, lending very strong support to the claims.
+- **Impactful Practical Finding:** Demonstrating that Binoculars achieves SOTA performance on MIA benchmarks is a concrete and valuable result.
+- **Community Resource:** The release of the MINT unified evaluation suite is a significant service to the research community.
+
+**Weaknesses**
+- The discussion of methods that do not fit neatly into the likelihood ratio framework (Section 2.5) is brief. A slightly more detailed discussion of why methods like Min-k% still show high transferability despite not being obvious ratio approximations could strengthen the paper.
+- The analysis of outliers is limited to `Zlib`. While insightful, a brief analysis of another method with lower-than-expected transferability, such as `Reference`, could provide additional insights into the nuances between the tasks.
+
+**Questions**
+1.  The success of Binoculars on the MIA task is a standout result. Beyond the general likelihood ratio framework, do the authors have any specific intuitions about why the cross-model entropy signal used by Binoculars is so much more effective for MIA than existing methods like `Reference`, which also uses a reference model?
+2.  The paper focuses on zero-shot detectors. Could the authors speculate on whether their unified framework might also extend to supervised detectors, which often learn features that are proxies for model likelihoods or generation artifacts?
+3.  The rank correlation is strong but not perfect (ρ = 0.66). Besides the prior distribution difference highlighted by the `Zlib` analysis, what other factors do you believe prevent an even stronger correlation between method performance on the two tasks?
+
+**Rating**
+- Overall (10): 10 — The paper presents a novel, impactful unification of two fields, supported by strong theory and massive-scale experiments.
+- Novelty (10): 10 — The formal connection between MIA and MGTD is a highly novel and significant conceptual contribution.
+- Technical Quality (10): 10 — The theoretical proof is sound and the empirical evaluation is comprehensive, rigorous, and well-executed.
+- Clarity (10): 10 — The paper is exceptionally well-written, with clear arguments and illustrative figures (e.g., Figure 1, Figure 2).
+- Confidence (5): 5 — I am highly confident in my assessment as I am an expert in this area.
+
+***
+
+### **Review 2**
+
+**Summary**
+This paper argues that membership inference attacks (MIAs) and machine-generated text detection (MGTD) are transferable tasks. The authors present a theoretical argument that the optimal classifier for both is an asymptotically optimal likelihood ratio test. They then attempt to unify a dozen existing methods under this framework and perform a large-scale empirical comparison, finding a positive rank correlation in method performance across the two tasks. A key finding is that the MGTD method `Binoculars` performs very well on MIA benchmarks. The authors release a unified benchmark suite called MINT.
+
+**Soundness**
+The paper's soundness is mixed, with a significant gap between the theoretical claims and their practical applicability. The core theoretical result, Theorem 2.3, relies on "standard asymptotic regularity conditions" (Block #11), including infinite training samples and sufficient model capacity. These assumptions are known to be poor fits for modern LLMs, which are typically trained for a single pass over a finite (though large) dataset. The authors themselves acknowledge this limitation in a remark (Block #14), which undermines the centrality of the theorem.
+
+Furthermore, the unification of various methods in Table 1 feels like a post-hoc rationalization. While some methods like `Reference` or `DetectGPT` are clear approximations of a likelihood ratio, others are a stretch. For instance, `Min-k%` is simply an average of the lowest log-likelihoods, and its reformulation as an approximation of `L(x;M)/L(x;Q)` is not provided or obvious. Similarly, `Lastde++` is based on a complex "diversity entropy" metric, and classifying it as a likelihood ratio approximation seems tenuous at best, as the authors implicitly admit in Section 2.5. The empirical correlation is interesting, but it may simply reflect that most of these methods rely on model likelihoods in some form, rather than the deeper "fundamental connection" the paper claims.
+
+**Presentation**
+The paper is well-written, but the strong claims in the abstract and introduction about a "unified optimality" are not fully supported by the details of the theory section. The presentation of Table 1 is potentially misleading, as it presents all methods in a unified format without clearly distinguishing between direct approximations and very loose interpretations. The empirical results are presented clearly in Figures 2 and 3, but the high-level takeaway of "transferability" is stated more strongly than the data (ρ=0.66) might warrant; this is a moderate-to-strong correlation, not a near-perfect one, indicating significant differences remain.
+
+**Contribution**
+The paper's main contribution is the large-scale empirical comparison and the release of the MINT benchmark. The observation that some methods work well across tasks is valuable, particularly the high performance of `Binoculars` on MIA. However, the novelty of the core idea is limited. The similarity between `DetectGPT` and `Neighborhood` has been noted by prior work (Block #36), and the general idea that members and machine text both have high likelihood under a model is a foundational concept in both fields. The theoretical contribution is of questionable significance given its strong, unrealistic assumptions.
+
+**Strengths**
+- **Extensive Empirical Study:** The paper's greatest strength is the head-to-head comparison of 12 methods on two large-scale benchmarks.
+- **Useful Benchmark Suite:** The release of MINT is a valuable practical contribution that will benefit the community.
+- **Interesting Cross-Task Finding:** The discovery that `Binoculars` is highly effective for MIA is a concrete and useful result.
+
+**Weaknesses**
+- **Theoretical Overclaiming:** The central theorem (Theorem 2.3) relies on asymptotic assumptions that do not hold for modern LLMs, limiting its relevance.
+- **Forced Unification:** The attempt to frame all tested methods as approximations of a single likelihood ratio test (Table 1) is unconvincing for several methods and feels like a post-hoc justification.
+- **Correlation vs. Equivalence:** The paper sometimes conflates the observed correlation with a fundamental equivalence between the tasks, downplaying the notable differences that cause the correlation to be imperfect.
+
+**Questions**
+1.  The proof in Section 2.3 relies on the model `M` being a maximum likelihood estimator that has converged. Given that large language models are trained for a single epoch, how does this discrepancy affect the validity of your theoretical claims and the interpretation of the likelihood ratio as "optimal"?
+2.  In Table 1, methods like `Min-k%` and `DC-PDD` are not formulated as ratios. Your discussion (Section 2.5) acknowledges this, but could you elaborate on why you believe they still exhibit high transferability if they don't fit the core theoretical framework of approximating the likelihood ratio?
+3.  The paper states that `DetectGPT` and `Neighborhood` are "approximately identical" (Block #10). However, your results in Figure 3 show a large performance gap between them on MGTD (99.36 for Fast-DetectGPT vs. 81.90 for Neighborhood). How do you explain this discrepancy if the methods are fundamentally the same?
+
+**Rating**
+- Overall (10): 6 — The paper provides a useful large-scale empirical study but overstates its theoretical contribution and the novelty of its core claim.
+- Novelty (10): 5 — The core idea has been partially observed before, and the main theoretical framing is of questionable relevance.
+- Technical Quality (10): 6 — The empirical work is extensive, but the theoretical part is weak due to its strong, unrealistic assumptions.
+- Clarity (10): 7 — The paper is well-written, but the presentation of the theoretical unification (Table 1) could be seen as misleading.
+- Confidence (5): 5 — I am very confident in my evaluation, with expertise in both ML security and NLP.
+
+***
+
+### **Review 3**
+
+**Summary**
+This paper investigates the "transferability" between methods for membership inference attacks (MIA) and machine-generated text detection (MGTD). The authors provide a theoretical argument for their similarity and then conduct a large-scale experiment comparing 7 MIA methods and 5 MGTD methods on the MIMIR and RAID benchmarks, respectively. They measure performance using AUROC and find a Spearman's rank correlation of ρ=0.66 between the methods' performance rankings on the two tasks. A key result is that `Binoculars`, an MGTD method, achieves the highest average performance on the MIA task. The authors also release a unified codebase, MINT.
+
+**Soundness**
+The empirical methodology is the core of this paper and is generally sound in its breadth. The scale of the experiments—testing 15 methods (including baselines) across multiple domains and models—is commendable. The use of standard, large-scale benchmarks like MIMIR and RAID is a major strength.
+
+However, there are several points in the experimental setup that could be improved or require further justification.
+1.  **Hyperparameter Sensitivity:** The appendix (Section B) details the implementation choices, often citing default settings from original papers (e.g., k=20 for Min-K%). It is unclear if these defaults are optimal for the specific models and domains tested here. Method rankings can be highly sensitive to hyperparameter choices, and without a sensitivity analysis, the reported rankings in Figure 2 might not be robust.
+2.  **Averaging of Results:** The main results presented in Figure 2 and Figure 3 are based on AUROC scores averaged across many domains and models. This aggregation can hide significant variance. For example, in the full results (Table 3), the performance of `Neighborhood` varies dramatically, from 95.3 on Abstracts/GPT-2 to 58.4 on Abstracts/MPT. Averaging these scores obscures the fact that a method's effectiveness can be highly context-dependent, which also impacts the interpretation of "transferability."
+3.  **Black-Box Setting:** The black-box evaluation (Section 3.1, 3.3) uses PYTHIA-160M and Llama-3-3.2B as surrogates for detecting text from ChatGPT/GPT-4. The choice of these specific surrogates is not well-justified. The performance of surrogate-based methods is highly dependent on the choice of surrogate, and the results might look very different with other models. The significant performance drop for most methods in this setting (Figure 3) also warrants more analysis than is currently provided.
+
+**Presentation**
+The paper is well-structured and the results are presented in an accessible way. The main figures (Figure 2, 3) are effective at conveying the high-level message. However, the reliance on averaged scores in the main body is a weakness. While full results are in the appendix (Tables 2-4), the paper would benefit from a more nuanced discussion of performance variations in the main text. For instance, a plot showing the variance of performance ranks across domains for a few key methods could have made the analysis more robust. The description of the methods in Table 1 is concise, but the appendix (Section A) is essential for understanding them, and the derivations to fit the unified form are sometimes complex.
+
+**Contribution**
+The paper's primary contribution is empirical. It provides the most comprehensive cross-task benchmark between MIA and MGTD methods to date. The finding that `Binoculars` excels at MIA is a significant, actionable result for the MIA community. The MINT codebase is also a valuable contribution that will facilitate future research. The theoretical part is less of a contribution, serving more as a motivating framework for the empirical study.
+
+**Strengths**
+- **Comprehensive Empirical Evaluation:** The scale of the experiments is a major strength.
+- **Use of Standard Benchmarks:** Grounding the study in the MIMIR and RAID benchmarks adds credibility.
+- **Actionable Findings:** The SOTA performance of `Binoculars` on MIA is a concrete result that can be immediately adopted by researchers.
+- **Public Codebase:** The MINT suite is a valuable resource for reproducibility and future work.
+
+**Weaknesses**
+- **Lack of Hyperparameter Sensitivity Analysis:** The robustness of the method rankings is questionable without exploring the impact of key hyperparameters.
+- **Over-reliance on Averaged Metrics:** The main results obscure significant performance variations across different domains and models, potentially oversimplifying the concept of transferability.
+- **Under-justified Black-Box Setup:** The choice of surrogate models for the black-box experiments is not well-motivated, and the performance gap is not deeply analyzed.
+
+**Questions**
+1.  How were the hyperparameters for the 15 tested methods selected? Were they tuned on a validation set, or were defaults from the original papers used? Could you comment on how sensitive the final rankings in Figure 2 are to these choices?
+2.  Your analysis of `Zlib` (Section 3.3) highlights how task differences can limit transferability. Looking at your full results in Tables 2-4, are there specific domains or model types where transferability is much lower or higher? For example, does transferability hold up for academic text (ArXiv) as well as it does for web text (Pile CC)?
+3.  In the black-box MGTD setting (Figure 3, bottom), `Loss` and `LogRank` become the 2nd and 3rd best methods, outperforming many more complex methods like `DetectLLM` and `Fast-DetectGPT`. Why do you think these simple baselines become so competitive in the surrogate model setting, and what does this imply about the transferability of more sophisticated methods to the black-box scenario?
+
+**Rating**
+- Overall (10): 7 — A very strong and valuable empirical paper, let down by a lack of robustness checks and over-aggregation of results.
+- Novelty (10): 6 — The empirical comparison at this scale is novel, but the underlying idea is not entirely new.
+- Technical Quality (10): 8 — The experimental execution is impressive in scale, but lacks depth in areas like hyperparameter tuning and analysis of variance.
+- Clarity (10): 8 — The paper is clearly written, but the main figures oversimplify the results by hiding variance.
+- Confidence (5): 5 — I am highly confident in my evaluation, as my expertise lies in empirical evaluation of NLP models.
+
+***
+
+### **Review 4**
+
+**Summary**
+This paper presents a timely and important perspective on the relationship between membership inference attacks (MIAs) and machine-generated text detection (MGTD). The authors argue that these two fields, which have developed in parallel, are tackling fundamentally related problems. They support this claim with a unifying theoretical framework based on the likelihood ratio test and a comprehensive empirical study that demonstrates a strong correlation in method performance across both tasks. A key finding is that a top detector, `Binoculars`, also sets a new state-of-the-art on MIA benchmarks. The paper concludes with a call for greater cross-pollination between the two communities and provides a unified software toolkit, MINT, to help achieve this.
+
+**Soundness**
+The paper's argument is logically sound and well-supported. The theoretical argument in Section 2, while based on asymptotic assumptions, serves as an excellent narrative device to frame the problem and motivate the connection. It provides a principled "why" for the observed similarities. The real strength lies in how this theory is connected to the large-scale empirical results. The experiments are thorough and use appropriate benchmarks and metrics. The finding that methods transfer well (Figure 2) and that an MGTD method can dominate MIA benchmarks (Figure 3) provides powerful evidence for the paper's central thesis. The analysis of `Zlib` in Section 3.3 is also a nice touch, as it proactively addresses a potential counterargument by explaining an outlier, thereby acknowledging the nuances that still exist between the tasks.
+
+**Presentation**
+The presentation is excellent. The paper tells a clear and compelling story that is accessible to researchers from both the security (MIA) and NLP (MGTD) communities. The abstract and introduction (Sections 1) do a superb job of setting the stage and stating the paper's goals. The structure is logical, and the writing is of high quality. The conclusion (Section 5) is particularly effective, as it doesn't just summarize results but issues a clear and constructive "call to action" for the research community. The figures are clean and effectively communicate the main takeaways.
+
+**Contribution**
+This paper's contribution is highly significant, primarily in its role as a bridge between two research communities. While prior work may have hinted at similarities, this is the first work to make the connection its central thesis and validate it so comprehensively. The main contributions are:
+1.  **Conceptual Reframing:** The paper successfully reframes MIA and MGTD as two sides of the same coin. This is a valuable contribution that can guide future research, preventing redundant efforts and encouraging the transfer of ideas.
+2.  **A Call for Better Evaluation:** By showing that MIA leaderboards may be incomplete without considering MGTD methods, the paper makes a strong case for more holistic and fair evaluations.
+3.  **A Major Community Resource:** The MINT benchmark is an outstanding practical contribution. By providing a single, easy-to-use toolkit for evaluating 15 different methods on both tasks, the authors have done a great service that will undoubtedly spur the very cross-task research they advocate for.
+
+**Strengths**
+- **Important and Timely Message:** The call to unify the study of MIA and MGTD is highly relevant as both fields are rapidly growing.
+- **Compelling Narrative:** The paper effectively combines theory and experiments to tell a clear and convincing story.
+- **Strong Community-Oriented Contribution:** The release of the MINT benchmark is a standout strength that will have a lasting impact.
+- **Constructive and Collaborative Tone:** The paper aims to build bridges rather than just critique existing work, which is a positive contribution to the academic discourse.
+
+**Weaknesses**
+- The paper could benefit from a slightly deeper discussion on the historical or sociological reasons for the divergence of the two fields. Were the goals initially perceived as more different than they are now? Acknowledging this could make the call for unification even more powerful.
+- The analysis of methods with limited transferability is focused on `Zlib`. It would be interesting to see if other outliers like `Reference` (which performs very poorly on MGTD, see Figure 3) reveal different aspects of the task differences.
+
+**Questions**
+1.  The paper makes a strong call for "greater cross-task awareness and collaboration" (Block #2). Beyond researchers in one field testing methods from the other, what other specific forms of collaboration do you think would be most fruitful? For example, should there be joint workshops or shared task competitions?
+2.  The analysis of `Zlib` in Section 3.3 is very insightful. You identify "different prior distributions" as a key task difference. Could you elaborate on what you mean by this? Is it that for MIA, members and non-members are both human text, while for MGTD, one class is human and the other is machine? How does this difference specifically cause `Zlib`'s score to fail as a discriminator for MGTD?
+3.  Your MINT benchmark is a fantastic contribution. Do you have plans to maintain and expand it with new methods and datasets as the fields evolve?
+
+**Rating**
+- Overall (10): 9 — An important and well-executed paper that successfully bridges two fields and provides a valuable resource to the community.
+- Novelty (10): 9 — While not the first to notice a similarity, this is the first to formalize and comprehensively prove the connection, which is a novel and significant act.
+- Technical Quality (10): 9 — The combination of a solid theoretical framing and a large-scale, well-designed empirical study is of high quality.
+- Clarity (10): 10 — The paper is exceptionally clear, well-structured, and tells a compelling story for a broad audience.
+- Confidence (5): 5 — I am very confident in my assessment of this paper's contribution and quality.

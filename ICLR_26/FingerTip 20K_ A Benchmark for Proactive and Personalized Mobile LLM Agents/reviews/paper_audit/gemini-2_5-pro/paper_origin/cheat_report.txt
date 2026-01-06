@@ -1,0 +1,70 @@
+Based on a critical review of the manuscript, several significant internal inconsistencies and integrity risks have been identified. These issues materially affect the scientific validity and trustworthiness of the work.
+
+### Summary of Key Issues
+
+The manuscript contains clear contradictions in reported numbers, conflicting data between tables and figures, inconsistencies in the described methodology versus the reported results, and highly problematic citations.
+
+### Detailed Findings
+
+**1. Contradiction in the Number of Data Contributors**
+
+There is a direct contradiction regarding the number of users who contributed to the dataset.
+
+*   **Evidence:**
+    *   The Introduction (Block #3) and Section 4.2 "Data collection" (Block #16) state that data was collected from **91 users**.
+    *   However, Figure 3, which illustrates the data collection pipeline (Block #20), explicitly states "**Users: 83**".
+*   **Impact:** This discrepancy in a fundamental statistic of the dataset raises concerns about the accuracy and care with which the data and manuscript were prepared.
+
+**2. Conflicting and Inconsistent Data Reporting in Figures and Tables**
+
+Multiple figures and their corresponding tables present conflicting numerical data for the same experiments.
+
+*   **Evidence (Figure 5):**
+    *   The analysis of personalized actions is presented in two conflicting formats: a table in Block #23 (mislabeled as "Figure 5") and an unlabeled bar chart in Block #25.
+    *   The table in Block #23 is missing numerous data points (marked with "-") that are present in the bar chart (e.g., values for "Different Type of Users").
+    *   The table format is also confusing, merging values for "Same User" and "Same Type of Users" into a single cell (e.g., "78.51 / 76.29" for "Posting"), while the bar chart correctly separates them into distinct bars.
+*   **Evidence (Figure 6):**
+    *   The analysis of performance under different task difficulties is presented in tables (Block #38) and corresponding line charts (Blocks #39, #40).
+    *   In Figure 6(a) for "Proactive task suggestion," the reported success rates (SR1) in the table and the chart are starkly different. For example, with 0 screenshots, the table reports SR1 values of `7`, `~4`, `~7`, `~3` for the four models, while the chart plots values of approximately `7.2`, `6.9`, `4.3`, and `3.1`. The values for Qwen-VL-Max and DeepSeek-VL2 are completely inconsistent between the two representations.
+    *   In Figure 6(b) for "Personalized task execution," there are also mismatches. For instance, with the shortest action length, the table reports SR2 of `~40` for CogAgent-9B and `~30` for Aguvis-7B, whereas the chart shows values of approximately `33` and `38`, respectively.
+*   **Impact:** These direct contradictions between tables and figures reporting the same results undermine the credibility of the experimental findings. It is impossible to determine which set of results, if any, is correct.
+
+**3. Inconsistency in Fine-Tuning Methodology**
+
+The description of the fine-tuning experiment contradicts the presentation of its results.
+
+*   **Evidence:**
+    *   Section 5.4 (Block #42) explicitly states that the authors "trained separately on two tracks and obtained **two fine-tuned models**, each suitable for one of the two tracks."
+    *   However, Table 6 (Block #42) presents the results under a single model name, "Qwen-2.5-VL-7B-FT," which is evaluated on both tracks.
+*   **Impact:** This inconsistency creates ambiguity about the experimental procedure. It is unclear whether one model was used for both tasks (contradicting the text) or if results from two different models were incorrectly aggregated under a single name.
+
+**4. Use of Invalid and Future-Dated References**
+
+The bibliography contains multiple references that are invalid as written, citing papers from the future.
+
+*   **Evidence:**
+    *   Numerous references are cited with the year **2025**.
+    *   These references include what appear to be fabricated arXiv identifiers with a future-year prefix, such as `arXiv:2501.12326` [14], `arXiv:2502.13923` [24], `arXiv:2501.01149` [30], and `arXiv:2501.02863` [31]. These identifiers do not correspond to existing preprints.
+*   **Impact:** This is a critical integrity issue. The presence of numerous invalid, future-dated citations suggests either extreme carelessness or an attempt to fabricate scholarly support for the work. It severely damages the credibility of the manuscript.
+
+**5. Inconsistent Naming of a Baseline Model**
+
+A key baseline model is referred to by two different names within the experiments section.
+
+*   **Evidence:**
+    *   Table 5 (Block #37) lists the model as "**CogAgent-7B**".
+    *   The table and chart for Figure 6 (Blocks #38, #40) refer to the same model as "**CogAgent-9B**".
+*   **Impact:** This inconsistency makes it difficult to understand the experimental setup and compare results across different sections of the paper.
+
+**6. Potential for Circularity in Dataset Creation**
+
+The method for cleaning the dataset introduces a potential for circular reasoning in the evaluation.
+
+*   **Evidence:**
+    *   Section 4.2 (Block #17) states that for actions that could not be automatically captured, the authors used "**Qwen-VL-Max** to observe the two screenshots before and after the action and regenerate the action."
+    *   Qwen-VL-Max is also one of the primary models evaluated in the benchmark experiments (Tables 4 & 5, Figure 6).
+*   **Impact:** Using a model to generate or repair ground-truth data for a benchmark, and then evaluating that same model on the benchmark, creates a risk of circularity. The model may perform better simply because the dataset contains synthetic data generated in its own style. The manuscript fails to quantify what proportion of the dataset was modified in this way, which is a material omission affecting the benchmark's fairness and validity.
+
+### Conclusion
+
+The manuscript suffers from multiple, severe internal inconsistencies, including contradictory data, conflicting methodological descriptions, and invalid citations. These issues are not minor errors; they fundamentally compromise the paper's integrity and the reliability of its contributions. The work, in its current state, does not meet the standards for scientific publication.

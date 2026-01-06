@@ -1,0 +1,174 @@
+Here are four distinct reviews of the paper "PREDNEXT: EXPLICIT CROSS-VIEW TEMPORAL PREDICTION FOR UNSUPERVISED LEARNING IN SPIKING NEURAL NETWORKS".
+
+***
+
+### **Review 1**
+
+**Summary**
+This paper proposes PredNext, a novel plug-and-play module designed to enhance unsupervised representation learning in Spiking Neural Networks (SNNs) for video data. The authors identify that existing unsupervised SNNs struggle with long-range temporal dependencies, leading to unstable feature representations. PredNext addresses this by introducing an explicit temporal prediction task as an auxiliary objective. It consists of two components: Step Prediction (predicting next time-step features) and Clip Prediction (predicting features of a future clip). A key aspect of the design is cross-view prediction, where one augmented view of a video is used to predict the future of another view. The authors establish new benchmarks for SNN self-supervised learning on large-scale video datasets (UCF101, HMDB51, MiniKinetics) and demonstrate that PredNext consistently improves performance across various self-supervised methods (e.g., SimCLR, BYOL, SimSiam).
+
+**Soundness**
+The methodology is sound and logically motivated. The core hypothesis—that explicitly modeling temporal relationships through prediction will enforce the learning of more semantically stable features—is well-grounded in principles of predictive coding. The experimental design is thorough and robust. The authors first establish baselines by adapting five popular self-supervised learning (SSL) frameworks to SNNs, which is a valuable contribution in itself. They then systematically evaluate PredNext's impact on these baselines across multiple datasets and downstream tasks (action recognition, video retrieval). The ablation studies are comprehensive, validating key design choices such as the inclusion of both step and clip prediction, the use of cross-view prediction, and the impact of various hyperparameters. The control experiment comparing PredNext to a "forced consistency" constraint (Section 3.3, Table 4) is particularly insightful, demonstrating that the predictive task encourages meaningful representations rather than simply collapsing temporal features.
+
+**Presentation**
+The paper is very well-written, clearly structured, and easy to follow. The introduction effectively uses Figure 1 to motivate the problem of temporal inconsistency and visualize the goal. The proposed method is clearly explained with the help of a high-level diagram (Figure 2) and a more detailed one (Figure 9), complemented by a concise algorithm (Algorithm 1). The results are presented effectively through comprehensive tables (Table 3) and compelling visualizations. The UMAP plots and consistency curves in Figure 4 provide strong qualitative evidence for the method's effectiveness. The video retrieval examples (Figure 5, Figure 33) further illustrate the quality of the learned representations.
+
+**Contribution**
+The paper makes several significant contributions to the field:
+1.  It introduces PredNext, a novel and effective method for improving unsupervised learning in SNNs, a notoriously difficult problem.
+2.  It pioneers the use of large-scale video datasets (UCF101, MiniKinetics) for benchmarking unsupervised SNNs, moving the field beyond smaller, simpler DVS datasets.
+3.  It provides a comprehensive empirical study, demonstrating that PredNext is a general-purpose module that boosts the performance of a wide range of SSL methods.
+4.  The finding that unsupervised SNNs pre-trained with PredNext can achieve performance comparable to supervised, ImageNet-pretrained models (Section 3.2) is a major milestone for SNN research.
+5.  The analysis of temporal consistency provides valuable insights into the representation learning dynamics of SNNs.
+
+**Strengths**
+- **Novelty and Effectiveness:** PredNext is a simple yet powerful idea that effectively addresses a key limitation of unsupervised SNNs. The consistent performance gains shown in Table 3 are impressive.
+- **Generality:** The plug-and-play design makes the method broadly applicable and easy to integrate into future research, lowering the barrier to entry for working on deep unsupervised SNNs.
+- **Thorough Evaluation:** The experiments are exhaustive, covering multiple SSL frameworks, datasets, evaluation tasks (fine-tuning, retrieval), and detailed ablations. This provides very strong evidence for the authors' claims.
+- **Benchmark Establishment:** By adapting and evaluating SSL methods on large video datasets, this work provides a much-needed standardized benchmark for future research in this area.
+- **Insightful Analysis:** The comparison against "forced consistency" (Table 4) and the visualization of feature manifolds (Figure 4) go beyond simple accuracy metrics to provide a deeper understanding of *why* the method works.
+
+**Weaknesses**
+- The paper notes that MoCo and SimSiam did not benefit from larger pre-training datasets (Section 3.2, "without MoCo, SimSiam"). This is an interesting and counter-intuitive finding that is mentioned but not explored or explained. A brief discussion on potential reasons would strengthen the analysis.
+- While the focus is on representation quality, a brief discussion on the computational overhead of PredNext during training would be beneficial. The paper mentions it adds no overhead at inference, which is great, but the training cost is also a practical consideration.
+
+**Questions**
+1.  In Section 3.2, you mention that the benefit of larger pre-training datasets was not observed for MoCo and SimSiam. This is surprising. Do you have any hypotheses as to why these specific methods, when adapted to SNNs, might not scale with data size in the same way as others like SimCLR and BYOL?
+2.  The results are remarkable and close the gap with supervised ANN performance. Given that a primary motivation for SNNs is energy efficiency, have you performed any analysis on the potential energy savings or computational cost (e.g., total synaptic operations) of the trained SNN models during inference compared to an equivalent ANN model?
+
+**Rating**
+- Overall (10): 9 — The paper presents a novel, effective, and thoroughly validated method that significantly advances unsupervised learning for SNNs on complex video data.
+- Novelty (10): 9 — The combination of cross-view prediction with step/clip objectives as a plug-and-play module for SNNs is highly novel and impactful.
+- Technical Quality (10): 10 — The experimental methodology is rigorous, comprehensive, and includes insightful ablations and analyses.
+- Clarity (10): 10 — The paper is exceptionally well-written and organized, with clear figures and tables that effectively support the main arguments.
+- Confidence (5): 5 — I am highly confident in my assessment; the paper's claims are strongly supported by extensive empirical evidence.
+
+***
+
+### **Review 2**
+
+**Summary**
+The paper proposes PredNext, an auxiliary training objective for self-supervised learning (SSL) in Spiking Neural Networks (SNNs). The goal is to improve the temporal consistency of learned video representations. PredNext involves two predictive tasks: predicting features of the next time step (Step Prediction) and a future video clip (Clip Prediction). These predictions are made in a cross-view manner, where features from one data augmentation are used to predict features from a second augmentation. The authors adapt several SSL methods (SimCLR, MoCo, etc.) to SNNs and show that adding the PredNext loss improves performance on downstream action recognition and video retrieval tasks on datasets like UCF101 and MiniKinetics.
+
+**Soundness**
+The overall approach is plausible, but there are several critical issues regarding the soundness of the claims and the experimental reporting that undermine the paper's conclusions.
+
+1.  **Contradictory Metric Reporting:** The central claim is that PredNext improves temporal consistency. However, the reporting of this metric is contradictory. Section 3.3 defines `E_consistency` as a distance metric (`1 - cos(...)`) where "Lower values indicate higher temporal feature consistency." However, Table 4 shows that PredNext-SimSiam has a "consistency" value of 0.819, which is *higher* than the baseline's 0.773. The text in the table even marks this as a positive gain (`+0.046`). This directly contradicts the metric's definition and the claim in the text that PredNext achieves "significantly lower consistency errors." The plots in Figure 4 are labeled "similarity," where higher is better, adding to the confusion. This fundamental inconsistency in the core metric makes it impossible to validate the paper's main hypothesis.
+
+2.  **Overstated Novelty:** The paper claims in Table 2 that PredNext requires "no additional module" in contrast to methods like DPC. This is misleading. PredNext explicitly introduces two MLP prediction heads, `P_T` and `P_C` (Section 2.2), which are indeed auxiliary modules. This misrepresents the comparison to prior work.
+
+3.  **Missing Hyperparameter Analysis:** The final loss is a weighted sum `L = (1 − α) · L_ssl + α · L_pred`. The weight `α` is a critical hyperparameter that balances the two objectives. The paper provides no information on how `α` was chosen or a sensitivity analysis of its value. This is a significant omission for a method that relies on combining loss terms.
+
+4.  **Algorithm vs. Text Discrepancy:** Algorithm 1 (line 11) defines the PredNext loss with a `0.25` coefficient. The text equation for `L_pred` in Section 2.2 implies a `0.5` coefficient for each of the four terms. These should be consistent.
+
+**Presentation**
+The presentation has major flaws that severely impact readability and credibility.
+- **Figure and Table Organization:** The layout is extremely poor. Figures are often placed many pages away from their first mention in the text. For example, the entire ablation study in Section 4 refers to subplots of Figure 6, but these plots (Blocks 39, 40, 41) are located at the very end of the paper, making it impossible to follow the analysis without constant scrolling.
+- **Inconsistent Terminology:** As mentioned in Soundness, the use of "consistency," "consistency error," and "similarity" is muddled and contradictory across the text, tables, and figures.
+- **Careless Errors:** Table 2 has an incorrect, copy-pasted title ("Summary of commonly used DVS and video datasets"). This indicates a lack of careful proofreading.
+
+**Contribution**
+The paper attempts to make an empirical contribution by applying a predictive coding objective to unsupervised SNNs and benchmarking the results. The idea of combining step and clip prediction is interesting. However, the severe issues with soundness and presentation make it difficult to accept the contributions at face value. The establishment of benchmarks is useful, but the results themselves are cast into doubt by the inconsistent metric reporting.
+
+**Strengths**
+- The paper tackles an important and under-explored problem: unsupervised learning for deep SNNs on large-scale video data.
+- The experimental setup is ambitious, covering five different SSL methods and three datasets.
+- The idea of using cross-view prediction for both short-term (step) and long-term (clip) temporal relations is intuitive.
+
+**Weaknesses**
+- **Fatal Flaw in Metric Reporting:** The contradictory reporting of the core "temporal consistency" metric undermines the central thesis of the paper.
+- **Misleading Claims:** The claim that PredNext requires "no additional module" is inaccurate.
+- **Poor Presentation and Organization:** The paper is very difficult to read due to the illogical placement of figures and careless errors.
+- **Missing Technical Details:** Key details, such as the selection and sensitivity of the loss weight `α`, are missing.
+
+**Questions**
+1.  Please clarify the "consistency" metric used in Table 4. Does a higher value mean better or worse consistency? Please reconcile the value reported in Table 4 (0.819 for PredNext vs. 0.773 for baseline) with the definition of `E_consistency` in Section 3.3 and the claim that PredNext achieves "lower consistency errors."
+2.  Can you justify the claim in Table 2 that PredNext requires "no additional module needed" when it introduces two MLP prediction heads, `P_T` and `P_C`? How is this fundamentally different from the aggregator in DPC?
+3.  How was the loss weighting coefficient `α` selected? Please provide an ablation study or sensitivity analysis for this crucial hyperparameter.
+
+**Rating**
+- Overall (10): 2 — The paper is not publishable in its current state due to a fatal flaw in the reporting of its core metric and severe presentation issues.
+- Novelty (10): 5 — The idea is an incremental combination of existing concepts, and the novelty claims are overstated.
+- Technical Quality (10): 2 — Major inconsistencies in the results, missing hyperparameter analysis, and misleading comparisons point to low technical quality.
+- Clarity (10): 1 — The paper is extremely difficult to follow due to poor organization and contradictory statements, making it impossible to properly evaluate.
+- Confidence (5): 5 — I am highly confident that the paper has major flaws that require a complete revision.
+
+***
+
+### **Review 3**
+
+**Summary**
+This work introduces PredNext, a method to improve unsupervised learning in Spiking Neural Networks (SNNs) by adding an auxiliary loss based on future feature prediction. The method operates on video data and aims to create more temporally consistent representations, which the authors argue is a key weakness in current SNNs. PredNext is designed as a "plug-and-play" module that can be combined with various self-supervised learning (SSL) frameworks. It uses two prediction heads to predict features at the next timestep and in a future clip, respectively. The authors demonstrate performance gains on action recognition and video retrieval after pre-training on large video datasets, a departure from typical SNN research on smaller DVS datasets.
+
+**Soundness**
+From a machine learning engineering perspective, the method appears sound. It combines established ideas—predictive coding and multi-view contrastive learning—and applies them in a novel context (deep SNNs for video). The experiments are extensive and show clear performance improvements. However, from a neuromorphic computing or SNN-specific standpoint, the work is less convincing. The SNN (a SEW ResNet) is largely treated as a black-box feature extractor. The core of the proposed learning mechanism—calculating cosine similarity between MLP-projected, temporally-averaged feature vectors—is entirely in the ANN domain. The method does not leverage or analyze the unique spiking dynamics of the SNN.
+
+**Presentation**
+The paper is generally well-written and structured. The motivation is clear, and the experiments are described in detail. However, the paper misses a crucial opportunity to connect its findings to the principles of SNNs. There is no analysis of how PredNext affects the underlying neural dynamics, such as spike rates, sparsity, or temporal coding precision. The figures and tables are plentiful, but their organization could be improved (e.g., Figure 6's subplots are scattered).
+
+**Contribution**
+The main contribution is empirical: it successfully demonstrates that a predictive auxiliary task can significantly boost the performance of SSL for deep SNNs on complex video tasks. This is a valuable engineering result and provides a strong set of baselines for future work. However, the conceptual contribution to SNN research is limited. The paper does not propose a new SNN-specific learning rule or provide new insights into how SNNs process temporal information. Instead, it shows that a powerful technique from the ANN world can be effectively ported to SNNs, treating the SNN primarily as an alternative backbone to an ANN.
+
+**Strengths**
+- **Strong Empirical Results:** The paper shows consistent and significant performance gains across multiple SSL methods and large-scale datasets (Table 3), which is a strong achievement.
+- **Addresses a Key Gap:** It tackles the challenging and important area of unsupervised learning for deep SNNs, pushing the boundaries beyond simple image classification.
+- **Good Analysis of Prediction vs. Constraint:** The experiment in Section 3.3, which shows that directly forcing consistency is harmful while predicting the future is beneficial, is an insightful finding.
+
+**Weaknesses**
+- **Lack of SNN-Specific Insight:** The paper fails to analyze how PredNext influences the core properties of the SNN. The SNN is used as a tool, but the work does not deepen our understanding of SNNs themselves. For example, does PredNext lead to more efficient (sparser) spike coding?
+- **Ignores SNN Motivations (Energy Efficiency):** A primary driver for SNN research is the promise of energy-efficient computation. This paper focuses exclusively on accuracy, which is a common metric for ANNs. Without any analysis of computational cost or energy efficiency (e.g., synaptic operations), the argument for using an SNN over a standard CNN is significantly weakened.
+- **Method is Not Natively "Spiking":** The prediction and loss calculations are performed on abstract feature vectors, not directly on spikes. The temporal information from the SNN is collapsed by averaging before being used in the main SSL loss. This design choice further distances the method from being a truly neuromorphic approach.
+
+**Questions**
+1.  The introduction argues that "intrinsic neuronal dynamics alone are insufficient" for this task. Could you provide an analysis of the SNN's spiking activity (e.g., firing rates, inter-spike intervals) with and without PredNext to show how your method alters these dynamics to better capture temporal information?
+2.  What is the primary motivation for using an SNN backbone in this work, given that the learning framework is adapted from ANNs and the evaluation does not consider SNN-specific advantages like energy efficiency? Have you compared the performance and computational cost (e.g., FLOPs vs. SynOps) to an equivalent ANN backbone trained with the same PredNext objective?
+3.  The SSL loss (e.g., for SimCLR) is computed on temporally-averaged features (`z_i`), while the PredNext loss is computed on per-timestep features (`z_i^t`). How do these two objectives, operating at different temporal granularities, interact during training? Does this create conflicting gradients or optimization challenges?
+
+**Rating**
+- Overall (10): 6 — A solid piece of engineering with strong empirical results, but it lacks depth from a neuromorphic science perspective and misses the opportunity to provide SNN-specific insights.
+- Novelty (10): 6 — The application of predictive coding to deep SNNs for video is novel, but the underlying components are well-established in the ANN literature.
+- Technical Quality (10): 7 — The experiments are well-executed, but the lack of SNN-specific analysis and justification for using an SNN is a technical weakness.
+- Clarity (10): 7 — The paper is mostly clear, but the lack of connection to SNN principles makes the core motivation for the choice of architecture unclear.
+- Confidence (5): 5 — I am confident in my assessment of the paper's strengths as an empirical study and its weaknesses as a contribution to SNN-specific science.
+
+***
+
+### **Review 4**
+
+**Summary**
+This paper presents PredNext, a module designed to be added to self-supervised learning frameworks for Spiking Neural Networks (SNNs). The goal is to learn better representations from video data by explicitly modeling temporal dependencies. PredNext adds a loss term based on predicting future features, both at the next time step and in a subsequent video clip. The authors test this module by adding it to five different self-supervised methods and show that it improves performance on action recognition and video retrieval tasks.
+
+**Soundness**
+The logical flow of the idea is reasonable: making a model predict the future should force it to learn features that are invariant and semantically meaningful over time. The authors support this with a wide range of experiments. However, the soundness of the paper's conclusions is severely compromised by a critical lack of clarity in how the main results are reported. The central metric of "temporal consistency" is defined one way in the text (as an error, where lower is better) but appears to be reported as a similarity in tables and figures (where higher is better). This contradiction (detailed in Weaknesses) makes it impossible to verify the paper's core claim that PredNext improves temporal consistency in a beneficial way.
+
+**Presentation**
+The presentation of this paper is deeply flawed and makes it exceptionally difficult to review.
+1.  **Disorganized Figures:** The paper's structure is chaotic. Figures are not placed near the text that describes them. The most egregious example is Figure 6, which is central to the ablation studies in Section 4. The text discusses subplots (a), (b), and (c), but the actual plots are scattered across three different image blocks (39, 40, 41) at the end of the paper, completely disconnected from the text. This makes the ablation section unreadable and appears to be an artifact of a poor authoring tool or template usage.
+2.  **Contradictory Core Metric:** As mentioned above, the paper is fatally inconsistent in its use of "consistency," "consistency error," and "similarity." Section 3.3 defines `E_consistency` as an error. Figure 4 plots "similarity." Table 4 reports "consistency" with values that suggest it is similarity, but the text in Section 3.3 claims the method achieves "lower consistency errors." A reader cannot be expected to decipher which is correct. This is a major failure of clear scientific communication.
+3.  **Sloppy Errors:** There are clear signs of haste and lack of proofreading. Table 2 has the wrong title, which has been copied and pasted from Table 1. This erodes confidence in the paper's overall quality.
+4.  **Minor Inconsistencies:** There are small but notable discrepancies, such as the weighting factor for the PredNext loss being `0.25` in Algorithm 1 but seemingly `0.5` in the text equations in Section 2.2.
+
+**Contribution**
+The paper aims to contribute a practical method for improving unsupervised SNNs and a set of benchmarks. The idea itself is potentially valuable. However, due to the abysmal state of the presentation, the contribution is completely obscured. A scientific paper's contribution is not just the idea, but also its clear and verifiable communication to the community. In its current form, this paper fails at the communication part.
+
+**Strengths**
+- The problem being addressed (unsupervised learning for SNNs on video) is timely and important.
+- The core idea of using future prediction as an auxiliary task is intuitive and well-motivated in the introduction.
+- The authors have clearly put a lot of effort into running a large number of experiments.
+
+**Weaknesses**
+- **Unacceptable Presentation Quality:** The paper is not formatted for readable review. The disconnection between text and figures, especially for Figure 6, makes large parts of the paper incomprehensible.
+- **Fatal Inconsistency in Key Metric:** The contradictory reporting of the temporal consistency metric makes the paper's central claim unverifiable and untrustworthy.
+- **Evidence of Carelessness:** Errors like the wrong table title suggest the paper was submitted without proper diligence.
+
+**Questions**
+1.  Before any scientific evaluation, the paper needs to be properly formatted. Can you please reorganize the manuscript to place all figures and tables near the text that discusses them? The current layout, especially for Figure 6, is not acceptable.
+2.  Please choose a single metric for temporal consistency (e.g., "cosine similarity" or "cosine distance"). Define it once, and use that exact term and interpretation (i.e., higher is better or lower is better) consistently across all text, tables, and figures in the entire paper.
+3.  Please clarify the discrepancy in the `L_pred` loss formulation between Algorithm 1 (using a 0.25 factor) and the text in Section 2.2.
+
+**Rating**
+- Overall (10): 1 — The paper is unreviewable in its current state. The work may have merit, but the presentation is so poor that it prevents a fair and accurate assessment.
+- Novelty (10): 4 — The idea seems to be a combination of existing techniques, but it's hard to judge its true novelty without being able to clearly understand the paper.
+- Technical Quality (10): 1 — The technical quality of the scientific communication is extremely low. The presence of contradictory results and careless errors suggests the underlying technical work may also have issues.
+- Clarity (10): 1 — The paper is fundamentally unclear due to chaotic organization and contradictory terminology.
+- Confidence (5): 5 — I am fully confident that this paper is not ready for publication and requires a complete overhaul of its presentation.

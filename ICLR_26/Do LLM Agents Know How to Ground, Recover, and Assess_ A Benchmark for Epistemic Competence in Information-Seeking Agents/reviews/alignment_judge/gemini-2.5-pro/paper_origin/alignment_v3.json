@@ -1,0 +1,129 @@
+{
+  "paper": "Do LLM Agents Know How to Ground, Recover, and Assess_ A Benchmark for Epistemic Competence in Information-Seeking Agents",
+  "runs": [
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "deepreviewer",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "deep_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "55f39c3e353412551a5ae68e81fc4acc489b4edd",
+      "inputs": {
+        "human_review": "review_origin.txt",
+        "ai_review": "reviews/deepreviewer/gpt-5-2025-08-07/paper_origin/deep_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 0.67,
+        "weakness_coverage_recall": 0.29,
+        "ai_extra_major_points_rate": 0.69,
+        "symmetric_coverage_similarity": 0.21,
+        "note": "The AI review misses several of the human's key concerns, such as the lack of experimental baselines and cost analysis. Conversely, the AI raises numerous distinct, detailed critiques of the metric designs (RQI, ERF, CE) and potential data sanitization biases that the human review does not mention, resulting in low overall coverage alignment."
+      },
+      "generated_at": "2025-12-27T23:45:28"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "baseline_review.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "b3137abdd5dd456ecfb029f7bed4151251d086e2",
+      "inputs": {
+        "human_review": "review_origin.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/baseline_review.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 0.67,
+        "weakness_coverage_recall": 0.75,
+        "ai_extra_major_points_rate": 0.43,
+        "symmetric_coverage_similarity": 0.31,
+        "note": "The AI review covers most of the human's key weaknesses (metric rationale, limited baselines, small annotation set) but completely misses the concern about the lack of cost analysis. The AI review is also far more comprehensive, raising additional major weaknesses like internal inconsistencies and reproducibility issues, which explains the low symmetric similarity."
+      },
+      "generated_at": "2025-12-27T23:50:41"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "final_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "0a71ca7d783136ba33fb6b5ec9aad08ece2f0c09",
+      "inputs": {
+        "human_review": "review_origin.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/final_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 0.67,
+        "weakness_coverage_recall": 0.57,
+        "ai_extra_major_points_rate": 0.63,
+        "symmetric_coverage_similarity": 0.3,
+        "note": "The AI review captures the human's methodological concerns but misses key experimental weaknesses like the lack of baselines and cost analysis. Conversely, the AI raises a large number of distinct major points the human missed, including reproducibility issues and internal inconsistencies in the paper."
+      },
+      "generated_at": "2025-12-28T00:01:39"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "deepreviewer",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "deep_review_merge.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "752f27bc09e656c7d041a880d0c174422eea6ca4",
+      "inputs": {
+        "human_review": "review_origin.txt",
+        "ai_review": "reviews/deepreviewer/gpt-5-2025-08-07/paper_origin/deep_review_merge.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 0.83,
+        "weakness_coverage_recall": 0.38,
+        "ai_extra_major_points_rate": 0.1,
+        "symmetric_coverage_similarity": 0.5,
+        "note": "The AI review provides very high coverage of the paper's strengths but has low coverage of the weaknesses identified by human reviewers. It misses several major concerns, such as the limited diversity of evaluated models and agent tools, and the lack of a cost analysis for the LLM judge."
+      },
+      "generated_at": "2025-12-28T00:17:03"
+    }
+  ]
+}

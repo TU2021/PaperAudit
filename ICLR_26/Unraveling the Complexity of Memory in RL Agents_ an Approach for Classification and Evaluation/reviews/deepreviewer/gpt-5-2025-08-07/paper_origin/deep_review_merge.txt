@@ -1,0 +1,41 @@
+Summary
+The paper addresses ambiguity in how “memory” is defined and evaluated in reinforcement learning by proposing a principled, operational framework and evaluation protocol. It distinguishes Memory Decision-Making (within-episode, declarative memory in a single POMDP) from Meta-RL (across-episode/task, procedural memory), and formalizes short-term vs. long-term memory using two measurable quantities: the agent’s context length K and an environment-defined correlation horizon ξ between “events” and later “recalls.” Memory-intensive environments are defined by min Ξ > 1, with the corollary that MDPs have max Ξ = 1. A simple theorem introduces a context–memory border K̄ = min Ξ − 1 that partitions regimes: ξ ≤ K corresponds to STM, ξ > K to LTM. The paper also defines effective context K_eff, expanded by memory mechanisms μ(K), and presents Algorithm 1 to configure environments and agent context so that experiments isolate STM-only, LTM-only, or mixed regimes and avoid common evaluation pitfalls.
+
+Empirically, the framework is illustrated on MiniGrid-Memory and Passive T-Maze with DTQN and GPT-2-based agents (DQN-GPT-2, SAC-GPT-2). The results show that allowing ξ to vary (mixing STM and LTM demands) can lead to falsely optimistic conclusions about LTM. Conversely, explicitly manipulating K and ξ toggles between STM and LTM as predicted by the theory, and placing agents in LTM-only regimes reveals deficits consistent with a lack of mechanisms that increase K_eff. The work emphasizes conceptual clarity and reproducible recipes for computing ξ, K̄, and configuring environments, aiming to improve comparability across memory studies.
+
+Strengths
+- Clear, actionable formalism:
+  - Precise definitions of context length K, event–recall correlation horizon ξ, memory-intensive environments, and effective context K_eff.
+  - A simple but useful theorem yielding the context–memory border K̄ = min Ξ − 1 that directly guides experiment configuration.
+  - Algorithm 1 provides a concrete procedure to design STM-only, LTM-only, or mixed tests.
+- Practical insight and validation:
+  - Demonstrates a realistic evaluation pitfall: variable ξ can mix regimes and overstate LTM capabilities.
+  - Shows how changing K or ξ reliably toggles memory regimes, illustrating the “relative” nature of STM vs. LTM.
+  - Provides environment-specific guidance and worked examples (Passive T-Maze, MiniGrid-Memory) that map definitions to implementation knobs (e.g., attention window, sequence truncation).
+- Conceptual contributions:
+  - Clarifies Memory DM vs. Meta-RL and maps these to declarative vs. procedural memory, enabling better alignment with cognitive science and prior RL taxonomies.
+  - Unifies memory and credit assignment into a single temporal-dependency lens for evaluation, making horizon manipulation straightforward.
+- Presentation quality:
+  - Generally well written and structured, with helpful taxonomy figures and a glossary.
+  - Notation and definitions are consistent enough to be operationalized, facilitating reproducibility.
+- Potential community impact:
+  - Offers a standardized, quantitative view that could improve benchmark design and the comparability of memory mechanisms (RNNs, SSMs, external memory, retrieval, etc.).
+
+Weaknesses
+- Empirical limitations and missing positive control:
+  - Experiments cover only two environments and a small set of baselines, focusing on negative results (failures in LTM-only regimes).
+  - No agent with an explicit long-term memory mechanism (e.g., external read–write memory or retrieval augmentation) is included to demonstrate success under LTM-only settings, leaving the protocol’s ability to detect true LTM unverified.
+  - No ablations on μ(K) or direct probes of K_eff; key claims rely on assuming K_eff ≈ K for GPT-2-based agents rather than measuring effective context length.
+- Conceptual boundaries and modeling choices:
+  - The declarative/procedural split, operationalized via n_envs × n_eps, may be too rigid; some within-environment, across-episode setups plausibly exercise declarative recall, blurring the boundary.
+  - Conflating memory and credit assignment simplifies horizon control but risks obscuring differences between training-time credit assignment mechanisms and inference-time recall, which can matter algorithmically.
+  - The assertion that LTM-capable mechanisms subsume STM should be qualified in finite-capacity settings where long-range mechanisms can trade off against short-range precision.
+- Reporting and rigor:
+  - Statistical treatment is light (few seeds, SEM); stronger analyses would better support evaluation-focused claims.
+  - Enforcement and verification of K at runtime are not detailed, leaving open the possibility of effective context leakage (e.g., through replay, recurrence, or target networks).
+  - Figures could be more self-contained: captions do not consistently report K, min/max Ξ, and K̄, making it harder to tie outcomes to Eq. (4) across conditions.
+  - The distribution of ξ in variable settings is not quantified (e.g., histograms, proportions with ξ ≤ K), limiting the precision of the “mixing” argument.
+- Scope and generality:
+  - Guidance for environments with multiple overlapping event–recall pairs and multimodal ξ is limited; focusing on min Ξ may mask failures at longer horizons.
+  - Potential confounds (e.g., noise channels favoring short-range heuristics) and sensitivity analyses are not explored.
+  - Minor presentation issues (notation inconsistency K̄ vs. overline K, dense table design, ordering of subsections) detract slightly from clarity.

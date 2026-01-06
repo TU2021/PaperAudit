@@ -1,0 +1,26 @@
+{
+  "paper_title": "AgentChangeBench: A Multi-Dimensional Evaluation Framework for Goal-Shift Robustness in Conversational AI",
+  "file_name": "2510.18170v1",
+  "reviewers": [
+    {
+      "reviewer_id": "W6tz",
+      "score": 4,
+      "confidence": 3
+    },
+    {
+      "reviewer_id": "96FC",
+      "score": 2,
+      "confidence": 4
+    },
+    {
+      "reviewer_id": "iMah",
+      "score": 2,
+      "confidence": 3
+    },
+    {
+      "reviewer_id": "kDAv",
+      "score": 2,
+      "confidence": 5
+    }
+  ]
+}

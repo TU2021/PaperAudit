@@ -1,0 +1,97 @@
+{
+  "paper": "FingerTip 20K_ A Benchmark for Proactive and Personalized Mobile LLM Agents",
+  "judge_model": "gpt-5.1",
+  "review_agent": "deepreviewer",
+  "ai_model": "gpt-5-2025-08-07",
+  "ai_review_file": "deep_review_all.txt",
+  "inputs": {
+    "human_review": "review.txt",
+    "ai_review": "reviews/deepreviewer/gpt-5-2025-08-07/paper_origin/deep_review_all.txt"
+  },
+  "multi_review": {
+    "detected": false,
+    "num_reviews": 1,
+    "summarize_used": false,
+    "summary_note": null
+  },
+  "ai_review_consolidated": null,
+  "alignment": {
+    "motivation_strength_alignment": 0.95,
+    "weakness_error_alignment": 0.7,
+    "overall_alignment": 0.85,
+    "explanation": {
+      "strength": "Both reviews emphasize essentially the same core contributions and motivations. They agree that (1) FingerTip 20K is a real-world, longitudinal, in-the-wild mobile dataset; (2) it specifically targets two key capabilities for mobile agents: proactive task/intent suggestion and personalized task execution; (3) the dataset is richly contextualized, including user profiles, history, time, location/scenario, screenshots, accessibility trees and actions; (4) it addresses a gap in existing benchmarks that mostly focus on instruction following without user context; (5) the dataset and code are released publicly, supporting community use; and (6) experiments show a substantial gap between current models and humans, with some gains from fine-tuning that illustrate task difficulty and potential. The AI review goes into more technical detail (metrics, equations, figures), but this is elaboration rather than a shift in emphasis. Hence, alignment on motivation and strengths is very high.",
+      "weakness": "There is solid but less-than-perfect overlap on weaknesses. Points clearly shared: (1) Limited demographic/geographic scope: both note that all users are Chinese Android users and that this limits generalization; (2) Evaluation concerns: the human review flags online-only evaluation of personalized execution and reproducibility concerns; the AI review more specifically criticizes reliance on LLM judges (SR1), lack of human validation, and manual SR2 details, which are consistent with general concerns about evaluation robustness; (3) Dataset/data-quality issues: the human review notes remaining noisy operations (typos, accidental touches) and the need to understand their impact, while the AI review notes post-processing/\"repair\" via MLLM+OCR as a potential artifact source and asks for its quantification; both are about potential noise and its influence on results. However, several AI-identified weaknesses are not present in the human review: metric design problems (Sim2 stability and discriminative power), numerous internal inconsistencies (user count, model naming, action naming, val categories), and missing inter-rater reliability or metric robustness analyses. Conversely, some human concerns are not echoed by the AI review: privacy and deployment concerns around explicit intent annotation, the weakly articulated connection between the two tracks, and the desire for offline evaluation for personalized execution. Thus, while the reviews converge on some important limitations, each highlights a different additional subset of issues, leading to moderate-to-strong but not very high alignment.",
+      "overall": "In aggregate, the reviews are substantively aligned on what the paper is about, why it matters, and its main positive contributions. Both see the core value in an in-the-wild, context-rich mobile benchmark for proactive suggestion and personalization, with public release and evidence that the tasks are challenging for current models. On weaknesses, there is clear overlap on generalization limits and evaluation/data-quality concerns, but the AI review drills much deeper into metric design and reporting inconsistencies, whereas the human review raises broader concerns about privacy, offline vs online evaluation, and conceptual linkage between the two tracks. This yields a high overall alignment on judgment and focus, with the AI review providing a more granular technical critique and the human review offering higher-level but overlapping concerns."
+    }
+  },
+  "generated_at": "2025-12-27T19:27:33",
+  "runs": [
+    {
+      "config": {
+        "judge_model": "gpt-5.1",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "baseline_review.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180
+      },
+      "config_key": "3b28d70d5731760031a4514ebc98b0afd78edf6d",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/baseline_review.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "motivation_strength_alignment": 0.86,
+        "weakness_error_alignment": 0.66,
+        "overall_alignment": 0.78,
+        "explanation": {
+          "strength": "Both reviews emphasize the same core motivation and contributions: a real-world, longitudinal mobile dataset; two novel tracks (proactive task suggestion and personalized task execution); rich contextual information enabling personalization; open release of data/code; and evidence that current models lag behind humans, indicating task difficulty. The AI review adds more granular points (formalization, personalized action analysis, comprehensive evaluations, fine-tuning gains), but these extend rather than contradict Review A’s strengths.",
+          "weakness": "There is solid overlap on two key weaknesses: the restricted regional/demographic scope (Chinese Android users) and concerns about reproducibility of personalized task execution due to the online/physical-phone setup. Review A additionally stresses privacy/annotation burden, unclear connection between the two tracks, and general dataset noise, while Review B instead focuses on metric design/validation, action-space inconsistencies, under-quantified data post-processing, and lack of statistical rigor. Thus, they share some core concerns but each raises multiple substantial, non-overlapping critiques.",
+          "overall": "Substantively, both reviews see the work as a novel, valuable benchmark with strong real-world data and well-motivated tracks, and both view it as non-trivial and challenging for current models. The main divergence is in the breadth and granularity of weaknesses: the AI review goes deep into metrics, protocol clarity, and statistics, whereas the human review focuses more on privacy/usability, demographic limitations, evaluation setup, and conceptual linkage between tracks. Overall judgment and focus on the primary contributions align well, but coverage of limitations is only partially overlapping."
+        }
+      },
+      "generated_at": "2025-12-27T19:50:11"
+    },
+    {
+      "config": {
+        "judge_model": "gpt-5.1",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "final_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180
+      },
+      "config_key": "4569a6a97a67c8e2b360606eb74d6eb53b892d06",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/final_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "motivation_strength_alignment": 0.7,
+        "weakness_error_alignment": 0.3,
+        "overall_alignment": 0.45,
+        "explanation": {
+          "strength": "Both reviews agree on the core contributions: real-world longitudinal data, the two-track benchmark design, contextual richness, openness of data/code, and evidence of task difficulty. Review B adds many extra strengths, but these do not conflict with Review A.",
+          "weakness": "Only a small subset of weaknesses overlap: demographic bias and some privacy-related concerns. Review A highlights issues like online-only evaluation, lack of connection between tracks, and noisy data, whereas Review B focuses on metric design flaws, action-space inconsistencies, reproducibility gaps, and statistical rigor—mostly unrelated to Review A’s concerns.",
+          "overall": "The reviews share a broadly similar view of the benchmark’s motivation and key strengths, but diverge heavily on weaknesses, with Review B introducing many technical and methodological criticisms absent from Review A. As a result, overall substantive alignment is moderate to low."
+        }
+      },
+      "generated_at": "2025-12-27T19:52:42"
+    }
+  ]
+}

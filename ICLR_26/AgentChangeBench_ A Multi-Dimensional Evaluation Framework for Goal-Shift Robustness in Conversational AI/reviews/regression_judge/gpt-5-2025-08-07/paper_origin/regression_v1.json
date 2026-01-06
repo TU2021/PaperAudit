@@ -1,0 +1,114 @@
+{
+  "paper": "AgentChangeBench_ A Multi-Dimensional Evaluation Framework for Goal-Shift Robustness in Conversational AI",
+  "runs": [
+    {
+      "config": {
+        "judge_model": "gpt-5-2025-08-07",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "baseline_file": "baseline_review.txt",
+        "final_file": "final_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 600,
+        "metric": "regression_v2_minimal",
+        "prompt_hash": "2142c04332"
+      },
+      "config_key": "1a46f14f5902ebb0fc2c14773cec6644d2fa5338",
+      "inputs": {
+        "baseline_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/baseline_review.txt",
+        "final_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/final_review_all.txt"
+      },
+      "regression": {
+        "score_delta": {
+          "baseline_score": 6.0,
+          "final_score": 6.0,
+          "delta": 0.0,
+          "scale_hint": "1-10"
+        },
+        "differences": [
+          {
+            "diff_type": "new_critique",
+            "summary": "Run-count inconsistency (3 runs vs 15 runs) introduced",
+            "paperaudit_types": [
+              "EXPERIMENTAL_DESIGN_PROTOCOL",
+              "METHOD_LOGIC_CONSISTENCY"
+            ],
+            "why_impacts_score": "Undermines protocol consistency and reproducibility; lowers technical rigor",
+            "evidence": {
+              "baseline_quote": "Each task is evaluated across 3 independent runs",
+              "final_quote": "Section 4.3 reports “14/15 runs contain at least one such low-T case,” implying a 15-run setup"
+            }
+          },
+          {
+            "diff_type": "intensified_critique",
+            "summary": "Stronger dataset provenance/accounting issues (unaccounted 51 tasks)",
+            "paperaudit_types": [
+              "EVIDENCE_DATA_INTEGRITY",
+              "EXPERIMENTAL_DESIGN_PROTOCOL"
+            ],
+            "why_impacts_score": "Raises doubts about dataset integrity and reproducibility",
+            "evidence": {
+              "baseline_quote": "Abstract claims 2,835 task sequences (Abstract), while the main text consistently reports 315 tasks",
+              "final_quote": "sum to 264, leaving 51 tasks unaccounted, further clouding provenance (Section 3.2)"
+            }
+          },
+          {
+            "diff_type": "intensified_critique",
+            "summary": "Expanded figure/table mismatches including conflicting GSRT values and rounding inconsistencies",
+            "paperaudit_types": [
+              "RHETORICAL_PRESENTATION_MANIPULATION",
+              "CLAIM_RESULT_DISTORTION",
+              "CONTEXT_MISALIGNMENT_INCOHERENCE"
+            ],
+            "why_impacts_score": "Inconsistent reporting erodes trust in results and clarity",
+            "evidence": {
+              "baseline_quote": "Table 10’s GSRT entries mix rate and turns in the same column semantics (“Shifts/Rec/Trans”), which can confuse interpretation",
+              "final_quote": "GSRT values depicted in figures/tables for Airline/Gemini conflict (e.g., 22.3% in Figure 1 table vs 32.1% in the bar chart vs “—” in Table 10)"
+            }
+          },
+          {
+            "diff_type": "new_critique",
+            "summary": "Cross-model coverage confusion in Retail (text vs tables)",
+            "paperaudit_types": [
+              "CONTEXT_MISALIGNMENT_INCOHERENCE",
+              "EXPERIMENTAL_DESIGN_PROTOCOL"
+            ],
+            "why_impacts_score": "Unclear coverage compromises comparability and validity of conclusions",
+            "evidence": {
+              "baseline_quote": "Results span TSR and its channel components (Table 9), efficiency (TUE with TC/PA), redundancy (TCRR), and recovery (GSRT)",
+              "final_quote": "Section 4.4.3 states “Retail domain comprises 165 tasks evaluated with GPT-4o,” yet Retail results are reported for Claude and Gemini"
+            }
+          },
+          {
+            "diff_type": "intensified_critique",
+            "summary": "Persona table counts don’t sum to dataset size",
+            "paperaudit_types": [
+              "EVIDENCE_DATA_INTEGRITY",
+              "CLAIM_RESULT_DISTORTION"
+            ],
+            "why_impacts_score": "Suggests aggregation bias and potential misreporting of totals",
+            "evidence": {
+              "baseline_quote": "Persona coverage is uneven (Table 8: MEDIUM_1 = 69 tasks vs 31–34 for others)",
+              "final_quote": "Table 8’s counts also sum to 201 tasks (Appendix D.2), not 315"
+            }
+          },
+          {
+            "diff_type": "score_rationale_shift",
+            "summary": "Lower sub-scores tied to added protocol/reporting inconsistencies",
+            "paperaudit_types": [
+              "EXPERIMENTAL_DESIGN_PROTOCOL",
+              "RHETORICAL_PRESENTATION_MANIPULATION"
+            ],
+            "why_impacts_score": "Explicitly reduces Technical Quality and Clarity assessments",
+            "evidence": {
+              "baseline_quote": "Technical Quality (10): 6 — Formal metrics and comprehensive experiments",
+              "final_quote": "run-count inconsistencies (Sections 3.5, 4.3; Appendix B.2; Appendix D.5) reduce rigor."
+            }
+          }
+        ]
+      },
+      "generated_at": "2026-01-05T20:42:39"
+    }
+  ]
+}

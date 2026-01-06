@@ -1,0 +1,101 @@
+{
+  "paper": "Towards Understanding Feature Learning in Parameter Transfer",
+  "runs": [
+    {
+      "config": {
+        "judge_model": "gpt-5-2025-08-07",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "baseline_file": "baseline_review.txt",
+        "final_file": "final_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 600,
+        "metric": "regression_v2_minimal",
+        "prompt_hash": "2142c04332"
+      },
+      "config_key": "1a46f14f5902ebb0fc2c14773cec6644d2fa5338",
+      "inputs": {
+        "baseline_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/baseline_review.txt",
+        "final_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/final_review_all.txt"
+      },
+      "regression": {
+        "score_delta": {
+          "baseline_score": 7.0,
+          "final_score": 7.0,
+          "delta": 0.0,
+          "scale_hint": "1-10"
+        },
+        "differences": [
+          {
+            "diff_type": "new_critique",
+            "summary": "Theory–experiment regime mismatch (Condition 4.1 not satisfied by synthetic settings)",
+            "paperaudit_types": [
+              "METHOD_LOGIC_CONSISTENCY",
+              "EXPERIMENTAL_DESIGN_PROTOCOL",
+              "CONTEXT_MISALIGNMENT_INCOHERENCE"
+            ],
+            "why_impacts_score": "Undermines empirical validation of theoretical bounds; weakens credibility",
+            "evidence": {
+              "baseline_quote": "Synthetic experiments systematically vary N1, σp,1, ∥u∥2, and d, and match theoretical trends.",
+              "final_quote": "Apparent mismatch means empirical settings may not satisfy the over-parameterization regime."
+            }
+          },
+          {
+            "diff_type": "new_critique",
+            "summary": "Assumption tension: text claims noise correlation while definitions enforce orthogonality",
+            "paperaudit_types": [
+              "METHOD_LOGIC_CONSISTENCY",
+              "CONTEXT_MISALIGNMENT_INCOHERENCE"
+            ],
+            "why_impacts_score": "Conflicting assumptions reduce methodological consistency and interpretability",
+            "evidence": {
+              "baseline_quote": "Orthogonality between signals and noise is assumed; may not hold in practice.",
+              "final_quote": "Text claims “noise may have non-trivial correlation” while Definitions enforce orthogonality; unresolved tension."
+            }
+          },
+          {
+            "diff_type": "new_critique",
+            "summary": "Undefined Appendix label (“VanillaLG base L12”) causing ambiguity",
+            "paperaudit_types": [
+              "RHETORICAL_PRESENTATION_MANIPULATION",
+              "CONTEXT_MISALIGNMENT_INCOHERENCE"
+            ],
+            "why_impacts_score": "Ambiguous labeling harms clarity and reproducibility",
+            "evidence": {
+              "baseline_quote": "Figure 4 shows curves without setup specifics (reproducibility).",
+              "final_quote": "Appendix Figure 4 labels “VanillaLG base L12” without definition, making it unclear."
+            }
+          },
+          {
+            "diff_type": "score_rationale_shift",
+            "summary": "Clarity score lowered with added issues (assumption tension, ambiguous labels)",
+            "paperaudit_types": [
+              "RHETORICAL_PRESENTATION_MANIPULATION",
+              "CONTEXT_MISALIGNMENT_INCOHERENCE"
+            ],
+            "why_impacts_score": "Explicitly cites more clarity problems to justify lower clarity score",
+            "evidence": {
+              "baseline_quote": "Clarity (10): 6 — … marred by notational inconsistencies and missing references.",
+              "final_quote": "Clarity (10): 5 — … assumption tension … ambiguous labels … figure formatting issues."
+            }
+          },
+          {
+            "diff_type": "intensified_critique",
+            "summary": "Broader loss-notation inconsistency flagged across appendix",
+            "paperaudit_types": [
+              "RHETORICAL_PRESENTATION_MANIPULATION",
+              "METHOD_LOGIC_CONSISTENCY"
+            ],
+            "why_impacts_score": "Signals pervasive notation problems, weakening rigor and traceability",
+            "evidence": {
+              "baseline_quote": "Occasional symbol inconsistencies (e.g., L_S vs L_Task2) reduce precision.",
+              "final_quote": "Audit loss-notation consistency across the appendix, avoiding undefined L_S/L(W)."
+            }
+          }
+        ]
+      },
+      "generated_at": "2026-01-05T20:37:30"
+    }
+  ]
+}

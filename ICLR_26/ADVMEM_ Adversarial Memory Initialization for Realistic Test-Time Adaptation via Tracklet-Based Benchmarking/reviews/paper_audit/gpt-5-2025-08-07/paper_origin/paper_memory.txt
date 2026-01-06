@@ -1,0 +1,155 @@
+# Global Summary
+The paper addresses realistic test-time adaptation (TTA) under natural distribution shifts and temporal dependencies that violate i.i.d. assumptions. It introduces ITD, a tracklet-based benchmark built from TrackingNet that preserves temporal continuity, and proposes ADVMEM, an adversarial memory initialization strategy for memory-based TTA. Evaluation covers three settings: frame-wise i.i.d., tracklet-wise i.i.d., and tracklet-wise non-i.i.d. (Dirichlet-sampled labels). Models (primarily ResNet-18, also ViT-B-16) are fine-tuned on ITD and tested under ImageNet-C style corruptions (severity often set to 5), including dynamic severity within tracklets. Key findings: traditional TTA methods perform reasonably in frame-wise i.i.d. but collapse under tracklet-wise settings (~94–95% error for SHOT-IM/TENT), while RoTTA with memory is more stable (51.3% average error in tracklet-wise i.i.d.), yet suffers a large drop under non-i.i.d. sampling (79.3%, a 28% increase vs. i.i.d.). ADVMEM substantially improves memory-based TTA, e.g., the authors state “equipping SHOT-IM with ADVMEM reduces error rates by 44% in Tracklet-wise i.i.d.”, and report specific gains such as RoTTA average −4% in non-i.i.d. and SHOT-IM −40%+ in i.i.d. However, the appendix presents detailed tables where initializing memory with training samples (TrainMem) sometimes yields lower average error than ADVMEM for RoTTA in tracklet-wise non-i.i.d. (79.3 → 75.5 vs. 78.2), indicating nuances in initialization choices. Dataset details: >23K objects, 21 classes, >220K images (train 50%, val 30%, test 20%), with crops taken every 5 frames and resized to 224×224. Fine-tuned baselines: ResNet-18 test error 9.4% vs. ViT 4.0% in clean ITD before corruptions. Code: github.com/Shay9000/advMem.git. Caveats explicitly noted include poor behavior of entropy-based methods with tracklet biases, memory imbalance under strong non-i.i.d. streams (γ → 0), and the limited effect of ADVMEM in uniform i.i.d. setups (γ → ∞). Some claims about TrainMem’s effectiveness differ between main text and appendix tables.
+
+# Introduction
+- Problem: DNNs degrade under natural corruptions and distribution shifts; real-world streams introduce sequential temporal dependencies that violate i.i.d.
+- TTA background: Adapts models online using unlabeled streams; existing benchmarks mostly simulate covariate shifts (e.g., CIFAR10-C, ImageNet-C) and often neglect temporal dependencies.
+- Benchmark gap: Prior efforts account for label distribution shifts (e.g., non-i.i.d. labels) but overlook sequential visual continuity.
+- ITD benchmark: Built from TrackingNet tracklets, preserving temporal dependencies; corruptions applied consistently across tracklets with evolving intensity.
+- Findings: Most TTA methods struggle when both distribution shift and temporal dependencies are present; memory-bank-based methods suffer from poor memory initialization.
+- ADVMEM: Adversarial memory initialization using synthetic noise optimized per class to boost stability; plug-and-play for memory-based TTA. Reported effectiveness: “equipping SHOT-IM with ADVMEM reduces error rates by 44% in Tracklet-wise i.i.d. settings (see Table 2).”
+- Contributions:
+  - ITD benchmark integrating tracklets and realistic corruptions.
+  - Comprehensive evaluation showing limitations under realistic non-i.i.d. conditions.
+  - Memory-equipped variants and ADVMEM to stabilize adaptation, with strongest improvements under severe non-i.i.d.
+
+# Abstract
+- Introduces ITD, a tracklet-based dataset for TTA, capturing temporal dependencies inherent in real-world video streams.
+- Benchmarks current TTA methods on ITD, highlighting limitations with temporal dependencies.
+- Proposes ADVMEM, an adversarial memory initialization that boosts performance of memory-based TTA on the benchmark.
+- Core claim: Substantial performance improvements across methods on ITD using ADVMEM.
+
+# Related Work
+- TTA methods for covariate shift:
+  - BN-stat updates (AdaBN).
+  - Entropy minimization (TENT).
+  - Sample selection and stability (ETA/EATA; note “ETA” and “EATA” mentioned; details summarized in experiments).
+- Memory-based methods:
+  - RoTTA: leverages memory bank to adapt under non-i.i.d. streams.
+- Broader context includes self-supervised TTT, normalization-based approaches, and continual TTA.
+- Quantitative details: Not specified in this section.
+
+# Method
+- ITD construction from TrackingNet (origin: YouTube-BB).
+- Tracklet extraction:
+  - Frame selection every 5 frames.
+  - Square crops 10% larger than the largest bounding box side.
+  - Standardization to 224×224.
+- Dataset properties:
+  - >23K objects, 21 classes.
+  - >220K images total; split: train 50%, val 30%, test 20%.
+  - Supports temporally consistent corruptions.
+- ADVMEM (Adversarial Memory Initialization):
+  - For K classes and memory capacity N.
+  - Initialize each memory entry from Gaussian noise x ~ N(0, I), assign y ~ U{1..K}, optimize x by gradient descent to minimize L_ce(fθ(x), y) until fθ(x) predicts y.
+  - Advantages: class-representative memory preventing forgetting; independent of downstream memory update mechanisms (works as a plug-in to RoTTA, TENT, SHOT-IM).
+  - Alternative “TrainMem” (uniformly sampled training examples) discussed later; main text notes it does not improve performance (appendix provides detailed results).
+- Algorithm:
+  - Iteratively fill memory M of size N using targeted adversarial optimization of x toward class y.
+
+# Motivation
+- Real-world streams have correlated labels and temporal redundancy.
+- Experiment on CIFAR-10-C comparing PTTA [53] vs. “tracklet mimic” (duplicated images per batch) shows temporal dependencies hurt TTA:
+  - Source: 44.1% → 44.1% (∆ 0).
+  - AdaBN: 75.4% → 78.7% (∆ 3.3).
+  - CoTTA: 75.5% → 89.1% (∆ 13.6).
+  - SAR: 75.2% → 82.4% (∆ 7.2).
+  - EATA: 75.4% → 78.6% (∆ 3.2).
+  - TENT: 75.3% → 85.1% (∆ 9.8).
+  - RoTTA: 27.6% → 66.8% (∆ 39.2).
+- Motivation: Need benchmarks with visual non-i.i.d. tracklets and strategies that avoid over-adaptation; hence ITD and ADVMEM.
+
+# Experiments
+- Benchmarks on ITD across three scenarios:
+  - Frame-wise i.i.d. (Section 4.5): sample one frame per tracklet; ignores sequential dependencies.
+  - Tracklet-wise i.i.d. (Section 4.6): process full tracklets i.i.d.; intra-tracklet dependency preserved.
+  - Tracklet-wise non-i.i.d. (Section 4.7): sample tracklets with Dirichlet Dir(γ); strong non-i.i.d. with γ = 10^-4; intermediate γ ∈ {10^-4, 10^-1, 10^3} explored in ablations; γ → ∞ ≈ i.i.d., γ → 0 ≈ class-incremental.
+- TTA methods evaluated (8): AdaBN [26], SHOT-IM [28], TENT [50], SAR [36], EATA [35], CoTTA [52], ETA (listed in tables), RoTTA [53]; baseline “Source” pre-trained/fine-tuned model fθ.
+- Setup:
+  - Base model ResNet-18; batch size 64 (default).
+  - Corruption severity often 5; also dynamic severity S(t) = s·|sin(t)|.
+  - Models fine-tuned on ITD; ImageNet-pretrained alone performs poorly on ITD.
+  - Fine-tuning outcomes (ITD):
+    - ResNet-18 error: Train 4.1, Val 8.2, Test 9.4.
+    - ViT-B-16 error: Train 2.0, Val 3.8, Test 4.0.
+- Corruptions (15 types from ImageNet-C; Table 3):
+  - Noise: Gaussian, Shot, Impulse.
+  - Blur: Defocus, Glass, Zoom.
+  - Weather: Snow, Frost, Fog, Brightness.
+  - Digital: Contrast, Elastic Transform, Pixelate, JPEG Compression.
+- Frame-wise i.i.d. results (Table 5/69):
+  - Average error: Source 62.4; AdaBN 46.9; SHOT-IM 39.3; TENT 46.8; SAR 46.5; CoTTA 46.7; ETA 46.7; EATA 46.8; RoTTA 53.4.
+  - Claim: Source error rises from <10% clean (9.4% test) to >60% corrupted (62.4%).
+- Tracklet-wise i.i.d. and non-i.i.d. with/without memory (Table 6/70/71):
+  - Tracklet-wise i.i.d.:
+    - TENT ✗: 94.0 avg; TENT ✓: 93.8.
+    - SHOT-IM ✗: 94.7 avg; SHOT-IM ✓: 93.4.
+    - RoTTA ✓: 51.3 avg.
+  - Tracklet-wise non-i.i.d. (γ = 10^-4):
+    - TENT ✗: 94.0 avg; TENT ✓: 93.8.
+    - SHOT-IM ✗: 95.1 avg; SHOT-IM ✓: 93.6.
+    - RoTTA ✓: 79.3 avg.
+  - Observation: SHOT-IM and TENT errors inflate to ~94–95% in tracklet settings due to biased statistics; RoTTA shows stability (51.3% in i.i.d.) but drops to 79.3% under non-i.i.d. (28% increase).
+- ADVMEM integration (Section 5):
+  - Hypothesis: Empty memory causes imbalance and forgetting under γ → 0; initialization should be class-balanced and representative.
+  - With ADVMEM:
+    - Tracklet-wise i.i.d. (γ → ∞): “reduces TENT by ~15% and SHOT-IM by >40%,” making SHOT-IM top-performing (table references in text; exact per-corruption values not enumerated in main).
+    - Tracklet-wise non-i.i.d. (γ → 0): RoTTA average improvement ~4%; specific gains: Pixelate −16%, Zoom −10%; TENT +>10% on JPEG and ~5% average improvement.
+  - Dynamic severity (Appendix Table 4):
+    - Tracklet-wise i.i.d.: TENT avg 91.1 → 69.8 (ADVMEM); SHOT-IM 91.0 → 40.1; RoTTA 40.0 → 40.2.
+    - Tracklet-wise non-i.i.d.: TENT 91.2 → 81.6; SHOT-IM 91.0 → 90.4; RoTTA 65.6 → 63.0.
+- Ablations:
+  - Label distribution control (γ ∈ {10^-4, 10^-1, 10^3}): ADVMEM benefits strongest at low γ; negligible at high γ (i.i.d.) as memory is quickly replaced.
+  - Batch size sensitivity (default 64; tested {8, 16, 32}): larger batches reduce error; ADVMEM consistently improves or maintains performance; sequential processing used when tracklets exceed batch size.
+  - ViT vs. ResNet: ViT less sensitive to batch size and outperforms ResNet; ADVMEM adds improvements.
+- TrainMem vs. ADVMEM (Appendix):
+  - TrainMem algorithm: class-balanced sampling of training images into memory.
+  - The text states TrainMem does not improve performance; however Appendix Table 5 (tracklet-wise non-i.i.d.) reports RoTTA averages:
+    - Standard memory (✗): 79.3.
+    - ADVMEM (✓): 78.2.
+    - TrainMem (✓✗): 75.5.
+  - Example per-corruption commentary: TrainMem reduces RoTTA’s error against glass blur by 1.7%; ADVMEM improves over naive initialization by >2% for that corruption.
+- Not specified: Exact memory capacity N; learning rates α for adversarial optimization; number of runs or seeds; total training budgets.
+
+# Conclusion
+- ITD provides a realistic TTA benchmark capturing temporal dependencies often ignored by prior work.
+- ADVMEM adversarially initializes memory banks to mitigate forgetting and stabilize adaptation, especially under non-i.i.d. streams.
+- Findings suggest a shift toward realistic benchmarks and robust memory-based strategies for evolving data distributions.
+- Future directions: enhance memory-based adaptation techniques and broaden realistic TTA benchmarks.
+
+# Appendix
+- Acknowledgements: KAUST Center of Excellence on GenAI, award 5940.
+- Dataset distribution: 21 classes with varied counts; examples:
+  - Person: ~200 videos, ~225 objects.
+  - Zebra: ~50 videos, ~50 objects.
+  - Many others: ~175 videos, ~175 objects.
+- Experiment setup details: Frame-wise vs. tracklet-wise stream construction; i.i.d. vs. non-i.i.d. sampling; default batch size 64 (one tracklet per forward pass); sequential processing when batch < tracklet length.
+- Dirichlet label control: γ ∈ {10^-4, 10^-1, 10^3}; ADVMEM helpful at low γ; inconsequential at γ → ∞.
+- Batch size sensitivity (Fig. 4b, 7): Larger batch sizes improve performance; ADVMEM robust across batch sizes; ViT experiments show consistent gains and reduced sensitivity to batch size.
+- Dynamic corruptions: Severity S(t) = s·|sin(t)| per frame within tracklet; dynamic application mimics realistic fluctuations. Results (Table 4):
+  - Tracklet-wise i.i.d. averages:
+    - TENT: 91.1 (✗) → 69.8 (✓).
+    - SHOT-IM: 91.0 (✗) → 40.1 (✓).
+    - RoTTA: 40.0 (✗) → 40.2 (✓).
+  - Tracklet-wise non-i.i.d. averages:
+    - TENT: 91.2 (✗) → 81.6 (✓).
+    - SHOT-IM: 91.0 (✗) → 90.4 (✓).
+    - RoTTA: 65.6 (✗) → 63.0 (✓).
+- TrainMem initialization (Algorithm 2): class-wise balanced selection from training set without replacement; contrasts with ADVMEM.
+  - Detailed results (Table 5) for tracklet-wise non-i.i.d. (RoTTA):
+    - Standard (✗): Avg 79.3.
+    - ADVMEM (✓): Avg 78.2.
+    - TrainMem (✓✗): Avg 75.5.
+- Expanded tables:
+  - Frame-wise i.i.d. per-corruption (Table 6): e.g., SHOT-IM avg 39.3; Source 62.4; RoTTA 53.4; detailed per-corruption values listed.
+  - Tracklet-wise i.i.d. per-corruption (Table 7): SHOT-IM ✗ 94.7 avg; ✓ 93.4; TENT ✗ 94.0; RoTTA ✓ 51.3.
+  - Tracklet-wise non-i.i.d. per-corruption (Table 8): SHOT-IM ✗ 95.1; ✓ 93.6; TENT ✗ 94.0; RoTTA ✓ 79.3.
+- Visualizations: Examples of static vs. dynamic corruptions (Fig. 6), batch size curves (Fig. 4/7), adversarial examples used in ADVMEM (Fig. 8).
+
+# References
+- Key references underpinning methodology and benchmark design:
+  - TrackingNet dataset [34]; YouTube-BoundingBoxes [40].
+  - Robustness/corruptions: ImageNet-C [16], 3D Common Corruptions [21].
+  - TTA methods: AdaBN [26], TENT [50], EATA [35], CoTTA [52], RoTTA [53], SAR [36], ETA (included in tables).
+  - Adversarial examples and optimization: Goodfellow et al. [14]; adversarial domain adaptation [49]; anti-adversaries [1].
+- Additional related works cited on test-time training/adaptation, continual learning, normalization, and domain adaptation; numeric details Not specified in this section.

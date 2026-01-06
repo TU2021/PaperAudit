@@ -1,0 +1,165 @@
+Here are four distinct reviews of the paper.
+
+***
+
+### **Review 1**
+
+**Summary**
+This paper presents a compelling empirical investigation into the relationship between loss landscape geometry and model performance. The authors challenge the conventional wisdom that flatter minima are universally desirable for generalization. They propose a "function-centric perspective," arguing that the sharpness of a minimum reflects the complexity of the learned function. Through extensive experiments on both toy optimization problems and large-scale image classification tasks, they demonstrate that regularized models (using SAM, weight decay, or data augmentation) often converge to sharper minima yet exhibit superior performance in terms of generalization, calibration, robustness, and functional consistency.
+
+**Soundness**
+The paper's methodology is sound and rigorous. The argument is built logically, starting with intuitive single-objective optimization problems (Section 4) that clearly illustrate how a function's intrinsic geometry dictates the sharpness of its optima. The high-dimensional experiments are well-designed, employing a matched-seed setup (Section 5.1) to provide a controlled comparison between different regularization techniques. The use of multiple modern architectures (ResNet, VGG, ViT), datasets (CIFAR-10/100, TinyImageNet), and reparameterization-invariant sharpness metrics (Section 3) lends significant credibility to the findings. The inclusion of safety-critical evaluations beyond standard accuracy, such as ECE and corruption robustness, is a commendable and important extension.
+
+**Presentation**
+The paper is exceptionally well-written and organized. The narrative is clear and easy to follow, guiding the reader from the core hypothesis to the supporting evidence. The introduction (Section 1) provides an excellent overview of the existing literature and clearly situates the paper's contributions. Figures are used effectively to illustrate key concepts, such as the landscapes of toy functions (Figure 3) and the distribution of converged minima (Figure 1). The tables are detailed and present the main results in a comprehensive manner (Tables 3, 5, 7). The separation of detailed experimental settings into the appendix keeps the main body focused and readable.
+
+**Contribution**
+The contribution of this work is significant and timely. It provides a strong, empirically-backed counter-argument to the long-standing "flatness is good" heuristic in deep learning. By systematically showing that popular regularization techniques often lead to sharper, better-performing models, the paper forces a re-evaluation of our geometric intuitions. The finding that SAM, an optimizer explicitly motivated by finding flat minima, frequently increases sharpness is particularly striking and important (Section 6). The proposed "function-centric" viewpoint offers a valuable new lens through which to interpret the role of loss landscape geometry.
+
+**Strengths**
+1.  **Comprehensive Empirical Evidence:** The study is extensive, covering multiple models, datasets, regularizers, and a broad suite of evaluation metrics. This makes the conclusions robust and broadly applicable.
+2.  **Counter-intuitive and Impactful Findings:** The paper directly challenges a widely held belief and provides strong evidence to the contrary, particularly regarding the effects of SAM and other regularizers on sharpness (Tables 3, 5, 7).
+3.  **Focus on Safety and Reliability:** The evaluation extends beyond simple test accuracy to include crucial safety-relevant properties like calibration and robustness (Section 3), which is highly relevant for the practical deployment of neural networks.
+4.  **Clear and Coherent Argument:** The "function-centric" hypothesis is introduced early and is consistently supported by the evidence presented, from simple toy problems to complex vision tasks.
+
+**Weaknesses**
+1.  The interpretation of "functional diversity" (lower disagreement is better) is interesting but could benefit from a more detailed justification, as diversity is often considered beneficial in other contexts like ensembling.
+2.  While the paper convincingly argues against the universality of flatness, the practical takeaway—that the "right" sharpness is task-dependent—could be explored further to offer more prescriptive guidance for practitioners.
+
+**Questions**
+1.  The paper masterfully shows that regularizers like SAM can lead to sharper but better minima. How do you think these findings should influence the design of future optimization and regularization algorithms? Should we be explicitly searching for minima with a certain *degree* of sharpness rather than maximal flatness?
+2.  You interpret lower prediction disagreement as a sign of functional stability. Could you elaborate on why this is preferable to functional diversity, which has been linked to benefits like improved ensemble performance?
+3.  Could the "function-centric" view be leveraged to predict *a priori* what kind of geometry (flat or sharp) would be optimal for a given task, perhaps based on properties of the data distribution?
+
+**Rating**
+- Overall (10): 9 — The paper presents a strong, well-supported, and impactful challenge to a core assumption in deep learning research.
+- Novelty (10): 9 — The function-centric perspective and the empirical findings, especially concerning SAM, are highly novel and counter-intuitive.
+- Technical Quality (10): 9 — The experiments are extensive, well-controlled, and use appropriate, modern metrics and techniques.
+- Clarity (10): 10 — The paper is exceptionally well-written, with a clear structure and illustrative figures that make the complex topic accessible.
+- Confidence (5): 5 — I am highly confident in my evaluation, based on a thorough reading of the paper and its appendices.
+
+***
+
+### **Review 2**
+
+**Summary**
+This paper investigates the relationship between the sharpness of loss minima and the performance of deep neural networks. The authors propose a "function-centric" view, hypothesizing that a solution's geometry is determined by the complexity of the learned function. Through experiments on toy problems and image classification tasks, they report that regularized models often converge to sharper minima while achieving better generalization and performance on safety-related metrics (calibration, robustness). They conclude that flatness is not a universal indicator of good performance and that sharpness can be a feature of well-regularized, high-performing models.
+
+**Soundness**
+The paper's experimental setup is broad, but there are several methodological concerns that weaken the conclusions.
+
+1.  **Undefined "Function Complexity":** The central thesis rests on the idea of "function complexity" (Abstract, Section 1), but this term is never formally defined or measured. The link is shown intuitively for toy problems where the target function is known, but for high-dimensional neural networks, it remains a vague, post-hoc explanation for the observed sharpness values. Without a way to quantify the complexity of the learned function, the "function-centric" perspective is an unfalsifiable hypothesis rather than a scientific theory.
+
+2.  **Interpretation of "Functional Diversity":** In Section 3, the authors measure functional similarity via prediction disagreement and state, "We interpret this agreement as a desirable property, reflecting stability." This is a questionable and non-standard interpretation. A large body of work on ensembles (e.g., Fort et al., 2020) suggests that diversity (i.e., disagreement) is crucial for performance gains. The authors should provide a much stronger justification for why agreement is desirable in this context.
+
+3.  **Inconsistent Results for SAM:** The paper claims that "SAM often increases sharpness" (Section 6). However, the authors' own results show inconsistencies. In Table 3 and Table 5, the "Augmentation + SAM" condition has a *lower* SAM Sharpness value than the "Augmentation" condition alone. While the authors briefly acknowledge "limited exceptions" (Section 6), this directly contradicts the main narrative and is not adequately addressed.
+
+4.  **Metric Calculation Issues:** The appendix reveals that some sharpness metrics were calculated on subsets of data due to computational cost (e.g., Relative Flatness on CIFAR-100 used 20% of the data, Appendix D). The potential impact of this subsampling on the reliability and comparability of the sharpness values is not discussed.
+
+**Presentation**
+The paper is generally well-written, but the argument's clarity is hampered by the aforementioned conceptual ambiguity. The reliance on the appendix for critical experimental details (e.g., Appendix D) makes it difficult to fully assess the methodology from the main text alone. The discussion on the mismatch between loss landscape visualizations (Table 4) and quantitative metrics (Table 3) is noted but could have been explored in more depth, as it highlights a fundamental challenge in this area.
+
+**Contribution**
+The paper provides a collection of interesting empirical results that add nuance to the "flatness vs. sharpness" debate. The primary contribution is the empirical demonstration that common regularizers can increase reparameterization-invariant sharpness metrics while improving performance. However, the contribution is limited by the lack of theoretical grounding for the proposed "function-centric" view and several methodological ambiguities. The work successfully questions a popular heuristic but fails to replace it with a well-defined alternative.
+
+**Strengths**
+1.  The experimental scope is broad, testing multiple architectures, datasets, and regularization methods.
+2.  The use of reparameterization-invariant sharpness metrics is appropriate and follows best practices.
+3.  The paper raises important questions about the conventional understanding of regularizers like SAM.
+
+**Weaknesses**
+1.  The core concept of "function complexity" is ill-defined and not measured, making the central thesis speculative.
+2.  The interpretation of prediction disagreement as a measure of functional stability is poorly justified and runs counter to established literature on ensembles.
+3.  The empirical results contain inconsistencies (e.g., SAM's effect on SAM-sharpness) that undermine the paper's main claims.
+4.  Potential methodological issues, such as calculating metrics on data subsets, are not sufficiently addressed.
+
+**Questions**
+1.  How would you formally define and measure the "function complexity" of a trained neural network? Without such a definition, how can your "function-centric" hypothesis be rigorously tested?
+2.  Can you provide a stronger theoretical or empirical justification for why low prediction disagreement (high agreement) is a desirable property, especially in light of the literature on ensembling where diversity is prized?
+3.  How do you explain the results in Tables 3 and 5 where adding SAM to an augmented model *decreases* the SAM-sharpness metric? This seems to be a direct counterexample to the claim that SAM increases sharpness.
+4.  Did you analyze whether calculating Relative Flatness on only 20% of the CIFAR-100 training data (Appendix D) produces reliable estimates? How sensitive are the sharpness values to the choice of this subset?
+
+**Rating**
+- Overall (10): 5 — The paper presents interesting empirical findings but is undermined by significant conceptual and methodological weaknesses.
+- Novelty (10): 6 — The empirical results are somewhat novel, but the conceptual framework is not well-developed.
+- Technical Quality (10): 4 — The technical quality is questionable due to the ill-defined core concept, inconsistent results, and potential issues in metric calculation.
+- Clarity (10): 7 — The paper is readable, but the central argument lacks the clarity that would come from precise definitions.
+- Confidence (5): 5 — I am confident in my assessment, having carefully examined the methodology and results in the main paper and appendix.
+
+***
+
+### **Review 3**
+
+**Summary**
+This paper provides an empirical re-evaluation of the role of loss landscape sharpness in deep learning. The authors argue for a "function-centric" perspective, where sharpness is not an intrinsic evil but rather a property that reflects the complexity of the function being learned. They conduct a wide range of experiments, from toy 2D functions to modern vision models, showing that regularization techniques like data augmentation and SAM can lead to solutions that are simultaneously sharper and better-performing on metrics including accuracy, calibration, and robustness. The work challenges the simple maxim that "flatter is better" and suggests a more nuanced relationship between geometry and generalization.
+
+**Soundness**
+The paper's empirical approach is largely sound. The experiments are comprehensive, and the use of a matched-seed protocol (Section 5.1) is a strong choice for ensuring fair comparisons between the different training "controls." The selection of reparameterization-invariant sharpness metrics is up-to-date and appropriate. The initial analysis on single-objective functions (Section 4) provides a very effective and intuitive foundation for the paper's main hypothesis before scaling up to deep networks. The results presented in the tables are detailed and appear to be robust across different settings.
+
+**Presentation**
+The paper is well-structured and clearly written. The introduction effectively frames the problem and the authors' position. The results are presented logically, with tables and figures that are generally easy to interpret. I particularly appreciate the explicit statement of the hypothesis at the end of Section 5. The conclusion (Section 7) provides a concise and accurate summary of the paper's findings and implications. The authors are also commendably transparent about the limitations of 2D loss landscape visualizations (Section 6).
+
+**Contribution**
+The main contribution of this paper is practical and empirical. It provides a valuable service to the community by systematically testing and ultimately questioning a piece of long-standing conventional wisdom. For practitioners using techniques like data augmentation or SAM, the finding that these methods may be succeeding *despite* increasing sharpness (and not because they are finding flatter minima) is an important insight (Section 6). The paper successfully complicates the narrative around flatness and encourages a more careful, context-dependent analysis. The inclusion of safety-related metrics like ECE and corruption accuracy is a significant plus, connecting the abstract geometric discussion to concrete, practical concerns.
+
+**Strengths**
+1.  **Practical Relevance:** The findings have direct implications for how practitioners should think about the effect of common regularization techniques.
+2.  **Strong Empirical Grounding:** The conclusions are backed by a large volume of experiments across different models, datasets, and metrics.
+3.  **Broadened Evaluation:** Moving beyond accuracy to include calibration (ECE), robustness (Corruption Accuracy), and functional consistency (Prediction Disagreement) provides a more holistic view of model quality.
+4.  **Clear Refutation of SAM's Motivation:** The paper provides some of the clearest evidence to date that SAM's success is not necessarily tied to finding flatter minima, reconciling its objective with empirical observations.
+
+**Weaknesses**
+1.  **Lack of Prescriptive Guidance:** The paper does an excellent job of deconstructing the "flatness is good" heuristic but offers little in its place. The conclusion that there is "No Geometric Goldilocks Zone" (Section 6) is an honest reflection of the data but leaves the reader wondering what to do with this information. What new heuristic or principle should guide the search for generalizable models?
+2.  **Ambiguity in "Prediction Disagreement":** The paper interprets lower prediction disagreement as a positive sign of "functional consistency." While plausible, this could also be interpreted negatively as a lack of diversity, which might harm the performance of an ensemble of these models. This point deserves more discussion.
+
+**Questions**
+1.  Your results convincingly show that the optimal level of sharpness is task- and architecture-dependent. Based on your experiments, can you identify any properties of a task (e.g., dataset size, number of classes, data complexity) that might correlate with the need for a sharper or flatter solution?
+2.  Given that SAM does not always flatten but generally improves performance, do you believe its success is entirely explained by promoting local robustness, as you suggest in Section 6? Or could there be other implicit regularization effects at play?
+3.  From a practitioner's standpoint, if we can no longer use "seek flatness" as a guiding principle, what practical advice would you offer for model selection or hyperparameter tuning based on your function-centric view?
+
+**Rating**
+- Overall (10): 8 — A strong, practical, and empirically-grounded paper that provides a valuable and much-needed correction to a popular narrative.
+- Novelty (10): 7 — While the idea that flatness isn't everything has been raised before (e.g., Dinh et al., 2017), the systematic empirical evidence against it in the context of modern regularizers is novel.
+- Technical Quality (10): 8 — The experiments are well-executed and comprehensive, though the interpretation of some metrics could be debated.
+- Clarity (10): 9 — The paper is very clearly written and structured, making its arguments easy to follow.
+- Confidence (5): 5 — I am confident in my review; the paper's claims and evidence are clearly presented.
+
+***
+
+### **Review 4**
+
+**Summary**
+This paper presents an empirical study challenging the prevailing view that flat minima in the loss landscape of neural networks are synonymous with good generalization. The authors advocate for a "function-centric" perspective, where the geometry of a solution is a consequence of the learned function's complexity. They provide evidence from both low-dimensional optimization testbeds and high-dimensional image classification tasks, demonstrating that regularization methods like SAM, weight decay, and data augmentation often yield sharper minima that nonetheless exhibit superior generalization and safety characteristics (calibration, robustness).
+
+**Soundness**
+The empirical methodology of the paper is solid. The experiments are extensive, covering a reasonable range of architectures, datasets, and regularization techniques. The use of reparameterization-invariant sharpness metrics (Fisher-Rao Norm, Relative Flatness) is a crucial and correct choice, addressing the key critique of Dinh et al. (2017). The controlled, matched-seed experimental design adds to the credibility of the comparisons. The results, as presented in the tables, appear to be statistically significant and consistent across many (though not all) conditions.
+
+**Presentation**
+The paper is well-written and logically structured. It begins by situating the work within the historical context of the flatness debate, then builds its argument from simple, illustrative examples (Section 4) to complex, realistic scenarios (Section 5). The figures and tables are informative. The authors are careful to distinguish between misleading low-dimensional visualizations and quantitative sharpness metrics (Section 6), which is a sign of intellectual rigor.
+
+**Contribution**
+The paper's primary contribution is as a strong empirical counterpoint to the "flatness equals generalization" hypothesis. It synthesizes and extends a line of critique that has been present in the literature, but does so with a breadth of modern techniques and a focus on safety-related metrics that is novel. The analysis of SAM is particularly noteworthy, offering a plausible reconciliation between its local-robustness objective and the observation of increased global sharpness (Section 6).
+
+However, the theoretical contribution is less developed. The "function-centric perspective" is presented more as an interpretative framework than a formal theory. Key terms like "function complexity" are used intuitively rather than being defined and measured rigorously. While the paper successfully pokes holes in an old theory, it does not formalize a new one.
+
+**Strengths**
+1.  **Strong Connection to Literature:** The paper does a good job of framing its investigation within the ongoing historical debate about sharpness, referencing key works from Hochreiter & Schmidhuber (1994) to Dinh et al. (2017) and Foret et al. (2021).
+2.  **Reconciliation of SAM's Behavior:** The explanation that SAM promotes *local* robustness without guaranteeing *global* flatness is a key insight and helps resolve a tension in the literature.
+3.  **Rigorous Empirical Work:** The use of appropriate invariant metrics and controlled experimental setups demonstrates high technical quality in the empirical investigation.
+
+**Weaknesses**
+1.  **Lack of Formalism:** The central "function-centric" idea lacks a formal theoretical basis. The paper does not connect its notion of "function complexity" to established theoretical concepts like VC dimension, Rademacher complexity, or information-theoretic measures. This makes the explanation feel descriptive rather than predictive.
+2.  **Superficial Link Between Toy and Real Problems:** The paper draws an analogy between the known complexity of toy functions (e.g., Rosenbrock) and the unknown complexity of functions learned by deep networks. This analogy is intuitive but lacks a formal bridge. It is not shown how the properties of the Rosenbrock function relate to, for example, classifying CIFAR-10 with a ResNet.
+3.  The paper concludes there is "no geometric Goldilocks zone" (Section 6), which, while empirically supported, feels like a missed opportunity to dig deeper. Are there no underlying principles that govern what the "right" geometry is for a given problem?
+
+**Questions**
+1.  Can you formalize the notion of "function complexity" for a learned neural network? How might it be estimated from the network's weights or the data, and how would you test its proposed relationship with reparameterization-invariant sharpness metrics?
+2.  In Section 6, you reconcile SAM's local objective with its global sharpness. Could this be made more formal? For example, can one construct a function where enforcing low curvature in small neighborhoods (the SAM objective) necessarily leads to high curvature on a global scale (as measured by Fisher-Rao norm)?
+3.  How does your function-centric view relate to other theoretical frameworks for understanding generalization, such as the Neural Tangent Kernel (NTK) or information bottleneck theory? Do these theories offer any predictions about the relationship between the target function, regularization, and the geometry of the resulting minima?
+
+**Rating**
+- Overall (10): 7 — A valuable empirical paper with strong results, but its theoretical claims are underdeveloped.
+- Novelty (10): 7 — The empirical demonstration is novel in its breadth and focus, but the core theoretical idea is not fully fleshed out.
+- Technical Quality (10): 9 — The experimental execution is of high quality, using appropriate methods and controls.
+- Clarity (10): 8 — The paper is clearly written, but the central theoretical concepts lack formal definition.
+- Confidence (5): 4 — I am reasonably confident in my review, with my expertise being in the theoretical foundations of machine learning.

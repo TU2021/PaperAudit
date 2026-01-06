@@ -1,0 +1,134 @@
+# Global Summary
+- Problem: Existing mobile GUI agents built on MLLMs are largely reactive, executing only when given explicit instructions, and they ignore user-related context (profile, history, time, place), limiting proactive intent anticipation and personalization.
+- Contribution: FingerTip 20K, a user-oriented benchmark introducing two tracks: (i) proactive task suggestion from user/context signals; (ii) personalized task execution that imitates user-specific action preferences. Data are longitudinal, real-world Android interactions collected from users’ own phones.
+- Dataset: 21,437 episodes from 91 users over 1–2 months each, covering 506 apps; average steps 11.1. Each episode includes intent text, time, scenario category, screenshots, accessibility trees, and action sequences; plus user profiles and long-term histories.
+- Evaluation scope: Generalist MLLMs (GPT-4.1, Qwen-VL-Max, DeepSeek-VL2, Qwen-2.5-VL-7B) and GUI-control-specific agents (Aguvis-7B, CogAgent-9B, UI-TARS-1.5-7B). Metrics include intent similarity and binary success for suggestion, execution success and user-alignment similarity for personalized control, efficiency, and query cost (time, tokens).
+- Key quantitative results:
+  - Proactive suggestion (no initial screenshots): GPT-4.1 achieved SR1 = 7.2% and Sim1 = 0.35; Qwen-VL-Max 6.9%, 0.33; DeepSeek-VL2 4.3%, 0.25; Qwen-2.5-VL-7B 3.1%, 0.25.
+  - Personalized execution: UI-TARS-1.5-7B reached SR2 = 38.5%, Sim2 = 1.06, step ratio 1.22; Aguvis-7B SR2 = 20.5%; CogAgent-9B SR2 = 18.0%. Generalist models had low SR2 (≤5.5%).
+  - Fine-tuning Qwen-2.5-VL-7B on 1,000 episodes with LoRA (rank 4) yielded large gains: proactive SR1 9.7% (+6.6), Sim1 0.49 (+0.24); personalized SR2 12.5% (+11.0), Sim2 1.21 (+0.26), step ratio 1.17 (-0.99).
+- Findings: Tasks are challenging; increasing early screenshots improves suggestion success. Specialized GUI-control models outperform generalists in execution. Fine-tuning on user-oriented data improves both proactivity and personalization; however, general personalized alignment (Sim2 ≈ 1 for many models) suggests agents often follow generic strategies.
+- Caveats stated: Data contributors are all in mainland China (domain bias); fine-tuning is limited to a single 7B model and 1,000 episodes; privacy risks from UI traces; screenshots assumed shareable post-anonymization.
+
+# Introduction
+- Motivation: Current mobile GUI agents are passive and instruction-bound; users may have latent or poorly specified needs. Agents also ignore user context (profile, time/location, long-term histories), missing personalization.
+- Proposal: FingerTip benchmark with two tracks:
+  - Proactive task suggestion: infer present intent using user profile, time, scenario, historical intents, and optionally up to three initial screenshots.
+  - Personalized task execution: execute explicit instructions while imitating user-specific action preferences informed by historical actions.
+- Data: New, real-world demonstrations gathered over two months from 91 users, producing 21,437 episodes across 506 apps, capturing user context and histories.
+- Claims: Experiments show substantial headroom on both tracks. A small model fine-tuned on the collected data leverages user information effectively and performs well.
+- Code link: https://anonymous.4open.science/r/FingerTip-57B8.
+
+# Related Work
+- Datasets/benchmarks comparison (Table 1):
+  - AndroidLab: 10.5k episodes; UI tree yes; screens yes; no profile/context; execution only.
+  - AMEX: 8k episodes, 110 apps, avg 12.8 steps; UI tree/screens yes; no profile/context; execution.
+  - AndroidControl: 15,283 episodes, 833 apps, avg 5.5 steps; screens yes; no UI tree/profile/context; execution.
+  - AitW: 715,142 episodes, 357 apps, avg 6.5 steps; UI tree/screens yes; no profile/context; execution.
+  - AndroidLab benchmark: 138 episodes, 9 apps, avg 8.6 steps; screens yes; no UI tree/profile/context; execution.
+  - A3: 201 episodes, 20 apps; UI tree/screens yes; execution.
+  - SPHINX: 100 apps, avg 8.1 steps; UI tree/screens yes; execution.
+  - SPA-Bench: 340 episodes, 58 apps; screens yes; execution.
+  - FingerTip: 21,437 episodes, 506 apps, avg 11.1 steps; UI tree/screens yes; includes profile and context; proactive suggestion and personalized execution.
+- Metrics in prior work: Predominantly success rate; sometimes efficiency/cost. Success often determined by reaching essential states or matching golden actions. Prior datasets lack user context and do not study proactive suggestion without an initial instruction.
+- Agents: Two paths—prompting generalist MLLMs (e.g., GPT-4V/4.1) and fine-tuning smaller, GUI-specific models (e.g., Aguvis, CogAgent, UI-TARS). Prior systems remain reactive and ignore user preferences; some clarify ambiguous instructions but still require initial prompts. Related proactive work is text-only and focused on desktop/web.
+
+# Preliminaries
+- Track 1: Proactive task suggestion.
+  - Objective: Predict current intent I using user profile U, time T, scenario S (location category), up to 20 historical intents I_history, and up to three initial screenshots O (possibly zero). Formalization: I = f(U, T, S, I_history, O).
+  - Output: A single unambiguous sentence naming the target app and desired outcome.
+- Track 2: Personalized task execution.
+  - Objective: Execute explicit instruction I_true while aligning with user action preferences, given U, I_true, user historical actions A_history (for similar past tasks), current agent actions A_agent so far, and current screenshot O_t with accessibility tree AT_t. Formalization: A_{t+1}, O_{t+1}, AT_{t+1} = f(U, I_true, A_history, A_agent, O_t, AT_t).
+  - Goal: Complete the instruction and have A_agent reflect user-specific action patterns.
+
+# Method
+- 4.1 Overview: Data emphasize user orientation, with rich contextual signals to expose intent/action patterns.
+- 4.2 Data collection:
+  - Participants: 91 Android users recruited via crowdsourcing; all in mainland China.
+  - Process: Users filled a profile survey; used a custom FingerTip app to record each real-life intent (one sentence) and scenario (location category), then demonstrated the full action sequence on their own phone.
+  - Uploads per episode: intent text with time and scenario; screenshots; accessibility tree XMLs; UI action sequence. App reminders occurred on screen wake.
+  - Duration: Each user collected for ≥1 month and ≤2 months; ≤12 episodes/day. Users received training before collection.
+  - Technicals: App leverages Android accessibility to log action types, coordinates, and optional text. Actions standardized into a shared action space (Table 2). A terminal action is appended to the last screenshot.
+  - Post-processing for non-compliant actions: Use Qwen-VL-Max to infer actions from adjacent screenshots; PaddleOCR validates coordinates.
+- 4.3 Data statistics:
+  - Benchmark summary contrasted in Table 1. Distributions (Figure 4) include intent length, episode length, intent categories, and app frequencies; categories assigned via DeepSeek-V3.
+- 4.4 Personalized action analysis:
+  - Users grouped by age; sampled data across 40 intent categories.
+  - Similarity metric: Levenshtein similarity of action sequences, normalized to [0,100].
+  - Comparisons against: same user; same type of users; different type of users.
+  - Quantitative examples (Figure 5):
+    - Same User (Posting/Video/Music/News/Shopping/Average): 78.51/76.29, 87.36/72.67, 87.06/64.19, 84.99/77.74, 83.26/57.10, 77.40/67.46.
+    - Same Type of Users (Average): 55.87.
+    - Different Type of Users (News): 45.79. Others not specified in this section.
+  - Conclusion stated: Similarity is notably lower across different user types than within the same user/type.
+- 4.5 Data splits (Table 3):
+  - Train: 16,000 episodes; 177,674 screens; 460 apps; 40 categories.
+  - Val: 4,411 episodes; 32,859 screens; 41 apps; 0 categories listed here.
+  - Test-suggestion: 1,000 episodes; 10,412 screens; 155 apps; 38 categories.
+  - Test-execution: 200 episodes; 2,074 screens; 68 apps; 31 categories.
+  - Formation: For each user, last 20% of episodes (time-sorted) were sampled and concatenated; the two test sets partially overlap. User proportions in test match overall proportions.
+- Action space (Table 2): click, long_click, type, scroll (with direction), navigate_back, navigate_home, navigate_recent, wait, finish.
+- Dataset distributions (Figure 4/plots):
+  - Intent length histogram peaks around 10–20 characters; approximate counts provided (e.g., ~1,600 at 10 chars).
+  - Episode length histogram peaks around 5–10 screens; tail includes 50+ screens (~600 episodes).
+  - Intent categories by percentage (top): Video 12.80%, Shopping 11.19%, Post 7.49%, Music 7.35%, Socialize 7.10%, Sign-in 4.89%, Clock/Timer 4.59%, Weather 3.75%, Read 3.51%, News/Hot Topics 3.51%, Others 19.91%.
+  - App distribution (top): Others 37.84%, Rednote 8.16%, WeChat 4.83%, Bilibili 3.83%, Taobao 3.36%, TikTok 3.33%, Meituan Clock 3.26%, Weather 3.24%, NetEase Cloud Music 3.05%, Amap 2.31%, QQ Music 2.10%, Zhihu 1.84%, JD App 1.73%, HUAWEI Health 1.40%, Xuexi Qiangguo 1.40%, DeepSeek 1.36%, others ~1% each.
+- Data release: https://www.kaggle.com/datasets/qinglongyang/fingertip-20k.
+
+# Experiments
+- 5.1 Experimental setup:
+  - Track 1 models: GPT-4.1, Qwen-VL-Max, DeepSeek-VL2, Qwen-2.5-VL-7B; temperature 0; single query per instance; unified prompt includes U, T, S, I_history, and O.
+  - Track 2 models: Above four plus Aguvis-7B, CogAgent-9B, UI-TARS-1.5-7B. Execution on a physical Android phone via ADB (due to Chinese apps’ emulator restrictions). Generalists received a unified next-action prompt matching the action space; GUI-control models used their native prompts with integrated inputs; outputs converted to the shared action format.
+  - Metrics:
+    - Proactive suggestion: S1 = cosine similarity between embeddings from paraphrase-multilingual-MiniLM-L12-v2; S2 = Levenshtein similarity. Sim1 = (S1 + S2)/2. SR1 = binary success judged by DeepSeek-V3 matching of intents.
+    - Personalized execution: SR2 = manual success check at finished(); automatic failure if steps > 2.5× golden steps. SI = Levenshtein similarity between agent and current user’s full action sequence; SII = same vs most intent-similar episode of a different user type; Sim2 = SI/SII (larger means more aligned with current user). Efficiency: step ratio = agent steps / golden steps. Cost: average time and tokens per query.
+- 5.2 Overall Performance:
+  - Proactive suggestion (no initial screenshots, Table 4):
+    - GPT-4.1: SR1 7.2%; Sim1 0.35; time 5.64 s; tokens 796.
+    - Qwen-VL-Max: SR1 6.9%; Sim1 0.33; time 1.98 s; tokens 950.
+    - DeepSeek-VL2: SR1 4.3%; Sim1 0.25; time 0.71 s; tokens 743.
+    - Qwen-2.5-VL-7B: SR1 3.1%; Sim1 0.25; time 0.78 s; tokens 943.
+  - Personalized execution (Table 5):
+    - Generalists: GPT-4.1 SR2 5.5%, Sim2 0.98, step ratio 1.98, time 8.02 s, tokens 2,912. Qwen-VL-Max SR2 4.5%, Sim2 1.07, step ratio 2.06, time 4.17 s, tokens 2,304. DeepSeek-VL2 SR2 1.0%, Sim2 0.93, step ratio 2.19, time 3.46 s, tokens 2,130. Qwen-2.5-VL-7B SR2 1.5%, Sim2 0.95, step ratio 2.16, time 3.66 s, tokens 2,213.
+    - GUI-control models: Aguvis-7B SR2 20.5%, Sim2 1.02, step ratio 1.38, time 6.86 s, tokens 2,494. CogAgent-9B SR2 18.0%, Sim2 0.92, step ratio 1.73, time 12.54 s, tokens 2,808. UI-TARS-1.5-7B SR2 38.5%, Sim2 1.06, step ratio 1.22, time 10.15 s, tokens 2,440.
+  - Stated observations: Success for generalists is low due to weak GUI grounding and inaccurate coordinates; GUI-focused models perform better on SR2. Sim2 values around ~1 imply generally non-personalized action paths.
+- 5.3 Effect of task difficulty:
+  - Proactive suggestion: Increasing the number of initial screenshots O improves SR1 for all models (Figure 6(a)). Approximate SR1 (%) across 0→3 screenshots:
+    - GPT-4.1: ~7 → ~10.
+    - Qwen-VL-Max: ~4 → ~9.
+    - DeepSeek-VL2: ~7 → ~6–7 (non-monotonic in plot).
+    - Qwen-2.5-VL-7B: ~3 → ~6.
+  - Personalized execution: SR2 declines with longer required action sequences (Figure 6(b); UI-TARS-1.5-7B ~60% at length 0, ~45% at 5, ~25% at 10, ~10–15% at ≥15; CogAgent-9B and Aguvis-7B follow similar downward trends with lower absolute values ~40→~5–10).
+- 5.4 Effect of fine-tuning:
+  - Procedure: LoRA finetuning of Qwen-2.5-VL-7B (rank 4) on 1,000 training episodes sampled proportionally across all users; separate models for each track; prompts identical to those used at inference for generalists.
+  - Results (Table 6):
+    - Baseline Qwen-2.5-VL-7B: SR1 3.1, Sim1 0.25; SR2 1.5, Sim2 0.95; step ratio 2.16.
+    - Qwen-2.5-VL-7B-FT: SR1 9.7 (+6.6), Sim1 0.49 (+0.24); SR2 12.5 (+11.0), Sim2 1.21 (+0.26); step ratio 1.17 (-0.99).
+    - Reference points: GPT-4.1 (SR1 7.2, Sim1 0.35; SR2 5.5, Sim2 0.98; step ratio 1.98) and UI-TARS-1.5-7B (SR2 38.5, Sim2 1.06; step ratio 1.22).
+  - Stated claim: Fine-tuned model surpasses GPT-4.1 on proactive metrics and improves personalization alignment (higher Sim2) despite lower SR2 than UI-TARS.
+
+# Conclusion
+- FingerTip 20K targets two underexplored capabilities in mobile agents: proactive intent suggestion and personalized execution.
+- Longitudinal, context-rich data reveal that current models struggle to leverage user context. Fine-tuning on this user-oriented data notably improves both intent prediction and user-aligned execution, evidencing the value of collecting and modeling user-specific signals.
+
+# References
+- Cited works span web/mobile agent benchmarks and agents (e.g., VisualWebArena, Mind2Web, AndroidWorld, Android in the Wild, SPA-Bench, AndroidLab, A3), GUI-focused models (UI-TARS, CogAgent, AGUVIS), personalization/proactivity studies, and technical references (DeepSeek-V3, Qwen2.5-VL, Sentence-BERT). Exact bibliographic details listed in the manuscript.
+
+# Appendix
+- Limitations:
+  - Geographic/app bias: all 91 users from mainland China; interactions focus on Chinese apps/UI layouts; generalization not validated.
+  - Fine-tuning budget: only 1,000 episodes and a single 7B model (LoRA rank 4); larger-scale studies not performed.
+  - Privacy: even anonymized screenshots may enable re-identification; need for redaction/synthetic replay.
+- Broader impacts:
+  - Potential benefits: lower interaction burden, accessibility gains, reduced screen time, platform for privacy-preserving personalization.
+  - Risks: sensitive data exposure from continuous capture; recommended on-device processing, differential privacy, and audits.
+- Data collection governance:
+  - Crowdsourced with living-wage compensation; informed consent with data usage agreement; guidance, training, and manual feedback provided; app records only when users actively use it.
+- Data format and availability:
+  - Public dataset: https://www.kaggle.com/datasets/qinglongyang/fingertip-20k.
+  - Per-episode contents: screenshots, accessibility trees, action list (JSON), intent_description, user_id (to link to profile), time, scenario, app (activity name; used only to launch apps in execution track).
+  - User profiles include fields such as sex, age, occupation, address, marital_status, phone_brand (example: user_id 55, male, 20, student, Beijing, single, Huawei).
+  - Scenario categories: 12 predefined (e.g., residence, office, school, dining place, shopping mall, medical institution, entertainment and leisure venue, sports venue, cultural venue, transportation, urban street, natural outdoor spaces), plus free-form if none fit.
+- Prompts used:
+  - Proactive suggestion prompt requests one unambiguous Chinese sentence intent including app name and outcome, given profile/time/scenario/previous intents and optionally initial screenshots.
+  - Personalized execution prompt specifies action space and formatting, screen description, reference actions (historical sequence), and previously taken actions; requires output of exactly one next action.

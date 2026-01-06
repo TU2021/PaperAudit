@@ -1,0 +1,155 @@
+# Global Summary
+The paper introduces ChemBOMAS, a large language model (LLM)-enhanced multi-agent framework to accelerate Bayesian Optimization (BO) for chemical reaction optimization under data scarcity and high-dimensional search spaces. The core approach couples (1) a data-driven LLM regressor that generates pseudo-data after pre-training and fine-tuning to warm-start BO, and (2) a knowledge-driven module that uses a hybrid Retrieval-Augmented Generation (RAG) strategy to partition the search space into subspaces via GPT-4o, followed by an Upper Confidence Bound (UCB)–guided hierarchical tree search to select promising regions. Within selected subspaces, a Gaussian Process (GP) BO with Matérn kernel exploits both real and pseudo-data; UCB or EI serves as acquisition.
+
+Evaluation covers three reaction benchmarks and two Buchwald subsets (Suzuki N=5030; Arylation N=3678; Buchwald_sub-1 N=629; Buchwald_sub-2 N=765), plus a materials science benchmark (LNP3). Pre-training uses ~50,000 reactions from Pistachio; supervised fine-tuning (LoRA rank 8) uses only 1% labeled data per benchmark. Experiments run 40 BO iterations with 1% prior and 0.1% sampling per iteration, repeated 5 seeds; knowledge module UCB exploration constant κ=20; training on 2× NVIDIA A800 with lr=1e−4, batch size 24, 100 epochs.
+
+Key findings:
+- ChemBOMAS reaches best objective values of 96.15% (Suzuki; 3 iters), 81.26% (Arylation; 39 iters), 80.00% (Buchwald_sub-1; 23 iters), and 56.80% (Buchwald_sub-2; 2 iters), outperforming baselines in final value and convergence rate.
+- Search space decomposition with a subspace tree yields up to a 34-fold acceleration over BO without a tree; the method improves optimal results by approximately 3–10% and converges about 2–5× faster (as stated).
+- The LLM regressor achieves R² ≈ 0.20 (Suzuki 0.20; Arylation 0.13; Buchwald 0.20) using 1% labels; authors claim gains over second-best by “2000%” (Arylation) and “140%” (Buchwald).
+- Ablations show both the data-driven and knowledge-driven modules are necessary; removing either drops Suzuki best from 96.15% to 82.65% (w/o data) or 88.98% (w/o knowledge).
+- Wet-lab validation on a previously unreported reaction achieved 96% yield in 2 iterations after 43 samples, vs 15% for a human using control-variable methods; strong initialization (90% max in round 1) and repeated-run robustness reported.
+- On the LNP3 materials dataset, ChemBOMAS matched best final (0.62) and reached it in 28 iterations (fewer than GoLLuM’s 33 and BO’s 38).
+
+Explicitly stated caveats: performance depends on LLM knowledge quality and RAG sources; safety/feasibility constraints are not enforced, necessitating expert oversight.
+
+# Abstract
+- Presents ChemBOMAS, an LLM-enhanced multi-agent system that accelerates BO by combining:
+  - Data-driven pseudo-data generation from an 8B-scale LLM regressor fine-tuned with 1% labeled samples.
+  - Knowledge-driven search space partitioning guided by a hybrid RAG approach to reduce hallucinations.
+- UCB identifies high-potential subspaces; BO within these subspaces uses LLM pseudo-data.
+- Claims new state-of-the-art across multiple chemical benchmarks, with up to 5-fold acceleration vs baselines.
+
+# Introduction
+- Problem: BO in chemistry suffers from (I) sparse, expensive early-stage data (“cold start”) and (II) high-dimensional parameter spaces (“curse of dimensionality”), leading to slow convergence.
+- Prior accelerations (space partition, embeddings, pseudo-data, transfer) often use a single data-driven technique and can explore chemically implausible regions.
+- Proposal: ChemBOMAS integrates:
+  - Knowledge-driven subspace decomposition via LLMs using literature/databases (RAG).
+  - Data-driven pseudo-data generation from a fine-tuned LLM regressor.
+- Claimed results: Across four benchmarks, improved optimal results by ~3–10% and convergence 2–5× faster; ablations show synergy is essential; validated in a wet-lab experiment.
+
+# Related Work
+- LLMs can assist BO by providing priors, enhancing surrogates, aiding acquisition function design, and understanding search spaces, but direct replacement brings hallucination, uncertainty, and computational issues.
+- Tree-based space decomposition (e.g., LA-MCTS) and hierarchical BO prior work exist.
+- This work emphasizes robust integration of LLM knowledge as an auxiliary to BO, mitigating hallucinations via hybrid RAG rather than substituting core BO components.
+
+# Method
+- Problem Setup: Efficiently search a variable space to maximize an objective over reaction conditions.
+- Framework (Figure 1): Closed-loop system integrating:
+  - Data-driven LLM regressor for pseudo-data to initialize BO and UCB subspace scoring.
+  - Knowledge-driven RAG-guided partition of the search space; UCB chooses promising subspaces; BO runs within selected subspaces.
+
+Data-driven strategy (LLM-generated pseudo-data):
+- Step 1: Pre-train LLaMA 3.1 on Pistachio (reaction SMILES Q&A predicting conditions from reactants/products, no performance labels) with CLM loss.
+- Step 2: Fine-tune on 1% of labeled data per task using LoRA (rank r=8); MLP head maps final hidden state to performance; minimize L2 loss with regularization.
+- Step 3: Generate pseudo-labels for unsampled points D_pseudo and initialize UCB and BO. Apply refinement: remove pseudo-points by high cosine similarity to new real samples (threshold τ) and globally prune high-predicted-performance pseudo-points (reverse-order removal). Also use pseudo-data to evaluate candidate trees by minimizing weighted intra-node variance (Appendix D).
+
+Knowledge-driven strategy (LLM-divided search space):
+- Step 1: GPT-4o with hybrid RAG ranks variable categories by importance; identifies key physicochemical properties and clusters candidates by property similarity to form subspaces Π_i per category.
+- Step 2: Construct a hierarchical tree ordered by category importance; each root-to-leaf path defines a Cartesian-product subspace; number of subspaces is ∏ q_i.
+- Step 3: UCB-based selection; for child i: UCB_i = R̄_i + C_p √(log(N_parent)/n_i). At each layer, select top-5 nodes; update UCBs dynamically as BO provides new data. (Experiments use exploration constant κ = 20.)
+
+Bayesian Optimization within subspaces:
+- Step 1: Fit a GP with Matérn kernel (constant scaling + white noise) on combined real + pseudo-data to get μ(x), σ²(x).
+- Step 2: Optimize acquisition α(x) (UCB or EI) within high-potential subspaces: x_next = argmax_{x∈X_sub} α(x); evaluate, update GP, iterate.
+
+# Experiments
+## 4.1 DATA
+- Pre-training: ~50,000 reaction entries from Pistachio without performance labels.
+- Fine-tuning and BO datasets:
+  - Suzuki (Science 2018; N=5030).
+  - Arylation (Nature 2021; N=3678).
+  - Buchwald with inconsistencies split into two consistent subsets: Buchwald_sub-1 (N=629), Buchwald_sub-2 (N=765).
+- Fine-tuning uses 1% labeled data per dataset. Additional statistics (Appendix C.3):
+  - Max yields: 96.15 (Suzuki), 84.65 (Arylation), 80.91 (Buchwald_sub-1), 56.81 (Buchwald_sub-2).
+  - Means: 33.04, 29.05, 42.24, 18.71, respectively.
+
+## 4.2 EXPERIMENT SETUP
+- Hardware: 2× NVIDIA A800.
+- LLM regressor fine-tuning: lr=1e−4, batch size=24, 100 epochs.
+- Knowledge module: UCB exploration constant κ=20; at each layer select top-5 children.
+- BO: 40 iterations; initialized with 1% prior; sample 0.1% of dataset per iteration. Acquisition and configurations match baselines for fairness.
+- Repeats: 5 random seeds; report averages. Prompts and details in Appendix G.
+
+## 4.3 PERFORMANCE COMPARISON
+### 4.3.1 REGRESSION MODELS
+- Compared categories: general LLMs (zero-shot GPT-4o, GPT-5), open LLMs fine-tuned on 1% (Qwen3-7B, GLM4-9B, LLaMA-3.1-8B), scientific LLMs (MolT5-Large, Galactica-1.3B), and ChemBOMAS.
+- Key metrics (Table 1; MSE/MAE/R²):
+  - ChemBOMAS: Suzuki 633.68/19.47/0.20; Arylation 650.00/19.55/0.13; Buchwald 593.76/18.52/0.20.
+  - Best Suzuki R² among comparators: GLM4-9B 0.25; LLaMA-3.1-8B 0.13.
+  - General LLMs zero-shot show negative R² across datasets (e.g., GPT-4o: Suzuki −1.80, Arylation −2.63, Buchwald −1.03).
+- Stated observations:
+  - ChemBOMAS achieves top prediction on Arylation and Buchwald; on Suzuki it ranks second to GLM4-9B.
+  - Authors claim ChemBOMAS R² exceeds second-best by 2000% (Arylation) and 140% (Buchwald).
+  - Fine-tuning is essential; 1% data yields R² between ~0.1–0.2 sufficient for BO (Tables 7–8). Predictive performance improves with 0.25%→4% data; BO gains are not strictly linear with R².
+
+### 4.3.2 CLUSTER METHODS
+- Evaluated BO without tree vs. Expert-Guided vs. ChemBOMAS data-driven clustering (ChemBOMAS_d-d) vs. ChemBOMAS knowledge-driven clustering (ChemBOMAS_k-d) using identical pseudo-data.
+- Selected results (Table 2):
+  - Suzuki Best Found (%): BO w/o tree 83.16; Expert-Guided 96.15; ChemBOMAS_d-d 89.51; ChemBOMAS_k-d 96.15.
+  - Suzuki 95% Max Iter: BO w/o tree 16; Expert-Guided 3; ChemBOMAS_k-d 3.
+  - Arylation Best Found (%): BO w/o tree 80.45; Expert-Guided 79.67; ChemBOMAS_k-d 82.23.
+  - Buchwald_sub-1 Best Found (%): BO w/o tree 78.86; ChemBOMAS_k-d 79.77.
+  - Buchwald_sub-2 Best Found (%): BO w/o tree 56.29; Expert-Guided/ChemBOMAS variants 56.81.
+- Reported outcome: tree-based subspace search accelerates BO up to 34× vs. no-tree baseline; ChemBOMAS clusterings match/surpass expert clustering.
+
+### 4.3.3 OPTIMIZATION
+- Overall performance (Figure 2):
+  - Best values and iterations: Suzuki 96.15% in 3 iters; Arylation 81.26% in 39; Buchwald_sub-1 80.00% in 23; Buchwald_sub-2 56.80% in 2.
+  - Strong initialization on Arylation and Buchwald subsets; on Suzuki initial was 5.12% lower than LA-MCTS/BO-ICL but surpasses by iteration 3.
+  - Lowest variance across 5 runs; performance robust to batch size (Appendix I.1).
+- Generality beyond chemistry (Appendix J, Table 9): LNP3 Best Found 0.62; Iteration of best 28 (vs GoLLuM 33; BO 38; BO-ICL 38; LA-MCTS lower best 0.47).
+- Wet-lab validation (Appendix H): new Pd-catalyzed cross-coupling; constraints: previously unreported; 6D space (~70× larger than comparable studies); 10× lower catalyst loading; ~60-run budget.
+  - ChemBOMAS found 96% yield in 2 iterations after 43 samples; human expert method achieved 15%.
+  - Round 1 max yield 90% (>75% target); total >75% conditions across rounds 1–5: 20.
+
+## 4.4 ABLATION STUDY
+- Pre-training and SFT impacts (Table 3):
+  - w/o Pre-train & SFT: Suzuki R² −1.966; Arylation −1.413; Buchwald −1.527.
+  - Pre-train Only: Suzuki −2.054; Arylation −1.488; Buchwald −1.411.
+  - SFT Only: Suzuki 0.130; Arylation 0.088; Buchwald 0.007.
+  - Pre-train & SFT (full): Suzuki 0.196; Arylation 0.128; Buchwald 0.104.
+- Module ablations on optimization (Table 4; selected):
+  - Suzuki Best Found (%): Full 96.15; w/o data 82.65; w/o knowledge 88.98; w/o both 83.16.
+  - Arylation Best Found (%): Full 81.26; w/o data 80.65; w/o knowledge 79.67; w/o both 80.45.
+  - Buchwald_sub-1 Best Found (%): Full 80.00; w/o data 79.90; w/o knowledge 79.63; w/o both 78.86.
+  - Buchwald_sub-2 Best Found (%): Full 56.81; w/o data 55.53; w/o knowledge 56.81; w/o both 56.29.
+- Conclusion: Both modules are critical; synergy delivers top performance and fastest convergence.
+
+# Discussion
+- Limitations:
+  - Dependence on LLM accuracy and corpus completeness; errors in literature parsing or knowledge gaps can produce suboptimal decompositions.
+  - No explicit safety/feasibility constraints; could recommend hazardous or infeasible conditions; requires expert oversight or safety-aware integration.
+
+# Conclusion
+- ChemBOMAS integrates knowledge-driven search space partitioning with data-driven pseudo-data generation to accelerate BO for chemical reactions.
+- Benchmarks show improved final outcomes and faster convergence; wet-lab validation on an industrially relevant, previously unreported reaction demonstrated practical gains (96% yield in 2 iterations vs 15% by expert method).
+- The framework shows promise for real-world chemical discovery and extends competitively to materials science.
+
+# References
+- Citations include autonomous/self-driving lab overviews; BO reviews and applications in chemistry; LA-MCTS and hierarchical BO; methods integrating LLMs with BO (e.g., BO-ICL, GoLLuM); datasets (Perera 2018; Shields 2021; Ahneman 2018); LoRA; LLaMA 3.1; GPT-4o/5 documentation; and related optimization literature. Specific references and DOIs are listed in the manuscript’s References section.
+
+# Appendix
+- A: Illustrative example of building an optimization tree via LLM: infer reaction type, retrieve literature, rank variable importance (e.g., Catalyst > Ligand > Solvent > Base), identify key properties, cluster candidates, and construct the hierarchical tree by importance order.
+- B: Update loop each round: retrain data module with new data; update tree node values/visits; BO recommends next experiments using updated pseudo-data and refined hot regions.
+- C: Benchmark details:
+  - Pistachio: 19.17M reactions overall; ~50k subset used for pre-training.
+  - Dataset stats (Table 5): Suzuki N=5030 (max 96.15, mean 33.04), Arylation N=3678 (max 84.65, mean 29.05), Buchwald_sub-1 N=629 (max 80.91, mean 42.24), Buchwald_sub-2 N=765 (max 56.81, mean 18.71).
+- D: Dual-strategy refinement of pseudo-data:
+  - Local removal by cosine similarity threshold τ with new real sample embeddings.
+  - Global removal favors pruning high predicted-performance pseudo-points; tree selection by minimizing weighted intra-node variance across candidate trees.
+- E: Qualitative comparison: heatmaps show ChemBOMAS_k-d and ChemBOMAS_d-d trajectories resemble expert-guided performance progression.
+- F: Full algorithm pseudocode: two-stage loop (knowledge-driven UCB tree traversal then fine-grained BO within subspace), with backpropagation of outcomes to tree nodes.
+- G: Prompt details:
+  - Data module pre-training prompts (reactants/products/reaction type → conditions) and yield prediction fine-tuning prompt example.
+  - Knowledge module prompts for clustering candidates using quantitative physicochemical data with RAG tools.
+- H: Wet experiments:
+  - Task: Pd-catalyzed coupling of boronic esters with aryl chlorides; 6D variable space; ~70× size vs comparable studies; 10× reduced catalyst loading; ~60-run cap.
+  - Results: 96% yield after 43 samples in 2 iterations; round 1 max 90%; >75% yield conditions across rounds 1–5 totaled 20; repeated initialization (10 runs) found ≥2 conditions >60% each run; >80% conditions in 70% of runs (11 total).
+  - Protocol and adjusted configurations: additional process variables included in knowledge grouping; EI and UCB used to propose 14 samples per round in wet lab.
+- I: Additional analyses:
+  - I.1 Batch size effects (Table 6): batch % of total—Suzuki best 96.15 at all tested batch sizes (0.05–0.4%); runtime increases with batch size (e.g., Suzuki time ~105→646). Arylation best ~80.64–81.65 with 2–12 samples/iter; minimal performance differences vs cost; main experiments use 0.1%.
+  - I.2 Prior data volume (Table 7): increasing fine-tuning data 0.25%→4% improves prediction (e.g., Suzuki R² −0.53→0.54; Arylation −0.07→0.62; Buchwald 0.01→0.67). BO with pseudo-data from 1%, 2%, 4% (Table 8) shows non-linear impact; e.g., Buchwald_sub-2 best 56.81 with 1% vs 53.95/53.93 with 2%/4%.
+- J: Generalization to materials (LNP3; 5D formulation; 768 points; multi-objective metric aggregated to scalar):
+  - ChemBOMAS Best Found 0.62; Initial 0.23; 95% Max Iter 12; Iteration of Best 28.
+  - Comparators: GoLLuM 0.62 (best at 33 iters); BO 0.62 (38); LA-MCTS 0.47; BO-ICL 0.60 (38).

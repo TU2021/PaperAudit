@@ -1,0 +1,130 @@
+{
+  "paper": "EmboMatrix_ A Scalable Training-Ground for Embodied Decision-Making",
+  "judge_model": "gpt-5.1",
+  "review_agent": "deepreviewer",
+  "ai_model": "gpt-5-2025-08-07",
+  "ai_review_file": "deep_review_all.txt",
+  "inputs": {
+    "human_review": "review.txt",
+    "ai_review": "reviews/deepreviewer/gpt-5-2025-08-07/paper_origin/deep_review_all.txt"
+  },
+  "multi_review": {
+    "detected": false,
+    "num_reviews": 1,
+    "summarize_used": false,
+    "summary_note": null
+  },
+  "ai_review_consolidated": null,
+  "alignment": {
+    "motivation_strength_alignment": 0.9,
+    "weakness_error_alignment": 0.7,
+    "overall_alignment": 0.8,
+    "explanation": {
+      "strength": "Both reviews describe essentially the same core contribution and motivations. They agree that EmboMatrix is a scalable, end-to-end training ground for embodied decision-making that integrates: (1) a multi-agent data/task/scene generation engine, including social simulation and multi-level scene/layout design; (2) a scalable, distributed simulation backend with a pre-cached language–physics interface for high-throughput rollouts; and (3) a hierarchical/multi-level reward architecture that moves from format to semantics to goal completion. They also both highlight strong empirical results where EmboBrain models, especially the 7B model, outperform much larger baselines on embodied benchmarks, emphasizing that this demonstrates the value of interactive, environment-grounded training. Additional overlapping strengths include scalability/latency reduction, task diversity and complex long-horizon procedures, and the importance of the hierarchical reward design in enabling stable and effective learning. The AI review adds more granularity (e.g., 50× latency, GRPO details, specific figures and tables), but this elaboration is consistent with, rather than contradictory to, the human review.",
+      "weakness": "There is partial but not complete overlap in the weaknesses emphasized. Clear alignment exists on concerns about the pre-cached language–physics interface: both note that it trades physical fidelity for speed and may limit robustness or allow mismatches with real or full-physics environments. Both also mention missing or weak statistical rigor and reporting: Review A points out lack of confidence intervals/variance with only 10 samples per task, while Review B repeatedly flags inconsistent headline numbers, incomplete tables, and absence of variance, which are closely related concerns about the credibility and interpretability of reported gains. However, there are notable divergences. The human review uniquely criticizes: (1) overstatement/limits of task diversity due to only 45 scenes and fixed object sets; (2) lack of evaluation across different model families to test generalization; and (3) missing practical details of the pre-caching system (storage overhead, cache hit rate, fallback mechanics). The AI review instead focuses on: (1) incomplete disclosure of GRPO hyperparameters and training scale; (2) fairness issues for proprietary baselines re formatting and skills; and (3) heavy reliance on GPT-4 evaluators and associated biases, as well as a more detailed critique of potential reward hacking or r_r’s incentives. These are adjacent but not the same as the human’s concerns, leading to moderate rather than high alignment on weaknesses.",
+      "overall": "In aggregate, the two reviews are strongly aligned on the big-picture view of the paper: both see it as a novel and valuable integrated system for training embodied LLM agents at scale, with major components being multi-agent task/scene generation, distributed simulation with a pre-cached interface, and hierarchical rewards, and both agree that the empirical results against large baselines are an important positive. On the negative side, they share concerns about the fidelity/limitations of the pre-cached physics and about the strength and clarity of empirical evidence, but diverge in the specific secondary issues they prioritize (task diversity vs. evaluator bias and hyperparameters, generalization across model families vs. baseline fairness, details of pre-caching vs. GRPO settings). Substantively, the AI review is more detailed and systematized, but does not contradict the human review; rather, it extends it into additional technical and reproducibility dimensions. This yields high alignment on strengths and moderate alignment on weaknesses, resulting in a solid but not perfect overall alignment."
+    }
+  },
+  "generated_at": "2025-12-27T19:28:04",
+  "runs": [
+    {
+      "config": {
+        "judge_model": "gpt-5.1",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "baseline_review.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180
+      },
+      "config_key": "3b28d70d5731760031a4514ebc98b0afd78edf6d",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/baseline_review.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "motivation_strength_alignment": 0.82,
+        "weakness_error_alignment": 0.7,
+        "overall_alignment": 0.78,
+        "explanation": {
+          "strength": "Both reviews emphasize the same core contributions: EmboMatrix as an integrated training ground for embodied decision-making, its scalable/high-throughput simulation backend (including heterogeneous hardware and pre-cached physics), the multi-agent data engine for diverse tasks/scenes (including social dynamics), the hierarchical reward architecture, and strong empirical gains where EmboBrain-7B beats much larger models like DeepSeek-R1 and GPT-4. The AI review adds more formalization and algorithmic details (operator F, GRPO, specific figures/tables) but these are refinements rather than new conceptual strengths, so the motivations and main strengths are highly aligned.",
+          "weakness": "Both reviews flag concerns related to the pre-cached physics/language–physics interface and its fidelity/generalization, and both note limited statistical rigor (lack of confidence intervals/significance tests) and incomplete reporting around evaluation. The human review additionally stresses scene/task diversity being constrained by only 45 scenes and limited cross-model-family evaluation, while the AI review instead emphasizes evaluator bias (LLM-based scoring), lack of real-world / sim-to-real validation, benchmarking fairness, reproducibility details, and clarity/consistency issues; these are overlapping in the broad theme of evaluation rigor but introduce several distinct critique angles not present in Review A.",
+          "overall": "In substance, both reviews view the paper as a strong systems contribution with notable empirical gains and similar central components (data engine, scalable backend, hierarchical reward), while sharing core concerns about the fidelity of pre-cached execution and the strength/rigor of the evaluation. The AI review provides a more granular and broader set of weaknesses (evaluator bias, fairness, reproducibility, clarity) and omits a few specific concerns from the human review (limited model families, explicit discussion of cache storage/hit rates), yielding high but not perfect overall alignment in focus and judgment."
+        }
+      },
+      "generated_at": "2025-12-27T19:50:56"
+    },
+    {
+      "config": {
+        "judge_model": "gpt-5.1",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "final_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180
+      },
+      "config_key": "4569a6a97a67c8e2b360606eb74d6eb53b892d06",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/final_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "motivation_strength_alignment": 0.9,
+        "weakness_error_alignment": 0.55,
+        "overall_alignment": 0.7,
+        "explanation": {
+          "strength": "Both reviews describe EmboMatrix as an integrated training ground for embodied decision-making, highlighting the multi-agent data engine, scalable simulation backend with pre-cached physics, hierarchical reward design, and strong empirical gains over larger baselines. They agree on the importance of task diversity and social dynamics, as well as the system’s throughput and scalability. The AI review adds extra emphasis on formalization, algorithmic details, and clarity, which the human review does not stress.",
+          "weakness": "Both reviews flag the pre-cached physics interface as a key source of potential fidelity and generalization problems and note insufficient statistical rigor in the evaluation, and they each question aspects of the task diversity claims. However, the human review uniquely calls out limited scene/object variety, lack of cross–model-family evaluation, and missing cache metrics, while the AI review introduces additional major concerns about LLM-based evaluators, real-world/sim-to-real validation, benchmarking fairness, reproducibility, clarity of reporting, and simulator integration.",
+          "overall": "Substantively, both see the work as a strong, impactful system with notable empirical benefits but nontrivial caveats around evaluation trustworthiness and physical fidelity, leading to broadly consistent judgments. Alignment is high on the central contributions and some core weaknesses, but the AI review has a much broader critical scope and surfaces multiple important issues that the human review does not mention, so the match on weaknesses and overall focus is only moderate to high rather than near-complete."
+        }
+      },
+      "generated_at": "2025-12-27T19:53:27"
+    },
+    {
+      "config": {
+        "judge_model": "gpt-5.1",
+        "review_agent": "deepreviewer",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "deep_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180
+      },
+      "config_key": "c4c3f92bb6e001153f8f3d5bbdd1185ecb61a980",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/deepreviewer/gpt-5-2025-08-07/paper_origin/deep_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "motivation_strength_alignment": 0.84,
+        "weakness_error_alignment": 0.7,
+        "overall_alignment": 0.8,
+        "explanation": {
+          "strength": "Both reviews clearly identify the same core motivation and contributions: EmboMatrix as an integrated, scalable training ground for embodied decision-making, built around (i) a multi-agent/task data engine, (ii) a scalable distributed simulation backend with a pre-cached language–physics interface, and (iii) a hierarchical/multi-level reward design. They both emphasize strong empirical gains over larger baselines and highlight scalability/high-throughput simulation and task diversity/scene generation as key strengths, with only minor differences in granularity (AI review adds more detail on benchmarks and ablations).",
+          "weakness": "There is solid overlap on two central weaknesses: limitations and possible fidelity issues of the pre-cached physics interface, and missing statistical rigor/variance reporting in the evaluation. The AI review adds several additional concerns (numerical inconsistencies, missing hyperparameters/training scale, GPT-4 evaluator bias, baseline fairness), while the human review uniquely mentions limited model-family generalization and insufficient technical detail about the pre-caching system’s storage/cache metrics and scene-count-limited task diversity, so not all major issues are shared.",
+          "overall": "Substantively, both reviews converge on the same big picture: a novel, well-engineered integrated system with strong empirical results and scalable infrastructure, but with important caveats around the proxy/approximate physics and incomplete or weaker evaluation/reporting. The AI review is more detailed and raises extra reproducibility and reporting issues, while the human review brings in some additional concerns on generalization and pre-caching details; nonetheless, their overall judgment and focus are largely consistent."
+        }
+      },
+      "generated_at": "2025-12-27T19:55:51"
+    }
+  ]
+}

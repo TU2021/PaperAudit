@@ -1,0 +1,97 @@
+{
+  "paper": "Adaptive kernel selection for Stein Variational Gradient Descent",
+  "judge_model": "gpt-5.1",
+  "review_agent": "deepreviewer",
+  "ai_model": "gpt-5-2025-08-07",
+  "ai_review_file": "deep_review_all.txt",
+  "inputs": {
+    "human_review": "review.txt",
+    "ai_review": "reviews/deepreviewer/gpt-5-2025-08-07/paper_origin/deep_review_all.txt"
+  },
+  "multi_review": {
+    "detected": false,
+    "num_reviews": 1,
+    "summarize_used": false,
+    "summary_note": null
+  },
+  "ai_review_consolidated": null,
+  "alignment": {
+    "motivation_strength_alignment": 0.9,
+    "weakness_error_alignment": 0.85,
+    "overall_alignment": 0.88,
+    "explanation": {
+      "strength": "Both reviews describe the same core motivation and contribution: SVGD is highly sensitive to kernel choice (especially bandwidth) and tends to underestimate variance; Ad-SVGD responds by adaptively tuning kernel parameters via KSD maximization while keeping the standard SVGD particle update. They agree that the algorithmic modification is simple, principled, and easy to integrate; that there is a clear theoretical extension of fixed-kernel KSD-based convergence to an adaptive-kernel setting (including KL-descent / iteration-complexity style results under additional assumptions); and that the experiments show improved robustness, better variance preservation, and better metrics than the median heuristic on synthetic / moderate-dimensional problems (Gaussian mixtures, inverse problems, multivariate Gaussians, BLR). Review B goes into more proof-level detail, but substantively it emphasizes the same positive aspects as Review A: clear structure and exposition, principled link between KSD and KL descent, and empirical evidence of reduced variance collapse.",
+      "weakness": "There is strong overlap in the main concerns, though Review B is more granular. Both reviews flag (i) limitations of the empirical evaluation and dimensionality—Review A calls it mostly toy/low-dimensional; Review B notes dimensions only up to ~16 and calls out that this does not fully support high-dimensional claims; (ii) lack of thorough comparison/positioning against other adaptive or multi-kernel SVGD variants (MK-SVGD, matrix-valued kernels, sliced/Grassmann SVGD), which makes it hard to assess gains relative to the broader SVGD literature; and (iii) theoretical assumptions that are strong or hard to verify in practice, especially the requirement that KSD is (approximately) maximized each iteration (Assumption 4) and the regularity / inequality conditions behind the convergence guarantees. Review A raises this at a higher level (“assumptions hard to verify; approximate maximization assumption; need clearer interpretation”), while Review B details specific smoothness and uniform boundedness conditions (Assumption 3), the gap between theory and the non-smooth p=1 kernels used in experiments, and the lack of guarantees on the inner gradient-ascent routine producing ε_n→0. Review B additionally discusses technical issues like second-derivative existence and explicit step-size/Θ-compactness, and asks for more implementation detail (e.g., MMD kernel choice, handling non-smooth derivatives, empirical tracking of ε_n), whereas Review A mentions these only in aggregate as missing discussion of computational overhead and some hyperparameter sensitivity. Review A’s concern about missing runtime/complexity reporting and clearer trade-offs corresponds to Review B’s more detailed but still critical comments on computational cost discussions and lack of quantified overhead. Overall, the weakness themes clearly align, with Review B providing a more fine-grained, assumption-level critique.",
+      "overall": "In substance and judgment, the two reviews are closely aligned. They both see Ad-SVGD as a well-motivated, conceptually simple enhancement to SVGD with a solid theoretical framing and promising empirical improvements, but tempered by limitations in empirical breadth/high-dimensional validation, incomplete comparison to related adaptive SVGD methods, and theoretical guarantees that hinge on strong and partly unverified assumptions (especially around kernel regularity and approximate KSD maximization). Review B is more detailed, citing specific assumptions, equations, and experimental choices, and it offers more concrete technical criticisms (e.g., smoothness of p=1 kernels, need for bounded parameter sets, unverified ε_n decay). Review A compresses these into higher-level concerns about practicality of assumptions and missing discussion of cost/scalability. Because the high-level takeaways and major pros/cons clearly overlap, alignment is high, but not perfect due to Review B’s additional, more specialized theoretical and implementation concerns that go beyond what Review A explicitly mentions."
+    }
+  },
+  "generated_at": "2025-12-27T19:29:28",
+  "runs": [
+    {
+      "config": {
+        "judge_model": "gpt-5.1",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "baseline_review.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180
+      },
+      "config_key": "3b28d70d5731760031a4514ebc98b0afd78edf6d",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/baseline_review.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "motivation_strength_alignment": 0.75,
+        "weakness_error_alignment": 0.65,
+        "overall_alignment": 0.7,
+        "explanation": {
+          "strength": "Both reviews identify the same core motivations: SVGD’s kernel sensitivity and the contribution of adapting kernel parameters via KSD maximization. They overlap on key strengths such as intuitive motivation, simple algorithmic modification, theoretical extension, and improved robustness. The AI review adds extensive detail but does not contradict the human review’s core points.",
+          "weakness": "Both reviews highlight similar major weaknesses: limited empirical breadth, incomplete positioning against existing SVGD variants, and theory relying on difficult-to-verify assumptions. The AI review introduces additional concerns—finite‑particle theory, calibration metrics, hyperparameter reporting—that go beyond the human review, creating partial rather than full alignment.",
+          "overall": "The two reviews are broadly consistent in their substantive judgment, agreeing on the main motivations, contributions, and core limitations. Divergence arises mainly from the AI review’s much greater granularity and several additional secondary critiques, but the primary evaluative focus remains aligned."
+        }
+      },
+      "generated_at": "2025-12-27T19:51:39"
+    },
+    {
+      "config": {
+        "judge_model": "gpt-5.1",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "final_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180
+      },
+      "config_key": "4569a6a97a67c8e2b360606eb74d6eb53b892d06",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/final_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "motivation_strength_alignment": 0.78,
+        "weakness_error_alignment": 0.67,
+        "overall_alignment": 0.72,
+        "explanation": {
+          "strength": "Both reviews agree on the core motivation (SVGD’s kernel/bandwidth sensitivity) and the main contribution of Ad-SVGD as KSD-based adaptive kernel selection, highlighting the simplicity of the algorithmic modification, the extension of KSD-based theory, and improved robustness vs. median-heuristic SVGD. The AI review adds more detailed KSD–KL motivation, task-by-task empirical descriptions, and exposition strengths that the human review only mentions in broader terms, so the alignment is strong but not exact.",
+          "weakness": "Both reviews raise concerns about the strength and verifiability of the theoretical assumptions, incomplete positioning against other adaptive/multi-kernel SVGD variants, and under-discussed computational cost, hyperparameter choices, and stability. The AI review introduces additional technical issues (mean-field vs finite-particle gap, specific step-size inconsistencies, differentiability of the chosen kernels, missing calibration metrics, and reproducibility details) and it does not share the human review’s specific claim that experiments are mostly toy/low-dimensional and lack BLR-type benchmarks, leading to only partial alignment on empirical weaknesses.",
+          "overall": "In substance, both reviews portray the work as a well-motivated, technically nontrivial extension of SVGD with promising robustness gains but nontrivial gaps in theory–practice alignment and empirical validation. The AI review is more granular and somewhat more positive about the breadth of empirical evidence, while simultaneously surfacing additional detailed theoretical and experimental concerns, so the overall judgment and focus are broadly consistent but not nearly identical."
+        }
+      },
+      "generated_at": "2025-12-27T19:54:33"
+    }
+  ]
+}

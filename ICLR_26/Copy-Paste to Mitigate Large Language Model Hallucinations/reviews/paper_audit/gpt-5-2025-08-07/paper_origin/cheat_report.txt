@@ -1,0 +1,76 @@
+Academic integrity and internal consistency risk report
+
+Summary
+The manuscript introduces CopyPasteLLM and reports large gains in contextual faithfulness and counterfactual robustness. However, several high‑impact issues threaten the paper’s scientific validity and reproducibility. Below are evidence‑anchored inconsistencies, numerical mismatches, and missing details that materially affect trustworthiness.
+
+1) Dataset usage and size contradictions (training/evaluation)
+- Claim: “only 365 training samples” are used to build preference data (Abstract, Block 2; Results, Block 21).
+- Conflicting evidence: Appendix Table 4 states for RQ2 (the training/evaluation of CopyPasteLLM) that:
+  • RAGTruth (QA, size 839) is used for Train (RQ2) (Block 37).
+  • FaithEval (Counterfactual, size 1,000) is used for Train + Eval (RQ2) (Block 37).
+  • PubMedQA (Expert‑annotated, size 1,000) is used for Train + Eval (RQ2) (Block 37).
+- Additional conflict: Table 3 caption states “PubMedQA is evaluated on 20,000 samples (none used for CopyPasteLLM training)” (Block 21), while Appendix Table 4 lists PubMedQA size as 1,000 and indicates Train + Eval (Block 37). Appendix I further reports “PubMedQA: 1000/1000 (100.0%) samples” (Block 57).
+- Impact: It is unclear which datasets and how many samples are used for training and evaluation. The 365‑sample claim, the “20,000” PubMedQA evaluation claim, and the Train + Eval indications for FaithEval and PubMedQA are mutually inconsistent, raising serious concerns about data accounting and the validity of the reported gains.
+
+2) Potential train–test contamination
+- Appendix Table 4 explicitly marks FaithEval and PubMedQA as Train + Eval for RQ2 (Block 37). The main text does not specify any split protocol (e.g., train/validation/test separation).
+- Contradictory assurance: Table 3 caption claims “PubMedQA is evaluated on 20,000 samples (none used for CopyPasteLLM training)” (Block 21), which conflicts with Appendix Table 4 (Train + Eval) and Appendix I (1000/1000).
+- Impact: Without a clearly documented split and consistent numbers, there is a non‑negligible risk of train–test leakage that could inflate reported performance.
+
+3) Absent core tables referenced for key claims
+- Stage 1 and Stage 2 sections make central claims supported by “Table 2” and “Table 1,” respectively:
+  • “Our experimental results demonstrate that CopyPaste‑Prompting methods consistently outperform baselines across all evaluation metrics (Table 2)” (Block 19–20).
+  • “As shown in Table 1 … CopyPasteLLM surpasses the strongest baselines…” (Block 21).
+- No Table 1 or Table 2 is present in the manuscript text provided. Only Table 3 (non‑counterfactual accuracy) and Appendix Table 5 (FaithEval model comparison) are shown.
+- Impact: Key comparative evidence supporting the main contributions is missing, preventing verification of the main claims.
+
+4) Contradictory availability statements
+- Abstract: “All codes are available at https://github.com/longyongchao/CopyPasteLLM” (Block 2).
+- Reproducibility Statement: “The complete implementation will be made available upon publication.” (Block 31).
+- Impact: Readers cannot ascertain whether code is already available or will be released later, undermining reproducibility assurances.
+
+5) Claims not supported by presented evidence
+- “CopyPasteLLM consistently achieves the highest Hit Rate across all models” (Block 21). No Hit Rate table/figure is included in the main text or appendix (No direct evidence found in the manuscript).
+- “On relatively straightforward datasets—PubMedQA and ConFiQA‑QA—the method achieves modest but consistent improvements” (Block 21). Table 3 shows a performance drop on Llama‑3.1‑8B for PubMedQA (98.15 → 97.67), contradicting “consistent” improvement (Block 21).
+- Impact: Overstatements and missing corroboration weaken the credibility of the conclusions.
+
+6) Figure axis/caption inconsistency for interpretability analysis
+- Figure 3 and Figure 7 captions state “Values above x=0 indicate CTX logits power; values below x=0 indicate Para. logits power (negated for visualization)” (Blocks 23, 25, 57). The x‑axis in these plots is “Response Length;” the separation is evidently along the y‑axis (positive vs. negative). 
+- Impact: This error confuses the interpretation of the proposed interpretability analysis and undermines clarity of the reported findings.
+
+7) Ambiguities in the Context‑Parameter Copying Capturing algorithm that affect validity
+- Section 3.3 and Algorithm 3 (Blocks 16, 44) classify contextual vs. parametric knowledge via simple membership checks:
+  • Step 12: if x_j ∈ C … capture contextual knowledge.
+  • Step 15: if x_j ∈ A_para … capture parametric knowledge.
+- Critical missing details:
+  • Tokenization/normalization for “membership” is not specified (subword tokens, byte‑pair splits, punctuation handling).
+  • The function isMeaningless(x_j) is undefined (criteria for function words/stopwords).
+  • The commonSubstringMatching with A_para (Step 2) vs. token‑level checks is underspecified, and the interplay between substring and token boundaries is unclear.
+- Impact: These omissions materially affect how tokens are attributed to context vs. parametric knowledge, which directly underpins the interpretability claims.
+
+8) Algorithmic/typesetting error in Algorithm 4
+- Algorithm 4 (Copy Fragment Detection) line 15 lacks a closing brace/parenthesis: “$i \leftarrow i + \ell_{\max” (Block 45). 
+- Impact: While likely a typesetting error, it impacts exact reproducibility of κ and δ computations central to the method.
+
+9) Anonymity breach (process risk)
+- The manuscript includes author names, affiliations, and a GitHub link identifying the authors (Block 1; Block 2). 
+- Impact: Violates standard double‑blind review practices; although not an integrity violation of results per se, it compromises review anonymity.
+
+10) Incomplete reporting of baseline configurations and judge prompts
+- The LLM‑as‑Judge process is central to building preferences (Blocks 15, 37–38, 81), but the main text does not report judge agreement rates, calibration, or sensitivity analyses; only high‑level prompt templates are provided (Appendix J.3, Block 81).
+- Impact: Without quantitative checks on the LLM‑judge reliability or ablations showing robustness, the preference construction’s validity remains uncertain. (No direct evidence found in the manuscript for judge reliability metrics.)
+
+Actionable recommendations
+- Unify and correct dataset accounting:
+  • Explicitly list training/validation/test splits for each dataset used in RQ2, and reconcile the “365 samples” claim with Appendix Table 4 and Table 3 captions. Correct the PubMedQA sample count (1,000 vs. 20,000) across all sections and figures.
+  • Clarify whether any FaithEval/PubMedQA instances used for training appear in evaluation. If so, re‑run with a strict split and report results.
+- Provide the missing tables:
+  • Include Table 1 (counterfactual comparisons) and Table 2 (Stage 1 prompting results) referenced in the main text.
+- Fix contradictory availability statements and ensure code availability aligns with the anonymization policy during review.
+- Correct figure captions for axes and ensure plots and captions are self‑consistent.
+- Specify the tokenization and matching procedures for Algorithm 3 in detail (token normalization, subword handling, stopword list, case sensitivity, punctuation, K value), and add ablations showing the effect of these choices on interpretability conclusions.
+- Correct Algorithm 4 typesetting and provide exact implementations used for κ and δ.
+- Substantiate claims about Hit Rate with a table/figure or revise the text; temper the “consistent improvements” claim for PubMedQA to reflect Table 3.
+
+Conclusion
+The manuscript contains multiple critical inconsistencies in dataset usage, training/evaluation protocol, and reporting (notably the 365‑sample claim vs. Train + Eval listings and 20,000 vs. 1,000 PubMedQA samples), as well as missing key tables. These issues materially affect the credibility of the reported improvements. Addressing the above points is necessary before the results can be considered reliable.

@@ -1,0 +1,129 @@
+{
+  "paper": "AgentChangeBench_ A Multi-Dimensional Evaluation Framework for Goal-Shift Robustness in Conversational AI",
+  "runs": [
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "deepreviewer",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "deep_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "55f39c3e353412551a5ae68e81fc4acc489b4edd",
+      "inputs": {
+        "human_review": "review_origin.txt",
+        "ai_review": "reviews/deepreviewer/gpt-5-2025-08-07/paper_origin/deep_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 1.0,
+        "weakness_coverage_recall": 0.17,
+        "ai_extra_major_points_rate": 0.71,
+        "symmetric_coverage_similarity": 0.35,
+        "note": "The AI review perfectly covers the paper's strengths but shows very low alignment on weaknesses. The AI misses many human-raised concerns like confusing paper structure and missing related work, while identifying several major, specific methodological flaws that the human reviewers missed, such as the inconsistent GSRT metric definition and potential judge-model bias."
+      },
+      "generated_at": "2025-12-27T23:45:44"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "baseline_review.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "b3137abdd5dd456ecfb029f7bed4151251d086e2",
+      "inputs": {
+        "human_review": "review_origin.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/baseline_review.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 1.0,
+        "weakness_coverage_recall": 0.25,
+        "ai_extra_major_points_rate": 0.44,
+        "symmetric_coverage_similarity": 0.38,
+        "note": "The AI review perfectly covers the strengths but misses most human-raised weaknesses, such as the lack of statistical significance testing, poor paper structure, and incremental contribution. Conversely, the AI identifies several valid, major weaknesses not mentioned by humans, including the reliance on an unvalidated LLM judge and contradictions in metric definitions."
+      },
+      "generated_at": "2025-12-27T23:50:50"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "final_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "0a71ca7d783136ba33fb6b5ec9aad08ece2f0c09",
+      "inputs": {
+        "human_review": "review_origin.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/final_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 1.0,
+        "weakness_coverage_recall": 0.13,
+        "ai_extra_major_points_rate": 0.8,
+        "symmetric_coverage_similarity": 0.27,
+        "note": "The AI review perfectly covers the paper's strengths but almost completely misses the weaknesses raised by humans, such as critiques of paper structure and conceptual limitations. Instead, the AI review raises a large set of distinct, detailed weaknesses concerning internal inconsistencies in metrics, data, and experimental protocol not mentioned by the human reviewers."
+      },
+      "generated_at": "2025-12-28T00:00:30"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "deepreviewer",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "deep_review_merge.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "752f27bc09e656c7d041a880d0c174422eea6ca4",
+      "inputs": {
+        "human_review": "review_origin.txt",
+        "ai_review": "reviews/deepreviewer/gpt-5-2025-08-07/paper_origin/deep_review_merge.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 1.0,
+        "weakness_coverage_recall": 0.44,
+        "ai_extra_major_points_rate": 0.31,
+        "symmetric_coverage_similarity": 0.5,
+        "note": "The AI review achieved perfect coverage of the paper's strengths but missed several major weaknesses identified by humans, notably the severe presentation issues (e.g., experiments in the appendix) and the incremental nature of the contribution. Conversely, the AI introduced several important methodological critiques not mentioned by humans, such as the inconsistent definition of the GSRT metric and potential judge-model bias."
+      },
+      "generated_at": "2025-12-28T00:16:53"
+    }
+  ]
+}

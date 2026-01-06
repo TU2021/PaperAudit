@@ -1,0 +1,156 @@
+Here are four distinct reviews of the paper "TOWERVISION: UNDERSTANDING AND IMPROVING MULTILINGUALITY IN VISION-LANGUAGE MODELS".
+
+***
+
+### **Review 1**
+
+#### Summary
+This paper presents TOWERVISION, a new family of open-source multilingual vision-language models (VLMs) for both image and video tasks, covering 20 languages. The authors conduct a systematic empirical study to understand the impact of various design choices on multilingual performance, including the text backbone, vision encoder, and data composition across different training stages. The work also introduces VISIONBLOCKS, a curated multilingual vision-language dataset. The resulting TOWERVISION models are shown to be highly competitive, particularly on culturally-grounded benchmarks and multimodal translation tasks.
+
+#### Soundness
+The methodological approach is sound and well-executed. The paper builds upon established VLM training paradigms (e.g., LLaVA-style multi-stage training) and applies them to the multilingual domain. The core of the paper's soundness lies in its extensive and well-designed ablation studies in Section 4. These experiments systematically isolate and evaluate the impact of the LLM backbone (Table 4), the vision encoder (Table 5), and the composition of training data at different stages (Tables 6, 7, 11). The choice of benchmarks is comprehensive, covering cultural QA (ALM-Bench), OCR (TextVQA, OCRBench), multimodal translation (Multi30K, CoMMuTE), and video understanding (ViMUL-Bench). The use of the `lmms-eval` framework (§3.2) for baseline comparison adds to the reproducibility and credibility of the results. One minor point of concern is the use of GPT-4o as a judge for the open-ended video QA on ViMUL-Bench (§3.3), as the reliability of LLM-as-judge can be variable, though this is a common practice in the field.
+
+#### Presentation
+The paper is exceptionally well-written, clearly structured, and easy to follow. The introduction (§1) effectively motivates the problem of English-centric VLM development and clearly outlines the paper's contributions. Figures are used effectively to illustrate the overall approach (Figure 1/8), the dataset composition (Figure 2/16), and key results (Figure 3/33). Tables are well-organized and present a large amount of experimental data in a digestible format. The appendix provides valuable supplementary details, including model checkpoints (Table 9) and system prompts (§A.5), which greatly enhances the paper's transparency and reproducibility. The logical flow from data creation (§2.1) to model training (§2.2), main results (§3), and detailed analysis (§4) is coherent and compelling.
+
+#### Contribution
+The paper makes several significant contributions. The primary contribution is the comprehensive empirical investigation into building multilingual VLMs, which provides valuable insights and a clear recipe for future work. The release of the TOWERVISION model family (§2), especially the highly competitive 2B variant, is a major contribution to the open-source community, offering powerful and accessible multilingual VLM capabilities. The creation and release of the VISIONBLOCKS dataset (§2.1) is another key contribution, providing a high-quality, aggregated resource for training and evaluating such models. While the architectural components themselves are not entirely novel, their combination and the systematic study of their multilingual impact represent a substantial and novel contribution to the field.
+
+#### Strengths
+1.  **Systematic Ablation Studies:** The rigorous analysis in Section 4 is the paper's greatest strength. It provides clear, evidence-based answers to crucial design questions, such as the importance of a multilingual backbone (Table 4) and the role of multilingual data at different training stages (Table 6, Table 7).
+2.  **Openness and Reproducibility:** The commitment to releasing all models, the VISIONBLOCKS dataset, and training recipes is commendable and a significant service to the research community (§2, Abstract, §8).
+3.  **Strong Empirical Results:** The TOWERVISION models achieve state-of-the-art or highly competitive performance on challenging multilingual benchmarks like ALM-Bench and Multi30K (Tables 1, 2), demonstrating the effectiveness of the proposed approach.
+4.  **Focus on Cultural Nuance:** The paper explicitly targets and evaluates performance on culturally-grounded tasks, an often-overlooked aspect of multilinguality, and shows strong results (§3.3).
+
+#### Weaknesses
+1.  **Weak OCR Performance:** The paper acknowledges that TOWERVISION is less competitive on OCR-related tasks (Table 1, §3.3). While a reason is hypothesized (limited OCR data), this remains a notable limitation for a general-purpose VLM, as text in images is a common use case.
+2.  **Limited Qualitative Analysis:** While Figure 1/8 provides some qualitative examples, the paper would benefit from a more extensive qualitative analysis, especially for failure cases or for showcasing the video understanding capabilities of TOWERVIDEO.
+3.  **Video Evaluation:** The evaluation on ViMUL-Bench (§3.3) shows TOWERVIDEO is competitive, but the performance gains over baselines are not as pronounced as in the image tasks. Furthermore, the comparison is slightly hampered by differences in training data composition and the number of frames used by baselines like VideoLLaMA3.
+
+#### Questions
+1.  In Section 2.1, you mention excluding certain datasets from the PixMo mixture (Android-Control, Points, PointQA) because they "do not provide additional multilingual value at this stage." Could you elaborate on this reasoning? Could these datasets have provided other benefits, such as improved spatial reasoning, that might be complementary to multilingual capabilities?
+2.  The choice of using a maximum of six tiles for high-dynamic resolution was based on finding the best trade-off (§2.2). Could you provide more detail on this trade-off, perhaps from the experiments mentioned in Appendix A.3? What were the specific performance vs. efficiency costs observed when using more or fewer tiles?
+3.  The performance gain from expanding from 10 to 20 languages is much larger for the 2B model than the 9B model (Figure 3/33). Do you have a hypothesis for why smaller models seem to benefit more from broader language exposure?
+
+#### Rating
+- Overall (10): 9 — This is an excellent paper that provides a thorough, systematic study on an important topic, delivering strong open-source models and a valuable dataset.
+- Novelty (10): 8 — While the architecture is not new, the comprehensive study of multilingual design choices and the creation of the TOWERVISION suite and VISIONBLOCKS dataset are highly novel contributions.
+- Technical Quality (10): 9 — The experiments are rigorously designed and executed, with extensive ablations and strong baseline comparisons, though the OCR performance is a minor technical weakness.
+- Clarity (10): 10 — The paper is exceptionally clear, well-structured, and easy to read, with excellent figures and tables supporting the narrative.
+- Confidence (5): 5 — I am highly confident in my assessment as I am an expert in multilingual NLP and multimodal models.
+
+***
+
+### **Review 2**
+
+#### Summary
+This paper introduces TOWERVISION, a family of multilingual vision-language models, and an accompanying dataset, VISIONBLOCKS. The work's main focus is a systematic investigation into how different components and data strategies affect a VLM's multilingual performance. The authors build their models on the TOWER+ multilingual LLM and train them using VISIONBLOCKS, a new 6M-sample dataset aggregated from public sources and augmented with machine-translated and synthetically generated data. The paper concludes that a strong multilingual text backbone and multilingual fine-tuning data are critical for performance.
+
+#### Soundness
+The overall experimental design is sound, particularly the ablation studies in Section 4. However, the soundness of the work is heavily dependent on the quality of the VISIONBLOCKS dataset (§2.1), which raises some concerns. A significant portion of the multilingual data is derived from machine translation using a "Tower model" and synthetic generation using the "Gemini 2.5 API" (§2.1). While the authors apply a quality filter (CometKiwi score > 0.85) for translations, machine translation can still introduce artifacts and systematic errors that may bias the model. The paper lacks a thorough analysis of the quality of these generated data components. For instance, the pie chart in Figure 16 shows that translated data makes up 17% of the total, which is a substantial fraction. The synthetic data portion is small (2%), making its impact questionable. The evaluation methodology itself is standard, but the claims of superiority rest on this potentially noisy, machine-generated data foundation.
+
+#### Presentation
+The paper is well-written and clearly organized. The structure logically guides the reader from the motivation to the data, the model, the results, and the analysis. Figure 2/16 provides a very clear and detailed overview of the composition of the VISIONBLOCKS dataset, which is a highlight of the presentation. The main results in Tables 1, 2, and 3 are easy to interpret. The appendix is helpful, especially the inclusion of system prompts used for data generation (§A.5), which adds a layer of transparency. However, the paper could have benefited from including examples of the translated or synthetic data in the appendix to allow readers to judge the quality for themselves.
+
+#### Contribution
+The main contribution of this work is twofold: the VISIONBLOCKS dataset and the empirical insights derived from using it. The dataset itself, an aggregation and augmentation of many sources, is a valuable resource for the community. The study's findings—particularly that high-quality English captions suffice for projector pre-training (Table 6) and that a multilingual vision encoder is most beneficial in low-data regimes (Table 5)—are useful contributions to the "best practices" of VLM training. However, the TOWERVISION models themselves, while strong, are primarily an application of these findings and existing architectural patterns rather than a fundamental architectural innovation.
+
+#### Strengths
+1.  **Creation of VISIONBLOCKS:** The effort to collect, filter, and augment a large-scale multilingual vision-language dataset is a major strength. Releasing this dataset (§2.1) is a significant contribution.
+2.  **Data-centric Analysis:** The paper provides a strong data-centric perspective on building VLMs, investigating the impact of data composition at various stages of training.
+3.  **Transparency in Data Curation:** The authors are transparent about their data sources (Figure 2/16) and filtering methods (e.g., CometKiwi score, §2.1), which is good practice.
+4.  **Practical Insights:** The finding that multilingual data is not necessary for the initial alignment stage (§4, Table 6) is a practical and potentially cost-saving insight for other researchers.
+
+#### Weaknesses
+1.  **Reliance on Machine-Generated Data:** The heavy use of machine translation and synthetic data generation (§2.1) is a significant weakness. The quality of this data is crucial, yet it is not analyzed in depth. This could lead to the model learning "translationese" or other artifacts, which might inflate performance on benchmarks but not generalize to real human-generated multilingual queries.
+2.  **Minimal Impact of Synthetic Data:** The synthetic data from Gemini constitutes only 2% of VISIONBLOCKS (Figure 16). It is unclear if this small fraction has any meaningful impact, and the paper does not ablate its inclusion.
+3.  **Lack of Data Quality Analysis:** The paper would be much stronger if it included a human evaluation of a sample of the translated and synthetic data to validate the automated quality control measures.
+
+#### Questions
+1.  Could you provide a small, random sample of the English source captions, their machine translations into a few languages, and their corresponding CometKiwi scores (both above and below the 0.85 threshold)? This would help in assessing the effectiveness of your filtering strategy.
+2.  What was the rationale for using a relatively small amount (2%) of synthetic data from Gemini 2.5? Did you experiment with larger proportions, and if so, what was the effect on performance and training cost?
+3.  The paper relies on a Tower model for translation and Gemini for synthesis (§2.1). How do you ensure that TOWERVISION is not simply learning to mimic the specific style or potential biases of these proprietary/semi-proprietary systems?
+
+#### Rating
+- Overall (10): 7 — A solid paper with valuable contributions in the form of a dataset and empirical findings, but with significant questions around the quality and impact of the machine-generated data.
+- Novelty (10): 7 — The VISIONBLOCKS dataset is a novel contribution, but the modeling approach is largely an integration of existing components.
+- Technical Quality (10): 6 — The experimental execution is good, but the lack of rigorous validation for the machine-translated and synthetic data, which forms the foundation of the training, is a notable technical weakness.
+- Clarity (10): 9 — The paper is very clearly written and presented, with excellent figures and tables.
+- Confidence (5): 5 — I am very confident in my evaluation, with a strong background in multilingual data curation and analysis.
+
+***
+
+### **Review 3**
+
+#### Summary
+This paper presents TOWERVISION, a set of multilingual vision-language models (VLMs) for images and video. The approach involves taking a pre-existing multilingual language model, TOWER+, and connecting it to a vision encoder (SigLIP2) using a standard projector architecture. The models are fine-tuned on a newly compiled dataset, VISIONBLOCKS, which includes a mix of public, translated, and synthetic data. The authors perform several ablation studies to justify their design choices and show that their models perform competitively on several multilingual benchmarks.
+
+#### Soundness
+The experimental methodology is generally sound. The ablation studies in Section 4 are well-controlled and provide interesting insights into the effect of different backbones and vision encoders. The choice of baselines in Section 3.2 is reasonable, including several recent and strong open VLMs. However, the overall framing of the contribution feels somewhat incremental. The core architecture is a direct application of the LLaVA framework (§2.2), and the training recipe (projector pretraining, full-model finetuning) is also standard. The main "trick" is substituting the base LLM with a strong multilingual one (TOWER+). While the results are good, the performance lift over other strong models like Qwen2.5-VL-7B is sometimes marginal (e.g., 85.2 vs. 83.6 on ALM-Bench (multi) in Table 1), which slightly undermines the claims of significant superiority.
+
+#### Presentation
+The paper is well-written and easy to follow. The authors do a good job of explaining their methodology and results. The figures and tables are clear and informative. The structure is logical, and the appendix provides useful details for reproducibility. No major issues with presentation.
+
+#### Contribution
+The contribution of this paper is debatable in terms of novelty. The core idea of improving a VLM's multilinguality by starting with a stronger multilingual LLM backbone is intuitive and has been explored in spirit by other works. For example, PANGEA (§1) also focuses on multilingualization through data augmentation during fine-tuning. This paper's contribution lies more in the careful engineering and extensive empirical validation rather than a novel conceptual breakthrough. The most concrete contributions are the open-source models themselves and the VISIONBLOCKS dataset. The ablation studies (§4) are valuable, but they largely confirm existing intuitions (e.g., a better multilingual backbone helps multilingual performance). The claim in the abstract of "surpassing existing approaches trained on substantially larger datasets" feels a bit overstated without a more rigorous, controlled comparison of data size and quality.
+
+#### Strengths
+1.  **Thorough Empirical Evaluation:** The paper is backed by a large number of experiments on a wide array of benchmarks, lending credibility to its findings.
+2.  **Well-Designed Ablations:** The studies in Section 4 are the highlight, providing a clear analysis of how different components contribute to the final performance.
+3.  **Open-Source Artifacts:** Releasing the models and dataset is a clear strength and a service to the community.
+
+#### Weaknesses
+1.  **Limited Novelty:** The core methodology is an adaptation of existing, well-established VLM training recipes (LLaVA-Next). The novelty is more in the specific choice of components (TOWER+, SigLIP2) than in the method itself.
+2.  **Incremental Performance Gains:** While TOWERVISION is strong, its performance advantage over the best baselines is not always substantial (Table 1). This makes it feel more like a strong new entry in a crowded field rather than a paradigm shift.
+3.  **Positioning vs. Prior Work:** The paper mentions PANGEA but could do a better job of clearly differentiating its approach. Both works tackle VLM multilingualization via data strategies, and a more direct comparison of methodologies and findings would have strengthened the paper.
+
+#### Questions
+1.  The core architectural and training paradigm seems heavily inspired by LLaVA. Could you elaborate on what you see as the fundamental methodological difference between TOWERVISION and prior work like PANGEA or simply fine-tuning a LLaVA model on a more multilingual dataset?
+2.  Table 9 in the appendix lists several very strong recent models like Pixtral-12B and Phi-4-Multimodal-14B. Why were these models not included as baselines in the main comparison tables (e.g., Table 1)? Comparing against them would provide a more complete picture of TOWERVISION's standing.
+3.  The finding that instruction-tuned backbones are not always optimal at the 2B scale (Table 4) is interesting. Do you have a deeper explanation for why pre-trained backbones retain "stronger raw visual extraction" and why this advantage disappears at the 9B scale?
+
+#### Rating
+- Overall (10): 6 — A solid piece of engineering with thorough experiments, but it lacks significant methodological novelty and the performance gains are sometimes incremental.
+- Novelty (10): 4 — The approach is largely a recombination of existing ideas and architectures; the main novelty is in the specific components used and the dataset.
+- Technical Quality (10): 8 — The experiments are well-conducted and the analysis is sound, making for a high-quality empirical study.
+- Clarity (10): 9 — The paper is very well-written and easy to understand.
+- Confidence (5): 4 — I am confident in my assessment, having reviewed many papers in the VLM space.
+
+***
+
+### **Review 4**
+
+#### Summary
+This paper introduces TOWERVISION and TOWERVIDEO, a family of open-source vision-language models designed to be effective in multilingual and multicultural contexts. The authors achieve this by building upon a strong multilingual text model (TOWER+), curating a comprehensive multilingual dataset (VISIONBLOCKS), and systematically fine-tuning the models for image and video tasks. The work's primary impact lies in delivering high-performing, open models that excel at culturally-aware tasks and making the associated data and training recipes publicly available.
+
+#### Soundness
+The paper demonstrates a sound and practical approach to a pressing problem. The methodology, while building on existing work, is implemented effectively. The three-stage training process (§2.2) is logical and well-motivated. The evaluation is robust, using a diverse set of established benchmarks to validate the models' capabilities in different domains, from cultural understanding (ALM-Bench) to multimodal translation (Multi30K). The ablation studies (§4) provide solid evidence for the design choices made, such as the selection of the TOWER+ backbone and the SigLIP2 vision encoder. The results convincingly show that the authors' recipe leads to models with strong multilingual skills.
+
+#### Presentation
+The paper is presented with excellent clarity. It is well-organized, and the authors communicate their goals, methods, and findings effectively. The abstract provides a concise and accurate summary of the work. Figures like Figure 1/8 are particularly effective, as they combine a high-level architectural diagram with concrete, multilingual examples that immediately showcase the model's improved capabilities over competitors. The release of a Hugging Face collection and a project website (mentioned in the abstract) is a great way to present the work's practical outputs to the community.
+
+#### Contribution
+The main contribution of this paper is its significant practical impact on the field of multilingual AI. By releasing a family of powerful, open-source multilingual VLMs (TOWERVISION) and a large, curated dataset (VISIONBLOCKS), the authors have provided invaluable tools for researchers and developers working with non-English languages. The demonstration that a smaller 2B model can be competitive with much larger models on multilingual tasks (§3.3, Table 1) is a particularly important contribution for accessibility and democratizing this technology. While some of the techniques are not new, the successful synthesis and the delivery of high-quality, open artifacts are a major contribution in their own right. The paper's findings also serve as a practical guide for others looking to build similar models.
+
+#### Strengths
+1.  **Public Release of Artifacts:** The most significant strength is the public release of models, data, and code (§2, Abstract). This directly enables further research and application in multilingual VLM.
+2.  **Strong Performance on Cultural and Translation Tasks:** The models show impressive results on benchmarks that require cultural knowledge (ALM-Bench) and visual context for translation (Multi30K, CoMMuTE), as shown in Tables 1 and 2. This demonstrates real-world utility beyond simple object recognition.
+3.  **Excellent Performance of Smaller Model:** The TOWERVISION-2B model is surprisingly strong, outperforming several larger models on multilingual benchmarks (§3.3). This is a fantastic result for practical deployment where resources are constrained.
+4.  **Extension to Video:** The inclusion of TOWERVIDEO and its evaluation on ViMUL-Bench (§3.3, Table 3) broadens the scope and impact of the work, addressing the often-neglected video modality in multilingual settings.
+
+#### Weaknesses
+1.  **Underwhelming OCR Capabilities:** As noted in the paper (§3.3), the models' performance on OCR-heavy tasks is a practical limitation. For many real-world applications (e.g., document understanding, parsing text in scenes), this would be a significant drawback.
+2.  **Limited Qualitative Examples for Video:** The paper focuses heavily on quantitative metrics. While the image examples in Figure 1/8 are good, there are no similar qualitative examples for TOWERVIDEO that would help a reader understand its strengths and weaknesses in video understanding.
+3.  **Evaluation on Unseen Languages:** The paper shows benefits for unseen languages (Figure 3/33, Table 11), but the set of unseen languages in the test set seems to contain languages closely related to the training languages (e.g., Danish/Swedish/Norwegian). The generalization to more distant, low-resource language families is less clear.
+
+#### Questions
+1.  Given the practical focus of this work, could you comment on the inference requirements (e.g., VRAM, speed) for the TOWERVISION-9B and TOWERVIDEO-9B models? How do they compare to other models of similar size?
+2.  Are there plans to expand the language coverage of TOWERVISION in the future, particularly to more low-resource languages from diverse families (e.g., African or Southeast Asian languages)?
+3.  The poor OCR performance is a key limitation. Do you have concrete plans for how to address this in future work? Would it require a significant change to the VISIONBLOCKS dataset composition or the training recipe?
+
+#### Rating
+- Overall (10): 9 — An outstanding paper that delivers high-impact, open-source contributions to the community, backed by solid engineering and thorough evaluation.
+- Novelty (10): 7 — While not a complete paradigm shift, the successful creation of a strong, open multilingual VLM family and the associated systematic study is a novel and important achievement.
+- Technical Quality (10): 9 — The technical execution is excellent, resulting in high-performing models. The only minor drawback is the acknowledged weakness in OCR.
+- Clarity (10): 10 — The paper is exceptionally clear, well-structured, and effectively communicates its contributions and their importance.
+- Confidence (5): 5 — I am highly confident in my review, as my expertise aligns with the practical and community-focused aspects of this work.

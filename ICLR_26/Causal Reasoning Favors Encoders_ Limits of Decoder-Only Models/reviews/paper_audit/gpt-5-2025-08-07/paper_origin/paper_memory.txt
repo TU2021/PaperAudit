@@ -1,0 +1,146 @@
+# Global Summary
+- Problem: Assess whether decoder-only large language models can reliably perform causal logical reasoning (multi-hop composition and strict conjunctive control) and how they compare to encoder and encoder–decoder architectures.
+- Core approach: Build synthetic first-order logic (FOL) datasets based on SimpleLogic (without disjunctions), generate one training split and two out-of-distribution (OOD) test splits, and compare zero/few-shot in-context learning (ICL) with fine-tuned encoder-only (BERT), encoder–decoder (BART, Flan-T5), and decoder-only models (GPT-4.1, GPT-5, Claude Opus 4.1, Qwen 2.5, Qwen3-1.7B). Evaluate natural-language (NL) and non-natural-language (NNL) settings to ablate lexical cues.
+- Datasets: Training set of 40,000 samples, depths 0–7 (5,000 per depth); NL test set 3,600 samples, depths 0–11 (300 per depth); NNL test set 3,600 samples, depths 0–11 (300 per depth).
+- Metrics: Accuracy, per-depth precision/recall/F1, AUROC (positive class), macro averaging across depths. Parse retries up to five times; failed calls defaulted to 0; parsing errors tallied as -1.
+- Key findings:
+  - Zero/few-shot decoder-only models are brittle under OOD depth/lexical shifts; five-shot yields only marginal gains (~+0.5% accuracy on average). NL accuracies: GPT-4.1 64%, Qwen-2.5 47%, Qwen3-1.7B 65; NNL: GPT-4.1 65%, Qwen-2.5 53%, Qwen3-1.7B 61. Reasoning model GPT-5 reaches 100% accuracy on both NL and NNL; Claude Opus 4.1: 93% NL; 65–66% NNL.
+  - Fine-tuned encoders/enc–dec generalize better and show stronger AUROC: NL accuracy—Flan-T5-Base 76%, BART-Base 74%, Qwen3-1.7B 73%, BERT-Base 71; NNL accuracy—BERT-Base 61%, BART-Base 55%, Flan-T5-Base 54%, Qwen3-1.7B 53. NL AUROC: BERT-Base 0.76, Flan-T5-Base 0.66, BART-Base 0.62, Qwen3-1.7B 0.50; NNL AUROC: BERT-Base 0.60, Qwen3-1.7B 0.60, BART-Base 0.53, Flan-T5-Base 0.51.
+  - Depth-wise accuracy declines with reasoning depth; sharper drop in NNL (first four-depth OLS slope -10.91, std 3.36) vs NL (-4.73, std 2.45).
+  - Mechanistic interpretability via curvature similarity shows encoders preserve structural invariants better with depth (e.g., BERT 0.86→0.78 from depths 6→11) vs decoder-only Qwen (0.59→0.56–0.57).
+  - Efficiency: Estimated accuracy per hour shows GPT-5 least efficient (1.1; 90.6 hours) vs BART-Base most efficient (640; 0.1 hours). API timing approximations noted.
+- Caveats explicitly stated: Architecture details for some API models not disclosed; inference-time comparisons for API models are approximate; the task subset excludes disjunctions; datasets are synthetic; five-shot analyses produce marginal changes only; prompt and parsing considerations; resource differences across hardware.
+
+# Introduction
+- Motivation: Causal reasoning requires multi-hop composition and strict conjunctive control; LLMs exhibit inconsistency, memorization, and reliance on spurious lexical features in natural language contexts.
+- Research question: Do architectural choices (encoder vs decoder-only) fundamentally constrain logical causal reasoning?
+- Hypothesis: Encoder projections over the full input should enable more reliable causal composition and robustness to distribution shifts compared to autoregressive decoders.
+- Experimental setup:
+  - Create one training dataset and two OOD test sets (NL deeper depths; NNL randomized characters to ablate lexical relations).
+  - Evaluate zero/few-shot ICL with decoder-only reasoning and non-reasoning models; fine-tune representative models from encoder-only (BERT), encoder–decoder (BART), decoder-only (Qwen3-1.7B).
+- Findings preview: Encoder-only models generalize better, with widening gaps at deeper reasoning chains; ICL alone insufficient for causal reasoning. GPT-5 is an outlier achieving near-perfect accuracy with substantial latency and presumed higher compute cost.
+- Code: https://github.com/Amartya-Roy/Causal-Reasoning-Favors-Encoders-On-The-Limits-of-Decoder-Only-Models/tree/main
+- Figure 1 describes dataset creation and evaluation: Example facts/rules/query/proof chain, and sample predictions from ICL and fine-tuned models.
+
+# Abstract
+- Summary: Compare fine-tuned encoder and encoder–decoder architectures with zero/few-shot ICL (decoder-only) on NL and NNL FOL tasks. ICL alone insufficient; decoder-only brittle under distributional shifts; fine-tuned encoders/enc–dec generalize better, including NNL. Decoder-only models match/surpass only at large scales. Recommendation: cost-effective robust causal reasoning favors encoder/encoder–decoder with targeted fine-tuning.
+
+# Related Work
+- Surveys: Liu et al. (2025); Luo et al. (2023). Roy et al. (2025) on causal-graph discovery with LLMs; highlights struggles with compositional and conjunctive dependencies.
+- Architectures: Encoder-only and encoder–decoder studies (Pirozelli et al., 2024; Dziri et al., 2023). Zheng et al. (2025) find comparable FOL entailment abilities across encoder/decoder-only in some settings.
+- Benchmarks: JustLogic (Chen et al., 2025), cognitive science evaluations (Seals & Shalin, 2024), DivLogicEval (Chung et al., 2025), FOLIO/P-FOLIO (Han et al., 2024a,b), PrOntoQA (Saparov & He, 2022), LogicBench (Parmar et al., 2024).
+- Methods to improve reasoning: Logic-LM (Pan et al., 2023), LogicAsker (Wan et al., 2024), LogicPro (Jiang et al., 2025), DREAM (Cao et al., 2025).
+
+# Preliminaries
+- Logical reasoning framing: Causal judgments reduce to logical implications; requires multi-hop chaining and strict global conjunction. Accuracy depends on both local checks and correct composition across depth.
+- Design choice: Instances stratified by compositional depth to enforce multi-hop reasoning; structure over lexical relations emphasized.
+- Architectural considerations:
+  - Encoders: Bidirectional layers contextualize all tokens; projection z = pool(H) aggregates global information, enabling single-pass evaluation of programs (literals ⇒ clause-level disjunction [here, no disjunctions used] ⇒ global conjunction).
+  - Decoder-only: Autoregressive recursion propagates information left-to-right; may require backtracking; inference is non-controllable and may need multiple calls.
+
+# Method
+- Dataset (SimpleLogic-based):
+  - Each instance: ⟨facts, rules (Horn clauses), query, explanation/proof chain, label⟩.
+  - Training: 40,000 samples, depths 0–7 (5,000 per depth), natural-language atoms.
+  - NL test (OOD deeper): 3,600 samples, depths 0–11 (300 per depth).
+  - NNL test (OOD lexical ablation): 3,600 samples, depths 0–11 (300 per depth), vocabulary of random characters (ungrammatical).
+  - DSL tokens: [AND], [IMPLY], [PERIOD].
+- Models used:
+  - Encoder-only: BERT Base and Large.
+  - Encoder–decoder: BART Base and Large; Flan-T5 Base.
+  - Decoder-only non-reasoning: GPT-4.1, Qwen 2.5.
+  - Decoder-only reasoning: GPT-5, Claude Opus 4.1, Qwen3-1.7B.
+  - Fine-tuned: BERT, BART, Qwen3-1.7B; Flan-T5 also fine-tuned.
+- Evaluation metrics:
+  - Overall accuracy; per-depth precision/recall/F1; AUROC (positive class) for discrimination.
+  - Macro averages across depths; AUROC used for statistical significance.
+  - Prompting and parsing: Up to five retries; failed calls default to 0; analyze class distributions.
+- Prompt and calls:
+  - Temperature set to 0 whenever possible.
+  - Completion tokens: 128 for non-reasoning LLMs; 5,000 for reasoning models.
+  - Azure OpenAI API used.
+- Fine-tuning regimen:
+  - 3 epochs; single NVIDIA RTX 6000 (48 GB).
+  - Batch size 8; learning rate 5 × 10⁻⁵.
+  - Supervised on both proof chain and final label.
+- Model specifications (Appendix Table 2):
+  - Qwen-2.5 7B (decoder-only); Qwen3-17B; Qwen3-1.7B; BERT-Base 110M (encoder-only); BART-Base 139M (encoder–decoder); Flan-T5-Base 250M (encoder–decoder). Some API model details undisclosed (GPT-4.1, GPT-5, Claude Opus 4.1).
+
+# Experiments
+- 5 RESULTS overview: Compare non-finetuned and finetuned on both corpora; ablations on depth vs accuracy and inference time; mechanistic interpretability via curvature similarity.
+
+- 5.1 Non-finetuned results:
+  - Shot analysis: Increasing shots from 0 to 5 changes accuracy marginally (~+0.5% average); results reported for zero-shot.
+  - NL test accuracy: GPT-4.1 64%; Qwen-2.5 47%; Qwen3-1.7B 65 (zero and five-shot reported as similar).
+  - NNL test accuracy: GPT-4.1 65%; Qwen-2.5 53%; Qwen3-1.7B 61.
+  - API-based reasoning models: GPT-5 100% accuracy on both NL and NNL; Claude Opus 4.1 93% NL (both zero and five-shot), and 65% (zero-shot) / 66% (five-shot) on NNL.
+  - Class distribution observations: Non-finetuned BART, BERT, Flan-T5, Qwen3-1.7B often output a single label across calls; parsing errors prevalent pre-finetuning. After fine-tuning, label compliance in NL increases from 1.3%→99.8% (BART-Base) and 5.8%→91.6% (Qwen3-1.7B); in NNL from 0%→91.2% (BART-Base), 17.7%→92.2% (Qwen3-1.7B).
+  - Non-finetuned AUC (Appendix C): NL—Flan-T5-Base 0.377; BART-Base 0.559; BERT-Base 0.376; Qwen3-1.7B 0.424. NNL—Flan-T5-Base 0.448; BART-Base 0.510; BERT-Base 0.511; Qwen3-1.7B 0.492.
+
+- 5.2 Finetuned results:
+  - NL accuracy: Flan-T5-Base 76%; BART-Base 74%; Qwen3-1.7B 73%; BERT-Base 71.
+  - NNL accuracy: BERT-Base 61%; BART-Base 55%; Flan-T5-Base 54%; Qwen3-1.7B 53.
+  - AUROC (NL): Qwen3-1.7B 0.50; BART-Base 0.62; Flan-T5-Base 0.66; BERT-Base 0.76.
+  - AUROC (NNL): Qwen3-1.7B 0.60; BART-Base 0.53; Flan-T5-Base 0.51; BERT-Base 0.60.
+  - AUROC improvements over non-finetuned: NL—BART +0.06; Flan-T5 +0.29; BERT +0.38; Qwen3-1.7B +0.08. NNL—BART +0.02; Flan-T5 +0.07; BERT +0.09; Qwen3-1.7B +0.10.
+  - Depth-wise accuracy patterns (Figure 4): NL declines roughly from ~90% (depth 0) to ~40–50% (depth 10–11). NNL drops sharply from ~89% (depth 0) to ~50% by depth 4–5, then plateaus through depth 11.
+
+- 6 Ablation studies:
+  - 6.1 Depth versus accuracy:
+    - OOD behavior at depths 8–11 (unseen during training). NL shows gradual decline (average OLS slope -3.45, std 0.49). NNL shows flatter global trend (average slope -3.04, std 1.31) due to early sharp drop and later plateau.
+    - Early-depth analysis (depths 0–3): NNL declines more sharply (average slope -10.91, std 3.36) vs NL (-4.73, std 2.45).
+    - Model-specific: In NNL, Flan-T5-Base reaches near-random by depth 4; Qwen3-1.7B by depth 3; BERT-Base by depth 7 (textual statements).
+  - 6.2 Inference time:
+    - Efficiency defined as accuracy/hour. Estimates:
+      - BART-Base: 0.1 hours; efficiency 640; NVIDIA RTX 6000.
+      - Flan-T5-Base: 0.45 hours; 143.4; RTX 6000.
+      - BERT-Base: 0.17 hours; 388.2; RTX 6000.
+      - Qwen2: 1.08 hours; 43.52; API.
+      - Qwen3-1.7B: 4.9 hours; 12.9; RTX 6000.
+      - GPT-5: 90.6 hours; 1.1; API.
+      - GPT-4.1: 0.5 hours; 129; API.
+      - Claude Opus 4.1: 14.4 hours; 5.5; API.
+    - Note: API models’ times are approximate; NNL takes roughly twice the time due to tokenization.
+
+- 7 Mechanistic interpretability of logical flow:
+  - Probe: Curvature similarity across depths 6–11 (per Zhou et al., 2025) as an invariant of consistent internal logical updates.
+  - Depth-wise curvature similarity (NL, depths 6–11):
+    - BERT (encoder): 0.86, 0.84, 0.82, 0.81, 0.79, 0.78.
+    - Flan-T5 (enc–dec): 0.80, 0.77, 0.74, 0.72, 0.70, 0.70.
+    - Bart (enc–dec): 0.73, 0.71, 0.67, 0.64, 0.62, 0.62.
+    - Qwen (decoder): 0.59, 0.58, 0.58, 0.57, 0.56, 0.57.
+  - Claim: Encoders preserve structural invariants and maintain stable geometric transformations with depth; decoder-only shows curvature drift.
+
+# Conclusion
+- Main claim: ICL alone is limited for reliable causal reasoning; decoder-only models are brittle under OOD shifts and depth. Fine-tuned encoders/encoder–decoders deliver more robust and efficient performance, with better discrimination (AUROC) and generalization, especially on NNL.
+- Exception: GPT-5 achieves near-perfect accuracy across NL and NNL but at substantially higher inference-time compute and latency.
+- Practical implication: For cost-effective, short-horizon robust causal reasoning, encoder or encoder–decoder architectures with targeted fine-tuning are preferable; decoder-only can close the gap only at massive scale and cost.
+- Forward-looking notes: Further mathematical work needed to formalize ICL limits in causal compositionality; explore architectures merging ICL convenience with encoder capabilities.
+
+# Appendix
+- Ethics: Synthetic datasets; no PII; adherence to research licenses; note dual-use concerns; encourage responsible deployment; highlight efficiency benefits of smaller encoders for sustainability.
+- Reproducibility: Code, data (NL and NNL), scripts, hyperparameters, library versions, and detailed configurations to be made public upon publication; Hugging Face models used; Appendix B reports hyperparameters and call parameters. Random seeds fixed; canonical forms logged.
+- Dataset generation:
+  - Problem schema: Facts (unary atoms), Horn rules, query; DSL with [AND], [IMPLY], [PERIOD]; serialized to an internal graph.
+  - Labeling and annotation: Minimal proof chains or structured failure traces via a Dijkstra-based algorithm; depth controlled as minimal rule applications to derive the query; balanced curriculum across depths; negative sampling strategies (premise-missing, distractor chains, adversarial swaps).
+  - Quality checks: Well-formedness, sound labels, bounded depth; repair/resample failures.
+- Detailed methods:
+  - Model specs (Appendix Table 2): Qwen-2.5 7B, Qwen3-17B 17B, Qwen3-1.7B 1.7B; BERT-Base 110M; BART-Base 139M; Flan-T5-Base 250M; unspecified details for GPT-4.1/GPT-5/Claude.
+  - Call parameters: Temperature 0; 128 tokens for non-reasoning LLMs, 5,000 for reasoning; Azure OpenAI API.
+  - Fine-tuning: 3 epochs; batch size 8; lr 5 × 10⁻⁵; supervised on proof chain + final label.
+  - Learning curves (Figure 6):
+    - Stepwise losses: BART-Base and Flan-T5-Base reduce to ≈0.20; Qwen3-1.7B reduces to ≈0.15 at ≥12,000 steps; BERT-Base fluctuates around ≈0.60. Appendix text also states “both Flan-T5 Base and BART-Base achieve a much smaller loss (≈0.15) whereas Qwen3-1.7B and BERT-Base converge to ≈0.5.”
+  - Prompt sensitivity (Table 5): Automatic prompt optimization on GPT-4.1 yields marginal accuracy increases (~1%); depth-wise NL averages 65.94% accuracy; NNL averages 65.50%.
+- Additional quantitative results (selected):
+  - Non-finetuned ROC/AUC: NL near random; NNL near random (Appendix Figures 7–8).
+  - Depth-wise accuracies for decoder-only (Appendix Figures 9, 68–69): NL declines from ~90–100% to ~40–60% by depth 10–11; NNL drops sharper to ~50–60% by depth 5–6 then plateaus.
+  - Fine-tuned NL depth-wise metrics (Table 6): Per-depth precision/recall/F1 across BERT-Base, BART-Base, Flan-T5-Base, Qwen3-1.7B; average NL accuracies—Flan-T5-Base 0.76; BART-Base 0.74; Qwen3-1.7B 0.73; BERT-Base 0.71.
+  - Fine-tuned NNL depth-wise metrics (Table 10): BERT-Base average accuracy 61.03%; BART-Base 54.83%; Flan-T5-Base 53.61%; Qwen3-1.7B 52.83.
+  - GPT models on NL (Table 8): GPT-5 zero-shot averages ~99.89% accuracy; GPT-4.1 five-shot average 64.50%; zero-shot average 57.60–76.65 for precision/recall averages (reported across labels).
+  - GPT models on NNL (Table 11): GPT-5 zero-shot average accuracy 99.88%; GPT-4.1 averages ~65.17% (five-shot) and ~65% range (zero-shot).
+  - Claude Opus 4.1 NNL (Table 12): Average accuracy 66.29% (five-shot) and 65.42% (zero-shot).
+  - Qwen 2.5 NNL (Table 13): Five-shot average accuracy 54.04%; zero-shot 53.25%.
+- Parsing and label distributions: Non-finetuned models frequently output uniform labels; fine-tuning reduces parsing errors and improves label compliance (e.g., NL: BART-Base 1.3%→99.8%; NNL: BART-Base 0%→91.2%).
+
+# References
+- Core citations cover: encoder/decoder transformer evaluations in logical reasoning; synthetic and human-authored FOL benchmarks (SimpleLogic, FOLIO, P-FOLIO, PrOntoQA, LogicBench, JustLogic, DivLogicEval); methods to improve logical reasoning (Logic-LM, LogicAsker, LogicPro, DREAM); analyses of LLM reasoning limitations (consistency, memorization, compositionality); mechanistic geometry of reasoning (Zhou et al., 2025); and model architecture papers (BERT, BART). Specific versions cited for GPT-4.1, GPT-5, Claude Opus 4.1, Qwen technical reports.

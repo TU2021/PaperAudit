@@ -1,0 +1,23 @@
+Summary
+The paper introduces FingerTip 20K, a benchmark and dataset targeting two under-explored capabilities in mobile GUI agents: proactive task suggestion (inferring a user’s current intent from profile, time, scenario, history, and optionally initial screenshots) and personalized task execution (carrying out instructions while aligning with a user’s action preferences). The dataset comprises roughly 21k real-world episodes collected from Android users during daily usage across hundreds of apps and includes screenshots, accessibility trees, user intents, executed actions, and user context. The tasks are formally defined with clear inputs and outputs, and the authors propose evaluation metrics for both tracks (Sim1/SR1 for suggestion; SR2/Sim2/Step Ratio for execution). Baselines span generalist multimodal LLMs and GUI-focused agents, with analysis of task difficulty and resource costs. Fine-tuning a 7B model using LoRA yields noticeable gains, particularly for personalization. The dataset, prompts, and code are slated for public release.
+
+Strengths
+- Timely and novel benchmark framing: explicitly evaluates proactive intent suggestion and personalization in execution, addressing gaps in prior mobile GUI datasets that lack rich user context and proactivity evaluation.
+- Ecologically valid data: collected on real devices from longitudinal, in-the-wild usage across a broad app ecosystem, enabling realistic assessment and user-level modeling.
+- Rich contextual inputs: profiles, timestamps, scenarios, histories, screenshots, and accessibility trees provide comprehensive signals for intent inference and execution grounding.
+- Clear task formalization: well-specified inputs/outputs and protocols for both tracks, with detailed prompting and environment setup on physical phones that reflect practical constraints.
+- Personalized behavior analysis: evidence of systematic, user-specific action patterns supports the need for personalization and validates the benchmark’s design.
+- Broad experimental coverage: comparisons between generalist MLLMs and GUI-specialized agents, difficulty analyses, and reporting of resource costs provide an informative baseline landscape.
+- Demonstrated gains from fine-tuning: LoRA fine-tuning on user-oriented data improves both proactivity and personalization, indicating the benchmark’s utility for driving method development.
+- Planned public release of data, code, and prompts enhances reproducibility and community impact.
+
+Weaknesses
+- Evaluation dependence on LLM judgment: the core suggestion metric (SR1) relies on another LLM to adjudicate intent equivalence, introducing potential bias and circularity; there is no corroborating human evaluation or multi-judge agreement analysis.
+- Limited transparency in manual verification: the execution success metric (SR2) is manually verified but lacks detail on annotator protocols, number of raters, and inter-rater reliability.
+- Personalization metric design: Sim2 is defined as a ratio that can be unstable when the denominator is small and appears weakly discriminative (values clustered near 1), reducing interpretability and sensitivity; robustness analyses or alternative bounded/contrastive measures are not presented.
+- Reporting inconsistencies undermining reproducibility: discrepancies in the number of users (e.g., 91 vs 83), inconsistent model naming/sizes (e.g., CogAgent-9B vs 7B), and non-unified action terminology (e.g., terminate/finish/finished) complicate replication and clarity. Anomalies such as a validation split showing zero categories are unexplained.
+- Potential artifacts from post-processing: action “repairs” using an MLLM+OCR pipeline are mentioned but not quantified, and their prevalence or impact on downstream metrics is not audited.
+- External validity concerns: all users appear to be from a single geographic region, limiting generalization across locales and app ecosystems; no cross-region or cross-app ecosystem validation is provided.
+- Metric calibration and sensitivity: the choice and calibration of Sim1/SR1 and Sim2/Step Ratio are not supported by sensitivity analyses or ablations that would establish reliability across varying task conditions.
+- Missing ablations on input contributions: there is no systematic study quantifying the relative importance of different context signals (profile, time, scenario, history, screenshots) for proactive suggestion, which would inform model and metric design.
+- Minor presentational issues: some figures and text appear to use different normalizations or nomenclatures, and terminology/model-version inconsistencies recur across sections, indicating the need for editorial clean-up.

@@ -1,0 +1,125 @@
+# Global Summary
+- Problem: Goal-Conditioned Behavior Foundation Models (GC-BFMs) like MaskedMimic can generate robust, human-like motions from goal tokens but require careful prompt engineering for specific tasks and struggle with out-of-distribution constraints.
+- Core approach: Task Tokens—a task-specific encoder trained with reinforcement learning (PPO) to map task observations to an additional token (a 512-D embedding) that conditions a frozen GC-BFM. Users can also provide optional prior tokens (e.g., joint or text goals). Gradients flow through the frozen BFM to train only the task encoder.
+- Evaluation scope: Five humanoid control tasks in Isaac Gym with an SMPL humanoid (69 DoF): Reach, Direction, Steering, Strike, and Long Jump. Baselines: Pure RL (PPO), MaskedMimic Fine-Tune, MaskedMimic (Joint Conditioning only), PULSE, AMP. Metrics: success rate (mean ± std over 5 seeds), convergence steps, parameter counts, OOD robustness (gravity/friction), and human-likeness via a user study (~96 participants).
+- Key quantitative findings:
+  - Success rates (Task Tokens): Reach 94.88 ± 1.99%, Direction 99.26 ± 0.79%, Steering 88.69 ± 4.04%, Long Jump 99.75 ± 0.57%, Strike 76.61 ± 3.49%.
+  - Strike task: PULSE 83.18 ± 2.67%, MaskedMimic Fine-Tune 83.07 ± 5.71%, and PPO 81.36 ± 1.41% outperform Task Tokens (76.61 ± 3.49%).
+  - Sample efficiency: Converges on Strike in ~50M steps vs PULSE ~300M steps.
+  - Parameter efficiency: ~200k parameters per task encoder vs PULSE 9.3M and MaskedMimic Fine-Tune 25M (×46.5 and ×125 larger).
+  - OOD robustness: Improved success under friction and gravity perturbations; authors note “order of magnitude” gains at friction ×0.4 and gravity ×1.5 for Steering (figure-based evidence).
+  - Human study (win rate = % times Task Tokens deemed more human-like): vs MaskedMimic F.T. 99.48% (Direction), 90.40% (Steering), 84.57% (Reach), 85.37% (Strike), 94.26% (Long Jump); vs PPO 99.29%, 92.57%, 88.62%, 81.98%, 93.82%, respectively. PULSE outperforms Task Tokens in human-likeness (Task Tokens win rates: 14.80%, 46.44%, 36.28%, 24.19%, 39.13%).
+- Training budget: 1024 parallel environments, 4000 epochs, 120M frames (Task Tokens and PULSE), with performance reported over 5 seeds.
+- Explicit caveats: Success depends on the quality of the underlying BFM; current results are limited to simulated environments.
+
+# Abstract
+- Introduces Task Tokens: a reinforcement-learned task encoder that outputs task-specific tokens to condition a frozen behavior foundation model (BFM), enabling adaptation to specific tasks while retaining the model’s generality.
+- Claims the method balances reward design with prompt engineering by injecting user-defined priors and learned tokens.
+- Demonstrates effectiveness across multiple tasks, including out-of-distribution scenarios, and compatibility with other prompting modalities.
+- No quantitative results provided in the abstract.
+
+# Introduction
+- Focus: Goal-Conditioned BFMs (GC-BFMs) such as Masked Trajectory Models and MaskedMimic, which use transformer architectures and goal tokens (e.g., “follow a path,” “reach with right hand”).
+- Problem: Precise goal specifications (prompts) are hard to craft for complex tasks spanning multiple objectives (e.g., approach vs striking motion); prompt engineering can be insufficient.
+- Proposal: Task Tokens—learn supplementary goal tokens via a Task Encoder trained with RL; the BFM remains frozen to preserve motion priors while the learned tokens optimize task-specific rewards.
+- Claims: Rapid convergence, high success rates, and superior sample efficiency versus hierarchical RL methods, with fewer learned parameters. Maintains human-like motion and generalizes across environmental variations (friction, gravity).
+
+# Related Work
+- Humanoid control through imitation learning and physics-based simulation; sim-to-real in robotics. Prior works include DeepMimic (2018), AMP (2021), ASE (2022), CALM (2023), and others.
+- BFMs and representations: PSM (2024), FB (2021) target stationary distributions; ASE (2022) and PULSE (2024a) compress demonstrations into latent skills and use RL for control.
+- GC-BFMs (e.g., Decision Transformer; Masked Trajectory Models; MaskedMimic) map goals directly to actions and generalize to new tasks via inpainting-like mechanisms but struggle with OOD constraints.
+- Task Tokens are presented as a mechanism to inject task-specific optimization into GC-BFMs while maintaining natural motion.
+
+# Preliminaries
+- RL setup: MDP M = (S, A, P, R, γ) with objective to maximize expected discounted cumulative reward; policy π(a|s).
+- MaskedMimic: A unified GC-BFM trained via online distillation (DAgger) with a transformer that inpaints masked future-goal tokens. Supports multimodal goal tokens (future joint positions, text commands, objects). When trained on large human mocap datasets, it generalizes to unseen objectives while producing natural motions.
+- Rationale: MaskedMimic’s tokenized goal interface makes it suitable for adding Task Tokens.
+
+# Method
+- Overall: Integrate a learned Task Token into the GC-BFM input sequence alongside optional user Prior Tokens (e.g., text/joint goals) and State Tokens. The BFM is frozen; only the Task Encoder is trained.
+- Task Tokens:
+  - Transformer compatibility allows appending new tokens without architectural changes.
+  - The Task Token is a specialized “word” in the input token “sentence” to steer behavior toward task objectives while preserving motion priors.
+- Task Encoder:
+  - Inputs: task goal observation g_t in an egocentric frame; includes proprioceptive info to align with MaskedMimic’s future-pose goals.
+  - Example (Steering): target movement direction ∈ R^2, facing direction ∈ R^2, desired speed ∈ R → g_t ∈ R^5.
+  - Architecture: feed-forward MLP outputting a 512-D token τ_t ∈ R^512, concatenated with other tokens for the BFM input.
+- Training:
+  - Use PPO to optimize the Task Encoder with respect to task-specific rewards and the BFM’s action probabilities.
+  - Gradients flow through the frozen GC-BFM to the Task Encoder; BFM parameters remain unchanged.
+
+# Experiments
+- Setup:
+  - Simulator: Isaac Gym. Agent: SMPL humanoid with 69 DoF.
+  - Tasks: Reach, Direction, Steering, Strike, Long Jump (SMPL-Olympics-inspired).
+  - Optional joint conditioning (J.C.) used for Reach, Direction, Steering; J.C. not available for Long Jump and Strike.
+  - Baselines: Pure RL (PPO), MaskedMimic Fine-Tune (optimize all parameters), MaskedMimic (J.C. only), PULSE, AMP.
+  - Parameter budget: Task Tokens ~200k parameters per task; PULSE 9.3M; MaskedMimic Fine-Tune 25M.
+  - Training: 1024 environments in parallel for 4000 epochs, totaling 120M frames; PULSE trained for 120M frames on 128 environments. Report mean ± std success over 5 seeds.
+- Task adaptation (Table 1 success rates, %):
+  - Task Tokens: Reach 94.88 ± 1.99; Direction 99.26 ± 0.79; Steering 88.69 ± 4.04; Long Jump 99.75 ± 0.57; Strike 76.61 ± 3.49.
+  - MaskedMimic (J.C. only): Reach 24.77; Direction 2.19; Steering 3.83; Long Jump —; Strike —.
+  - MaskedMimic Fine-Tune: Reach 93.70 ± 4.59; Direction 99.10 ± 1.29; Steering 87.44 ± 6.79; Long Jump 47.36 ± 54.78; Strike 83.07 ± 5.71.
+  - PULSE: Reach 83.96 ± 2.20; Direction 97.60 ± 0.62; Steering 40.72 ± 7.64; Long Jump 99.37 ± 1.40; Strike 83.18 ± 2.67.
+  - AMP: Reach 57.14 ± 4.80; Direction 5.14 ± 0.68; Steering 4.28 ± 1.42; Long Jump 76.59 ± 43.42; Strike 52.21 ± 47.58.
+  - PPO: Reach 89.90 ± 3.25; Direction 97.74 ± 1.40; Steering 32.64 ± 40.21; Long Jump 61.91 ± 52.26; Strike 81.36 ± 1.41.
+  - Convergence (Strike; Figure 3): Task Tokens ~50M steps; PULSE ~300M steps (success rate axis shown up to 0.8; steps marked 0–350M).
+  - Parameter efficiency factors: Task Tokens vs PULSE ×46.5 smaller; vs MaskedMimic Fine-Tune ×125 smaller.
+- OOD generalization (Figure 4):
+  - Steering task with friction and gravity perturbations. Authors report improved robustness using Task Tokens (with/without J.C.), including an “order of magnitude” higher success at friction ×0.4 and gravity ×1.5. Exact success rates not specified in text.
+- Human study (Table 2; ~96 participants; three Google Forms with 40 questions each; 8 questions per task; Task Tokens present in every triplet; joint conditioning used when applicable):
+  - Task Tokens win rate vs alternatives (Direction | Steering | Reach | Strike | Long Jump):
+    - MaskedMimic (J.C. only): 95.45% | 74.74% | 52.51% | — | —.
+    - MaskedMimic F.T.: 99.48% | 90.40% | 84.57% | 85.37% | 94.26%.
+    - MaskedMimic F.T. + J.C.: 96.09% | 89.26% | 81.99% | — | —.
+    - PULSE: 14.80% | 46.44% | 36.28% | 24.19% | 39.13%.
+    - AMP: 92.38% | 83.75% | 70.09% | 67.88% | 96.17%.
+    - PPO: 99.29% | 92.57% | 88.62% | 81.98% | 93.82%.
+  - Authors note PULSE scores higher than Task Tokens in human-likeness despite Task Tokens’ faster convergence and stronger task success on most tasks.
+- Multi-modal prompting (Figures 5–6):
+  - Direction: Combining Task Tokens with head height/orientation priors eliminates backward walking, yielding upright forward locomotion.
+  - Strike: Combining an orientation prior (face the target) and a text goal “a person performs a kick” encourages a kick-based strike instead of emergent backward “whirlwind” motions.
+- Reporting: Mean ± std over 5 seeds. Success definitions per task in Appendix A. Training/evaluation termination rules differ (results may differ).
+
+# Conclusion
+- Summary: Task Tokens augment GC-BFMs with a learned task-specific token, trained via RL, while freezing the BFM. This hybrid approach blends user priors and reward-driven optimization.
+- Findings: Rapid convergence, high success rates across tasks, strong OOD robustness, and human-like motion quality per user study; parameter-efficient adaptation (~200k parameters).
+- Limitations: Depends on the underlying BFM’s quality and is currently restricted to simulated environments.
+
+# References
+- Citations include foundational works in GC-BFMs and RL (Decision Transformer, Masked Trajectory Models, MaskedMimic, PPO, DAgger), motion control (DeepMimic, AMP, ASE, PULSE), humanoid control and simulation (SMPL, Isaac Gym), and related representation methods (PSM, FB). Full bibliographic entries are listed in the manuscript.
+
+# Appendix
+- Environments and success metrics:
+  - Control frequency: controller 30 Hz; simulation 120 Hz.
+  - Direction success: speed along target direction within 20% of target speed during the measurement period.
+  - Steering success: speed within 20% and facing direction deviation ≤ 45° (sum over period).
+  - Reach success: right-hand position within 20 cm of target.
+  - Strike success: target knocked down to its side and not deviating by more than ~78°.
+  - Long Jump success: distance > 1.5 meters after a 20 m run-up; must not touch ground after crossing jump start line.
+- Training/evaluation details:
+  - 1024 parallel environments, 4000 epochs, 120M frames (Task Tokens); PULSE also 120M frames but with 128 environments in parallel.
+  - Task Encoder: MLP [512, 512, 512]; critic MLP [1024, 1024, 1024].
+  - Inputs concatenation: added current head and pelvis positions to Task Encoder inputs (noted to slightly improve human-likeness).
+  - Metrics: mean ± std success over 5 seeds; each seed corresponds to the last checkpoint. Training and evaluation use different termination rules.
+- Ablations (Table 3: algorithmic scheme):
+  - Task Tokens (ours): Reach 95.37 ± 1.80; Direction 96.89 ± 4.33; Steering 83.66 ± 5.66; Long Jump 99.75 ± 0.57; Strike 76.61 ± 3.49.
+  - Task Tokens (ours) + J.C.: Reach 94.88 ± 1.99; Direction 99.26 ± 0.79; Steering 88.69 ± 4.04.
+  - MaskedMimic (J.C. only): Reach 24.77; Direction 2.19; Steering 3.83.
+  - MaskedMimic F.T.: Reach 93.70 ± 4.59; Direction 99.10 ± 1.29; Steering 87.44 ± 6.79; Long Jump 47.36 ± 54.78; Strike 83.07 ± 5.71.
+  - MaskedMimic F.T. + J.C.: Reach 92.88 ± 3.42; Direction 98.86 ± 0.32; Steering 96.41 ± 4.94.
+- Ablations (Table 4: Task Encoder architecture; Steering success rate ± std):
+  - With J.C., Bigger MLP=True, Using Current Pose=True: 87.77 ± 7.14.
+  - With J.C., Bigger MLP=True, Using Current Pose=False: 87.58 ± 7.02.
+  - With J.C., Bigger MLP=False, Using Current Pose=False: 86.88 ± 6.65.
+  - Without J.C., Bigger MLP=False, Using Current Pose=False: 84.28 ± 7.72.
+  - Without J.C., Bigger MLP=True, Using Current Pose=False: 83.30 ± 10.06.
+  - With J.C., Bigger MLP=False, Using Current Pose=True: 79.47 ± 4.71.
+  - Without J.C., Bigger MLP=True, Using Current Pose=True: 78.59 ± 8.93.
+  - Without J.C., Bigger MLP=False, Using Current Pose=True: 66.31 ± 13.11.
+- Human study protocol:
+  - ~96 participants (three Google Forms: 20, 24, 52 participants).
+  - Each form: 40 questions; 8 per task; each question shows 3 videos (A/B/C) side-by-side; Task Tokens appears in every triplet.
+  - Joint conditioning used when applicable (Direction, Steering, Reach).
+  - Win rate computed as (# Task Tokens chosen) / (# Task Tokens chosen + # Algorithm A chosen).
+- Any additional implementation, dataset licensing, or compute hardware specifics: Not specified.

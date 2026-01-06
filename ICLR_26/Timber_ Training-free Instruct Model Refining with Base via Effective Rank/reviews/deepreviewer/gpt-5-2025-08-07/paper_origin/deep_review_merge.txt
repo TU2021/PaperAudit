@@ -1,0 +1,21 @@
+Summary
+The paper investigates whether post-training (instruction tuning) is “superficial” at the weight level by comparing effective ranks (eRank) of linear layers in paired Base and Instruct LLMs (e.g., Llama and Qwen). It reports near-identical eRanks across pairs, suggesting post-training preserves representational dimensionality. Building on this, the authors propose Timber, a training-free refinement that operates on the per-layer weight delta WΔ = WI − WB: compute the SVD of WΔ, set a threshold K using eRank(WΔ), and either zero the tail singular values (Timber-L) or attenuate them by a factor λ ∈ (0,1) (Timber). The intent is to dampen lower-energy directions introduced by post-training while retaining high-energy changes, thereby improving exploration without sacrificing exploitation. Extensive experiments across multiple model families and sizes, including MoE, show consistent though modest gains over Instruct on average benchmarks and larger improvements in Pass@k metrics. Robustness sweeps over λ, comparisons against truncated SVD and simple model merging, and module ablations further contextualize performance. The paper positions Timber as a lightweight, broadly applicable refinement that enhances sampling diversity and mean accuracy without additional training.
+
+Strengths
+- Clear problem framing of the exploitation–exploration trade-off introduced by post-training, with empirical evidence via Pass@k curves.
+- Simple, training-free method applicable across model families and sizes, including MoE variants.
+- Conceptually coherent use of eRank to set an adaptive spectral threshold for WΔ, and attenuation of the tail rather than pure truncation.
+- Consistent empirical gains across benchmarks, with stronger improvements in exploration metrics (Pass@k), and robustness to λ choices demonstrated by sweeps.
+- Comparisons to reasonable baselines (truncated SVD variants, simple model merge) and module-level ablations that clarify where improvements arise.
+- Clear algorithmic motivation and explicit mathematical formulation; the unbiased Pass@k estimator is appropriate.
+
+Weaknesses
+- Central evidentiary issue: Figure 1 reports implausibly large eRank values (e.g., multi-million) for certain layers, contradicting the formal bound that eRank ≤ min(m,n). This discrepancy undermines the weight-level superficiality claim unless corrected and reconciled.
+- Ambiguity in singular-value ordering: Equations define singular values in “non-decreasing” order while “Top-K preserve” suggests keeping the largest singular values. This inconsistency risks mis-implementation and should be clarified.
+- The inference that similar eRank implies preserved singular subspaces is not substantiated; eRank equality alone does not guarantee subspace alignment. Absent analyses of principal angles or subspace overlap, the superficiality conclusion remains suggestive rather than demonstrated.
+- Hyperparameter selection for λ appears tuned on a single task, raising potential selection bias. While robustness plots mitigate this concern, broader cross-task validation would strengthen the claim.
+- Computational cost and scalability of performing full SVD across all linear layers in large models are not quantified; practical deployment guidance (runtime, memory footprint, approximations such as randomized SVD) is lacking.
+- Limited analysis of mechanisms beyond the heuristic: there are no diversity metrics or deeper diagnostics connecting tail attenuation to exploration gains, and alternatives (e.g., spectrum shaping directly on WI or adaptive layer-wise merge coefficients) are not fully explored.
+- Reproducibility and clarity gaps: absence of precise pseudo-code and per-layer operational details (including singular value sorting and indexing) may hinder replication; some figure/caption choices obscure what is plotted (e.g., Base vs Instruct paired differences).
+- Safety/alignment impacts are not evaluated beyond IFEval; potential effects on helpfulness, harmlessness, toxicity, or calibration are unaddressed.
+- Stability across seeds and decoding configurations, and performance under deterministic decoding or smaller sampling budgets, are not thoroughly assessed.

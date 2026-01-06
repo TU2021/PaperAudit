@@ -1,0 +1,185 @@
+Summary
+The paper introduces LoCoT2V-Bench, a benchmark tailored to evaluating long-form, complex text-to-video (T2V) generation. It builds a 240-sample prompt suite (18 themes) from real-world YouTube videos, uses VLM/LLMs to synthesize rich, multi-event prompts, and proposes a five-dimension evaluation: static quality (aesthetic, technical), text–video alignment (overall and event-level), temporal quality (motion, flicker, transitions, consistency), content clarity (theme, logic, completeness, consistency), and a new Human Expectation Realization Degree (HERD) for high-level attributes (emotional response, narrative flow, character development, etc.). Nine LVG baselines are assessed, revealing strong frame-level quality but weaknesses in event alignment, long-term temporal coherence, and high-level narrative adherence (Tables 2–4; Sec. 4.1).
+
+Soundness
+- Prompt construction is grounded in real-world videos and refined via a self-refine LLM loop with manual corrections (Sec. 3.1), which is reasonable and scalable.  
+- The evaluation methodology mixes established metrics (e.g., DOVER++ for technical quality, VBench metrics, optical-flow warping error, semantic consistency) with novel components. The event-level alignment formulation using Hungarian matching and inversion penalties is well-defined (Sec. 3.2.2, Eq. 1), logically connecting fidelity and order.  
+- Temporal quality is comprehensive (Sec. 3.2.3), and transition smoothness is formalized with scene detection and multi-cue similarity/variance (Appendix B.6).  
+- HERD is an interesting polarity-aware yes/no framework (Sec. 3.2.5; Appendix B.8–C.6) intended to quantify abstract expectations.  
+- However, heavy reliance on MLLMs in both prompt creation and multiple evaluation steps (OA description generation, EA extraction, content clarity scoring, HERD Q&A) introduces potential evaluator bias, domain drift, and model-version sensitivity. Some components lack exact parameter choices (e.g., α weights, b/c in B.6; embedding model for semantic similarity in OA; event segmentation thresholds), limiting replicability. Correlation analyses use only three representative methods (Table 5), which narrows statistical generality (Sec. 4.3–4.5).
+
+Presentation
+The paper is clearly structured, with distinct sections for construction and metric suites (Sec. 3.1–3.2) and extensive numerical tables (Tables 1–4) and diagrams (Fig. 1, Figs. 3–9). Appendices provide methodological detail (B.5–B.8) and prompt templates (C.*). Minor inconsistencies exist (e.g., “HERO” vs. HERD in B.10; “HPSV2” in case figures, Fig. 10–12). Precise hyperparameters and model versions are sometimes omitted, and the normalization decisions (e.g., percentages across heterogeneous metrics) could be better justified. Case studies (Appendix E) are helpful.
+
+Contribution
+The benchmark’s key novelty lies in (i) using complex, long prompts grounded in real videos (Table 1 shows highest average length and high complexity), and (ii) introducing an event-level alignment score combining semantic fidelity and order, transition smoothness, event-level temporal consistency (intra-/inter-, subject/background), and a polarity-aware HERD targeting high-level narrative/thematic attributes. The comprehensive evaluation of nine LVG systems highlights critical gaps in long-range coherence, inter-event consistency, and narrative flow (Sec. 4.1; Tables 2–4), providing actionable directions for LVG. While prior works benchmark short clips or simpler prompts, this work advances the space by covering long, multi-scene, multi-event generation under complex control.
+
+Strengths
+- Realistic and diverse prompt suite with clear complexity advantages over prior benchmarks (Table 1; Fig. 4–5).  
+- Well-motivated event-level alignment with temporal order penalty (Sec. 3.2.2, Eq. 1).  
+- Rich temporal quality metrics, including novel transition smoothness and event-level consistency (Sec. 3.2.3; Appendix B.6–B.7).  
+- HERD introduces polarity-aware binary evaluation for abstract attributes (Sec. 3.2.5; Appendix B.8–C.6).  
+- Broad empirical coverage of nine open-source LVG methods; clear findings about strengths/weaknesses (Tables 2–4; Sec. 4.1).  
+- Ethical and reproducibility statements, with partial data/code availability (Sec. 6–7).
+
+Weaknesses
+- Extensive dependence on MLLMs for prompt generation and multiple evaluation dimensions (OA, EA, content clarity, HERD) risks evaluator bias and version drift; robustness across evaluators/models is not validated (Sec. 3.1; 3.2.2–3.2.5).  
+- Some implementation specifics are under-specified (e.g., text embedding model, α weights and scaling constants in B.6; event segmentation criteria in B.7), reducing reproducibility.  
+- Aggregation/normalization scheme across heterogeneous sub-metrics is only briefly described; relative weights and calibration are unclear (Tables 2–4; Sec. 3.2).  
+- Statistical analyses use limited subsets (Table 5 based on three methods), potentially overstating generality (Sec. 4.3–4.5).  
+- Benchmark size (240 prompts) is moderate; lack of human validation or inter-rater studies for HERD and content clarity to ground LLM judgments.  
+- Length control and generation duration comparability across models are not fully reported, which could affect temporal metrics (Sec. 3.2.3; Appendix B.1).
+
+Questions
+- Can the authors specify the exact text embedding model and similarity function used for OA (Sec. 3.2.2), and report ablations with alternative encoders?  
+- What α weights, window size k, and scaling constants (b, c) were used for transition smoothness (Appendix B.6), and how sensitive are results to them?  
+- How are sub-dimensions weighted when forming each major dimension’s average in Tables 2–4? Any learned/calibrated weighting or human-derived scaling?  
+- Have the authors validated HERD and content clarity scores against human annotators (e.g., correlation with MOS) to quantify LLM bias and reliability (Sec. 3.2.4–3.2.5)?  
+- Do models generate comparable video lengths for evaluation? If lengths vary, how are metrics normalized to avoid bias (Sec. 3.2.3; Appendix B.1)?  
+- For event-level consistency, how are failure cases handled when prompted subjects/events do not appear (Sec. 4.4)? Are penalties applied consistently across models?
+
+Rating
+- Overall (10): 8 — Substantive benchmark with novel event-level and high-level evaluation, strong empirical coverage, but MLLM dependence and some under-specified parameters temper replicability (Sec. 3.2.2–3.2.5; Tables 2–4; Appendix B.6–B.7).
+- Novelty (10): 8 — Complex prompt suite and HERD/event-level alignment are notable advances over prior benchmarks (Table 1; Sec. 3.2.2; 3.2.5).
+- Technical Quality (10): 7 — Sound formulations and comprehensive metrics, yet reliance on LLM evaluations and missing detail on some hyperparameters/encoders limit rigor (Sec. 3.2.2–3.2.5; Appendix B.6–B.7).
+- Clarity (10): 8 — Generally clear with thorough appendices and figures; minor nomenclature inconsistencies and parameter omissions remain (Fig. 1; Tables 2–4; Appendix B.10).
+- Confidence (5): 4 — High confidence based on careful reading of methods/appendices and cross-checking tables/figures, with some uncertainty due to unavailable full code and unspecified parameters (Sec. 7; Appendix B.6–B.7).
+
+---
+
+Summary
+LoCoT2V-Bench proposes a benchmark targeting long, complex T2V generation by constructing multi-event prompts from real-world videos and evaluating models across five dimensions, including a new HERD metric for abstract human expectations. Event-level alignment combines semantic fidelity and ordering (Hungarian matching with inversion penalty), temporal quality adds transition smoothness and event-level consistency, and content clarity uses MLLM-driven scoring. Nine LVG systems are compared, revealing substantial gaps in fine-grained alignment and high-level narrative coherence (Sec. 4.1; Tables 2–4).
+
+Soundness
+- The event-level alignment design is principled: extracting structured events from prompts and video descriptions, matching via Hungarian algorithm, and penalizing out-of-order sequences (Sec. 3.2.2, Eq. 1).  
+- The temporal suite covers both short- and long-term aspects and introduces transition smoothness with a multi-feature sequence variance (Appendix B.6), plus intra-/inter-event consistency anchored by segmentation (Appendix B.7).  
+- HERD’s polarity-aware binary scoring addresses common pitfalls in yes/no evaluation (Sec. 3.2.5).  
+- Still, the pipeline interweaves LLMs at nearly every stage (prompt generation, description, event extraction, content clarity, HERD), raising concerns about evaluator drift, circularity (prompts derived from videos; evaluations judged by related models), and sensitivity to model/version changes. Statistical analyses (Sec. 4.3–4.5) are informative but limited in scope (Table 5 uses three methods).
+
+Presentation
+The manuscript is well-organized with a clear method overview (Fig. 1) and detailed appendices (B.5–B.8, C.*). Tables and figures effectively summarize performance and correlations (Tables 1–4; Figs. 3, 7–9). Some labels are inconsistent (HERD/HERO; “HPSV2” in case panels), and exact hyperparameters and evaluator configurations (e.g., number of HERD questions, weights in transition smoothness) could be foregrounded in the main text for ease of reproduction.
+
+Contribution
+The work advances benchmarking for long video generation by: (i) adopting longer, more complex, multi-event prompts (Table 1); (ii) formalizing event-level prompt adherence with order penalties (Sec. 3.2.2); (iii) proposing transition smoothness and event-level consistency metrics (Appendix B.6–B.7); and (iv) introducing HERD as a polarity-aware evaluator of high-level narrative/thematic qualities (Sec. 3.2.5). The cross-model findings on weaknesses in inter-event coherence and narrative flow are valuable to the community (Sec. 4.1).
+
+Strengths
+- Real-world-sourced prompts with demonstrated higher length/complexity than prior work (Table 1; Fig. 4–5).  
+- Formal event-level alignment with temporal-order penalty (Sec. 3.2.2, Eq. 1).  
+- New transition smoothness metric and event-level temporal consistency definitions (Appendix B.6–B.7).  
+- HERD’s polarity-aware design reduces yes/no scoring bias (Sec. 3.2.5; Appendix B.8–C.6).  
+- Comprehensive comparative evaluation on nine methods with actionable insights (Tables 2–4; Sec. 4.1).
+
+Weaknesses
+- Strong dependency on specific MLLMs across multiple evaluation stages; robustness to choice/version not evaluated (Sec. 3.1; 3.2.2–3.2.5).  
+- Missing explicit reporting of some metric hyperparameters and encoders (e.g., OA similarity encoder; α, b, c in Appendix B.6), weakening reproducibility.  
+- Dimension aggregation and normalization to percentages lack a thorough justification and sensitivity study (Tables 2–4).  
+- Limited human validation for HERD/content clarity; no inter-annotator agreement or calibration against human MOS.  
+- Only three methods included in correlation analysis (Table 5), constraining general conclusions.  
+- Benchmark size (240 prompts) is moderate; duration normalization across generated videos is unclear (Sec. 3.2.3; Appendix B.1).
+
+Questions
+- What exact text embedding model was used for OA semantic similarity (Sec. 3.2.2)? How does OA change with alternative encoders?  
+- Can the authors report hyperparameters for transition smoothness (Appendix B.6) and provide sensitivity results?  
+- Are HERD and content clarity scores reproducible across different MLLMs/few-shot seeds? Any calibration to human ratings?  
+- How are major-dimension averages formed from sub-dimensions (equal weights or tuned)?  
+- Were generation lengths standardized across baselines? If not, how were length effects mitigated for temporal metrics?  
+- Could the authors provide an ablation where prompts are human-authored to test the dependency on MLLM-generated prompt semantics?
+
+Rating
+- Overall (10): 7 — Strong benchmark idea with novel high-level metrics, but heavy LLM dependence and some reproducibility gaps reduce confidence (Sec. 3.2.2–3.2.5; Appendix B.6–B.7; Tables 2–4).
+- Novelty (10): 8 — Event-level alignment + HERD + complex prompts represent meaningful advances over prior suites (Table 1; Sec. 3.2.2; 3.2.5).
+- Technical Quality (10): 6 — Solid formulations but evaluator choice/params are under-specified; limited human validation and robustness checks (Sec. 3.2.4–3.2.5; Table 5).
+- Clarity (10): 8 — Clear structure and visuals; minor labeling inconsistencies and missing parameter specifics (Fig. 1; Tables 2–4; Appendix B.10).
+- Confidence (5): 4 — High confidence after detailed cross-referencing; tempered by pending full code release and unspecified parameters (Sec. 7; Appendix B.6).
+
+---
+
+Summary
+This work presents LoCoT2V-Bench, a benchmark for evaluating long-form, complex T2V outputs using a multi-dimensional framework. Prompts are extracted from real videos and refined via LLMs; evaluation covers static quality, text–video alignment (overall + event-level), temporal quality (including transition smoothness and event-level consistency), content clarity, and the new HERD for abstract expectations. Results across nine LVG systems highlight strengths in frame quality yet deficiencies in fine-grained alignment, long-term coherence, and narrative flow (Sec. 4.1; Tables 2–4).
+
+Soundness
+- The event-level design and matching are principled (Sec. 3.2.2, Eq. 1) and integrate temporal ordering through inversion penalties.  
+- Temporal metrics are thorough, extending VBench and EvalCrafter with transition smoothness (Appendix B.6) and intra-/inter-event consistency (Appendix B.7).  
+- HERD’s polarity-aware Q&A framework explicitly addresses yes/no scoring biases (Sec. 3.2.5).  
+- Nonetheless, MLLM-driven steps (prompt generation, description, event extraction, content clarity, HERD) make the pipeline sensitive to evaluator choice and seed/version. The paper does not provide robustness checks (e.g., swapping Qwen2.5-VL for InternVL3; varying seeds), and some hyperparameters/weights are not fully specified. Correlation analyses use limited models (Table 5), and aggregation to percentages lacks transparent weighting justification.
+
+Presentation
+The manuscript communicates ideas clearly, supported by overview schematics (Fig. 1), tables (Tables 1–4), and appendices with equations and prompt templates (Appendix B–C). Minor typos/inconsistencies exist (HERD/HERO; “HPSV2” in case panels), and some parameter details are relegated to appendices without numeric settings. The case studies (Appendix E) improve interpretability.
+
+Contribution
+The benchmark significantly elevates evaluation for long video generation by: crafting extended, complex prompts from real-world content (Table 1); formalizing event-level alignment with order penalties (Sec. 3.2.2); introducing transition smoothness and event-level consistency (Appendix B.6–B.7); and proposing HERD to quantify high-level narrative/thematic attributes (Sec. 3.2.5). The comprehensive comparison offers clear guidance for future LVG research (Sec. 4.1).
+
+Strengths
+- Real-world grounding of prompts with demonstrated complexity (Table 1; Fig. 2, Fig. 4).  
+- Event-level alignment and temporal-order penalty are well-motivated (Sec. 3.2.2, Eq. 1).  
+- Novel transition smoothness and event-level temporal consistency definitions (Appendix B.6–B.7).  
+- HERD’s polarity-aware scoring for abstract dimensions (Sec. 3.2.5; Table 4).  
+- Broad model coverage and insightful analyses (Sec. 4.1–4.5; Tables 2–5).
+
+Weaknesses
+- Evaluation depends on LLMs across multiple stages; no robustness study across evaluators/models/seeds (Sec. 3.2.2–3.2.5).  
+- Missing concrete parameter values and weights for some metrics, and unclear aggregation/normalization rationale (Appendix B.6–B.7; Tables 2–4).  
+- Lack of human studies to validate HERD/content clarity; potential evaluator bias remains unquantified.  
+- Benchmark size is moderate, and generation-length comparability across baselines is not fully controlled or reported (Sec. 3.2.3; Appendix B.1).  
+- Correlation analyses are limited in model coverage (Table 5), restricting generality of conclusions.
+
+Questions
+- Will the authors release fixed evaluator configurations (model versions, prompts, seeds) to mitigate evaluator drift (Sec. 7)?  
+- What are the numeric α weights, window sizes, and scaling constants for transition smoothness (Appendix B.6)?  
+- Are major-dimension averages simple means across sub-dimensions (Tables 2–4), and has sensitivity to weighting been tested?  
+- Can HERD/content clarity be calibrated against human ratings to establish external validity?  
+- How are variable generation lengths handled for temporal metrics (e.g., clip segmentation beyond DOVER++)?
+
+Rating
+- Overall (10): 7 — Compelling benchmark with novel metrics; evaluator dependence and missing details limit immediate reproducibility (Sec. 3.2.2–3.2.5; Appendix B.6–B.7; Sec. 7).
+- Novelty (10): 8 — Strong novelty in complex prompts, event-level alignment, and HERD (Table 1; Sec. 3.2.2; 3.2.5).
+- Technical Quality (10): 6 — Good formulations but needing robustness checks and parameter disclosure; limited human validation (Tables 2–4; Appendix B.6–B.7).
+- Clarity (10): 8 — Clear narrative and useful visuals; minor inconsistencies and parameter omissions (Fig. 1; B.10).
+- Confidence (5): 4 — Confident after deep reading and cross-referencing; some uncertainty due to evaluator dependence and pending full code release (Sec. 7).
+
+---
+
+Summary
+The paper presents LoCoT2V-Bench, a new benchmark for long and complex T2V generation using prompts mined from real videos and a five-pronged evaluation suite: static quality, text–video alignment (overall/event-level), temporal quality, content clarity, and HERD for abstract human-centric properties. Event-level alignment leverages structured extraction and bipartite matching with a sequence-order penalty (Sec. 3.2.2, Eq. 1). Temporal quality includes transition smoothness and event-level consistency (Appendix B.6–B.7). Results across nine baselines show strong static quality, but insufficient inter-event coherence and narrative flow (Sec. 4.1; Tables 2–4).
+
+Soundness
+- The evaluation’s mathematical formulations are coherent: EA’s multiplicative semantic/field-level similarity with order penalty (Sec. 3.2.2, Eq. 1) and transition smoothness based on multi-cue similarity sequences and normalized variance (Appendix B.6).  
+- Static quality normalization via RR-UB is sensible (Appendix B.5), and technical quality segmentation for long videos aligns with DOVER++’s training regime (Sec. 3.2.1).  
+- Content clarity MOS-like approach with repeated MLLM judgments (Sec. 3.2.4) aims to mitigate randomness.  
+- Risks: evaluator circularity (prompts derived via MLLMs; evaluation also via MLLMs), sensitivity to model/version/seed choices, and missing parameter disclosure (e.g., embedding model for OA; B.6 constants). The entanglement analysis (Sec. 4.4) is thoughtful, but more systematic controls could be added.
+
+Presentation
+Readable and well-structured; figures summarize the system and results effectively (Fig. 1; Fig. 7–9). Tables are comprehensive (Tables 1–4; Table 6). Some naming inconsistencies occur (HERD/HERO; “HPSV2” in case figures). Explicit evaluator details and weights could be surfaced earlier. The reproducibility link (Sec. 7) is positive but indicates pending code reorganization.
+
+Contribution
+The benchmark offers clear advances: complex, realistic prompts (Table 1), a formal event-level alignment metric, new temporal constructs (transition smoothness, event-level consistency), and HERD for narrative/thematic attributes. The multi-model evaluation and correlation analyses (Table 5; Sec. 4.3–4.5) provide insights into where LVG models fail, guiding research toward long-range coherence and higher-level storytelling.
+
+Strengths
+- Real-world prompts with the highest average length and strong complexity vs. prior work (Table 1).  
+- Rigorous event-level alignment with order penalties (Sec. 3.2.2).  
+- Temporal evaluation beyond standard metrics (transition smoothness, intra/inter-event consistency; Appendix B.6–B.7).  
+- HERD’s polarity-aware binary scoring for abstract properties (Sec. 3.2.5; Table 4).  
+- Extensive baseline comparison and thematic analysis (Sec. 4.1–4.3; Tables 2–3; Fig. 8; Table 6).
+
+Weaknesses
+- MLLM-heavy pipeline without robustness tests across evaluator models/seeds; potential evaluator bias and drift (Sec. 3.1; 3.2.2–3.2.5).  
+- Partial parameter/method omissions (OA embedding model; B.6 hyperparameters; event segmentation details) impede exact reproduction.  
+- No human-grounded validation for HERD/content clarity; reliance on LLM judgments may misalign with human perception.  
+- Aggregation/normalization across heterogeneous sub-metrics needs clearer justification and sensitivity analyses (Tables 2–4).  
+- Correlation analyses limited to three methods (Table 5); generality may be overstated.  
+- Dataset scale moderate; generation-length normalization across models remains unclear.
+
+Questions
+- Please specify the text encoder used for OA similarity and report sensitivity to alternative encoders (Sec. 3.2.2).  
+- What are the precise parameter values in transition smoothness (Appendix B.6), and how were α weights chosen?  
+- Are major-dimension averages weighted; if so, how? Have sensitivity analyses been conducted?  
+- Can you provide human studies (e.g., correlation with human MOS) for HERD and content clarity?  
+- How do you control for variable video lengths across baselines for temporal metrics (Sec. 3.2.3)?  
+- Would cross-evaluator robustness (e.g., swapping Qwen2.5-VL with InternVL3) materially change Tables 2–4?
+
+Rating
+- Overall (10): 8 — A well-designed, forward-looking benchmark with meaningful new metrics and clear empirical insights; evaluator dependence and missing details reduce replicability (Sec. 3.2.2–3.2.5; Tables 2–4; Appendix B.6).
+- Novelty (10): 9 — Strong novelty in event-level alignment, transition smoothness, event-level consistency, and HERD, plus complex real-world prompts (Table 1; Sec. 3.2.2–3.2.5).
+- Technical Quality (10): 7 — Methodologically sound but needs robustness/human validation and fuller parameter disclosure (Appendix B.6–B.7; Sec. 3.2.4–3.2.5).
+- Clarity (10): 8 — Clear exposition with rich visuals; minor inconsistencies and parameter omissions (Fig. 1; Tables 2–4; Appendix B.10).
+- Confidence (5): 4 — Substantial confidence from thorough reading and cross-checking; pending full code and evaluator specifics warrant caution (Sec. 7).

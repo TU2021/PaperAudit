@@ -1,0 +1,191 @@
+Summary
+The paper proposes Text-to-Talk (TtT), a unified audio–text model that combines autoregressive (AR) text generation with non-autoregressive (NAR) audio generation via absorbing discrete diffusion in a single Transformer. It argues text exhibits target–target dependencies requiring causal ordering, while audio generation is mostly source–target dependent and benefits from any-order conditioning. The authors formalize a hybrid factorization (Eq. 14), show the practical training objective is an upper bound on the negative log-likelihood of the joint scoring function (Eq. 20; Appendix A.1.1), introduce a modality-aware attention mask that is causal for text and bidirectional within audio spans (Fig. 2b), and propose three strategies (BANOM, PPM, SST) to reduce train–test discrepancies. They report improvements over AR-only and NAR-only baselines on Audio-QA and ASR benchmarks (Table 1).
+
+Soundness
+- The motivation that text has strong target–target dependencies while audio tokens should be conditioned any-order on source context is compelling and consistent with prior observations (Sec. 1; Fig. 1). Mapping absorbing diffusion’s λ-DCE to an any-order autoregressive objective (Eq. 5; Sec. 2.2) is sound and correctly cites Ou et al. (2024).
+- The partial-order factorization and order-marginalization over audio spans (Sec. 3.3; Eqs. 12–14) is well reasoned. The upper-bound proof (Eq. 17 leading to Eq. 20; Appendix A.1.1) uses Jensen appropriately to connect the trainable AO loss to the intractable order-marginalized conditional.
+- However, 𝑝̃θ is described as a “joint scoring function” (Sec. 3.3–3.4; Eq. 14) and may not be a properly normalized probability; calling the bound an “upper bound on NLL of the desired joint distribution” could be imprecise unless normalization is established. Clarifying whether 𝑝̃θ integrates to one over 𝒜m (or the full sequence) is needed.
+- The modality-aware attention mask (Fig. 2b; Sec. 3.4) is consistent with the intended dependencies. Implementation feasibility in standard decoder-only LLMs is reasonable via per-token masks.
+- The inference procedure (Sec. 3.5; Fig. 3a–b; Algorithm 1) is coherent, but the 200 diffusion steps and block length choices (Sec. 4.1.4) may be costly for “real-time” claims without latency measurements.
+
+Presentation
+- The paper is clearly structured: preliminaries (Sec. 2), method (Sec. 3), experiments (Sec. 4), with helpful equations (Eqs. 4–20) and step-by-step figures (Figs. 2–3).
+- Figures communicate key ideas well (Fig. 1 dependency asymmetry; Fig. 2 attention; Fig. 3 pipeline and reverse process).
+- Minor inconsistencies: Algorithm 1 is titled “for Autoregressive Audio Generation” though it is NAR masked diffusion; 𝑝̃θ alternates between “scoring” and “distribution” language; dataset naming differs (Audio-QA lists AE/LQ/TQA/WQ in Table 1 vs ReasoningQA in Appendix A.5.2).
+- Some important experimental details (baselines’ training parity, latency, speech quality metrics) are missing or deferred to appendices.
+
+Contribution
+- Conceptual: Formal identification of modality asymmetry (text target–target vs audio source–target) and a principled hybrid AR–NAR training objective with an upper-bound analysis (Sec. 3.3–3.4; Eq. 20).
+- Architectural: Single-Transformer, modality-aware attention enabling causal text and bidirectional audio-span conditioning (Fig. 2b).
+- Practical: Three training strategies (BANOM, PPM, SST) to reduce train–test mismatch and improve variable-length generation (Sec. 3.4).
+- Empirical: Reported gains on Audio-QA and ASR benchmarks at 1.5B and 3B scales (Table 1), plus ablations for the proposed strategies.
+
+Strengths
+- Clear theoretical grounding linking absorbing diffusion to any-order AR and a partial-order factorization (Sec. 2.2; Sec. 3.3; Eqs. 5, 12–17, 20).
+- Elegant attention design that matches modality-specific dependencies while keeping a unified backbone (Fig. 2b).
+- Practical strategies (BANOM, PPM, SST) with convincing ablation evidence (Table 1, ablation rows) showing large sensitivity, especially SST to 〈EOA〉 termination.
+- Empirical improvements over AR-only and NAR-only baselines across tasks and scales (Table 1, “Main Results”).
+
+Weaknesses
+- The diffusion baseline appears unusually weak (Table 1: WER > 200 on AISHELL-2 and low Audio-QA), raising fairness questions. Details on parity of training data, steps, and hyperparameters for AR vs NAR baselines are sparse (Sec. 4.1.3–4.1.4).
+- The evaluation pipeline uses ASR to transcribe generated speech and an LLM-as-a-Judge (Sec. 4.1.2; Appendix A.5.1), introducing compounding biases (ASR errors, judge variability). No MOS or prosody/naturalness metrics are provided; no latency or real-time factor measurements despite claims of streaming and low first-token latency (Sec. 3.5; Fig. 3a).
+- Potential train/test contamination: Training corpus includes AISHELL-1/2 and WenetSpeech (Table 2), while evaluation uses these datasets (Table 4). Leakage safeguards (train/dev/test splits, speaker overlap) are not described.
+- Normalization and probabilistic interpretation of 𝑝̃θ are unclear (Sec. 3.3–3.4). The “upper bound on NLL” language (Eq. 20) may need refinement to “upper bound on negative log joint score” unless normalization is proven.
+- Data formatting examples enforce fixed interleaving patterns (e.g., “generate 13 text tokens followed by 26 audio tokens”; Appendix A.6–A.7), which seems at odds with “content-aware variable-length generation”; SST helps, but this training prescription may constrain generality.
+- Real-time viability: 200 diffusion steps per block and 640-token span (Sec. 4.1.4) without throughput/latency benchmarks leaves performance claims unsubstantiated.
+
+Questions
+- Is 𝑝̃θ (Eq. 14) normalized over sequences, or should it be treated as a pseudo-likelihood? If not normalized, can the “upper bound on NLL” claim be restated and the implications for likelihood-based evaluation clarified?
+- What precise training and inference settings were used for the AR-only and NAR-only baselines (optimizer, steps, data balance, attention masks, diffusion steps, block size)? Can you add a parity table to ensure fairness?
+- How is data leakage prevented for AISHELL-1/2 and WenetSpeech given they appear in both training (Table 2) and evaluation (Table 4)? Please detail splits, speaker disjointness, and filtering.
+- Can you report speech quality metrics (MOS, CER/WER of the ASR transcription of generated speech independent of LLM-judge), and streaming latency (first-token latency, real-time factor) under the 200-step diffusion setting?
+- Why does Algorithm 1 label “Autoregressive Audio Generation” when the process is NAR masked diffusion? Is this a typo or is there an autoregressive component within blocks?
+- The LLM-as-a-Judge configuration (Sec. 4.1.2) uses Qwen3-235B-A30B; is it trained on similar data distributions? How do you mitigate judge bias? Can you provide pairwise comparison confidence intervals?
+
+Rating
+- Overall (10): 7 — Strong conceptual hybridization with clear math (Eqs. 12–20) and useful attention design (Fig. 2b), but evaluation fairness/metrics and normalization of 𝑝̃θ need clarification (Sec. 4.1.2; Table 1; Sec. 3.3).
+- Novelty (10): 8 — Clear identification of modality asymmetry (Sec. 1; Fig. 1) and unified AR–NAR training with upper-bound analysis (Eq. 20) and new training strategies (Sec. 3.4).
+- Technical Quality (10): 7 — Sound linkage to absorbing diffusion and AO-ARM (Sec. 2.2; Eq. 5) and partial-order factorization (Eq. 12), but probabilistic normalization and baseline parity are under-specified (Sec. 3.3; Table 1).
+- Clarity (10): 7 — Well-organized with helpful figures/equations (Figs. 1–3; Eqs. 4–20), minor inconsistencies (Algorithm 1 title; dataset naming; “distribution” vs “scoring”).
+- Confidence (5): 4 — Reasonable confidence based on detailed method/equations and ablations, but some experimental and theoretical clarifications are needed (Table 1; Sec. 3.3–3.4; Sec. 4.1.2).
+
+
+Summary
+This paper introduces TtT, a single-Transformer audio–text model that generates text autoregressively and audio tokens via absorbing discrete diffusion. It posits a modality asymmetry (text target–target vs audio source–target), formalizes a partial-order factorization (Sec. 3.3, Eq. 11–14), and proves the unified AR+AO training objective upper-bounds the negative log of an order-marginalized joint score (Eq. 20; Appendix A.1.1). An attention scheme imposes causal text decoding and bidirectional intra-audio-span modeling (Fig. 2b). Three strategies (BANOM, PPM, SST) target train–test mismatch. Experiments show improvements on Audio-QA and ASR (Table 1).
+
+Soundness
+- The theoretical mapping between absorbing diffusion and any-order AR (Eq. 5; Sec. 2.2) aligns with Ou et al. (2024). The partial-order (poset) formalization and order-marginalized conditional (Eqs. 12–13) are mathematically coherent, and the upper-bound derivation (Eqs. 17–20; Appendix A.1.1) logically applies Jensen’s inequality.
+- The attention mask implements causal dependencies for text and bidirectional conditioning within audio spans while keeping cross-span causality (Sec. 3.4; Fig. 2b). This is consistent with the poset assumptions.
+- The inference design (Sec. 3.5; Algorithm 1) is internally consistent; early termination at 〈EOA〉 supports variable-length generation (Appendix A.4–A.6). However, runtime feasibility with 200 diffusion steps per block (Sec. 4.1.4) is not empirically validated.
+- Potential theoretical gap: 𝑝̃θ is introduced as a “joint scoring function” (Eq. 14) from an order-marginalized product of conditionals; there is no explicit proof it is normalized. The stated “upper bound on NLL of the desired joint distribution” (Sec. 3.4; Eq. 20) should be qualified unless normalization is established.
+
+Presentation
+- Clear exposition with formal notation (Sec. 2–3) and useful diagrams (Figs. 1–3). The derivations are well localized (Appendix A.1.1).
+- Inconsistencies: Algorithm 1 title uses “Autoregressive Audio Generation” (Appendix A.5.1/A.60), likely a typo; dataset lists differ between main text and Appendix (Table 1 vs Table 4 naming). The paper alternates between “distribution” and “scoring function” for 𝑝̃θ.
+- Experimental setup lacks details for baseline parity (Sec. 4.1.3–4.1.4).
+
+Contribution
+- Provides a principled hybrid AR–NAR approach tailored to modality-specific dependencies, backed by a partial-order view and an upper-bound training objective (Sec. 3.3–3.4).
+- Operationalizes the idea in a single unified Transformer via attention masks (Fig. 2b) and offers pragmatic training strategies (BANOM, PPM, SST) with strong empirical ablations (Table 1).
+- Bridges theory (absorbing diffusion, AO-ARM equivalence) and system design for speech-in/speech-out LLMs.
+
+Strengths
+- Strong theoretical framing tying absorbing diffusion to any-order conditioning and poset-based factorization (Sec. 2.2; Sec. 3.3; Eqs. 5, 12–14).
+- Clean architectural integration with modality-aware attention (Fig. 2b).
+- Practical strategies substantively influence performance (Table 1 ablations, especially SST).
+- Clear empirical gains over AR/NAR baselines on both Audio-QA and ASR across scales (Table 1).
+
+Weaknesses
+- Probabilistic status of 𝑝̃θ remains unclear; the “NLL upper bound” phrasing (Eq. 20) risks overclaiming without normalization proof.
+- Baseline diffusion performance is extremely poor (Table 1), suggesting possible implementation or configuration mismatch; parity details are missing.
+- Evaluation pipeline relies on ASR+LLM-as-Judge (Sec. 4.1.2), potentially conflating TTS quality with ASR errors and judge bias; no MOS or latency metrics despite streaming claims (Sec. 3.5; Fig. 3a).
+- Training/evaluation overlap risks: AISHELL/WenetSpeech in both Table 2 and Table 4; leakage safeguards not documented.
+- Fixed interleaving patterns in training examples (Appendix A.6–A.7) may contradict “content-aware variable-length” claims; SST partly addresses but broader evidence is needed.
+
+Questions
+- Can you explicitly prove normalization of 𝑝̃θ (Eq. 14) or restate results as bounds on a joint score rather than likelihood?
+- What exact training recipe was used for “Qwen2.5-(AR)” and “Qwen2.5-(NAR)” baselines (steps, masks, diffusion parameters, data balance)? Please add a baseline parity table.
+- How do you ensure no train/test leakage for AISHELL/WenetSpeech? Provide split protocols and any filtering applied.
+- Please report streaming metrics (RTF, first-token latency), TTS quality (MOS), and robustness across diffusion step budgets (e.g., T=50/100/200).
+- Could you replace or complement LLM-as-Judge with objective speech metrics (e.g., CER of recognized answers, intelligibility scores) to reduce evaluation bias?
+- Is “Autoregressive Audio Generation” in Algorithm 1 a typo?
+
+Rating
+- Overall (10): 6 — Solid theory-method integration (Eqs. 12–20) and attention design (Fig. 2b), but probabilistic clarity and experimental parity/metrics need work (Table 1; Sec. 4.1.2–4.1.4).
+- Novelty (10): 7 — Hybrid AR–NAR with poset-based factorization and upper-bound training is a fresh synthesis (Sec. 3.3–3.4; Eq. 20).
+- Technical Quality (10): 6 — Sound derivations but normalization and baseline fairness are under-specified; evaluation pipeline introduces confounds (Sec. 3.3; Table 1; Sec. 4.1.2).
+- Clarity (10): 6 — Generally clear with some inconsistencies (Algorithm 1 title; “scoring” vs “distribution”; dataset naming) and missing experimental details.
+- Confidence (5): 4 — Good access to method and derivations, but lacking baseline parity and metrics reduces confidence in empirical conclusions.
+
+
+Summary
+The paper presents TtT, which unifies AR text generation with NAR audio diffusion in one Transformer. It motivates that text tokens require causal target–target dependencies, whereas audio tokens benefit from any-order conditioning on source text. The method formalizes a partial-order factorization, derives an upper bound training objective (Eq. 20), designs a modality-aware attention mask (Fig. 2b), and introduces BANOM, PPM, and SST to address train–test mismatch. Experiments at 1.5B and 3B scales show improvements over AR-only and NAR-only baselines on Audio-QA and ASR (Table 1), with ablations supporting each training strategy.
+
+Soundness
+- The theoretical connection between absorbing diffusion and any-order AR (Sec. 2.2; Eq. 5) is accurate. The partial-order factorization and order-marginalized likelihood (Eqs. 12–14) are well laid out, and the upper bound (Eq. 20) follows from Jensen’s inequality as shown in Appendix A.1.1.
+- The attention design (Fig. 2b) faithfully encodes causal dependencies for text and flexible intra-span conditioning for audio and should be implementable with standard attention masks.
+- Training strategies (Sec. 3.4) are reasonable interventions to reduce mismatch; ablation results (Table 1) give strong evidence of their utility, especially SST for 〈EOA〉 termination.
+- Concerns: The NAR baseline underperforms dramatically (Table 1), and aspects of the evaluation pipeline (Sec. 4.1.2) may confound results; additionally, the normalization of 𝑝̃θ is not demonstrated.
+
+Presentation
+- Clear and self-contained preliminaries (Sec. 2) and method (Sec. 3) with informative figures (Figs. 1–3) and equations (Eqs. 4–20).
+- Minor issues: Algorithm 1 title (“Autoregressive Audio Generation”) appears inconsistent; dataset naming across sections is not fully aligned (Table 1 vs Appendix A.5.2).
+- Experimental configuration details for baselines and latency metrics are thin (Sec. 4.1.3–4.1.4).
+
+Contribution
+- A principled hybridization of AR and NAR tailored to modality-specific dependencies and supported by an order-marginalization view and an upper-bound objective.
+- A unified attention mask enabling the hybrid regime in a single backbone.
+- Pragmatic training strategies with demonstrated impact via ablations.
+- Empirical performance gains across tasks and scales.
+
+Strengths
+- Strong theoretical framing and derivation (Sec. 3.3–3.4; Eq. 20; Appendix A.1.1).
+- Clean engineering of attention masks for modality-aware dependencies (Fig. 2b).
+- Substantial ablation evidence (Table 1) showing each proposed strategy matters.
+- Reported improvements on both Audio-QA and ASR (Table 1), particularly after multimodal pretraining (Sec. 4.4).
+
+Weaknesses
+- Evaluation pipeline depends on ASR transcription and an LLM judge (Sec. 4.1.2), which can bias Audio-QA outcomes; lack of MOS/naturalness, intelligibility, and latency measures weakens practical claims (Sec. 3.5; 4.1.4).
+- Baseline parity and NAR implementation details are insufficient; the extremely poor NAR baseline suggests configuration issues (Table 1).
+- Potential train/test leakage for AISHELL/WenetSpeech (Table 2 vs Table 4) is not addressed.
+- Probabilistic interpretation of 𝑝̃θ is ambiguous; the “NLL upper bound” phrasing may require qualification (Sec. 3.3–3.4).
+
+Questions
+- Can you add latency measurements (first-token latency, real-time factor) and speech quality metrics (MOS, intelligibility) to substantiate real-time streaming claims?
+- What measures prevent data leakage between training and evaluation for AISHELL/WenetSpeech? Please detail splits and filtering.
+- Could you provide a rigorous baseline parity table (training steps, masks, diffusion steps, guidance scales, block sizes) to address the NAR baseline’s weak performance?
+- Is 𝑝̃θ normalized? If not, can you adjust the theoretical claims to reflect bounds on a joint score rather than likelihood?
+- How sensitive are results to diffusion steps and block sizes (Sec. 4.1.4)? Please add an ablation on T and B.
+
+Rating
+- Overall (10): 5 — Interesting hybrid design with convincing theory (Eq. 20; Fig. 2b) but empirical evaluation and baselines need more rigor (Table 1; Sec. 4.1.2–4.1.4).
+- Novelty (10): 8 — The modality-aware hybrid AR–NAR framework and partial-order factorization are fresh and well motivated (Sec. 1; Sec. 3.3).
+- Technical Quality (10): 5 — Theory is solid, but experimental methodology (baseline parity, metrics, leakage controls) under-specified (Table 1; Sec. 4.1.2).
+- Clarity (10): 8 — Generally clear and well illustrated (Figs. 1–3; Eqs. 4–20) with minor inconsistencies.
+- Confidence (5): 3 — Good understanding of the method; limited confidence in empirical conclusions due to missing metrics and baseline details.
+
+
+Summary
+The authors propose a unified audio–text framework (TtT) that generates text autoregressively and audio via absorbing discrete diffusion in the same Transformer. They argue that text tokens require causal target–target conditioning, while audio tokens benefit from any-order conditioning on source text. They formalize a poset-based factorization and derive an upper-bound training objective (Eq. 20), implement a modality-aware attention mask (Fig. 2b), and introduce three training strategies (BANOM, PPM, SST). Experiments on Audio-QA and ASR show improvements over AR-only and NAR-only baselines, with ablations indicating the necessity of each strategy (Table 1).
+
+Soundness
+- The theoretical underpinnings (absorbing diffusion → AO-ARM equivalence; Eq. 5) and poset-based factorization (Eqs. 11–14) are well aligned with cited work. The use of Jensen’s inequality to show the upper bound (Eqs. 17–20; Appendix A.1.1) is correct.
+- The attention mask design (Fig. 2b; Sec. 3.4) faithfully enforces causal dependencies for text and intra-span bidirectional audio modeling; the approach is implementable in practice.
+- The inference strategy (Fig. 3; Algorithm 1) supports parallel audio token synthesis and early termination on 〈EOA〉, but performance claims should be substantiated with latency benchmarks given the 200 diffusion steps (Sec. 4.1.4).
+- Some theoretical language is loose: 𝑝̃θ is referred to as a “joint distribution” despite being defined via order-marginalized products (Eq. 14) without normalization proof.
+
+Presentation
+- The manuscript is easy to follow, with clear figures and equations. The derivations are placed in the Appendix (A.1.1) and referenced in the main text (Sec. 3.4).
+- Minor inconsistencies (Algorithm 1 title; dataset naming across sections; “scoring” vs “distribution” wording) are present but do not impede understanding.
+- Experimental details are generally provided, but baseline training parity, speech-quality metrics, and latency are missing.
+
+Contribution
+- Conceptual advance: explicit modality asymmetry and hybrid AR–NAR training in one backbone with a rigorous upper-bound objective (Eq. 20).
+- Practical systems contribution: attention mask that enforces different dependency patterns and training strategies to close train–test gaps.
+- Empirical: improvements across tasks and scales, and ablations validating proposed strategies (Table 1).
+
+Strengths
+- Strong conceptual framing of modality-specific dependencies (Sec. 1; Fig. 1).
+- Mathematically principled order-marginalization and upper-bound training (Sec. 3.3–3.4; Eq. 20).
+- Attention mask fits the hybrid objective and enables efficient training (Fig. 2b).
+- Ablations are thorough and demonstrate large impacts (Table 1; effect of SST/BANOM/PPM).
+
+Weaknesses
+- Baseline fairness concerns: NAR baseline is conspicuously weak (Table 1), suggesting configuration or training disparities; parity details are absent (Sec. 4.1.3–4.1.4).
+- Evaluation pipeline (ASR transcription + LLM judge; Sec. 4.1.2) can introduce ASR and judge biases; no MOS, intelligibility, or latency metrics.
+- Possible data leakage: training includes AISHELL/WenetSpeech (Table 2) and evaluation uses the same datasets (Table 4); leakage controls are unspecified.
+- The theoretical claim about “upper bound on NLL of the desired joint distribution” should be carefully phrased given 𝑝̃θ may not be normalized (Eq. 14).
+
+Questions
+- Please provide baseline parity details (diffusion steps, guidance, masks, data balance) for AR-only vs NAR-only to contextualize Table 1 results.
+- Can you report speech quality (MOS), intelligibility (CER), and latency (RTF, first-token latency) to substantiate real-time claims (Sec. 3.5; 4.1.4)?
+- How is train/test leakage prevented for AISHELL/WenetSpeech? Detail splits and filtering policies.
+- Is 𝑝̃θ normalized? If not, can you adjust the theoretical language around Eq. 20 to reflect an upper bound on a joint score?
+- The training data format prescribes fixed interleaving sizes (Appendix A.6–A.7); can you quantify how SST mitigates positional bias and demonstrate variable-length generation in controlled tests?
+
+Rating
+- Overall (10): 8 — Compelling and well-founded hybrid approach with strong ablations (Eq. 20; Fig. 2b; Table 1), tempered by evaluation/baseline clarity gaps.
+- Novelty (10): 9 — Innovative synthesis of AO-ARM diffusion with AR text under a poset-based factorization and unified attention (Sec. 3.3–3.4; Fig. 2b).
+- Technical Quality (10): 7 — Solid theory and design, but empirical methodology (baseline parity, metrics, leakage control) needs strengthening (Table 1; Sec. 4.1.2).
+- Clarity (10): 8 — Clear narrative with effective figures and equations, minor inconsistencies present (Algorithm 1; dataset naming).
+- Confidence (5): 4 — High confidence in method/theory; moderate in empirical claims pending additional metrics and fairness checks.

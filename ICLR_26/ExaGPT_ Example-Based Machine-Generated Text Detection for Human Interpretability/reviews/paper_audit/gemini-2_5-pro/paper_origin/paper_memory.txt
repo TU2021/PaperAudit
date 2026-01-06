@@ -1,0 +1,101 @@
+# Global Summary
+This paper introduces ExaGPT, an interpretable method for detecting LLM-generated text. The core problem it addresses is that existing detectors lack interpretability, which is crucial given the severe consequences of misclassification (e.g., in academia). ExaGPT's approach is designed to mimic the human process of verifying a text's origin by comparing it to known examples. It classifies a text by checking whether its constituent spans are more similar to spans in a datastore of human-written texts versus LLM-generated texts. The method uses a k-NN search on span embeddings and a dynamic programming algorithm to segment the text optimally. As evidence, it provides the retrieved similar spans for each segment of the input text. The evaluation was conducted on the M4 dataset across four domains (Wikipedia, Reddit, WikiHow, arXiv) and three generators (ChatGPT, GPT-4, Dolly-v2). A human evaluation found that ExaGPT's evidence was more interpretable than that of baselines (RoBERTa+SHAP, LR-GLTR, DNA-GPT), improving human judgment accuracy by up to 13.6%. Quantitatively, ExaGPT significantly outperforms these baselines, especially in practical scenarios, achieving up to +40.9 points higher accuracy at a fixed 1% false positive rate (FPR).
+
+# Abstract
+The paper argues that LLM-generated text detection requires interpretability to allow users to assess the reliability of a decision, especially to avoid grave mistakes like wrongly accusing students. Current interpretable detectors are not aligned with the human process of comparing a text to known human vs. machine examples. The paper proposes ExaGPT, an interpretable detection method that identifies a text's origin by checking if its spans are more similar to human-written or LLM-generated texts from a datastore. For each span in the target text, ExaGPT provides similar span examples as evidence. A human evaluation shows that this evidence is more effective for judging the correctness of a decision compared to existing methods. Experiments across four domains and three generators show that ExaGPT outperforms powerful detectors by up to +40.9 points in accuracy at a 1% false positive rate.
+
+# Introduction
+- The misuse of powerful LLMs for cheating or fake news has created a demand for LLM-generated text detectors.
+- While detectors exist, misclassifications can have severe consequences, such as writers losing jobs or students' academic dignity being ruined.
+- Perfect detectors are nearly impossible, so providing interpretable evidence for users to judge the reliability of results is crucial.
+- Existing interpretable methods (e.g., highlighting tokens, showing prediction shifts) are not aligned with the intuitive human process of comparing a text to known human vs. LLM examples by looking for similar spans (verbatim or semantic).
+- This paper introduces ExaGPT, a method based on this human decision-making process.
+- ExaGPT segments a text into spans and, for each span, provides similar examples from a datastore of human and LLM texts as evidence.
+- Span segmentation is optimized using dynamic programming to balance span length and its frequency (similarity) in the datastore.
+- Human evaluation confirms ExaGPT's evidence is more interpretable.
+- Experiments show ExaGPT outperforms prior detectors by up to +40.9 points accuracy at 1% FPR.
+
+# Method
+ExaGPT operates in two phases: Span Scoring and Span Selection.
+
+- **2.1 Span Scoring with k-NN Search:**
+    - For every n-gram span `x_{i:i+n}` in a target text `x`, the method retrieves the top-k most similar n-gram spans from a datastore containing both human and LLM texts.
+    - Retrieval is done via k-NN search on span embeddings based on cosine similarity.
+    - Three scores are calculated for each target span:
+        - **Length score (L):** The number of tokens, `n`.
+        - **Reliability score (R):** The mean cosine similarity with the k retrieved spans.
+        - **Prediction score (P):** The fraction of the k retrieved spans that are labeled as LLM-generated.
+
+- **2.2 Span Selection with a DP Algorithm:**
+    - The goal is to segment the target text `x` into a sequence of non-overlapping spans `T`.
+    - A dynamic programming algorithm (Algorithm 1) is used to find the optimal segmentation.
+    - The optimization maximizes a score `S` which is a weighted average of the normalized length score `L^{std}` and reliability score `R^{std}` across all selected spans.
+    - The score is `S = (∑ {α * L^{std}(t_h) + (1 − α) * R^{std}(t_h)}) / H`, where `α` is a hyperparameter balancing length and reliability.
+
+- **2.3 Overall Detection with Evidence:**
+    - The final classification for the entire text is based on the mean prediction score `P_overall` across the selected spans.
+    - The text is classified as LLM if `P_overall` is above a threshold `ε`, otherwise Human.
+    - The evidence provided to the user consists of the selected spans `t_h` along with their corresponding top-k retrieved similar spans from the datastore.
+
+# Experiments
+- **3.1 Overall Setup:**
+    - **Evaluation Measures:** Area Under Receiver Operating Characteristic curve (AUROC) and accuracy at a fixed 1% False Positive Rate (FPR).
+    - **Datasets:** The English subset of the M4 dataset. It includes texts from four domains (Wikipedia, Reddit, WikiHow, arXiv) and three generators (ChatGPT, GPT-4, Dolly-v2). Each combination has 2,000/500/500 pairs for train/validation/test splits.
+    - **Baselines:** RoBERTa with SHAP, LR-GLTR, and DNA-GPT. Baselines are trained on the same training split. DNA-GPT is configured with parameters (`γ`=0.7/0.5, `K`=10/5) reported as favorable in its original paper.
+    - **ExaGPT Settings:** The training split serves as the datastore. n-grams range from n=1 to 20. Spans are embedded using BERT-large (mean of 2nd layer hidden outputs). k=10 for k-NN search with FAISS. The hyperparameter `α` is tuned on the validation set.
+    - **Human Evaluation:** Four NLP-expert annotators judged the correctness of detector decisions based on the provided evidence. The metric is the accuracy of these human judgments. 96 samples were evaluated for each detector, balanced between correct and incorrect detections at a 1% FPR threshold.
+
+- **3.2 Results:**
+    - **Detection Interpretability (Table 1):** The accuracy of human judgments on detection correctness was highest for ExaGPT.
+        - ExaGPT: 61.5%
+        - LR-GLTR: 57.3%
+        - DNA-GPT: 53.1%
+        - RoBERTa: 47.9%
+        - ExaGPT outperforms the next best baseline by +4.2 points and the worst by +13.6 points. The paper suggests that providing semantically similar spans (not just overlaps like DNA-GPT) improves interpretability.
+    - **Detection Performance (Table 2):**
+        - ExaGPT consistently achieves performance on par with or better than baselines in AUROC and accuracy at 1% FPR.
+        - It shows massive improvements in accuracy at 1% FPR, outperforming baselines by up to +40.9 points.
+        - For ChatGPT, ExaGPT achieves an average accuracy of 96.2% vs. 90.4% for LR-GLTR and 59.1% for RoBERTa.
+        - For GPT-4, ExaGPT achieves an average accuracy of 96.2% vs. 87.6% for LR-GLTR and 55.3% for DNA-GPT.
+        - For Dolly-v2, ExaGPT achieves an average accuracy of 83.3% vs. 67.7% for LR-GLTR and 61.1% for RoBERTa.
+
+# Discussion
+- **4.1 What Makes ExaGPT Interpretable:**
+    - An analysis of 1,000 correct and 1,000 incorrect predictions shows that correct predictions by ExaGPT tend to contain more long spans (n ≥ 10) with higher reliability scores (Figure 4).
+    - This suggests that providing long, highly similar span examples helps users correctly judge the detection's reliability. Table 3 shows an example of retrieved spans that are lexically and semantically similar to a target span.
+
+- **4.2 Impact of α:**
+    - The hyperparameter `α` balances span length and reliability. Experiments show that higher `α` (prioritizing length) generally leads to better performance.
+    - However, the performance variation across different `α` values (0.0 to 1.0) is minor. For ChatGPT, the lowest AUROC is 98.5% and the lowest accuracy at 1% FPR is 93.4%, indicating ExaGPT is robust to the choice of `α`.
+
+- **4.3 Impact of the Datastore Size:**
+    - Detection performance generally improves with a larger datastore.
+    - Even with a small datastore of 500 pairs (down from 2,000), ExaGPT's performance remains strong. The accuracy at 1% FPR is at least 94.5% across four domains, which still outperforms all baselines from Table 2.
+
+- **7 Limitations:**
+    - **Inference Cost:** The method is computationally expensive, requiring a search through a vast number of spans. The experiments used four NVIDIA A6000 GPUs. The cost can be reduced by using a smaller datastore.
+    - **Bias in Human Judgments:** The human evaluation was conducted with four participants who are experts in NLP. The results on interpretability might not generalize to non-expert users.
+
+- **8 Ethics and Broader Impact:**
+    - Human subjects provided informed consent.
+    - The code and data, including human annotations, are released to promote transparency and reproducibility.
+
+# Related Work
+- **LLM-Generated Text Detection:** The paper categorizes prior work into three types: text watermarking, metrics-based methods (using log probabilities, token ranks, entropy, perplexity, curvature), and supervised classifiers.
+- **Interpretability of the Detection Results:** Previous work includes GLTR (color-highlighting tokens), using LIME/SHAP on classifiers, and DNA-GPT (showing n-gram overlaps with re-generated text). ExaGPT is positioned as being more aligned with the human decision-making process.
+- **Example Retrieval for Interpretability:** The paper notes that retrieving similar examples is a known technique for interpretability in other NLP tasks (e.g., machine translation, POS tagging). ExaGPT's novelty lies in applying this to LLM detection with a unique mechanism for span-based retrieval and segmentation via dynamic programming.
+
+# Conclusion
+- The paper introduced ExaGPT, an interpretable detector that mimics human verification by comparing text spans to a datastore of human and LLM examples.
+- It provides similar spans as evidence, which a human evaluation confirmed is more effective for judging detection correctness than prior methods.
+- ExaGPT also shows superior detection performance, particularly at a low (1%) false positive rate, making it practical for real-world scenarios.
+- Future work will explore ExaGPT's performance in cross-domain and cross-generator settings.
+
+# References
+This section lists the references cited in the paper.
+
+# Appendix
+- **A Detailed Configurations of Baselines:** Specifies the GLTR features used for the LR-GLTR baseline (top-k rank counts and probability ratios).
+- **B Detection Evidence of Baselines:** Provides visual examples and descriptions of the evidence generated by RoBERTa with SHAP (contribution scores), LR-GLTR (token rank highlighting), and DNA-GPT (n-gram overlaps).
+- **C Analysis Details:** Contains supplementary figures and tables showing the impact of `α` and datastore size on performance for all three generators (ChatGPT, GPT-4, Dolly-v2), confirming the trends discussed in the main paper.
+- **D Computational Budget:** States that experiments were run on two AMD EPYC 7453 CPUs and four NVIDIA A6000 GPUs, taking approximately 25 hours in total.

@@ -1,0 +1,51 @@
+### Summary
+
+The paper introduces **MCCE (Multi-LLM Collaborative Co-evolution)**, a hybrid framework designed for multi-objective discrete optimization problems. MCCE integrates a **frozen closed-source LLM** (for global exploration) with a **trainable lightweight LLM** (for local adaptation). The two models work together in a co-evolutionary loop, where the frozen model generates candidates and the trainable model refines them through **DPO (Direct Preference Optimization)**, with the system logging "breakthrough" trajectories to continuously improve the local model. The paper highlights the use of **similarity-based DPO** for stable training and demonstrates the framework's success in **multi-objective molecular design** and other combinatorial optimization tasks.
+
+---
+
+### Strengths
+
+1. **Innovative Hybrid Framework**:
+
+   * The combination of a **frozen global model** and a **trainable local model** is conceptually novel and shows strong practical potential in optimization tasks.
+
+2. **Effective Use of DPO**:
+
+   * The **similarity-based DPO** approach improves training stability and ensures high data efficiency by generating stable preference pairs. This is crucial for handling long-horizon tasks.
+
+3. **Strong Experimental Results**:
+
+   * MCCE consistently outperforms existing **single-model optimizers** and **co-evolution baselines** in **multi-objective drug design** and **NP-hard combinatorial optimization tasks** like **MOTSP** and **CVRP**.
+
+4. **Clear and Accessible Writing**:
+
+   * The paper is **well-written**, with **clear diagrams** and explanations, making the framework easy to understand. The authors have also ensured **full reproducibility** by releasing the code.
+
+5. **Cost and Efficiency**:
+
+   * MCCE proves to be **cost-effective** (about **$3.81 per 5,000-molecule run**) and **efficient** with a **runtime of 3 hours** on standard hardware.
+
+---
+
+### Weaknesses
+
+1. **Limited Baseline Comparison**:
+
+   * While the paper compares MCCE to existing models, it **lacks comparisons** to recent and relevant **LLM-based evolutionary algorithms** like **MoLLEO** and **ExLLM** under identical settings. A more comprehensive baseline comparison is necessary to firmly establish MCCE¡¯s superiority.
+
+2. **Domain-Specific Evaluation**:
+
+   * The paper focuses primarily on **molecular design**, which raises concerns about the **generalizability** of MCCE. The claims of MCCE being a **"general framework"** would be more credible with **broader evaluation** across domains like **code synthesis** or **symbolic reasoning**.
+
+3. **Lack of Detailed Analysis of Design Components**:
+
+   * The paper does not provide a **rigorous breakdown** of the contributions from key components like **DPO fine-tuning**, **trajectory selection**, or **mutual feedback**. Isolating the impact of these components would strengthen the overall argument.
+
+4. **Scalability and Stability**:
+
+   * While the paper discusses computational costs, it doesn¡¯t fully address the **scalability** or **stability** of the **co-evolution loop**. An in-depth analysis of how well MCCE scales with increasing complexity (e.g., more objectives, larger domains) would be useful.
+
+5. **Algorithmic Reproducibility**:
+
+   * The **feedback exchange protocol** and **update rules** between the models are not clearly formalized, making **reproducibility** of the experiments more challenging.

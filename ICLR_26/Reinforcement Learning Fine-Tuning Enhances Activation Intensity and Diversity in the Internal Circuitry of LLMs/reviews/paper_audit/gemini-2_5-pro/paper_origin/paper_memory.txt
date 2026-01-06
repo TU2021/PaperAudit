@@ -1,0 +1,62 @@
+# Global Summary
+This paper investigates the internal mechanisms by which reinforcement learning (RL) fine-tuning enhances the capabilities of Large Language Models (LLMs). Using an Edge Attribution Patching (EAP) framework, the authors analyze the internal information flow of four pairs of ~7B parameter LLMs before and after RL post-training on mathematical reasoning tasks. The study identifies two consistent effects of online RL algorithms (PPO and GRPO): an increase in the overall activation intensity of internal pathways and a greater diversity in activation patterns, as measured by information entropy and kurtosis. These changes suggest that online RL reshapes the model's internal circuitry to be more redundant and flexible, potentially explaining its improved generalization. Notably, the model fine-tuned with Direct Preference Optimization (DPO) does not exhibit these trends, which the authors attribute to DPO's reliance on a static, pre-sampled dataset, unlike the dynamic, online sampling of PPO and GRPO.
+
+# Abstract
+The paper explores the underlying mechanisms of why reinforcement learning (RL) fine-tuning improves Large Language Model (LLM) capabilities beyond Supervised Fine-Tuning (SFT). Using Edge Attribution Patching (EAP), the study analyzes internal differences in LLMs before and after RL. The analysis across multiple model families reveals two robust effects of online RL post-training: (i) an overall increase in activation intensity, suggesting stronger and more engaged internal pathways, and (ii) greater diversity in activation patterns, indicated by higher entropy and less concentrated edge distributions. These changes suggest RL promotes more redundant and flexible information flow, which may aid generalization. Models fine-tuned with Direct Preference Optimization (DPO) deviate from these trends, showing weaker or inconsistent changes compared to PPO- and GRPO-based models. The findings provide a unified view of how RL alters LLM internal circuitry and highlight differences between online RL and preference-based methods.
+
+# Introduction
+The paper addresses the gap between the empirical success of RL-based post-training for LLMs and the lack of understanding of its internal mechanisms. While RL fine-tuning is known to improve performance on tasks like writing, reasoning, and coding beyond SFT, most studies focus on external behavioral changes. Mechanistic interpretability research, on the other hand, has not typically focused on the effects of different post-training methodologies. This work aims to bridge this gap by systematically analyzing how RL fine-tuning affects LLMs internally. The authors use an efficient Edge Attribution Patching (EAP) framework to estimate the contribution of internal edges on mathematical problem-solving tasks. The core claims are that online RL post-training strengthens activation intensity and diversifies activation patterns, effects not consistently observed with DPO training.
+
+# Preliminaries
+- LLMs are typically based on the Transformer architecture with L layers, each containing a multi-head self-attention mechanism and a position-wise feed-forward network (FFN), both with residual connections. The paper provides standard mathematical formulations for these components.
+- The paper presents a unified view of LLM post-training, where various methods (SFT, RL) can be expressed in a common gradient form: ∇_θ J_A(θ) = E_{(q,o)∼D} [ (1/|o|) ∑_{t=1}^{|o|} GC_A(...) ∇_θ log π_θ(...) ]. This formulation highlights three key components: the data source D, the reward/evaluation rule π_ref, and the gradient coefficient GC_A.
+
+# Method
+- The methodology is based on Edge Attribution Patching (EAP), which views an LLM as a directed acyclic graph (DAG). Nodes in the graph are sub-modules (attention and FFN blocks), and edges represent information flow through residual pathways.
+- Edge importance is quantified using a gradient-based approximation, $I_{EAP}(O, H) \approx -\langle\nabla_H L(y; f(x)), O\rangle$, where $L$ is the loss, $O$ is the output of a source sub-module, and $H$ is the hidden state at the destination. This is computationally more efficient than ablation-based methods like ACDC, requiring only a single forward and backward pass.
+- A sample selection and truncation procedure is used for analysis.
+    - **Question Filtering:** Only questions correctly answered by both the base (SFT) and RL-tuned models are used. Questions with extremely short or long answers are filtered out based on thresholds ($T_{\min} = \beta \bar{T}$, $T_{\max} = \gamma \bar{T}$). The difference in answer length between the two models is also constrained by a balance coefficient $\delta$.
+    - **Token Truncation:** For analysis, generated sequences are truncated to a length $T_{\text{cut}} = \alpha \bar{T}$.
+    - **Loss Computation:** The loss used for backpropagation is the self-entropy (cross-entropy of the model on its own generated output) computed over the truncated sequence.
+
+# Experiments
+- **Experimental Settings:**
+    - Four pairs of ~7B parameter open-source LLMs were used, each with a base SFT model and an RL-tuned counterpart:
+        1.  **DeepSeek-Math:** SFT (deepseek-math-7b-instruct) vs. GRPO (deepseek-math-7b-rl).
+        2.  **Mistral:** SFT (mistral-7b-sft) vs. PPO (math-shepherd-mistral-7b-rl).
+        3.  **Distilled-Qwen:** SFT (DeepSeek-R1-Distill-Qwen-7B) vs. GRPO (AceReason-Nemotron-7B).
+        4.  **Qwen2.5:** SFT (Qwen2.5-7B-SFT) vs. DPO (Qwen2.5-7B-DPO).
+    - Analyses were conducted on three mathematical benchmarks: GSM8K, MATH, and College Math.
+- **Metrics:**
+    - **Activation Intensity (Act.Intens.):** The average absolute magnitude of all edge weights across all samples.
+    - **Information Complexity (Info.Complex.):** The Shannon entropy of the flattened distribution of absolute edge weights.
+    - **Distribution Kurtosis (Dist.Kurt.):** The average kurtosis of edge-weight distributions across samples.
+- **Results and Analysis:**
+    - For the three model families trained with online RL (Deepseek-Math, Mistral, Distilled-Qwen), RL fine-tuning generally increases Activation Intensity and Information Complexity, while decreasing Distribution Kurtosis (Table 1).
+    - The Qwen2.5 model, trained with DPO, is a notable exception and does not show these consistent patterns. The authors attribute this to DPO's training process, which uses a static dataset of responses sampled once from the initial SFT model, unlike the online interaction of PPO and GRPO where responses are continuously regenerated from the evolving policy.
+    - **Pathway Engagement:** RL fine-tuning consistently increases Act.Intens., suggesting stronger and more numerous active pathways. Figure 2 visualizes this for the Mistral model.
+    - **Activation Diversity:** RL fine-tuning increases Info.Complex. and decreases Dist.Kurt., indicating more diverse and less concentrated activation patterns. Figure 3(a) shows that RL improves inter-sample diversity in 95.1% of 41 experiments, with an average improvement of 7.6%. Figure 3(b) shows large increases in output-edge entropy for online RL models (e.g., +1246% for one Deepseek-Math case, +120% for a Mistral case), while Qwen2.5 (DPO) shows negligible change.
+
+# Related Work
+- **Interpretability of Reinforcement Learning:** The paper surveys pre-hoc (inherently interpretable agents like neuro-symbolic systems) and post-hoc (analyzing trained agents) methods. Post-hoc techniques include feature attribution (saliency maps), policy distillation, and counterfactuals. The authors note that these studies typically focus on lightweight RL agents, not LLMs.
+- **Interpretability of Large Language Models:** This research is categorized into two paradigms:
+    - **Mechanistic interpretability:** Aims to reverse-engineer model components (neurons, attention heads) using techniques like causal tracing.
+    - **Representation interpretability:** Investigates what information is encoded in internal activations using external probes.
+    - The paper argues that existing LLM interpretability work does not sufficiently connect internal mechanisms to the specific post-training methodologies used to create the models.
+
+# Conclusion
+The paper presents a systematic analysis showing that online RL fine-tuning reshapes the internal circuitry of LLMs. Using edge attribution patching, it identifies two robust effects: increased activation intensity and greater diversity in activation patterns. These findings suggest that online RL (PPO, GRPO) enhances information flow to be more redundant and flexible, which may explain its superior generalization. In contrast, DPO fine-tuning shows weaker and inconsistent effects, highlighting a methodological difference between static preference optimization and dynamic online RL.
+
+# Appendix
+- **Ethics and Reproducibility:** The paper uses open-source models and datasets. Code is provided for reproducibility. Implementation details are listed.
+- **LLM Characteristics:** Details for the four model pairs are provided, including Hugging Face links. All models are ~7B parameters. Architectural details from Table 2:
+    - DeepSeek-Math: 30 layers, 32 heads, 4096 dim.
+    - Mistral: 32 layers, 32 heads, 4096 dim.
+    - Distilled-Qwen: 28 layers, 28 heads, 3584 dim.
+    - Qwen2.5: 28 layers, 28 heads, 3584 dim.
+- **Implementation Details:** Experiments were run on Ubuntu 22.04.3 with CUDA 12.2, Python 3.11, PyTorch 2.7.0+cu26, on 2x NVIDIA A800 80G GPUs.
+- **Performance of LLMs:** Table 4 shows that post-training generally improves model performance on various math benchmarks. For example, on the MATH dataset, DeepSeek-Math improves from 46.2 to 52.6, Mistral from 29.1 to 32.6, DS-Distill-Qwen from 88.4 to 95.4, and Qwen-2.5 from 75.7 to 82.6.
+- **Use of LLMs:** The authors state they used LLMs to aid in paper writing and literature retrieval, but all content was carefully reviewed by the authors.
+
+# References
+This section contains the list of references cited in the manuscript.

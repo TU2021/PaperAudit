@@ -1,0 +1,129 @@
+{
+  "generated_at": "2025-12-27T12:14:10.546339Z",
+  "input_dir": "/mnt/parallel_ssd/home/zdhs0006/ACL/data/ICLR_26",
+  "judge_model": "gemini-2.5-pro",
+  "model_tag": "v1",
+  "filters": {
+    "review_agent": null,
+    "ai_model": null,
+    "ai_review_file": null
+  },
+  "global": {
+    "count": 150,
+    "files_read": 50,
+    "papers_with_missing_alignment_file": 0,
+    "motivation_strength_alignment": {
+      "mean": 0.8383333333333334,
+      "std": 0.18477418348197827,
+      "min": 0.0,
+      "max": 0.95
+    },
+    "weakness_error_alignment": {
+      "mean": 0.5352,
+      "std": 0.1879694391839112,
+      "min": 0.0,
+      "max": 0.98
+    },
+    "overall_alignment": {
+      "mean": 0.6338666666666667,
+      "std": 0.17135381452980553,
+      "min": 0.0,
+      "max": 0.96
+    }
+  },
+  "per_config": {
+    "config_key:24b66d75b94c155df325f4e5f2603b40312e4469": {
+      "count": 50,
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "deepreviewer",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "deep_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180
+      },
+      "config_key": "24b66d75b94c155df325f4e5f2603b40312e4469",
+      "motivation_strength_alignment": {
+        "mean": 0.853,
+        "std": 0.18278179251082258,
+        "min": 0.0,
+        "max": 0.95
+      },
+      "weakness_error_alignment": {
+        "mean": 0.522,
+        "std": 0.17818816012340233,
+        "min": 0.0,
+        "max": 0.85
+      },
+      "overall_alignment": {
+        "mean": 0.631,
+        "std": 0.1653351574400142,
+        "min": 0.0,
+        "max": 0.9
+      }
+    },
+    "config_key:a14d937ebf873b90a820c8cb44da768956431bd4": {
+      "count": 50,
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "baseline_review.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180
+      },
+      "config_key": "a14d937ebf873b90a820c8cb44da768956431bd4",
+      "motivation_strength_alignment": {
+        "mean": 0.826,
+        "std": 0.18796439089598316,
+        "min": 0.0,
+        "max": 0.95
+      },
+      "weakness_error_alignment": {
+        "mean": 0.5626,
+        "std": 0.2008635438931269,
+        "min": 0.0,
+        "max": 0.98
+      },
+      "overall_alignment": {
+        "mean": 0.6557999999999999,
+        "std": 0.18225447560362137,
+        "min": 0.0,
+        "max": 0.96
+      }
+    },
+    "config_key:565dcfbed8e348ba365acb8ebe44bf867f3cd0c2": {
+      "count": 50,
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "final_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180
+      },
+      "config_key": "565dcfbed8e348ba365acb8ebe44bf867f3cd0c2",
+      "motivation_strength_alignment": {
+        "mean": 0.836,
+        "std": 0.1862738821833954,
+        "min": 0.0,
+        "max": 0.95
+      },
+      "weakness_error_alignment": {
+        "mean": 0.521,
+        "std": 0.18491310700666175,
+        "min": 0.0,
+        "max": 0.95
+      },
+      "overall_alignment": {
+        "mean": 0.6148,
+        "std": 0.1669197534195179,
+        "min": 0.0,
+        "max": 0.93
+      }
+    }
+  }
+}

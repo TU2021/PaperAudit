@@ -1,0 +1,70 @@
+# Innovation & Motivation Report
+
+## 1. The Authors' Claimed Contribution
+- Core Problem: Existing agent evaluations assume static user goals and binary completion, failing to capture how tool-augmented LLM agents adapt when objectives change mid-conversation.
+- Claimed Gap: “Binary pass@k fails to capture nuanced progress and differences in efficiency, redundancy, and adaptation under dynamic goal changes.” [Motivation]
+- Proposed Solution: A benchmark (AgentChangeBench) that injects explicit, mid-dialogue goal shifts across three enterprise domains with five personas, and evaluates with four metrics: TSR (multi-channel effectiveness), TUE (tool correctness/parameter validity), TCRR (wasted/redundant tool calls), and GSRT (acknowledgment→tool→outcome recovery timing). They release the benchmark, harness configurations, and artifacts for reproducibility.
+
+## 2. Comparative Scrutiny (The "Trial")
+
+### vs. τ²-bench (Barres et al., 2025)
+- Identified Overlap: Both evaluate tool-augmented LLM agents in multi-turn, persona-driven enterprise scenarios; AgentChangeBench reuses τ²-bench templates and orchestration while shifting focus from pass@k to goal-shift robustness and multi-dimensional metrics.
+- Manuscript's Defense:
+  - Citation and explicit contrast appear in Related Work and Experiments:
+    • “τ²-bench: Telecom support scenarios with compositional task generation; several personas; mostly static goals; no explicit adaptability testing to changing goals or runtime constraints.” [Related Work]
+    • “Metrics comparison (Table 3): AgentChangeBench vs τ²-bench: TSR (weighted multi-channel) replaces pass@k-only task completion… adds TCRR… introduces GSRT to measure acknowledgment, first relevant tool call, and first outcome after a shift.” [Experiments]
+    • Acknowledges reuse and additions: “Seeded from τ²-bench: reuse 50 airline and 114 retail templates… added explicit goal-sequence annotations, broader persona coverage, uniform shift-triggering rules.” [Method]
+- Reviewer's Assessment: The defense is concrete and technically substantive at the evaluation-design level. The reuse of templates and orchestration indicates continuity (not a clean-slate benchmark), but the introduction of explicit goal-sequence annotations and GSRT/TCRR shifts the evaluative target from static/implicit dynamics to explicit adaptation latency and waste. This is more than a minor metric tweak: it reframes the unit of analysis around goal-shift recovery and exposes behaviors pass@k conceals. Nonetheless, novelty resides primarily in benchmark design and metricization, not in new algorithms or theory.
+
+### vs. API-Bank (Li et al., 2023)
+- Identified Overlap: Runnable, multi-API, dialogue-grounded evaluation of tool-augmented LLMs; emphasis on correctness of planning/calling and parameterization.
+- Manuscript's Defense:
+  - Cited in References, but not directly contrasted in the Dataset comparison table. The manuscript’s general contrast is aimed at τ-bench/τ²-bench. There is no explicit, line-level differentiation against API-Bank beyond the manuscript’s broader claim of “explicit goal shifts” and multi-dimensional metrics (TSR/TUE/TCRR/GSRT) absent in prior static-goal tool-use benchmarks.
+- Reviewer's Assessment: Overlap exists at the level of tool-use dialogues and correctness checking. The manuscript’s differentiation (explicit mid-dialogue goal shifts and GSRT/TCRR) is plausible and relevant, but not explicitly argued against API-Bank in text. Given API-Bank’s focus on tool-use capability rather than adaptation to changing goals, the manuscript’s motivation stands; a tighter comparative positioning would strengthen the claim.
+
+### vs. Automated test generation for tool-augmented agents (ALMITA)
+- Identified Overlap: LLM-assisted generation of multi-turn, procedure-grounded tests in customer support; curated datasets to evaluate complete conversations.
+- Manuscript's Defense:
+  - Not cited in Related Work or References. The manuscript’s Method details partially parallel this line: “Mix of human-written and LLM-generated tasks; added explicit goal-sequence annotations… uniform shift-triggering rules.” [Method]
+- Reviewer's Assessment: Conceptual overlap in dataset curation and procedure-grounded tests is clear. The manuscript’s distinctive angle is explicit, annotated goal-shift sequences and recovery-time metricization (GSRT). However, the lack of direct citation/contrast is a weakness in positioning within the test-generation/dataset literature.
+
+### vs. Budget-Aware Tool-Use (BATS)
+- Identified Overlap: Efficiency-oriented evaluation of tool-augmented agents; diagnosing wasted tool calls and cost-performance scaling.
+- Manuscript's Defense:
+  - Not cited. The manuscript introduces TCRR to quantify redundancy and emphasizes efficiency: “Tool efficiency metrics (TUE and TCRR) measuring tool selection correctness, parameter validity, and redundancy patterns.” [Motivation]
+- Reviewer's Assessment: The efficiency lens substantially overlaps. AgentChangeBench focuses on redundancy under goal shifts (TCRR) and adaptation latency (GSRT), whereas BATS focuses on budget awareness and Pareto cost-performance scaling. The novelty here is orthogonal but complementary. Explicitly relating TCRR/GSRT to budget-constrained behavior would strengthen the motivation; as-is, the contribution remains distinct but would benefit from acknowledging budget-aware literature.
+
+### vs. Temporal Blindness (TicToc-v1)
+- Identified Overlap: Diagnosing misaligned tool-use decisions in nonstationary settings; repeated/unnecessary tool calls vs delayed/omitted calls.
+- Manuscript's Defense:
+  - Not cited. The manuscript underscores related failure modes and metrics: “Redundancy: TCRR (duplicates within 3-turn window or batch >2)… GSRT… first-hitting times after shift…” [Experiments]
+  - Acknowledges limitation on implicit dynamics: “Goal shifts are pre-declared and often explicit; … GSRT detection of implicit or concurrent goal drift not yet evaluated.” [Global Summary; Conclusion]
+- Reviewer's Assessment: Strong conceptual alignment on nonstationarity and wasted effort. The manuscript’s explicit limitation vis-à-vis implicit/temporal drift shows awareness of the gap. The focus on explicit goal shifts and first-hitting times is a valid and useful specialization, though citing closely related temporal-awareness work would better situate the contribution.
+
+## 3. Novelty Verdict
+- Innovation Type: Application-Oriented with incremental metric design
+- Assessment:
+  The paper’s motivation—to move beyond pass@k and static-goal setups by explicitly testing mid-dialogue goal shifts and measuring recovery latency and redundancy—is well articulated and supported by new evaluation machinery (GSRT, TCRR) and explicit goal-sequence annotations. The authors directly acknowledge lineage and reuse from τ²-bench and provide a concrete, defensible differentiation via explicit shifts and multi-dimensional metrics, quoting limitations of τ-bench/τ²-bench. The empirical results substantiate the need for these metrics (e.g., parameter validity saturation vs high redundancy; divergent recovery rates at similar TSRs), reinforcing the motivation’s significance.
+  - Strength:
+    • Clear gap statement and concrete, domain-grounded formalization: “First benchmark explicitly testing mid-conversation goal shifts and persona-adaptive communication.” [Introduction]
+    • Specific metric innovations tied to the gap (GSRT for adaptation latency; TCRR for redundancy), with operational definitions and ablations showing why pass@k is insufficient.
+    • Transparent acknowledgment of reuse and the added value: “added explicit goal-sequence annotations… uniform shift-triggering rules.” [Method]
+    • Reproducibility emphasis (released benchmark/harness/artifacts).
+  - Weakness:
+    • Core infrastructure/templates are substantially inherited from τ²-bench; novelty is concentrated in evaluation design and task annotations rather than new environments or theory.
+    • Comparative positioning against broader tool-use/dataset and efficiency literature (API-Bank, budget-aware/temporal-awareness works, automated test generation) is light; several relevant works are not cited, which undercuts the completeness of the motivation.
+    • Scope limitations (benign personas, explicit shifts only) mean the present contribution addresses a constrained slice of nonstationarity; connections to implicit drift and resource-aware adaptation are deferred to future work.
+
+## 4. Key Evidence Anchors
+- Motivation: “Binary pass@k fails to capture nuanced progress and differences in efficiency, redundancy, and adaptation under dynamic goal changes.” [Motivation]
+- Claim of primacy: “First benchmark explicitly testing mid-conversation goal shifts and persona-adaptive communication.” [Introduction – Contribution summary]
+- Differentiation vs prior benchmarks:
+  • “τ-bench: … pass^k metric; assumes static user goals and full agent control; limited dynamics.” [Related Work]
+  • “τ²-bench: … mostly static goals; no explicit adaptability testing to changing goals or runtime constraints.” [Related Work]
+  • “AgentBench: … stable objectives; does not address explicit goal shifts or persona variability.” [Related Work]
+- Methodological additions over τ²-bench: “Seeded from τ²-bench: reuse 50 airline and 114 retail templates… added explicit goal-sequence annotations, broader persona coverage, uniform shift-triggering rules.” [Method]
+- Metrics formalization and contrasts:
+  • “Metrics comparison (Table 3): … replaces pass@k-only… adds TUE… adds TCRR… introduces GSRT…” [Experiments]
+  • GSRT definition: “Defined via first-hitting times after shift at τ_s… (ack, tool, outcome).” [Experiments]
+  • TCRR definition: “Fraction of exact duplicate tool calls within a 3-turn window or exceeding batch threshold of 2 to the same function.” [Experiments]
+- Limitations acknowledging scope: “Goal shifts are pre-declared and often explicit; does not evaluate implicit drift, overlapping objectives, conflicts.” [Conclusion]

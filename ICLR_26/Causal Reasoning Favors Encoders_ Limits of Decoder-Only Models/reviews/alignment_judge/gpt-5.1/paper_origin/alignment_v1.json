@@ -1,0 +1,97 @@
+{
+  "paper": "Causal Reasoning Favors Encoders_ Limits of Decoder-Only Models",
+  "judge_model": "gpt-5.1",
+  "review_agent": "deepreviewer",
+  "ai_model": "gpt-5-2025-08-07",
+  "ai_review_file": "deep_review_all.txt",
+  "inputs": {
+    "human_review": "review.txt",
+    "ai_review": "reviews/deepreviewer/gpt-5-2025-08-07/paper_origin/deep_review_all.txt"
+  },
+  "multi_review": {
+    "detected": false,
+    "num_reviews": 1,
+    "summarize_used": false,
+    "summary_note": null
+  },
+  "ai_review_consolidated": null,
+  "alignment": {
+    "motivation_strength_alignment": 0.0,
+    "weakness_error_alignment": 0.0,
+    "overall_alignment": 0.0,
+    "explanation": {
+      "strength": "The two reviews are about entirely different papers. Review A discusses DeepMiner, a framework for long-horizon web search agents with dynamic context management and hard web-grounded QA trajectories applied to Qwen3-32B. Review B discusses a comparison of encoder/encoder–decoder vs decoder-only models on Horn-clause logical reasoning with SimpleLogic-style datasets, NNL splits, and mechanistic curvature analysis. As a result, there is no overlap in the described motivations, contributions, methods, or reported strengths.",
+      "weakness": "For the same reason, the weaknesses and concerns are about different topics: Review A focuses on ablations, reward design, context-window strategies, and training cost for search agents; Review B focuses on architectural training confounds, API failure handling, AUROC misuse, tokenization confounds, and under-specified mechanistic curvature analysis. There is no shared criticism or overlapping concern because the underlying works are different.",
+      "overall": "Since the reviews clearly address different research problems, datasets, architectures, and experimental setups, their substance and focus do not align. Any similarity would be accidental and superficial. Thus, alignment across motivations, strengths, and weaknesses is effectively zero."
+    }
+  },
+  "generated_at": "2025-12-27T19:28:28",
+  "runs": [
+    {
+      "config": {
+        "judge_model": "gpt-5.1",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "baseline_review.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180
+      },
+      "config_key": "3b28d70d5731760031a4514ebc98b0afd78edf6d",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/baseline_review.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "motivation_strength_alignment": 0.0,
+        "weakness_error_alignment": 0.0,
+        "overall_alignment": 0.0,
+        "explanation": {
+          "strength": "The two reviews clearly describe completely different papers: Review A focuses on DeepMiner, a long-horizon web search agent with dynamic context windows and hard QA trajectories; Review B discusses a study on causal reasoning via multi-hop FOL deduction across encoder/decoder architectures with SimpleLogic-style datasets and curvature analysis. There is no overlap in stated motivations, methods, or claimed strengths.",
+          "weakness": "The weaknesses in Review A concern ablations, reward design, discard-vs-summarize strategies for tool outputs, attribution between data and context mechanisms, and compute cost for training agents; Review B instead critiques statistical rigor (AUROC vs significance), parsing-error handling, fairness in API evaluation, curvature methodology, NNL dataset confounds, and scope of causal reasoning claims. None of these issues intersect in substance.",
+          "overall": "Substantively, the reviews evaluate entirely different problem settings, methods, datasets, and conclusions, so there is no meaningful alignment in content or judgment. Any similarity is purely at a generic level (e.g., both mention experiments and limitations), not at the level of concrete contributions or critiques."
+        }
+      },
+      "generated_at": "2025-12-27T19:50:53"
+    },
+    {
+      "config": {
+        "judge_model": "gpt-5.1",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "final_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180
+      },
+      "config_key": "4569a6a97a67c8e2b360606eb74d6eb53b892d06",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/final_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "motivation_strength_alignment": 0.05,
+        "weakness_error_alignment": 0.05,
+        "overall_alignment": 0.05,
+        "explanation": {
+          "strength": "Review A focuses on a long-horizon web-search agent framework (DeepMiner) with dynamic context management and web-grounded QA trajectories, while Review B addresses a controlled FOL deduction benchmark for comparing encoder/decoder architectures and a curvature-based mechanistic probe; the core motivations, tasks, and claimed contributions do not overlap. Any commonality is limited to very generic notions like releasing data/code and reporting training details, which are framed around entirely different problems.",
+          "weakness": "Review A’s criticisms center on missing ablations/baselines (later partially fixed), coarse trajectory-level rewards, discard-vs-summarize design choices, attribution between data and context mechanisms, and compute-driven training instability, whereas Review B critiques statistical rigor (AUROC misuse, lack of uncertainty), parsing/error handling, fairness of API evaluations, mechanistic-curvature methodology, NNL dataset confounds, and overgeneralized causal-reasoning claims. These concern different methods and setups, with no substantive overlap beyond being methodological in nature.",
+          "overall": "Substantively the two reviews describe different papers, with distinct problem settings, methods, datasets, and evaluation concerns, so their judgments cannot be meaningfully aligned. There is no contradiction, but also almost no shared focus on the same contributions or limitations, leading to very low overall alignment."
+        }
+      },
+      "generated_at": "2025-12-27T19:53:09"
+    }
+  ]
+}

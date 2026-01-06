@@ -1,0 +1,129 @@
+{
+  "paper": "SD-MAD_ Sign-Driven Few-shot Multi-Anomaly Detection in Medical Images",
+  "runs": [
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "final_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "0a71ca7d783136ba33fb6b5ec9aad08ece2f0c09",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/final_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 1.0,
+        "weakness_coverage_recall": 0.67,
+        "ai_extra_major_points_rate": 0.26,
+        "symmetric_coverage_similarity": 0.43,
+        "note": "The AI review covers all strengths and most weaknesses from the human review, but misses the points on open-set detection and pixel-level results being in the appendix. The AI adds substantial extra detail, identifying numerous specific technical weaknesses in the model's implementation and reproducibility that the human did not mention."
+      },
+      "generated_at": "2025-12-27T20:39:41"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "baseline_review.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "b3137abdd5dd456ecfb029f7bed4151251d086e2",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/baseline_review.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 1.0,
+        "weakness_coverage_recall": 0.83,
+        "ai_extra_major_points_rate": 0.36,
+        "symmetric_coverage_similarity": 0.67,
+        "note": "The AI review provides excellent coverage, capturing all human-identified strengths and most weaknesses. The main coverage difference is that the AI review adds several major, specific technical points not mentioned by the human, such as the anchor-based loss mechanism and the use of shift adapters. The only substantive point missed by the AI was the lack of discussion on open-set detection."
+      },
+      "generated_at": "2025-12-27T20:44:13"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "deepreviewer",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "deep_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "55f39c3e353412551a5ae68e81fc4acc489b4edd",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/deepreviewer/gpt-5-2025-08-07/paper_origin/deep_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 0.8,
+        "weakness_coverage_recall": 0.33,
+        "ai_extra_major_points_rate": 0.58,
+        "symmetric_coverage_similarity": 0.35,
+        "note": "The AI review captures most high-level strengths but diverges significantly on weaknesses. The AI misses several of the human's key concerns (e.g., limited baselines, open-set detection), while raising numerous major, specific technical flaws not mentioned by the human, most notably a non-reproducible sign selection mechanism."
+      },
+      "generated_at": "2025-12-27T20:50:13"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "deepreviewer",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "deep_review_merge.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "752f27bc09e656c7d041a880d0c174422eea6ca4",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/deepreviewer/gpt-5-2025-08-07/paper_origin/deep_review_merge.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 1.0,
+        "weakness_coverage_recall": 0.33,
+        "ai_extra_major_points_rate": 0.78,
+        "symmetric_coverage_similarity": 0.37,
+        "note": "While strength coverage is perfect, there is a major divergence in weaknesses. The AI review misses several key human concerns (e.g., limited baselines, open-set detection), while raising a large number of its own distinct and more granular methodological/reproducibility issues."
+      },
+      "generated_at": "2025-12-27T21:19:52"
+    }
+  ]
+}

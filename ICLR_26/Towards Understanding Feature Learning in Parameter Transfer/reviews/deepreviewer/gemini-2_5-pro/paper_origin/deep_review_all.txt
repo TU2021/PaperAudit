@@ -1,0 +1,157 @@
+Here are four distinct reviews of the paper, simulating four different expert academic reviewers.
+
+***
+
+### **Review 1**
+
+**Summary**
+This paper presents a theoretical analysis of parameter transfer, a common technique in transfer learning where a subset of weights from a pre-trained upstream model is used to initialize a downstream model. The authors develop a framework based on a two-layer ReLU convolutional neural network (CNN) and a synthetic data model to study the training dynamics. The primary goals are to understand when parameter transfer is beneficial compared to random initialization and to explain the phenomenon of negative transfer. The key findings identify the strength of the shared signal between tasks, the upstream sample size, and the upstream noise level as critical factors. The theory provides sharp conditions that characterize a phase transition in generalization performance and formally proves the existence of negative transfer. These theoretical results are supported by both numerical simulations and experiments on real-world datasets like CIFAR-10/100.
+
+**Soundness**
+The methodology is theoretically sound and rigorous. The choice of a two-layer ReLU CNN and a synthetic data model with shared and task-specific components (Definitions 3.1, 3.2) is a standard and well-justified approach in the feature learning literature, enabling a deep, non-asymptotic analysis that would be intractable in more complex settings. The analysis of training dynamics, which decomposes weight updates into signal-learning and noise-memorizing components (Appendix B), is state-of-the-art. The proof sketch in the appendix appears thorough, detailing the evolution of these components through two coupled dynamical systems (Lemmas A.1, A.2). The derivation of a phase transition for the test error (Theorem 4.2) is a strong result that demonstrates the sharpness of the analysis. The assumptions listed in Condition 4.1 are standard for this line of theoretical work and are clearly stated.
+
+**Presentation**
+The paper is well-structured and clearly written, particularly for an audience familiar with theoretical machine learning. The introduction effectively motivates the problem and situates the work within the existing literature, correctly distinguishing it from static generalization bounds and NTK-based analyses (Block 2). The main theorems are presented upfront in Section 4, followed by empirical validation, which is a logical flow. The figures, especially the synthetic experiment plots (Figure 1) and the phase transition heatmap (Figure 2), are effective visual aids that correspond well to the theoretical claims. The appendix is extensive and provides the necessary technical details for an expert to verify the results.
+
+**Contribution**
+The paper makes a significant and novel contribution to the theory of transfer learning. To my knowledge, this is the first work to provide a rigorous, non-asymptotic analysis of the *training dynamics* of partial parameter transfer in a feature learning regime. While prior work has focused on generalization bounds, this paper sheds light on the *mechanism* of knowledge transfer during training. The formal characterization of conditions leading to positive transfer (Proposition 4.4, part 1) and, notably, negative transfer (Proposition 4.4, part 2) is a key novelty. This provides a much-needed theoretical foundation for a widely used empirical heuristic and explains counter-intuitive results reported in the literature.
+
+**Strengths**
+- **Novelty:** Provides the first dynamic analysis of partial parameter transfer, moving beyond the limitations of the NTK regime to explain feature learning.
+- **Rigorous Theory:** The analysis is mathematically deep, leading to sharp, non-asymptotic results, including a phase transition for generalization (Theorem 4.2).
+- **Explanation of Negative Transfer:** A major strength is the formal theoretical explanation for why parameter transfer can sometimes be harmful (Proposition 4.4, part 2), linking it to the weakness of the shared signal.
+- **Comprehensive Validation:** The combination of synthetic experiments that directly test the theory (Figure 1, 2) and real-world experiments on modern architectures (Table 1, Figure 3) strongly supports the paper's conclusions.
+
+**Weaknesses**
+- **Simplified Model:** The analysis is confined to a two-layer CNN and a specific data generation model with orthogonal signals. While necessary for tractability, this is a simplification of real-world scenarios.
+- **Random Parameter Selection:** The theoretical model assumes a random subset of parameters (`αm`) is transferred (Algorithm 1). In practice, transfer is often structured (e.g., transferring early layers). The theory does not capture this structural aspect.
+
+**Questions**
+1. The analysis of negative transfer in Proposition 4.4 hinges on the shared signal `||u||` being small. Does your framework also predict negative transfer if `||u||` is reasonably large, but the source task is extremely noisy (large `σ_{p,1}`) or trained on very few samples (small `N1`)?
+2. The proof relies on the property that per-sample losses remain balanced during training (e.g., Lemma D.4, part 4). How critical is this property to the overall result, and could you comment on its expected validity in more general, less symmetric settings?
+3. Your theory analyzes the transfer of a random fraction of filters. Your ViT experiment, however, transfers contiguous blocks of layers (9, 10, 11). Could you speculate on how the theory might be extended to account for such structured, non-random transfer?
+
+**Rating**
+- Overall (10): 9 — The paper provides a novel and rigorous theoretical framework for parameter transfer dynamics, a significant and previously unaddressed problem.
+- Novelty (10): 9 — It is the first work to analyze the training dynamics of parameter transfer and provide a theoretical account of negative transfer in this context (Block 2, Block 4).
+- Technical Quality (10): 10 — The mathematical analysis is deep, state-of-the-art for feature learning theory, and appears correct, with extensive proofs provided in the appendix (Appendix A-E).
+- Clarity (10): 8 — The paper is well-written for a theoretical audience, though the main theorems are dense; the clear motivation and experimental validation greatly aid understanding (Section 1, Section 5).
+- Confidence (5): 5 — I am an expert in this area and have carefully reviewed the theoretical arguments and their connection to the experiments.
+
+***
+
+### **Review 2**
+
+**Summary**
+This paper develops a mathematical theory to explain how parameter transfer works. Using a simplified two-layer convolutional network and a synthetic data model, the authors derive formulas that predict when transferring weights from a source task will help a target task. They identify three main factors: the amount of shared information between tasks, the size of the source dataset, and the noise in the source data. The paper also provides a theoretical reason for "negative transfer," where using a pre-trained model hurts performance. The authors conduct experiments on both synthetic data and real datasets (CIFAR) to back up their theory.
+
+**Soundness**
+The soundness of the paper's practical conclusions is questionable due to the significant gap between the theoretical model and real-world transfer learning. The theory relies on a highly specific data generation model where signals and noise are orthogonal (Definitions 3.1, 3.2). This is an unrealistic assumption; in practice, features are correlated in complex ways. Therefore, it is unclear if the sharp conditions derived (e.g., Theorem 4.2) have any bearing on practical applications. The real-data experiments are a positive inclusion, but their design may be confounded. For example, in the experiment varying `N1` (Table 1), the authors increase the number of source classes. This changes not only the sample size but also the diversity and complexity of the source task, an effect not captured by the theory. The link between the theoretical constructs (`||u||`, `σ_p,1`, etc.) and the real-world experiments is never established, making the experiments feel more like a loose analogy than a direct validation.
+
+**Presentation**
+The paper is very difficult to read for a general machine learning audience. The main theoretical results, such as the condition in Theorem 4.2, are presented as a single, massive formula with little to no intuitive explanation in the main text. This makes the core findings inaccessible without a deep dive into the highly technical appendix. The paper would benefit greatly from a more pedagogical approach, perhaps using simplified corollaries or more detailed textual explanations of what each part of the formula represents. The connection between the theory and the real-data experiments is also poorly explained. For instance, Figure 3 shows the effect of varying target task noise (`σ_{p,2}`), but the theoretical discussion in Proposition 4.4 focuses on source task properties like `σ_{p,1}`. This mismatch is confusing.
+
+**Contribution**
+The paper's contribution appears to be of limited practical value. While it provides a mathematical exercise that produces some intuitively correct trends, the underlying model is too simplistic to offer new, actionable insights for practitioners. The main takeaway—that transfer works better with more related source data—is already a well-established empirical rule of thumb. The theoretical conditions for positive and negative transfer (Proposition 4.4) are expressed in terms of unmeasurable abstract quantities (`||u||`, `σ_p`), making them impossible to apply in practice. For a practitioner deciding whether to use a pre-trained model, this paper offers no concrete guidance.
+
+**Strengths**
+- The paper tackles an important and challenging theoretical question: why and when does parameter transfer work?
+- The synthetic experiments (Figure 1) are clear and provide a good sanity check for the theoretical claims in a controlled environment.
+- The authors made an effort to connect their theory to the real world by including experiments with ResNets and ViTs on CIFAR datasets (Table 1, Figure 4).
+
+**Weaknesses**
+- **Theory-Practice Gap:** The theoretical model (2-layer CNN, orthogonal data features) is a gross oversimplification of modern deep learning.
+- **Unrealistic Assumptions:** The orthogonality assumption in the data model (Section 3) is a critical weakness that limits the generalizability of the findings.
+- **Inaccessible Results:** The main theorems are presented as dense, uninterpreted mathematical formulas (Theorem 4.2), hindering understanding and impact.
+- **Weak Experimental Link:** The real-data experiments are not well-connected to the theory. For example, varying the number of classes to vary `N1` introduces confounding factors (Table 1).
+
+**Questions**
+1. How can a practitioner use your findings? Given a pre-trained ResNet-50 on ImageNet and a new task, how would your theory help me decide if I should fine-tune it or train from scratch? What would I measure?
+2. In your real-data experiments (Table 1), you vary `N1` by changing the number of source classes. This also changes the feature diversity of the source task. How do you know the observed performance gain is due to sample size, as your theory suggests, and not due to the richer source task?
+3. Your theory analyzes the random selection of `αm` filters. However, standard practice is to transfer and fine-tune entire layers or blocks. How relevant is your analysis to this more common and structured form of parameter transfer?
+
+**Rating**
+- Overall (10): 4 — The paper is theoretically dense but the extreme simplifications in the model cast doubt on the relevance of its conclusions for practice.
+- Novelty (10): 6 — The application of feature learning dynamics to parameter transfer is somewhat new, but the insights are not surprising.
+- Technical Quality (10): 6 — The mathematical derivations may be correct for the given model, but the model itself is flawed in its assumptions (e.g., orthogonality in Def 3.1, 3.2).
+- Clarity (10): 3 — The paper is poorly presented for a broad audience; the main results are impenetrable without expert knowledge (Theorem 4.2).
+- Confidence (5): 4 — I am confident in my assessment of the paper's practical limitations and the gap between its theory and experiments.
+
+***
+
+### **Review 3**
+
+**Summary**
+This paper investigates the theoretical underpinnings of parameter transfer in deep learning. The authors propose a framework using a two-layer convolutional neural network to analyze the training dynamics when a fraction of parameters from an upstream model are transferred to a downstream model. The work aims to explain why this process can improve performance and also why it sometimes fails, leading to negative transfer. The theory identifies three key factors: the strength of the shared signal (`||u||`), the size of the source dataset (`N1`), and its noise level (`σ_p,1`). The paper presents formal theorems that characterize when generalization improves and provides empirical validation through both synthetic and real-world experiments using ResNet and ViT models.
+
+**Soundness**
+The paper's methodology is sound within its defined scope. The use of a simplified two-layer CNN and a synthetic data model is a common and necessary strategy for achieving a tractable analysis of complex training dynamics. The feature learning perspective is more suitable for this problem than the NTK regime, as it can explain how features are learned and not just how a network behaves near initialization. The main theoretical results (Theorems 4.2 and 4.3) appear to be derived correctly based on the detailed proof sketch in the appendix. The experiments are well-designed to support the theory: the synthetic experiments directly manipulate the theoretical variables (`N1`, `σ_p,1`, `||u||`), while the real-data experiments demonstrate that the same qualitative trends hold in more realistic settings.
+
+**Presentation**
+The paper is generally well-organized, with a clear progression from motivation to theory to experiments. However, the clarity of the main theoretical results could be significantly improved. The condition for achieving Bayes optimal error in Theorem 4.2 is presented as a single, highly complex inequality. While precise, it is difficult to parse and build intuition from. The authors should consider adding a paragraph to dissect this formula, explaining what each component represents (e.g., the numerator as a combination of upstream and downstream signal strengths, and the denominator as an effective sample size). The figures are clear and informative. The captions are good, but the main text could do a better job of explicitly linking the experimental results back to the specific terms in the theorems. For example, when discussing Figure 1a, the text should explicitly state this corresponds to increasing `N1` in the numerator of the condition in Theorem 4.2.
+
+**Contribution**
+The paper makes a valuable contribution to the field. It is one of the first works to move beyond static generalization bounds and analyze the *dynamics* of parameter transfer, offering a mechanistic explanation for its success and failure. The theoretical characterization of negative transfer (Proposition 4.4, part 2) is a particularly important and novel insight, providing a formal basis for an empirically observed phenomenon. While the model is simplified, it serves as a crucial first step and lays a solid foundation for future theoretical work on this topic.
+
+**Strengths**
+- **Novel Problem Formulation:** The paper tackles the dynamics of parameter transfer, a novel and important theoretical problem.
+- **Explains Positive and Negative Transfer:** The framework successfully provides a unified explanation for both the benefits and the pitfalls of parameter transfer.
+- **Strong Empirical Support:** The theoretical findings are convincingly backed by a good mix of synthetic experiments that isolate variables (Figure 1) and real-data experiments that show relevance (Table 1).
+- **Sharp Phase Transition Result:** The identification of a sharp threshold for generalization performance (Theorem 4.2, Figure 2) is a strong theoretical result.
+
+**Weaknesses**
+- **Accessibility of Theory:** The main theoretical results are presented in a very dense format that is not accessible to a broad audience (Theorem 4.2).
+- **Limited Practical Guidance:** The paper does not discuss how the theoretical quantities (like `||u||` or `σ_p`) could be estimated or approximated in real-world scenarios, which limits the direct applicability of the findings.
+- **Simplistic Transfer Scheme:** The analysis of transferring a random subset of filters (Algorithm 1) may not fully capture the nuances of structured transfer (e.g., transferring early layers), which is more common in practice.
+
+**Questions**
+1. Could you provide a more intuitive breakdown of the main condition in Theorem 4.2? Specifically, how should one interpret the numerator and denominator of the large fraction, and how do they relate to the "knowledge" from the source and target tasks?
+2. The experiment in Figure 3 investigates the effect of adding noise to the target task (`σ_{p,2}`). Your theory, however, seems to focus more on the properties of the source task (`N1`, `σ_{p,1}`). Could you elaborate on how parameter transfer helps mitigate target task noise, and whether this is a form of regularization that your theory captures?
+3. Proposition 4.4 provides a condition for when transfer is beneficial. This happens when `Γ` is large and the downstream task alone would perform sub-optimally. Does this imply that parameter transfer is most useful as a "rescue" mechanism for difficult downstream tasks with limited data?
+
+**Rating**
+- Overall (10): 7 — A strong paper with a novel theoretical contribution, though its presentation could be improved for broader impact.
+- Novelty (10): 8 — The dynamic analysis of parameter transfer and the theoretical treatment of negative transfer are highly novel (Block 2, Block 4).
+- Technical Quality (10): 8 — The theoretical analysis is rigorous for the chosen model, and the experiments are well-executed (Section 4, Section 5).
+- Clarity (10): 6 — The paper is well-structured, but the core theoretical results are presented in a dense and inaccessible manner (Theorem 4.2).
+- Confidence (5): 5 — I am an expert in machine learning theory and have carefully evaluated the paper's contributions and limitations.
+
+***
+
+### **Review 4**
+
+**Summary**
+The paper presents a theoretical analysis of parameter transfer using a two-layer ReLU CNN. It models a source and target task using a synthetic data distribution with shared and specific features. The authors analyze the gradient descent dynamics to derive conditions under which transferring a portion of the learned weights is beneficial or detrimental compared to training from scratch. The work is supported by synthetic and real-data experiments.
+
+**Soundness**
+The soundness of the theoretical claims is questionable due to the reliance on overly strong and unrealistic assumptions. The data generation model (Definitions 3.1 and 3.2) assumes that the shared signal `u`, task-specific signals `v1`, `v2`, and the noise vectors `ξ` are all mutually orthogonal. This is a critical flaw, as the core challenge in feature learning is often disentangling *correlated* features. By assuming orthogonality, the paper sidesteps this fundamental difficulty, and the results may not hold in any realistic setting. The claim of being the "first theoretical analysis of training dynamics in parameter transfer" (Block 2) is an overstatement; dynamic analyses of related multi-task and continual learning problems exist and provide relevant context that is not sufficiently discussed. The appendix, which contains the bulk of the proof, is exceptionally long and convoluted, making verification difficult. There appear to be circular dependencies in the inductive proofs; for example, Lemma D.3 relies on bounds from Proposition D.1, which itself is proven using Lemma D.3 and others in a complex inductive loop (see Appendix D) that is hard to trust without an exhaustive check.
+
+**Presentation**
+The presentation is poor and hinders understanding. The paper is filled with dense mathematical notation that is not adequately explained. The main result, Theorem 4.2, is presented as an unparsable block of mathematics that offers zero intuition on its own. The paper fails to build a clear bridge between its abstract theory and the experiments. A glaring example is the experiment on target task noise (`σ_{p,2}`) in Figure 3 and Section 6. The theoretical analysis and key takeaways (Proposition 4.4) focus on source task properties (`N1`, `σ_{p,1}`, `||u||`). The paper presents the `σ_{p,2}` experiment as validation but fails to explain how it validates the theory, creating a disconnect. The notation can also be confusing; for instance, `T*` is used both as the end of upstream training (Block 8) and as a generic "maximum admissible number of training iterations" (Block 12), which is ambiguous.
+
+**Contribution**
+The contribution is incremental and of limited scope. The paper essentially applies existing, highly complex analysis techniques from recent feature learning papers (e.g., Kou et al., 2023, which is cited for the baseline Theorem 4.3) to the parameter transfer setting. The novelty is therefore in the problem setup, not the analytical tools. However, since the problem setup itself is based on unrealistic assumptions (orthogonality), the value of the resulting insights is limited. The conclusions that more source data and less source noise are good for transfer are intuitive and already well-known empirically, so the theory provides little new knowledge in that regard.
+
+**Strengths**
+- The paper addresses a topic of high importance in modern deep learning.
+- The authors correctly identify that a feature learning analysis, rather than NTK, is necessary to understand pre-training.
+
+**Weaknesses**
+- **Unrealistic Assumptions:** The orthogonality of signal and noise components is a major flaw that undermines the credibility of the results (Section 3).
+- **Overstated Novelty:** The claim of being the "first" dynamic analysis is likely an exaggeration and ignores related work in adjacent fields (Block 2).
+- **Poor Clarity:** The main theoretical results are impenetrable (Theorem 4.2), and the paper is generally difficult to read.
+- **Mismatched Experiments:** The real-data experiments do not always directly test the core theoretical claims (e.g., the `σ_{p,2}` experiment in Figure 3).
+- **Difficult-to-Verify Proofs:** The appendix is a "proof dump" with a complex, hard-to-follow inductive structure (e.g., Appendix D).
+
+**Questions**
+1. The entire analysis rests on the orthogonality of `u`, `v1`, `v2`, and the noise space. What is your argument for why these results would hold if this assumption were relaxed to allow for correlations, as is the case in all real data?
+2. In Section 6, you conduct an experiment by varying the target task noise `σ_{p,2}` (Figure 3). However, your main theoretical results on the benefits of transfer (e.g., the quantity `Γ` in Proposition 4.4) depend on source task noise `σ_{p,1}`. How does this experiment validate your theory?
+3. Can you clarify the statement of negative transfer in Proposition 4.4, part 2? The condition is a complex ratio. Can it be simplified to a more intuitive condition, for instance, relating `||u||` to `||v2||` and `N1` to `N2`?
+4. The proof structure in Appendix D appears to be a large, multi-part induction. Could you provide a simplified roadmap of the inductive hypothesis and how the different lemmas (D.2, D.3, D.4) fit together to prove the main proposition (D.1/D.5) without circular reasoning?
+
+**Rating**
+- Overall (10): 3 — The paper has fundamental flaws in its core assumptions, and its presentation is poor, limiting its contribution despite the effort.
+- Novelty (10): 4 — The application of this specific analysis to this specific setup is new, but the core ideas are not, and the claims of being "first" are too strong (Block 2).
+- Technical Quality (10): 4 — The mathematical machinery is complex, but it is applied to a flawed model with unrealistic assumptions, and the proofs are difficult to verify (Section 3, Appendix D).
+- Clarity (10): 2 — The paper is exceptionally difficult to read. Key results are presented as opaque formulas with insufficient explanation (Theorem 4.2).
+- Confidence (5): 4 — I have experience with this literature and am confident in my assessment of the paper's methodological weaknesses and lack of clarity.

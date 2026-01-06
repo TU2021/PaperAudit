@@ -1,0 +1,59 @@
+Academic integrity and consistency risk report
+
+Summary
+The manuscript presents a compelling framework and dataset for process-level evaluation of LLM search agents. However, several high-impact internal inconsistencies and definitional issues could materially affect the correctness and trustworthiness of the reported findings and metrics. Below are evidence-based issues anchored to specific sections, figures, and equations.
+
+1) Conflicting notation for C_{i,t}
+- Evidence: Definition 3.1 (Section 3.3, Block #19) defines C_{i,t} as a binary clarity label for evidence at turn t. Section 3.3.1 (Block #20) then redefines C_{i,t} as the reasoning type (C_{i,t} ∈ {IS, PF, SA}).
+- Impact: Reusing C_{i,t} for two different concepts (clarity vs. reasoning type) creates ambiguity in the mathematical definitions (e.g., in RQI decompositions and type-level metrics). This risks incorrect interpretation or implementation of RQI_i and RQI_i^{(c)} results.
+- Severity: High, as it directly affects metric definitions and any derived quantitative analyses.
+
+2) Recovery event definition likely incorrect (T_recover,i)
+- Evidence: Equation (7), Section 3.3.2 (Block #23), defines recovery as the first turn where E_{i,t} = 2 or correct_i = 1, where correct_i “indicates whether the agent's final answer in trace i is correct.”
+- Problem: correct_i is a trace-level constant; if correct_i = 1, the condition is true for all t, so T_recover,i = 1. This collapses recovery timing to the first turn for all correct traces, independent of the actual turn when evidence improves or an answer is produced.
+- Impact: Invalidates the Evidence Recovery Function (ERF) in Definition 3.4 (Block #23–24) and undermines the recovery analysis (Figure 3/Block #32 and Figure 36/Block #36). Recovery curves and any downstream conclusions become suspect unless the implementation deviates from the stated definition.
+- Severity: High, as it compromises the validity of the recovery metric and related findings.
+
+3) Inconsistency between trace structure and “abstention” concept
+- Evidence: Introduction formalism (Section 1, Block #4) stipulates the final turn concludes with an answer: τ_T = ⟨r_T, a_T⟩. Calibration section (Section 3.3.3, Block #24) and Table 2 (Block #37) discuss “overcautious abstention: failing to provide a final answer despite having reached good evidence state.”
+- Impact: If the trace format requires an answer at T, “failing to provide a final answer” is contradictory unless abstention is encoded as a special answer type (e.g., “I don’t know”)—which is not defined. This ambiguity affects the interpretation and computation of “overcautious” rates and CE.
+- Severity: Medium to High; clarifying whether abstention is permitted and how it is encoded is necessary for the correctness of calibration metrics.
+
+4) Naming inconsistency suggesting copy-paste error
+- Evidence: Appendix Section 8 title (Block #62) states “LLM-as-judge used in CompetenceBench,” while the paper consistently refers to SeekBench elsewhere.
+- Impact: Introduces uncertainty about whether parts of the methodology are ported from another benchmark and whether definitions fully align with SeekBench. This is a red flag for documentation integrity.
+- Severity: Medium; affects trust and clarity of provenance.
+
+5) Reasoning type schema mismatch (three vs. four types)
+- Evidence: Main text and Table 1 (Section 1, Block #6) define three reasoning types (InformationSynthesis, PlanFormation, StateAssessment). Appendix 8.1 (Block #63) introduces a fourth type “CritiqueAndCorrection.”
+- Impact: Discrepancy between the evaluation schema used for annotations/metrics and the LLM-as-judge prompt. If four types are used in annotation/judging but only three are used in metrics, results may be inconsistent or omit a category without disclosure.
+- Severity: Medium; undermines the consistency of the annotation-to-metric pipeline.
+
+6) Contradictory statements on overconfident answering rates
+- Evidence: Section 4.4/Table 2 (Block #37) reports RL-trained overconfident rate = 0.353 (35.3%). Appendix Section 11 narrative (Block #81) claims “RL-trained agents … still exhibits overconfident answering in 76.5% of trajectories.”
+- Impact: These figures cannot both be true for the same population without explicit conditioning differences (none stated). This contradiction directly affects central claims that RL reduces overconfidence.
+- Severity: High; calls into question core conclusions about calibration improvements.
+
+7) Misclassification of evidence states and misinterpretation for Search-R1
+- Evidence: Appendix Section 10.1 narrative (Block #75) says “SEARCH-R1 exhibits significant epistemic misalignment, with elevated groundedness even under insufficient evidence (≈ 0.10 at E = 1 and 0.14 at E = 2).” But Definition 3.1 (Block #19) defines E=2 as “good evidence,” not insufficient; and the values 0.10–0.14 are low compared to other models in Figure 6 (Block #69).
+- Impact: The text contradicts the evidence state definitions and mischaracterizes the magnitude of groundedness for Search-R1. This undermines the credibility of the interpretation and the claimed behavioral profile of Search-R1.
+- Severity: Medium to High; affects the accuracy of model-specific findings.
+
+8) Figure 1 search-type label inconsistency
+- Evidence: Figure 1 description (Section 1, Block #7) lists search bar categories as “Initial, Recovery, FollowUp, Refined.” Table 1 (Section 1, Block #6) defines search behavior types as Initial/Repeat/FollowUp/Refined.
+- Impact: “Recovery” is a competency, not a search action category; “Repeat” is missing. This inconsistency can cause confusion about annotation categories and reported distributions.
+- Severity: Medium; impacts interpretability of dataset composition.
+
+9) Inconsistent reported synthesis gain for Search-R1
+- Evidence: Section 4.5 (Block #38) states “Search-R1 … +1.27 F1 on average.” Appendix Table 5 (Block #82) lists “Overall Avg. ΔF1” for Search-R1 as 1.27 but the paragraph immediately above Table 5 claims “highest overall improvement (+1.06 F1).”
+- Impact: Conflicting aggregate improvement figures weaken confidence in synthesis results; it is unclear which number is correct.
+- Severity: Medium; affects the reliability of the agent synthesis claim.
+
+10) Minor but recurrent precision/definition issues
+- ERF survival plot label mismatch: Figure 3 (Right, Block #32/35) labels “P(remaining E ≤ 2)” while the text defines low-evidence as E < 2. This is minor but imprecise.
+- Number of “annotation fields”: Section 3.1 (Block #16) says reduced to 8 features; Table 1 (Block #6) and Figure 1 imply more categories when counting types plus clarity/quality/grounding/correctness. The mapping of “features” vs. “categories” is not clearly specified. No direct evidence found that reconciles the count.
+
+If addressed, these issues would improve the methodological clarity and strengthen the validity of conclusions.
+
+Conclusion
+The manuscript contains several high-impact internal inconsistencies—most notably the recovery event definition (Equation 7), conflicting notation for C_{i,t}, contradictory overconfidence rates, schema mismatches between text and Appendix, and misstatements about evidence states. These issues materially affect the correctness of key metrics (ERF, CE, RQI interpretations) and the reliability of reported findings. Clarifying and correcting these points is necessary to ensure scientific validity.

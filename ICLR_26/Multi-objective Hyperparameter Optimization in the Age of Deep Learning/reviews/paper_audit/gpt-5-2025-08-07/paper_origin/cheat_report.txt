@@ -1,0 +1,82 @@
+Academic integrity and consistency risk report
+
+Summary: The manuscript contains several high-impact internal inconsistencies and methodological ambiguities that materially affect correctness, reproducibility, and the trustworthiness of the claims. Below are the most salient issues with explicit anchors.
+
+1) Definition of expert priors is mathematically inconsistent with later usage
+- Evidence: Section 2, Equation (1) (Block #8): π_{f_i}(λ) = P(f_i(λ) = min_{λ'∈Λ} f_i(λ')).
+- Problem: For continuous spaces, the event “f_i(λ) equals the global minimum” has probability zero almost everywhere; more fundamentally, the prior should be a distribution over the optimizer location λ (e.g., P[λ = arg min f_i]) or a density over λ reflecting belief. This definition conflicts with later implementation where priors are Gaussian densities over λ (Appendix D, Blocks #58–#60).
+- Impact: The acquisition in Equation (4) multiplies by π_{f_j}(λ) treated as a PDF over λ; with Equation (1) as stated, π is not a valid density for this purpose. This undermines the theoretical formulation and the correctness of the acquisition weighting.
+
+2) Contradictory parameterization and notation for the prior decay exponent
+- Evidence:
+  - Section 4.1 (Block #13): γ = exp(−n^2_{BO}/n_d), contrasted with πBO’s γ = 10/n.
+  - Appendix E.1 (Block #61): πBO in NePS uses γ = e^{-n_{BO}/n_d} (not 10/n).
+  - Appendix H.2 (Block #77): “influenced by two key parameters — β and ε… aggressive β setting,” although β is not defined anywhere for PriMO; PriMO uses γ in Section 4.1.
+- Problem: There is a three-way inconsistency: the manuscript’s description of πBO (10/n), the stated implementation used for πBO baseline (exp(-n_BO/n_d)), and PriMO’s discussion later referring to β instead of γ.
+- Impact: This ambiguity directly affects fair baseline comparison and interpretation of robustness to misleading priors. Readers cannot assess whether observed differences are due to algorithmic design or differing decay schedules.
+
+3) Pseudocode/data structure mismatch that makes the BO step ill-specified
+- Evidence:
+  - Algorithm 1 (Block #15): computes y ← w^T y (scalar) but then stores D ← D ∪ {(λ, y-vector)}. The computed scalar y is not inserted into D.
+  - Algorithm 3 (Block #17): again computes y ← w^T y (scalar) and stores D ← D ∪ {(λ_new, y-vector)}; the scalar is not stored.
+  - Section 4.1 (Block #13), Eq (3): defines linear scalarization and implies a scalar BO objective/acquisition α(λ, D).
+- Problem: The acquisition α(λ, D) used in BO typically expects scalar responses to fit a surrogate on the scalarized objective. The algorithms store vector-valued outcomes in D while computing the scalar but not using it for D. This is a clear internal inconsistency between the intended scalarized BO and the dataset contents.
+- Impact: This affects implementability and correctness of the BO phase. If D holds vectors, α(·) as a scalar acquisition over a scalar surrogate is undefined; if D should be scalarized, the pseudocode does not store the scalar. The claimed results hinge on a BO that is not coherently specified.
+
+4) Missing parameter input and unused parameters in pseudocode
+- Evidence: Algorithm 2 (Block #16) computes γ = exp(−n_{BO}^2/n_d) but n_d is not provided to the function; η is passed in but never used.
+- Problem: The pseudocode is incomplete for computing γ and includes extraneous parameters.
+- Impact: Reduces reproducibility and clarity of the method; undermines confidence in implementation fidelity to the described algorithm.
+
+5) Initial design’s stated use of priors contradicts its algorithmic specification
+- Evidence:
+  - Section 4.2 (Block #14): “we choose one of the priors over multiple objectives uniformly at random during each iteration” in the initial design.
+  - Algorithm 1 (Block #15): calls MOASHA(Λ, η, z_min, z_max) with no incorporation of priors; sampling is not conditioned on any π_{f_i}.
+- Problem: The text claims the initial design leverages priors during sampling, while the provided algorithm does not integrate priors.
+- Impact: This mismatch affects the explanation for PriMO’s strong starts and compute-efficiency; readers cannot reconcile claimed behavior with the provided method.
+
+6) Contradictory prior construction details (σ values and perturbation)
+- Evidence: Appendix D (Blocks #58–#60).
+  - States priors are “perturbed by a Gaussian noise with a σ depending on prior quality.”
+  - Good priors: perturb best configuration with σ = 0.01; Bad priors: select worst configuration “and do not perturb it.”
+  - Then: “we create a Gaussian distribution over each, N(λ, σ^2), where σ = 0.25 for all priors.”
+- Problem: σ is stated as 0.01 for good priors and “no perturbation” for bad priors, but then a universal σ = 0.25 is used for all priors to form Gaussian distributions.
+- Impact: This is a material inconsistency about prior strength/quality used in experiments, directly affecting claims of robustness and the interpretation of “good” vs “bad” priors.
+
+7) Conflicting statements about performance under bad priors
+- Evidence:
+  - Section 5.4 (Block #26): “Under all bad priors… PriMO… nearly catches up with BO+RW,” implying BO+RW is best at final budget.
+  - Appendix H.2 (Block #77): “PriMO achieves the best final performance across all benchmarks, with MO-Priorband a close second,” under bad priors.
+- Problem: These conclusions contradict each other on which algorithm has the best final performance under bad priors.
+- Impact: Undermines credibility of the empirical conclusions; readers cannot ascertain the true ranking without raw results.
+
+8) Budget mismatch between headline figure and stated experimental protocol
+- Evidence:
+  - Section 5.1 (Block #20): “run for 20 equivalent full function evaluations.”
+  - Figure 1 left (Blocks #4–#7): shows evaluations up to 25.
+- Problem: The headline comparison uses a different budget than the stated main protocol.
+- Impact: This discrepancy weakens the comparability of the headline claims (“state-of-the-art across 8 DL benchmarks”) to the main experiments; readers cannot reconcile the budget differences.
+
+9) Ambiguous and potentially misleading speedup annotation
+- Evidence: Figure 1 right (Blocks #4–#7): PriMO reportedly reaches ~10,200 HV near the beginning, while others reach ~10,200 by ~100 evaluations; the figure annotates “~10x speedup.”
+- Problem: If PriMO reaches the target hypervolume at ~1–10 evaluations and others at ~100, the speedup appears closer to 10–100× depending on the exact evaluation count. The figure provides discrete ticks at 1, 20, 40, 60, 80, 100 with PriMO already at ~10,200 at 1. The "~10x" annotation is not supported by the plotted axis values.
+- Impact: Overstated or imprecise speedup claims reduce trust. The manuscript should report a precise “time-to-target HV” with exact evaluation counts.
+
+10) Minor but relevant inconsistencies that hinder reproducibility
+- πBO baseline naming and settings: Section 5.2 (Block #21) refers to “Priorband-BO,” Appendix E.3 (Block #64) uses “Priorband+BO.” While minor, consistent naming is important for reproducibility.
+- The statement “All of these PD1 benchmarks have a single fidelity epoch” (Appendix F.1, Block #66) is ambiguous given Tables 3–6 list epoch ranges (fidelity levels). Clarification is needed to avoid misinterpretation.
+
+If addressed, the manuscript’s empirical contributions would be clearer. As is, the above issues represent substantive internal inconsistencies in definitions, algorithm specification, baseline parameterization, and reported results.
+
+Recommendations
+- Correct Equation (1) to define a prior density over λ (e.g., π_{f_i}(λ) ∝ belief that λ ≈ arg min f_i) and ensure all subsequent uses treat π as a PDF over λ.
+- Harmonize prior decay notation and values across Sections 4.1, E.1, and H.2; explicitly report the decay schedule used for each baseline and for PriMO in all experiments.
+- Fix Algorithms 1 and 3 to store scalarized outcomes in D when using scalarization-based BO; or explicitly define α for multi-output surrogates if vectors are intended.
+- Provide n_d to Algorithm 2; remove unused η in moprior_bo or justify its role.
+- Align Section 4.2 text with Algorithm 1 regarding whether priors are used during initial design; if not, revise the description.
+- Resolve the σ contradictions in Appendix D; report the exact σ values used for each prior condition (good/bad) and ensure consistency with the implemented sampling.
+- Reconcile the contradictory conclusions about bad prior performance (Section 5.4 vs Appendix H.2) with consistent plots and quantitative summaries.
+- Align Figure 1’s evaluation budget with the main protocol or clearly mark it as a separate experiment; quantify speedup rigorously (e.g., evaluations to reach a fixed HV threshold).
+- Standardize baseline names and clarify PD1 fidelity wording.
+
+Without these corrections, no clear determination can be made that PriMO “fulfills all desiderata” and achieves “state-of-the-art” performance, given the present internal inconsistencies.

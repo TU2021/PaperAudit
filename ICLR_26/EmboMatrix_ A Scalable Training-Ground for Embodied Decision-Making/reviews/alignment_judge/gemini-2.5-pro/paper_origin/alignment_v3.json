@@ -1,0 +1,129 @@
+{
+  "paper": "EmboMatrix_ A Scalable Training-Ground for Embodied Decision-Making",
+  "runs": [
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "deepreviewer",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "deep_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "55f39c3e353412551a5ae68e81fc4acc489b4edd",
+      "inputs": {
+        "human_review": "review_origin.txt",
+        "ai_review": "reviews/deepreviewer/gpt-5-2025-08-07/paper_origin/deep_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 1.0,
+        "weakness_coverage_recall": 0.56,
+        "ai_extra_major_points_rate": 0.33,
+        "symmetric_coverage_similarity": 0.53,
+        "note": "The AI review perfectly covered the human-identified strengths but missed several major weaknesses, including misleading evaluation claims, limited generalization, and the use of text-only inputs which bypasses perception. However, the AI review also raised important, distinct concerns not mentioned by the humans, most notably the numerical inconsistencies in the paper's results."
+      },
+      "generated_at": "2025-12-27T23:47:28"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "baseline_review.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "b3137abdd5dd456ecfb029f7bed4151251d086e2",
+      "inputs": {
+        "human_review": "review_origin.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/baseline_review.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 1.0,
+        "weakness_coverage_recall": 0.27,
+        "ai_extra_major_points_rate": 0.27,
+        "symmetric_coverage_similarity": 0.42,
+        "note": "The AI review perfectly covers all strengths but has low coverage of weaknesses, missing many specific human concerns like the fixed skill library, overstated claims, and bypassing perception. The AI also introduces valid but distinct points about the lack of real-world validation and general reproducibility gaps."
+      },
+      "generated_at": "2025-12-27T23:52:24"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "final_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "0a71ca7d783136ba33fb6b5ec9aad08ece2f0c09",
+      "inputs": {
+        "human_review": "review_origin.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/final_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 1.0,
+        "weakness_coverage_recall": 0.43,
+        "ai_extra_major_points_rate": 0.35,
+        "symmetric_coverage_similarity": 0.5,
+        "note": "The AI review successfully identifies all key strengths noted by humans but misses several critical methodological weaknesses, including the misleading nature of the EAI benchmark results, the limitations of a fixed skill library, and the absence of visual sensory inputs. Instead, the AI review introduces distinct concerns regarding benchmarking fairness, simulator integration inconsistencies, and internal data leakage."
+      },
+      "generated_at": "2025-12-28T00:04:25"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "deepreviewer",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "deep_review_merge.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "752f27bc09e656c7d041a880d0c174422eea6ca4",
+      "inputs": {
+        "human_review": "review_origin.txt",
+        "ai_review": "reviews/deepreviewer/gpt-5-2025-08-07/paper_origin/deep_review_merge.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 0.67,
+        "weakness_coverage_recall": 0.46,
+        "ai_extra_major_points_rate": 0.25,
+        "symmetric_coverage_similarity": 0.43,
+        "note": "The AI review has moderate coverage of weaknesses, missing several major points from the human reviews, such as the misleading evaluation on the EAI benchmark, the use of text-only inputs instead of sensory data, and overstated claims. The AI did, however, raise valid new concerns about baseline fairness and specific reproducibility gaps."
+      },
+      "generated_at": "2025-12-28T00:18:18"
+    }
+  ]
+}

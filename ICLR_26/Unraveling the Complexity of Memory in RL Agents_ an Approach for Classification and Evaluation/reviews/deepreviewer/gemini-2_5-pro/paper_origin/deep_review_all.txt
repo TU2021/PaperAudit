@@ -1,0 +1,186 @@
+### Review 1
+
+**Summary**
+
+This paper addresses the ambiguity surrounding the term "memory" in Reinforcement Learning (RL). The authors propose a new framework for classifying and evaluating agent memory, drawing inspiration from cognitive science. They introduce formal definitions for short-term memory (STM) and long-term memory (LTM), as well as declarative and procedural memory, based on quantifiable parameters like the agent's context length (K) and the environment's correlation horizon (ξ). The paper distinguishes between Memory Decision-Making (Memory DM) tasks, which require declarative memory, and Meta-RL tasks, which require procedural memory. A key contribution is a systematic methodology (Algorithm 1) for designing experiments to test LTM and STM capabilities correctly. The authors empirically demonstrate that failing to follow this methodology can lead to incorrect conclusions about an agent's memory, using experiments in the Passive T-Maze and MiniGrid-Memory environments.
+
+**Soundness**
+
+The methodology presented in this paper is sound and logically consistent. The definitions provided in Section 5 are built upon clear, measurable quantities: the agent's context length `K`, the correlation horizon `ξ`, and the number of environments/episodes. The core distinction between STM (`ξ ≤ K`) and LTM (`ξ > K`) is intuitive and provides a solid foundation for the proposed experimental protocol. Theorem 1, which establishes the "context memory border" `K̄`, is straightforward and correctly derived. The experiments in Section 6 effectively support the paper's central thesis. The comparison between "variable mode" and "fixed mode" in Figure 4 provides a compelling demonstration of how an improper experimental setup can conflate STM and LTM, leading to erroneous conclusions. The results in Figure 5 further reinforce the validity of the framework by showing predictable performance changes as `K` and `ξ` are manipulated relative to each other.
+
+**Presentation**
+
+The paper is exceptionally well-written and organized. The authors do an excellent job of motivating the problem in the introduction by highlighting the inconsistent use of "memory" in existing literature. The progression from cognitive science concepts (Section 4.1) to formal RL definitions (Section 5) is logical and easy to follow. The use of figures is highly effective; Figure 1 and Figure 2 provide clear visual intuitions for the proposed memory dichotomies, and Figure 3 presents a comprehensive classification scheme. Algorithm 1 is presented clearly and provides an actionable guide for researchers. The experimental results in Figures 4 and 5 are well-labeled and effectively illustrate the key takeaways.
+
+**Contribution**
+
+The primary contribution of this work is the establishment of a much-needed standardized framework for discussing, classifying, and evaluating memory in RL agents. While the concepts of LTM and STM are not new to the field, this paper is the first to provide rigorous, quantitative definitions that are directly tied to an agent's architecture and the environment's structure. The decoupling of Memory DM and Meta-RL tasks, and the mapping to declarative and procedural memory, brings significant clarity to the field. The proposed experimental methodology (Algorithm 1) is a major practical contribution that will enable more rigorous and reproducible research on memory-enhanced agents. This work has the potential to unify a fragmented area of RL research.
+
+**Strengths**
+
+1.  **Clear Formalization:** The paper provides clear, quantitative, and actionable definitions for different types of memory in RL (Definition 3, Definition 4), moving the field from ambiguous qualitative descriptions to a formal framework.
+2.  **Practical Methodology:** Algorithm 1 offers a concrete and easy-to-follow protocol for designing experiments that can reliably distinguish between LTM and STM capabilities, which is a significant practical strength.
+3.  **Convincing Empirical Evidence:** The experiments in Section 6, particularly the contrast shown in Figure 4, provide strong evidence for the necessity of the proposed methodology and clearly illustrate the pitfalls of naive experimental design.
+4.  **Excellent Presentation:** The paper is very well-structured, clearly written, and uses effective visualizations (Figures 1, 2, 3) to communicate complex ideas intuitively.
+
+**Weaknesses**
+
+1.  **Limited Scope of Agents:** The experiments exclusively use transformer-based agents. While the framework is presented as general, its application to other memory architectures, such as RNNs or agents with external memory buffers, is only discussed theoretically. Demonstrating the methodology with a wider variety of agent architectures would strengthen the paper's claims of generality.
+2.  **Binary Definition of Memory:** The distinction between LTM and STM is sharply defined by the condition `ξ > K`. In practice, there might be a "gray area" where an agent can partially solve tasks with `ξ` slightly larger than `K`. The framework could benefit from a discussion of this boundary condition.
+
+**Questions**
+
+1.  The framework maps procedural memory to Meta-RL settings where `n_envs * n_eps > 1`. How would you classify the learning of a complex, reusable skill (e.g., opening a door) that is learned and applied multiple times within a single, long episode in one environment (`n_envs = 1, n_eps = 1`)? Does this not also constitute a form of procedural memory?
+2.  Your definition of a memory mechanism in Definition 6 introduces an "effective context" `K_eff`. For an RNN, you state `K=1` and `K_eff` is achieved via the hidden state. Could you elaborate on how one might practically measure or estimate `K_eff` for an architecture like an RNN, which is crucial for applying your methodology?
+
+**Rating**
+
+- Overall (10): 9 — The paper provides a much-needed and well-executed formalization of memory in RL, supported by a strong methodology and clear experiments (Section 5, Section 6).
+- Novelty (10): 8 — While the concepts are inspired by prior work, the rigorous formalization and the proposed experimental framework are highly novel and impactful for the RL community (Algorithm 1).
+- Technical Quality (10): 9 — The definitions are precise, the theorem is sound, and the experiments are well-designed to validate the central claims (Theorem 1, Figure 4).
+- Clarity (10): 10 — The paper is exceptionally well-written, with clear definitions, intuitive figures, and a logical structure that makes the complex topic highly accessible (Figure 1, Figure 2, Section 5).
+- Confidence (5): 5 — I am highly confident in my assessment, as I am familiar with the literature on memory in RL and find the paper's arguments compelling.
+
+---
+
+### Review 2
+
+**Summary**
+
+This paper attempts to bring order to the concept of "memory" in reinforcement learning by proposing a set of formal definitions for long-term, short-term, declarative, and procedural memory. The authors base their framework on the relationship between an agent's context length (`K`) and the time gap (`ξ`) between an event and a corresponding decision. They propose a methodology for setting up experiments to test these memory types and conduct experiments on simple gridworld tasks to show that improper setups can be misleading.
+
+**Soundness**
+
+The paper's logical foundation is questionable in its practical significance. The core idea—that long-term memory is required when the necessary information is outside the agent's immediate context (`ξ > K`)—is an almost tautological point that is already implicitly understood and practiced by researchers in the field. The formalization presented in Section 5, while mathematically tidy, essentially just puts symbols to this existing intuition without adding significant new insight. The experiments in Section 6 use toy environments (Passive T-Maze, MiniGrid-Memory) and standard transformer agents. The finding that an agent without an explicit long-term memory mechanism fails on a task requiring it (Figure 5, center) is entirely expected and does not constitute a surprising result. The main experimental result in Figure 4 simply shows that averaging over easy (STM) and hard (LTM) tasks can mask failure on the hard tasks, which is a general principle of evaluation, not one specific to memory.
+
+**Presentation**
+
+The presentation is overly verbose for the simplicity of the core idea. The paper spends a great deal of time defining terms (Section 5) that are arguably just relabeling of existing concepts. For instance, the distinction between "Memory DM" and "Meta-RL" is useful, but the subsequent mapping to "declarative" and "procedural" memory feels forced and adds a layer of jargon. The figures are generally clear, but Table 1 is convoluted and difficult to parse. The writing is clear, but the paper could be made much more concise without losing its main message.
+
+**Contribution**
+
+The contribution of this paper is marginal. It provides a vocabulary for discussing memory, but it is unclear if this vocabulary is an improvement over the existing, albeit informal, language used by the community. The primary "contribution," Algorithm 1, outlines an experimental procedure that most competent researchers would likely follow by intuition: to test long-term memory, ensure the memory requirement exceeds the agent's context window. The paper does not propose a new memory-enabled agent or a novel technique for improving memory. It is a position paper that formalizes common sense, and its impact on advancing the capabilities of RL agents is likely to be minimal.
+
+**Strengths**
+
+1.  **Problem Identification:** The paper correctly identifies a real problem in the field: the term "memory" is used inconsistently, which complicates the comparison of different methods (Section 1, Section 3).
+2.  **Attempt at Unification:** The work represents a genuine attempt to create a unified framework, which is a commendable goal. The distinction between Memory DM and Meta-RL is a useful clarification.
+
+**Weaknesses**
+
+1.  **Limited Novelty:** The core concepts of testing memory by manipulating context length and task horizon are not new. The paper's main contribution is a formal notation for these existing ideas, which feels incremental.
+2.  **Oversimplified Experiments:** The experiments are conducted in very simple environments that do not reflect the complexity of memory challenges in more realistic domains. The results (e.g., that a transformer fails when `ξ > K`) are predictable and do not offer new insights into agent behavior.
+3.  **Brittle Definitions:** The definition of declarative vs. procedural memory based strictly on `n_envs × n_eps` (Definition 3) is overly simplistic and brittle. An agent can learn procedural skills within a single complex environment, and declarative facts can be relevant across episodes. This rigid definition does not capture the nuances of memory.
+4.  **Limited Practical Value:** It is unclear how this framework would help a practitioner build a better agent. It tells them how to test an agent, but the testing protocol is largely intuitive.
+
+**Questions**
+
+1.  The central claim is that violating the proposed methodology leads to incorrect judgments. However, isn't the finding in Figure 4 (variable mode) simply an instance of poor experimental design, where the distribution of task difficulty is not controlled? How is this specific to memory evaluation, rather than a general principle of empirical science?
+2.  The paper's framework seems heavily tailored to transformer-style architectures with a clear, fixed context `K`. How would you apply Algorithm 1 to an agent whose memory is implemented via a world model or an external memory buffer, where the concept of a fixed `K` is less clear?
+3.  Do you believe that experienced researchers in this area are genuinely confused about the difference between in-context and out-of-context recall? If not, who is the primary audience for this framework?
+
+**Rating**
+
+- Overall (10): 4 — The paper formalizes intuitive concepts but lacks significant novelty and provides predictable experimental results on toy tasks (Section 6).
+- Novelty (10): 3 — The contribution is primarily a new set of definitions for existing, well-understood concepts in memory-based RL (Section 5).
+- Technical Quality (10): 6 — The definitions are logically consistent, but the experiments are too simple to convincingly demonstrate the broad utility of the framework (Figure 5).
+- Clarity (10): 7 — The paper is clearly written, but the introduction of new jargon for simple concepts can sometimes obscure the main point (Table 1).
+- Confidence (5): 5 — I am confident in my evaluation, having worked on similar problems and finding the contributions to be of limited significance.
+
+---
+
+### Review 3
+
+**Summary**
+
+This paper presents a formal framework for classifying and evaluating memory in RL agents. It introduces precise definitions for short-term memory (STM) and long-term memory (LTM) based on the relationship between an agent's context length `K` and the environment's correlation horizon `ξ`. It also distinguishes declarative memory (used in single-task "Memory DM" settings) from procedural memory (used in multi-task/multi-episode "Meta-RL" settings). The core of the work is a proposed algorithm for setting up experiments to correctly isolate and test LTM versus STM. The authors use experiments to show that failing to control for `K` and `ξ` can lead to ambiguous or incorrect conclusions about an agent's LTM capabilities.
+
+**Soundness**
+
+The technical soundness of the proposed framework is strong. The definitions are built on a solid, quantifiable foundation. Definition 4, which formalizes STM and LTM, is precise and directly usable. Theorem 1 logically follows from this definition, providing a clear criterion (`K ≤ K̄`) for designing experiments that exclusively test LTM. Algorithm 1 is a direct and sound application of these principles. The experimental methodology is robust; the authors correctly identify a key confounder in memory evaluation (i.e., environments with variable correlation horizons) and demonstrate its effect in Figure 4. This experiment provides strong validation for the necessity of their proposed controlled setup. The second experiment (Figure 5) is also well-conceived, systematically demonstrating the "relative" nature of LTM/STM by manipulating both `K` and `ξ` and showing the expected performance shifts.
+
+**Presentation**
+
+The paper is well-structured and clearly presented. The authors build their argument step-by-step, starting from the motivation and related work, moving to the conceptual basis in cognitive science, and then introducing their formal definitions and methodology in Section 5. The mathematical notation is consistent and clear. Algorithm 1 is a model of clarity, providing an unambiguous recipe for other researchers to follow. The figures are clean and support the text well. My only minor criticism is that Table 1 is quite dense and could potentially be simplified or split to improve readability.
+
+**Contribution**
+
+This paper makes a significant methodological contribution to the field of memory-based RL. The lack of standardized evaluation protocols has been a persistent problem, making it difficult to compare different memory architectures fairly. This work directly addresses that gap. The main contributions are:
+1.  A set of precise, operational definitions for memory types in RL (Definition 3, 4).
+2.  A clear decoupling of memory-requiring task types (Memory DM vs. Meta-RL).
+3.  A sound and practical algorithm (Algorithm 1) for designing controlled experiments to test LTM and STM.
+By providing these tools, the paper facilitates more rigorous and reproducible science in this subfield. While it doesn't introduce a new state-of-the-art agent, its contribution to the *science* of evaluating such agents is substantial.
+
+**Strengths**
+
+1.  **Methodological Rigor:** The paper's greatest strength is its focus on methodological rigor. The formal definitions and Algorithm 1 provide a clear path away from ad-hoc evaluation practices.
+2.  **Actionable Guidance:** The framework is not just theoretical; it provides concrete, actionable guidance for researchers on how to set up their experiments (e.g., how to calculate `K̄` and choose `K`).
+3.  **Clear Problem Demonstration:** The experiment in Section 6.1 (Figure 4) is a powerful and clear demonstration of the problem the paper aims to solve, showing how easily results can be misinterpreted without a rigorous methodology.
+4.  **Sound Formalism:** The definitions are mathematically precise and build on each other logically, from the definition of context length `K` to the context memory border `K̄` (Theorem 1).
+
+**Weaknesses**
+
+1.  **Vagueness of "Memory Mechanism":** Definition 6 defines a "memory mechanism" `μ(K)` as a function that yields an "effective context" `K_eff`. This definition is somewhat circular. It states *that* a mechanism allows access to out-of-context information but doesn't provide a way to analyze or quantify *how* it does so. This makes it difficult to compare different mechanisms (e.g., RNN hidden state vs. external memory) within the framework.
+2.  **Sharp LTM/STM Boundary:** The framework imposes a hard binary distinction between LTM (`ξ > K`) and STM (`ξ ≤ K`). This might not capture the full picture, as the difficulty of recalling information likely scales with the distance `ξ - K`, rather than being a step function.
+3.  **Focus on Declarative Memory:** The paper's methodology and experiments are focused entirely on declarative memory in the Memory DM setting. While acknowledged by the authors, the framework for procedural memory is left underdeveloped, limiting the immediate applicability to the Meta-RL community.
+
+**Questions**
+
+1.  Regarding Definition 6, how would you propose to measure `K_eff` for a non-trivial memory mechanism like an RNN? Without a method to estimate `K_eff`, it seems difficult to apply the condition `K̄ < ξ ≤ K_eff` from equation (6) in practice.
+2.  In your analysis of the Passive T-Maze, you calculate `K̄ = T - 1`. This implies that for any `K ≤ T - 1`, the task is purely LTM. However, if `K = T - 2`, the agent sees almost the entire trajectory except the first step. Intuitively, this seems much easier than if `K = 1`. Does your framework account for this "degree" of long-term memory requirement?
+3.  Could Algorithm 1 be extended to provide a more fine-grained analysis of an agent's memory, for example, by plotting performance as a function of `ξ` for a fixed `K` to generate a "memory horizon curve"?
+
+**Rating**
+
+- Overall (10): 8 — This is a strong methodological paper that introduces a valuable and rigorous framework for evaluating memory in RL agents (Algorithm 1).
+- Novelty (10): 7 — The formalization of existing intuitions into a coherent and actionable methodology is a novel and important contribution (Section 5).
+- Technical Quality (10): 9 — The definitions are precise, the logic is sound, and the experiments are carefully designed to support the paper's claims (Figure 4, Theorem 1).
+- Clarity (10): 9 — The paper is very well-written and structured, though some parts like Table 1 could be slightly clearer.
+- Confidence (5): 5 — I am very confident in my review; the paper's strengths and weaknesses are clear from a methodological standpoint.
+
+---
+
+### Review 4
+
+**Summary**
+
+This paper proposes a framework to systematize the study of memory in reinforcement learning, drawing analogies from cognitive neuroscience. The authors define a taxonomy of memory, distinguishing between declarative and procedural memory, and further subdividing declarative memory into short-term (STM) and long-term (LTM). These distinctions are formalized based on properties of the task (number of environments/episodes) and the relationship between the agent's context window (`K`) and the temporal distance to relevant information (`ξ`). The paper puts forth a methodology for designing experiments to test LTM and STM and provides empirical results on simple tasks to argue for the importance of this methodology.
+
+**Soundness**
+
+The paper's approach is logically sound within its own set of definitions. The distinction between in-context (STM) and out-of-context (LTM) reasoning is a valid and useful one for analysis. The proposed methodology, which involves controlling the agent's context `K` relative to the environment's minimum correlation horizon `min(ξ)`, is a sensible way to isolate these two capabilities. The experiments, while simple, effectively demonstrate the core thesis: that uncontrolled experimental setups can lead to ambiguous results (Figure 4). However, the soundness of the high-level framing relies on the appropriateness of the analogy to human memory, which is a point of weakness. The mapping of declarative/procedural memory to `n_envs * n_eps` is a significant oversimplification of the concepts from cognitive science and may not hold in more complex, realistic scenarios.
+
+**Presentation**
+
+The paper is well-written and organized. The introduction effectively frames the problem of ambiguous terminology. The use of figures to illustrate the concepts (e.g., Figure 1 and 2) is helpful for building intuition. The overall structure flows logically from motivation to formalization, methodology, and finally empirical validation. The appendices provide useful supplementary information, clarifying the motivation and experimental details.
+
+**Contribution**
+
+The main contribution is a conceptual framework and an associated evaluation methodology that encourages more rigorous empirical work on memory-based RL. By providing a common language and a set of definitions, the paper facilitates clearer communication and comparison between different approaches. The classification of tasks into Memory DM and Meta-RL, and the further breakdown based on the inner-loop task type (Table 1), is a useful conceptual map of the problem space. While the paper does not introduce a new algorithm, its contribution to the field's empirical foundations is valuable. It encourages researchers to be more precise about what kind of "memory" they are evaluating.
+
+**Strengths**
+
+1.  **Interdisciplinary Bridge:** The paper makes a commendable effort to bridge concepts from cognitive neuroscience and RL, providing an intuitive, high-level framing for the problem of agent memory.
+2.  **Clear Task Classification:** The distinction between Memory DM and Meta-RL, and the classification scheme in Table 1, provides a useful taxonomy for memory-related tasks in RL.
+3.  **Emphasis on Rigorous Evaluation:** The paper's strongest point is its call for more rigorous and standardized evaluation, backed by a concrete proposal in Algorithm 1. This is a healthy direction for the field.
+4.  **Clear Illustration of Pitfalls:** The experiment in Section 6.1 serves as an excellent cautionary tale, clearly illustrating how easy it is to draw incorrect conclusions from poorly designed experiments.
+
+**Weaknesses**
+
+1.  **Oversimplified Analogy:** The mapping from the rich concepts of declarative and procedural memory in humans to a simple formula based on the number of environments and episodes (Definition 3) is a major oversimplification. Human procedural memory (skills) can be learned within a single "episode," and declarative memory (facts) can be transferred across "environments." This weak analogy undermines the conceptual foundation of the framework.
+2.  **Limited Scope of Memory Types:** The framework focuses almost exclusively on temporal memory (recalling past events). It does not explicitly address other forms of memory relevant to RL, such as spatial memory (e.g., building a map) or associative memory, which are only mentioned in passing. The framework's applicability to agents with complex world models is unclear.
+3.  **Future Work is Needed:** The paper lays out a framework but leaves much of the work for the future. The methodology for procedural memory is not developed, and the framework has only been applied to simple agents and environments. Its utility in more complex, open-ended domains remains to be seen.
+
+**Questions**
+
+1.  The paper's distinction between declarative and procedural memory hinges on `n_envs` and `n_eps`. Consider an agent in a single, persistent world (e.g., Minecraft) where it learns both facts (e.g., "diamonds are at this location") and skills (e.g., "how to craft a pickaxe"). How would your framework classify these two types of learning, given that `n_envs = 1` and `n_eps = 1`?
+2.  How does your framework relate to the concept of "episodic memory" as used in other RL works (e.g., Pritzel et al., 2017)? It seems your definition of LTM in the Memory DM setting is closely related, but you don't make this connection explicit.
+3.  Could the proposed methodology be extended to generate a quantitative "memory score" for an agent, perhaps by finding the maximum `ξ` it can handle for a given `K`, rather than just a binary pass/fail on LTM vs. STM tasks?
+
+**Rating**
+
+- Overall (10): 7 — A valuable contribution towards standardizing memory evaluation in RL, despite some oversimplified analogies to cognitive science (Definition 3).
+- Novelty (10): 6 — The core ideas are not entirely new, but their synthesis into a single, formal methodological framework is a novel and useful contribution (Algorithm 1).
+- Technical Quality (10): 7 — The methodology for declarative memory is sound, but the conceptual framework for procedural memory is underdeveloped and based on a weak analogy (Definition 3).
+- Clarity (10): 9 — The paper is very clearly written and well-organized, making its proposed framework easy to understand (Section 5).
+- Confidence (5): 4 — I am reasonably confident in my assessment, particularly regarding the strengths of the methodology and the weaknesses of the cognitive science analogies.

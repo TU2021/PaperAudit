@@ -1,0 +1,170 @@
+# Global Summary
+Problem: Imbalanced molecular property regression where rare, high-value compounds lie in sparse target regions. Standard GNNs optimize average error and underperform on rare regimes; common oversampling distorts molecular topology, and latent-space augmentation lacks interpretability and validity guarantees.
+
+Approach: SPECTRA (Spectral Target-Aware augmentation) generates synthetic molecular graphs by (i) reconstructing multi-attribute graphs from SMILES, (ii) aligning molecule pairs via (Fused) Gromov–Wasserstein (FGW) to obtain node correspondences, (iii) interpolating Laplacian spectra (eigenvalues/eigenvectors) and node features in a shared, stable basis, and (iv) reconstructing edges and labels to form chemically valid intermediates. A rarity-aware augmentation budget uses KDE over labels to concentrate augmentation in low-density regions. Training uses a spectral GNN with edge-aware Chebyshev convolutions.
+
+Evaluation scope: Molecule generation validity/quality (RQ1), predictive performance against baselines (RQ2), error across target ranges (RQ3), and computational efficiency/Pareto trade-offs (RQ4) on MoleculeNet datasets ESOL, FreeSolv, and Lipophilicity (Lipo). Ablations on FGW alignment and KDE-based augmentation.
+
+Key findings:
+- Validity/novelty: 100% validity and high uniqueness/novelty across datasets (FreeSolv: Validity 1.000, Uniqueness 0.568, Novelty 1.000; ESOL: 1.000, 0.661, 0.949; Lipo: 1.000, 0.706, 0.992).
+- Structural diversity: Augmented molecules increase mean atoms and rings (e.g., ESOL atoms mean 13.28→19.83; rings mean 1.39→2.86), extending scaffold diversity.
+- Predictive performance: SPECTRA is competitive on MAE and SERA, often second-best to SGIR while matching best SERA on Lipo. Table 4 reports:
+  - ESOL MAE: SGIR 0.46 ± 0.19; SPECTRA 0.53 ± 0.28. ESOL SERA: SGIR 0.13 ± 0.00; SPECTRA 0.20 ± 0.00.
+  - FreeSolv MAE: SGIR 0.68 ± 0.85; SPECTRA 0.77 ± 1.05. FreeSolv SERA: SGIR 0.69 ± 0.05; SPECTRA 0.95 ± 0.29.
+  - Lipo MAE: SGIR 0.37 ± 0.13; SPECTRA 0.38 ± 0.13. Lipo SERA: SGIR 0.09 ± 0.00; SPECTRA 0.09 ± 0.00.
+- Error in sparse regimes: Figures indicate SPECTRA lowers MAE in low-density target ranges compared to baselines (exact margins not specified).
+- Efficiency: Time–MAE Pareto plots show SPECTRA on or near Pareto frontiers with reduced runtime versus transformer-based Molformer (exact runtimes not specified).
+- Ablation: Incrementally adding augmentation, alignment, and KDE improves performance; full model achieves best or near-best per dataset (e.g., FreeSolv MAE 0.769 (1.023) with full stack).
+
+Explicit caveats:
+- Exact runtime numbers, augmentation rate “perc,” number of generated samples, and exact improvements in sparse target bins are not specified.
+- Number of runs is described as “multiple” but not quantified.
+- Some baselines’ names (e.g., “Chemb”) appear as typos; mapping to specific implementations is not clarified.
+
+# Abstract
+- Problem: Valuable compounds occupy sparse target regions; standard GNNs optimize average error and fail on rare cases; existing oversampling distorts topology; embedding-based augmentation lacks structural validity.
+- Method: SPECTRA — spectral-domain augmentation:
+  - Reconstruct multi-attribute molecular graphs from SMILES.
+  - Align molecule pairs via GW/FGW couplings for node correspondences.
+  - Interpolate Laplacian eigenvalues/eigenvectors and node features in a shared basis.
+  - Reconstruct edges to synthesize physically plausible intermediates with interpolated targets.
+- Rarity-aware budgeting: KDE-derived label density directs augmentation to scarce regions.
+- Model: Spectral GNN with edge-aware Chebyshev convolutions.
+- Claims: Densifies underrepresented regions without degrading global accuracy; consistent improvements in relevant target ranges with competitive overall MAE; synthetic molecules are interpretable and reflect spectral geometry. Quantitative results not specified in abstract.
+
+# Introduction
+- Context: Graph-structured data in drug discovery, materials science, genomics; GNNs enable property prediction and design.
+- Gap: Imbalanced regression on graphs is less studied than classification; rare, high-value outcomes suffer from average-performance optimization.
+- Limitations of prior augmentation:
+  - Classical oversampling fails to preserve molecular topology/chemistry.
+  - Latent-space generation lacks interpretability/validity guarantees.
+- Proposal: SPECTRA — operates in spectral domain of graph Laplacians to interpolate spectra and node features of matched graphs, generating structurally coherent, chemically plausible molecules tailored to underrepresented label regions.
+- Contributions:
+  - Novel spectral augmentation preserving topology and focusing on low-density label regions.
+  - Improved predictive performance on rare compounds without degrading common-case accuracy.
+  - Interpretability and lower computational footprint.
+- Figure 1: Histograms/KDEs of ESOL, FreeSolv, Lipo targets (Scott’s bandwidth), highlighting skewness/spread affecting training.
+- Resources: Code and dataset link (https://anonymous.4open.science/r/SPECTRA-0D3C).
+- Quantitative details in this section: Not specified.
+
+# Related Work
+- Imbalanced learning on graphs: Oversampling, loss adjustment, posterior re-calibration; most operate in graph space rather than spectral, limiting structural constraints.
+- Spectral GNNs: Surveys and theory (Bo et al., 2023b; Wang & Zhang, 2022) show global information capture and expressiveness; prior work focuses on balanced/classification tasks.
+- Imbalanced regression methods:
+  - SMOGN (Branco et al., 2017), BMSE (Ren et al., 2022), LDS (Yang et al., 2021), RankSim (Gong et al., 2022), SERA (Ribeiro & Moniz, 2020b), SGIR (Liu et al., 2023a), SIRN (Zong et al., 2024).
+  - Trade-offs: Improvements in sparse regions often reduce accuracy in well-represented areas, especially with limited supervision/pseudo-labeling.
+- Spectral augmentation in other settings: Specformer (Bo et al., 2023a), scalable spectral GNNs (Li et al., 2025), spectral-aware augmentation for contrastive learning (Yang et al., 2024); not specifically targeting regression with imbalance.
+- Molecular generation: VAEs/RNNs/GANs (LatentGAN), RL-based (DeepGraphMolGen, MORLD), conditional generative (MGCVAE), protein-informed (DeepTarget). Focus on validity/novelty/property optimization; do not address distributional imbalance explicitly.
+- SPECTRA novelty: Spectral-domain augmentation targeting low-density labels, preserving global structure and chemical validity; avoids accuracy sacrifice in dense regions; interpretable molecules and improved regression on rare regimes.
+
+# Method
+- Pipeline (Figure 2):
+  - Align molecules via GW/FGW matching.
+  - Decompose three edge-specific Laplacians (bond type, stereo, conjugation), interpolate spectra, project/interpolate node features in aligned basis.
+  - Interpolate target values; reconstruct edges to obtain new graphs.
+- From SMILES to multi-attribute graphs:
+  - Using RDKit to build G = (V, E, X, E_attr, y).
+  - Node features X ∈ ℝ^{n×d} (OGB utilities). Edge attributes: 3D vector for bond type/stereo/conjugation.
+  - Treat edge channels as separate weighted adjacencies W^{(f)}, f = 1..F, F = 3. Unnormalized Laplacians: L^{(f)} = D^{(f)} − W^{(f)}, D^{(f)} = diag(W^{(f)}1).
+- Geometry-aware graph matching (FGW):
+  - Zero-pad adjacency matrices to common size; define uniform node distributions p_i = 1/|V_A|, q_j = 1/|V_B|.
+  - Solve GW or FGW: T* = arg min_{T∈Π(p,q)} (1 − α) L_GW(Ã, B̃, T) + α⟨M, T⟩.
+  - Convert soft T* to hard one-to-one mapping via Hungarian assignment on −T*; reorder features accordingly.
+- Spectral alignment and interpolation:
+  - Diagonalize L_A = U_AΛ_AU_A^⊤, L_B = U_BΛ_BU_B^⊤.
+  - Align bases with orthogonal Procrustes: R* = arg min_{R∈O(k)} ||U_A^⊤U_B − R||_F; set Ũ_B = U_BR*.
+  - Interpolate with mixing coefficient α ∈ (0,1): Λ_α = (1 − α)Λ_A + αΛ_B; Ũ = (1 − α)U_A + αŨ_B; U_α = qr(Ũ). Synthesize L_α = U_αΛ_αU_α^⊤. Repeat across F=3 channels.
+  - Node features: X_α = (1 − α)X_A + α X̃_B, where X̃_B is permuted via GW/FGW correspondence.
+- Graph reconstruction from spectra:
+  - For each channel, map L_α^{(f)} to nonnegative adjacency: W_α^{(f)} = max(0, −L_α^{(f)} + diag(L_α^{(f)})); zero diagonals. Assemble edges across channels.
+  - Label interpolation: y_α = (1 − α)y_A + α y_B.
+- Rarity-aware pair selection and augmentation budget:
+  - KDE over training labels estimates density ρ(y); rarity weights w_i ∝ 1/ρ(y_i), normalized.
+  - Augmentation budget per molecule: ⌊w_i · N · perc⌋, with perc ∈ [0,1] (global rate). Pair selection by sorting neighbors by |y_i − y_j|. N and perc values not specified.
+- Graph validity and conversion back to molecules:
+  - Decode node features (atomic number, charge, chirality, hybridization, aromaticity) with defaults as needed; reconstruct bonds with type/stereochemistry/conjugation; avoid duplicates.
+  - RDKit sanitization enforces valence/aromaticity/connectivity; relaxed mode for corrections if strict fails; canonical SMILES output; invalid graphs flagged.
+  - Validity metric: fraction of generated graphs successfully converted to valid SMILES.
+- Spectral GNN with edge-aware Chebyshev convolutions:
+  - L stacked blocks with ChebConv and batch normalization: H^{(ℓ+1)} = Drop(SiLU(BN(ChebConv_K(H^{(ℓ)}, A, w_e)))).
+  - Multi-attribute edge features e_{uv} ∈ ℝ^3 are projected. L not specified here; chosen via hyperparameter search (Appendix).
+
+# Experiments
+- Setup:
+  - Datasets: FreeSolv, ESOL, Lipo (Appendix A.1).
+  - RQs: RQ1 generation quality (validity/uniqueness/novelty + chemical properties QED, SA, LogP, MW, Bertz complexity BCT, NP), RQ2 predictive performance (MAE, SERA vs. baselines), RQ3 error across target ranges, RQ4 computational efficiency (runtime vs. accuracy).
+  - Ablations (Appendix A.2).
+
+## 4.1 MOLECULE GENERATION QUALITY (RQ1)
+- Validity, uniqueness, novelty (Table 1):
+  - FreeSolv: Validity 1.000, Uniqueness 0.568, Novelty 1.000.
+  - ESOL: Validity 1.000, Uniqueness 0.661, Novelty 0.949.
+  - Lipo: Validity 1.000, Uniqueness 0.706, Novelty 0.992.
+- t-SNE of Morgan fingerprints (Figure 3/Table 3): Augmented samples populate sparse regions across all datasets, improving coverage and mitigating imbalance. Exact counts not specified.
+- Atom and ring statistics (Table 2; Original/Augmented):
+  - Atoms min: FreeSolv 1/5, ESOL 1/2, Lipo 7/10.
+  - Atoms mean: FreeSolv 8.73/12.06, ESOL 13.28/19.83, Lipo 27.04/22.80.
+  - Atoms max: FreeSolv 24/20, ESOL 55/28, Lipo 115/115.
+  - Rings min: FreeSolv 0/0, ESOL 0/0, Lipo 0/0.
+  - Rings mean: FreeSolv 0.66/1.77, ESOL 1.39/2.86, Lipo 3.49/3.25.
+  - Rings max: FreeSolv 5/8, ESOL 8/7, Lipo 13/9.
+- Property–target joint distributions (Figure 3): Augmented molecules follow trends similar to originals for LogP, SA, QED, MW, BT; extend coverage while maintaining realistic distributions. Quantitative correlations not specified.
+
+## 4.2 PREDICTIVE PERFORMANCE (RQ2)
+- Baselines compared: GraphCL, MolCLR, Molformer, ChebNet (“Chemb”), HiMol, SGIR.
+- Metrics: Mean Absolute Error (MAE) and Squared Error Relevance Area (SERA), reported as “mean ± var” (Table 4).
+- Results (Table 4):
+  - ESOL MAE: Chemb 0.59 ± 0.32; GraphCL 0.78 ± 0.40; HiMol 0.51 ± 0.22; MolCLR 0.73 ± 0.40; MolFormer 1.66 ± 1.68; SGIR 0.46 ± 0.19; SPECTRA 0.53 ± 0.28.
+  - FreeSolv MAE: Chemb 0.93 ± 1.26; GraphCL 1.76 ± 2.30; HiMol 0.97 ± 1.46; MolCLR 1.12 ± 1.31; MolFormer 2.84 ± 6.87; SGIR 0.68 ± 0.85; SPECTRA 0.77 ± 1.05.
+  - Lipo MAE: Chemb 0.41 ± 0.15; GraphCL 0.73 ± 0.30; HiMol 0.41 ± 0.14; MolCLR 0.43 ± 0.14; MolFormer 0.81 ± 0.38; SGIR 0.37 ± 0.13; SPECTRA 0.38 ± 0.13.
+  - ESOL SERA: Chemb 0.25 ± 0.01; GraphCL 0.36 ± 0.00; HiMol 0.17 ± 0.00; MolCLR 0.32 ± 0.00; MolFormer 2.77 ± 0.01; SGIR 0.13 ± 0.00; SPECTRA 0.20 ± 0.00.
+  - FreeSolv SERA: Chemb 1.07 ± 0.19; GraphCL 2.59 ± 0.45; HiMol 1.34 ± 0.74; MolCLR 1.36 ± 0.18; MolFormer 10.61 ± 12.16; SGIR 0.69 ± 0.05; SPECTRA 0.95 ± 0.29.
+  - Lipo SERA: Chemb 0.11 ± 0.00; GraphCL 0.40 ± 0.00; HiMol 0.10 ± 0.00; MolCLR 0.11 ± 0.00; MolFormer 0.54 ± 0.00; SGIR 0.09 ± 0.00; SPECTRA 0.09 ± 0.00.
+- Claims: SPECTRA achieves consistently strong performance, is competitive with best models on ESOL/Lipo, second-best on FreeSolv, and excels in capturing underrepresented patterns.
+
+## 4.3 ERROR DISTRIBUTION ACROSS TARGET RANGES (RQ3)
+- Figure 4 (bar charts): MAE dissected by target ranges per dataset; baselines show higher errors in low-density regions; SPECTRA shows markedly lower errors in sparse regions. Exact numeric margins not specified.
+
+## 4.4 EFFICIENCY AND PARETO OPTIMALITY (RQ4)
+- Figure 5: Runtime (log scale) versus MAE across models/datasets; Pareto frontiers highlighted.
+- Claim: SPECTRA lies on or near Pareto frontier across datasets, achieving favorable performance–efficiency trade-off. Compared to Molformer’s substantial runtime, SPECTRA attains competitive/superior accuracy with reduced computational overhead.
+- Exact runtime values and training times per model/dataset are not specified in the text.
+
+# Conclusion
+- SPECTRA improves predictive accuracy in rare target regimes, preserves property–target correlations, and balances accuracy with efficiency.
+- Demonstrates spectral augmentation as an interpretable strategy for imbalanced regression in molecular property prediction.
+- Future work: Multi-property prediction and incorporation of 3D features.
+
+# References
+- Key cited areas:
+  - Imbalanced learning and regression: SMOTE (Chawla et al., 2002), SMOGN (Branco et al., 2017), BMSE (Ren et al., 2022), LDS (Yang et al., 2021), RankSim (Gong et al., 2022), SERA (Ribeiro & Moniz, 2020a/b), SGIR (Liu et al., 2023a/b), SIRN (Zong et al., 2024), posterior recalibration (Tian et al., 2020), class-balanced/focal losses (Cui et al., 2019; Lin et al., 2017).
+  - Spectral GNNs and augmentation: survey (Bo et al., 2023b), Specformer (Bo et al., 2023a), expressive power (Wang & Zhang, 2022), scalability via Laplacian sparsification (Li et al., 2025), spectral-aware augmentation (Yang et al., 2024).
+  - Molecular generation and property prediction: LatentGAN (Prykhodko et al., 2019), DeepGraphMolGen (Khemchandani et al., 2020), MORLD (Jeon & Kim, 2020), MGCVAE (Lee & Min, 2022), DeepTarget (Chen et al., 2023), Attentive FP (Xiong et al., 2020), MoleculeNet (Wu et al., 2018), Molformer (Ross et al., 2022), GraphCL (You et al., 2020), MolCLR (Wang et al., 2022), HiMol (Zang et al., 2023).
+  - Chemical property metrics: QED (Bickerton et al., 2012), SA (Ertl & Schuffenhauer, 2009), LogP (Wildman & Crippen, 1999), Bertz complexity (Bertz, 1981), NP (Ertl et al., 2008).
+
+# Appendix
+- A.1 Dataset details (Table 5; MoleculeNet tasks):
+  - ESOL: 1,128 compounds; water solubility (log solubility in mol/L).
+  - FreeSolv: 642 compounds; hydration free energy in water.
+  - Lipophilicity (Lipo): 4,200 compounds; octanol/water distribution coefficient (logD at pH 7.4).
+- A.2 Ablation study (Table 6; mean (std) per-sample errors over multiple runs):
+  - No augmentation/align/KDE: ESOL 0.586 (0.568); FreeSolv 0.926 (1.125); Lipo 0.408 (0.384).
+  - +Aug only: ESOL 0.552 (0.562); FreeSolv 0.863 (1.128); Lipo 0.384 (0.371).
+  - +Aug +KDE: ESOL 0.534 (0.515); FreeSolv 0.869 (1.113); Lipo 0.378 (0.362).
+  - Full (Aug + Align + KDE): ESOL 0.534 (0.525); FreeSolv 0.769 (1.023); Lipo 0.377 (0.359).
+  - Notes: Excluding FGW alignment notably hurts FreeSolv; KDE improves imbalanced-region performance. Number of runs not specified.
+- A.3 Experimental setup:
+  - Hardware: Linux server; two 12-core Intel Haswell processors; 256 GB RAM; four NVIDIA A100 GPUs (80 GB each).
+  - Software: Python 3.8.19; PyTorch 2.1.2.
+  - Model: Chebyshev GCN (ChebConv).
+  - Hyperparameter search ranges:
+    - Hidden dimension {128, 256, 512}
+    - Layers {3, 4, 5}
+    - Dropout {0.0, 0.1, 0.3}
+    - Learning rate {1e−3, 2e−3, 5e−4}
+    - Chebyshev filter order k {2, 3, 5}
+    - Epochs {500}
+    - Batch size {32, 64}
+    - Alpha {0.1, 0.2, 0.3, 0.4, 0.5}
+  - Code/data: https://anonymous.4open.science/r/SPECTRA-0D3C.
+- B The use of LLMs: Used only to polish grammar.

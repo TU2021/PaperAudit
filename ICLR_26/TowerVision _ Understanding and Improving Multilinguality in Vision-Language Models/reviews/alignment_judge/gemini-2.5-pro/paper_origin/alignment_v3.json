@@ -1,0 +1,129 @@
+{
+  "paper": "TowerVision _ Understanding and Improving Multilinguality in Vision-Language Models",
+  "runs": [
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "deepreviewer",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "deep_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "55f39c3e353412551a5ae68e81fc4acc489b4edd",
+      "inputs": {
+        "human_review": "review_origin.txt",
+        "ai_review": "reviews/deepreviewer/gpt-5-2025-08-07/paper_origin/deep_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 1.0,
+        "weakness_coverage_recall": 0.5,
+        "ai_extra_major_points_rate": 0.5,
+        "symmetric_coverage_similarity": 0.5,
+        "note": "The AI review covers all strengths but misses half of the human's weaknesses, specifically the lack of novelty in the video model and concerns about the effectiveness of automated data filtering. The AI introduces several valid new concerns, including evaluation gaps (biased judges, single metrics) and potential data leakage."
+      },
+      "generated_at": "2025-12-27T23:47:44"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "baseline_review.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "b3137abdd5dd456ecfb029f7bed4151251d086e2",
+      "inputs": {
+        "human_review": "review_origin.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/baseline_review.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 1.0,
+        "weakness_coverage_recall": 0.44,
+        "ai_extra_major_points_rate": 0.17,
+        "symmetric_coverage_similarity": 0.67,
+        "note": "Review B achieves perfect coverage of the paper's strengths but diverges significantly on weaknesses, often framing points criticized by humans (e.g., limited novelty, counter-intuitive alignment findings, lack of qualitative analysis) as strengths or settled design choices. While topic overlap is high, this sentiment mismatch lowers the weakness recall. Review B adds a specific concern regarding video data transparency but otherwise adheres to the substantive topics raised by the human reviewers."
+      },
+      "generated_at": "2025-12-27T23:54:00"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "final_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "0a71ca7d783136ba33fb6b5ec9aad08ece2f0c09",
+      "inputs": {
+        "human_review": "review_origin.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/final_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 1.0,
+        "weakness_coverage_recall": 0.5,
+        "ai_extra_major_points_rate": 0.21,
+        "symmetric_coverage_similarity": 0.56,
+        "note": "The AI review aligns perfectly with the human review on strengths, identifying the same contributions in performance and resources. However, substantial divergence occurs in the weaknesses: the AI praises the pipeline clarity and alignment findings that the human reviewers critique for lack of novelty and insufficient explanation. Furthermore, the AI misses the human request for qualitative error analysis and video-specific ablations, while introducing its own unique concerns regarding reporting transparency and formatting inconsistencies."
+      },
+      "generated_at": "2025-12-28T00:03:53"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "deepreviewer",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "deep_review_merge.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "752f27bc09e656c7d041a880d0c174422eea6ca4",
+      "inputs": {
+        "human_review": "review_origin.txt",
+        "ai_review": "reviews/deepreviewer/gpt-5-2025-08-07/paper_origin/deep_review_merge.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 1.0,
+        "weakness_coverage_recall": 0.5,
+        "ai_extra_major_points_rate": 0.25,
+        "symmetric_coverage_similarity": 0.57,
+        "note": "The AI review perfectly covers the human's strength points but misses half of the weaknesses, notably the lack of video-specific ablations and the poor explanation for a counter-intuitive finding. Conversely, the AI introduces several valid new concerns regarding evaluation breadth, reporting gaps, and data licensing."
+      },
+      "generated_at": "2025-12-28T00:18:10"
+    }
+  ]
+}

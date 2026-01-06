@@ -1,0 +1,104 @@
+{
+  "paper": "Two-Way Garment Transfer_ Unified Diffusion Framework for Dressing and Undressing Synthesis",
+  "runs": [
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "deepreviewer",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "deep_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180
+      },
+      "config_key": "24b66d75b94c155df325f4e5f2603b40312e4469",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/deepreviewer/gpt-5-2025-08-07/paper_origin/deep_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "motivation_strength_alignment": 0.9,
+        "weakness_error_alignment": 0.6,
+        "overall_alignment": 0.75,
+        "explanation": {
+          "strength": "Both reviews identify the same core strengths: the novel unified framework for VTON/VTOFF, the bidirectional approach with mutual task enhancement, the strong experimental results, and the effective two-stage training paradigm.",
+          "weakness": "Both reviews highlight major weaknesses in presentation clarity, reproducibility, and mask handling. However, they diverge on other key points, with Review A focusing on the lack of comparison to advanced models and Review B critiquing an unsubstantiated theoretical claim and incomplete VTOFF evaluation.",
+          "overall": "The reviews are highly aligned in their overall judgment, recognizing the paper's strong contribution and results while also noting significant flaws in presentation and completeness. The high alignment on strengths and moderate alignment on weaknesses results in a consistent message about the paper's value and shortcomings."
+        }
+      },
+      "generated_at": "2025-12-27T20:05:00"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "baseline_review.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180
+      },
+      "config_key": "a14d937ebf873b90a820c8cb44da768956431bd4",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/baseline_review.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "motivation_strength_alignment": 0.9,
+        "weakness_error_alignment": 0.5,
+        "overall_alignment": 0.6,
+        "explanation": {
+          "strength": "Both reviews identify the unified VTON/VTOFF framework, the bidirectional technical approach, and the mutual task enhancement as the core strengths, showing very high alignment. Review B provides a much more granular breakdown of the technical components and experimental validation, but these details support the same high-level points made by Review A.",
+          "weakness": "Both reviews agree on key weaknesses, such as poor presentation clarity and missing details on mask prediction. However, Review B identifies multiple additional major flaws absent in Review A, including a lack of reproducibility information, unvalidated conceptual claims, and significant gaps in the evaluation protocol.",
+          "overall": "The reviews align strongly on the paper's strengths, agreeing on the novelty and effectiveness of the unified framework, but they diverge significantly on the weaknesses. Review B presents a much more comprehensive and severe critique focused on reproducibility and conceptual validation, points largely missed by Review A, leading to only a moderate match in their critical assessment."
+        }
+      },
+      "generated_at": "2025-12-27T20:09:07"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "final_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180
+      },
+      "config_key": "565dcfbed8e348ba365acb8ebe44bf867f3cd0c2",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/final_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "motivation_strength_alignment": 0.9,
+        "weakness_error_alignment": 0.55,
+        "overall_alignment": 0.6,
+        "explanation": {
+          "strength": "Both reviews identify the same core strengths: the novel unified framework for VTON/VTOFF, the bidirectional conditioning approach, the two-stage training, and strong empirical results. Review B is far more detailed, but the fundamental points are identical, leading to very high alignment.",
+          "weakness": "There is clear overlap on weaknesses related to presentation clarity, unclear mask handling, and limited baselines. However, the reviews diverge significantly, with Review B raising major concerns about reproducibility and unsubstantiated novelty claims that Review A misses, and they hold contradictory views on the quality of the ablation studies.",
+          "overall": "The reviews align strongly on the paper's main contributions but only moderately on its weaknesses, leading to a mixed overall alignment. While both see the paper as a promising contribution, they focus on different types of flaws, with Review A concerned about complexity and presentation, and Review B focusing more on scientific rigor and reproducibility."
+        }
+      },
+      "generated_at": "2025-12-27T20:12:47"
+    }
+  ]
+}

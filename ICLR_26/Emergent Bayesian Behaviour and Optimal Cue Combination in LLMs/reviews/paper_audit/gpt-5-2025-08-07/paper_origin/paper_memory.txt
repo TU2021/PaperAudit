@@ -1,0 +1,132 @@
+# Global Summary
+Problem: Do large language models (LLMs) exhibit emergent Bayesian behaviour and optimal multimodal cue combination without explicit training? The paper adopts psychophysics-style behavioural probing to infer implicit computational strategies.
+
+Core approach: Introduce BayesBench, a synthetic, reproducible benchmark with four magnitude estimation tasks (line ratio, marker location, maze distance, subtitle duration) spanning text, image, and text+image inputs. Fit LLM responses to behavioural observer models (linear, static Bayesian, sequential Bayesian/Kalman) and evaluate capability (accuracy and cue-combination efficiency) and behaviour (Bayesian Consistency Score, BCS). Perturb inputs with controlled ablations (steering prompts, Gaussian image blur, context length/order).
+
+Evaluation scope: Nine recent multimodal LLMs (closed/open-weight), human baseline under selected ablations, three session lengths per task (short, medium, long), 10 trials/session with rolling context, repeated 5 times. API interactions, temperature 0.7; extended reasoning disabled where possible (GPT-5 Mini minimum reasoning depth). Uncertainty via 30 bootstrap rounds (68% percentile intervals).
+
+Key findings:
+- More accurate models often show stronger Bayesian factor evidence and Bayes-consistent adaptation, especially in vision.
+- Accuracy does not guarantee robust cue combination. GPT-5 Mini has near-perfect text performance on maze distance (Appendix A.12: text NRMSE ≈ 0.01 vs image NRMSE ≈ 0.2) but fails to downweight image sufficiently in multimodal fusion.
+- Llama-4 Maverick achieves best multimodal performance across tasks and surpasses linear Bayesian reliability-weighted fusion; non-linear random forest fits its cue combination better than linear baselines.
+- Multimodal inputs do not universally improve error; some models (Llama-4 Maverick across all tasks; Claude 3.7 Sonnet and GPT-4o on two of three tasks) benefit.
+- BayesBench composite scores (approximate, Fig. 9): Llama-4 Maverick 0.85 (A≈0.25, E≈0.30, C≈0.30); Claude 3.7 Sonnet 0.81; GPT-4o 0.81; GPT-5 Mini 0.68 (E≈0.10); Mistral 24B 0.66; Gemini 2.5 Flash Lite 0.64; Qwen2.5 VL 32B 0.60; Phi 4 Multimodal 0.51; Gemma 3 4B it 0.43.
+- Steering ablations with biased numerical ranges increase error and reduce sequential evidence; models gravitate toward provided priors.
+
+Caveats: Bounded task ranges; limited ablation types; API non-determinism or silent vendor updates; GPT-5 Mini reasoning could not be fully disabled.
+
+# Abstract
+- Question: Whether LLMs perform optimal multimodal integration akin to human Bayesian strategies without explicit training.
+- Contribution: BayesBench with four psychophysics-inspired magnitude estimation tasks across text and image; ablations of noise, context, and instruction; and a Bayesian Consistency Score (BCS) to capture Bayes-consistent behavioural shifts when accuracy saturates.
+- Evaluation: Nine LLMs compared to human judgments.
+- Findings: Capable models often adapt Bayes-consistently; accuracy does not ensure robust cue integration. GPT-5 Mini achieves perfect text accuracy yet fails to integrate visual cues efficiently. Highlights dissociation between capability and strategy; accuracy-centric benchmarks may miss brittle uncertainty handling.
+- Release: Benchmark and consistency metric available (project page: https://bayes-bench.github.io).
+
+# Introduction
+- Motivation: Humans estimate magnitudes via Bayesian integration, weighting cues by reliability and incorporating priors, emerging without explicit instruction. Investigate whether LLMs trained on next-token prediction similarly handle uncertainty.
+- Implication: Understanding implicit uncertainty processing informs robust multimodal systems.
+- Setup: Psychophysics paradigm applied to LLMs as black-box observers to infer computational principles.
+
+# Related Work
+- Framework: Classical psychophysics methodology to test controlled stimulus uncertainty and measure signatures of Bayesian processing in LLMs.
+- Contributions:
+  1) Systematic psychophysics pipeline for four synthetic tasks (length, location, distance, duration), with ablations of noise, context, and instruction.
+  2) BayesBench benchmark combining task performance, cue-combination efficiency, and Bayesian consistency via BCS.
+  3) Evidence of emergent Bayes-consistent behaviour alongside a “Safety Gap” where accurate models fail to adopt robust strategies.
+- Human psychophysics: Regression-to-the-mean, Weber–Fechner, scalar variability, sequential biases explained by Bayesian inference. Figure 1 shows Llama-4 Maverick’s responses exhibiting regression-to-the-mean analogous to human data.
+- LLMs and Bayesian behaviour: Prior works on in-context learning as Bayesian inference, Bayesian teaching for reasoning, and Bayesian surprise in segmentation; this work targets perceptual tasks to reveal implicit strategies.
+- Multimodal studies: Existing benchmarks (MMbench, SEED-bench) test multimodal reasoning but lack controlled modality-specific noise manipulations; synthetic datasets here support fine-grained cue combination analysis.
+
+# Method
+- Tasks (3.1):
+  - Marker location: estimate marker position on a line (0–1).
+  - Line ratio: ratio of shorter to longer line.
+  - Maze distance: straight-line distance between path start/end.
+  - Duration estimation: dialogue duration from AMI Meeting Corpus transcripts.
+  - First three tasks are multimodal (text, image).
+- Ablations:
+  - Steering: verbal/numerical information in system prompt (to study uncertainty handling).
+  - Noise: constant or gradually increasing Gaussian blur in images.
+  - Context: vary history length; reverse trial sequence.
+- Behavioural models (3.2):
+  - Linear observer: μ_t = w x_t + b; y_t ~ N(μ_t, σ_dec^2).
+  - Static Bayesian observer: precision-weighted combination of stimulus x_t and prior μ_p; y_t ~ N(μ_t, σ_dec^2).
+  - Sequential Bayesian observer (Kalman filter): trial-by-trial updates with process noise q and measurement noise r; y_t ~ N(μ_t, σ_dec^2).
+  - Variants: log transforms (motivated by logarithmic magnitude perception) and affine/gain adjustments to capture miscalibration.
+- Cue combination models (3.3):
+  - Equal weighting: y_comb = 0.5(y_text + y_image).
+  - Linear regression: y_comb = α y_text + (1−α) y_image.
+  - Bayes-optimal fusion: weights by inverse variances; Oracle variant calibrates gains/offsets and uses residual covariance (BLUE); Non-Oracle variant uses modality variances only.
+- Model evidence (3.4): Akaike Information Criterion (AIC) based factor-evidence procedure (Appendix A.8).
+- Metrics (3.5):
+  - Accuracy (NRMSE): RMSE_LLM / RMSE_baseline (baseline is constant predictor of stimulus mean; lower is better).
+  - Efficiency (RRE): NRMSE_ref / NRMSE_LLM against reference combiners (Bayes-optimal Oracle and Non-Oracle).
+  - Bayesian Consistency Score (BCS): sum over five ablations’ signs of Δw_prior from static Bayesian fits; s_a ∈ {+1, −1, 0} with saturation threshold w_prior > 0.9 yielding s_a=0. Ablations: Steering (verbal), Steering (unbiased numerical), Noise (constant), Noise (gradual), Context (longer window).
+  - Normalisations for BayesBench components (Table 2): NRMSE factor A with min/max 0/2; BCS factor C with min/max −15/15; RRE factor E is average of Oracle and Non-Oracle RREs.
+- Composite BayesBench score (3.6): S_BayesBench = (A + E + C)/3; A averaged across four tasks; E and C across three multimodal tasks; NRMSE_max = 2.
+
+# Experiments
+- Setup (4):
+  - Each task has three sessions (short, medium, long) with overlapping range-uniform priors (e.g., marker location example: Short 0.1 < s_true < 0.5; Medium 0.3 < s_true < 0.8; Long 0.5 < s_true < 0.9).
+  - 10 trials/session with rolling context; each session repeated 5 times.
+  - API interactions; temperature 0.7; reasoning disabled where possible; GPT-5 Mini at minimum reasoning depth.
+  - Models: nine LLMs (Appendix A.4/A.60), spanning closed/open, with disclosed sizes for some (e.g., Llama-4 Maverick “400B total / 17B active”; Qwen2.5 VL 32B “32B”; Mistral “24B”; Gemma 3 “4B”; others undisclosed).
+  - Human baseline collected under two ablations (constant noise, longer context).
+  - Uncertainty estimation: 30 bootstrap rounds; error bars are 68% bootstrap percentile intervals.
+- Results (5.1):
+  - Text vs image: Most models are more accurate in text than image, except maze distance where text prompts are complex; GPT-5 Mini is an outlier with near-perfect text performance (reasoning not fully disabled).
+  - Factor evidence for Bayesian behaviour is higher in image than text (Appendix A.11).
+  - Multimodal gains: Not uniform; Llama-4 Maverick best under multimodal across all tasks; Claude 3.7 Sonnet and GPT-4o improve on two of three tasks.
+  - Accuracy vs behaviour: Trend toward higher Bayesian evidence with lower error (left panel Fig. 8).
+  - Steering ablation: Providing numerical ranges reduces sequential model evidence and biased ranges increase error (triangles at larger NRMSE vs circles), indicating attraction to priors.
+- Cue combination (5.2):
+  - Efficiency does not follow accuracy. GPT-5 Mini shows poor cue-combination efficiency despite strong NRMSE, particularly in maze distance; Bayes-optimal would heavily downweight image, but the model appears unable to do so (Appendix A.12).
+  - Under image noise, many LLMs downweight image modality (Bayes-consistent).
+  - Llama-4 Maverick’s multimodal NRMSE exceeds Bayesian reliability-weighted linear fusion; non-linear random forest fits multimodal responses better than linear baselines (Figure 7).
+- Bayesian Consistency (5.3):
+  - Generally, more accurate models have higher BCS. Despite lower accuracy, Gemma 3 4B and Phi 4 Multimodal achieve decent BCS. Model/task breakdown in Appendix A.9.
+- BayesBench summary (5.4; Fig. 9 approximate values):
+  - Llama-4 Maverick: Total ≈ 0.85 (NRMSE A≈0.25; Bayes-RRE E≈0.30; BCS C≈0.30).
+  - Claude 3.7 Sonnet: ≈ 0.81 (A≈0.25; E≈0.30; C≈0.26).
+  - GPT-4o: ≈ 0.81 (A≈0.25; E≈0.30; C≈0.26).
+  - GPT-5 Mini: ≈ 0.68 (A≈0.30; E≈0.10; C≈0.28).
+  - Mistral 24B: ≈ 0.66; Gemini 2.5 Flash Lite: ≈ 0.64; Qwen2.5 VL 32B: ≈ 0.60; Phi 4 Multimodal: ≈ 0.51; Gemma 3 4B it: ≈ 0.43.
+- Discussion (6):
+  - Accurate models (GPT-5 Mini, Claude 3.7 Sonnet, Llama-4 Maverick) show higher Bayesian evidence, especially in image; adapt Bayes-consistently under noise/steering/context.
+  - Accuracy does not ensure optimal fusion; GPT-5 Mini fails to downweight weak modality; highlights risk of accuracy-only benchmarks.
+  - Llama-4 Maverick surpasses linear Bayesian baseline, suggesting non-linear integration.
+  - Variability in multimodal gains suggests headroom; BCS captures behavioural shifts beyond static metrics.
+  - LLMs show behaviours consistent with Bayesian observer models; emergent properties may relate to scale/capability.
+- Limitations: Bounded task ranges; limited ablations; API non-determinism and silent updates.
+
+# Conclusion
+- BayesBench probes LLM magnitude estimation, multimodal cue integration, and Bayes-consistent adaptation.
+- Capable LLMs achieve low errors and exhibit emergent Bayesian-like strategies; strong models can combine cues efficiently, but high accuracy does not guarantee robust uncertainty handling.
+- The framework bridges psychophysics and AI, is extensible to naturalistic tasks, and motivates mechanistic analyses and scaling studies (model size, data, objectives).
+- Reproducibility: Plan to release the synthetic data generator, prompts, ablation configurations, behavioural/cue-combination model code, factor-evidence computation scripts, and evaluation code.
+
+# References
+- Key citations include Ernst & Banks (2002) on human optimal cue integration, classical psychophysics (Fechner, Weber), Bayesian brain (Knill & Pouget, 2004), time perception and Bayesian behaviours (Gibbon, Jazayeri & Shadlen, Roseboom et al., Sherman et al., Petzschner & Glasauer, Fountas et al.), LLM Bayesian behaviours (Xie et al., Qiu et al.), multimodal benchmarks (MMbench; SEED-bench), robustness to missing modality (Ma et al., 2022), efficient coding explanations (Wei & Stocker, 2015). Full bibliographic entries are provided in the manuscript.
+
+# Appendix
+- A.1 Experimental design: Modular pipeline—data/prompt generation, session structure, API interaction, analysis (Figure 10).
+- A.2 API interaction: Programmatic calls at temperature 0.7; instruct models to output only final numeric answer without reasoning; GPT-5 Mini minimal reasoning depth; unimodal and multimodal runs.
+- A.2.2 Prompt design: System prompt defines role and output format; user query provides stimulus (ASCII for line ratio/marker; concise text for maze/duration; image in visual mode); malformed outputs discarded; steering manipulations adjust system prompts.
+- A.3 Ablations:
+  - Steering: Verbal instruction to “behave like a Bayesian observer” and numerical ranges of past observations (including biased/unbiased variants).
+  - Noise: Gaussian blur—constant or gradually increasing (Figures 11–12).
+  - Context: Shorter (3 prior trials) vs longer (20 prior trials); stimulus order reversal.
+- A.4 LLMs studied (Table 3): Claude 3.7 Sonnet (undisclosed), GPT-5 Mini (undisclosed; adjustable reasoning depth), GPT-4o (undisclosed), Llama-4 Maverick (“400B total / 17B active”), Qwen2.5-VL 32B (“32B”), Mistral 24B (“24B”), Gemini 2.5 Flash-Lite (undisclosed), Phi-4 Multimodal (undisclosed), Gemma 3 4B (“4B”).
+- A.5 Human feedback: Web-based tasks; two ablations (constant noise, longer context); screenshots in Figure 13.
+- A.6 Ethics: Minimal risk, informed consent, anonymised, voluntary participation.
+- A.7 Bayesian cue combination: Non-Oracle inverse-variance weighting; Oracle calibration with gains/offsets and generalised least squares using residual covariance; both are BLUE under linear-Gaussian assumptions.
+- A.8 Factor analysis: AIC-to-likelihood transformation; nuisance-factor cell grouping; best-in-cell comparison; equal weighting across cells; compute factor probabilities (e.g., BAYESIAN vs NON-BAYESIAN).
+- A.11 Performance and evidence breakdown: Detailed NRMSE and Bayesian factor evidence per task/modality/model (figures 14–17). Note: multimodal does not always outperform unimodal; Llama-4 Maverick is an outlier with best multimodal NRMSE across all tasks.
+- A.12 GPT-5 Mini cue combination: Maze task unimodal text NRMSE ≈ 0.01 vs image NRMSE ≈ 0.2; Bayes-optimal implies near-zero image weight, but multimodal performance shows residual image influence.
+- A.13 Model variants: Logarithmic transforms (x′ = log(x + ε)); Bayesian models with affine gain/offset; AIC penalisation guards against complexity inflation.
+- Quantitative details:
+  - Trials: 10 per session; sessions repeated 5 times; three session ranges (e.g., marker location Short 0.1–0.5; Medium 0.3–0.8; Long 0.5–0.9).
+  - Bootstrapping: 30 rounds; error bars 68% percentile intervals.
+  - BCS per-model per-task (Table 4 examples): GPT-5 Mini line ratio 5.0; marker location 5.0; maze distance 1.9; Llama-4 Maverick line ratio 3.2; marker location 4.4; maze distance 3.3; Claude 3.7 Sonnet line ratio 1.5; marker location 5.0; maze distance 0.0; Qwen2.5 VL 32B line ratio −2.0; marker location 5.0; maze distance 0.5; Gemini 2.5 Flash Lite marker location −1.3; etc.
+  - Selected modality-specific Bayesian factor evidence and NRMSE values per task are provided in figures (e.g., line ratio multimodal Bayes prob/NMRSE percentages across models; marker location and maze distance breakdowns).
+- Project page: https://bayes-bench.github.io.

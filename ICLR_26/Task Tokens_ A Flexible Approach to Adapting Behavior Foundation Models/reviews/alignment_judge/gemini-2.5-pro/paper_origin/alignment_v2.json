@@ -1,0 +1,129 @@
+{
+  "paper": "Task Tokens_ A Flexible Approach to Adapting Behavior Foundation Models",
+  "runs": [
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "final_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "0a71ca7d783136ba33fb6b5ec9aad08ece2f0c09",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/final_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 1.0,
+        "weakness_coverage_recall": 0.5,
+        "ai_extra_major_points_rate": 0.42,
+        "symmetric_coverage_similarity": 0.5,
+        "note": "The AI review perfectly covers all strengths but only captures half of the weaknesses, missing the human's points on limited task complexity and lack of comparison to other PEFT methods. Conversely, the AI review introduces several major new weaknesses, including concerns about reproducibility, human study bias, and the sim-only evaluation."
+      },
+      "generated_at": "2025-12-27T20:42:15"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "baseline_review.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "b3137abdd5dd456ecfb029f7bed4151251d086e2",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/baseline_review.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 1.0,
+        "weakness_coverage_recall": 0.33,
+        "ai_extra_major_points_rate": 0.67,
+        "symmetric_coverage_similarity": 0.39,
+        "note": "The AI review perfectly covers all strengths mentioned by the human. However, there is a significant divergence in weaknesses: the AI misses key human concerns about limited task complexity, multi-task scalability, and comparison to other PEFT methods, while raising numerous distinct points about reproducibility, human study design, and the lack of quantitative metrics."
+      },
+      "generated_at": "2025-12-27T20:46:26"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "deepreviewer",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "deep_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "55f39c3e353412551a5ae68e81fc4acc489b4edd",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/deepreviewer/gpt-5-2025-08-07/paper_origin/deep_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 0.88,
+        "weakness_coverage_recall": 0.29,
+        "ai_extra_major_points_rate": 0.71,
+        "symmetric_coverage_similarity": 0.43,
+        "note": "The reviews show very high alignment on strengths, but low alignment on weaknesses. The human's concerns about exaggerated claims, unoptimized baselines, and missing PEFT comparisons are not covered by the AI. Conversely, the AI raises several major points about reproducibility (missing hyperparameters, inconsistent plots) and lack of statistical analysis that the human does not mention."
+      },
+      "generated_at": "2025-12-27T20:52:40"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "deepreviewer",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "deep_review_merge.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "752f27bc09e656c7d041a880d0c174422eea6ca4",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/deepreviewer/gpt-5-2025-08-07/paper_origin/deep_review_merge.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 1.0,
+        "weakness_coverage_recall": 0.0,
+        "ai_extra_major_points_rate": 0.57,
+        "symmetric_coverage_similarity": 0.3,
+        "note": "The reviews show near-perfect alignment on strengths (efficiency, human-likeness, modularity) but completely disjoint critiques in the weaknesses section. The human reviewer focuses on substantive methodological concerns like baseline optimization, task complexity, and validity of efficiency claims, whereas the AI focuses primarily on reporting deficiencies such as missing hyperparameters, statistical rigor, and reward details."
+      },
+      "generated_at": "2025-12-27T21:22:52"
+    }
+  ]
+}

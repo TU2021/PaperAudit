@@ -1,0 +1,102 @@
+{
+  "paper": "Timber_ Training-free Instruct Model Refining with Base via Effective Rank",
+  "runs": [
+    {
+      "config": {
+        "judge_model": "gpt-5-2025-08-07",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "baseline_file": "baseline_review.txt",
+        "final_file": "final_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 600,
+        "metric": "regression_v2_minimal",
+        "prompt_hash": "2142c04332"
+      },
+      "config_key": "1a46f14f5902ebb0fc2c14773cec6644d2fa5338",
+      "inputs": {
+        "baseline_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/baseline_review.txt",
+        "final_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/final_review_all.txt"
+      },
+      "regression": {
+        "score_delta": {
+          "baseline_score": 7.0,
+          "final_score": 7.0,
+          "delta": 0.0,
+          "scale_hint": "1-10"
+        },
+        "differences": [
+          {
+            "diff_type": "intensified_critique",
+            "summary": "Figure 1 eRank values flagged as violating Equation 1 bounds",
+            "paperaudit_types": [
+              "EVIDENCE_DATA_INTEGRITY",
+              "METHOD_LOGIC_CONSISTENCY",
+              "CONTEXT_MISALIGNMENT_INCOHERENCE"
+            ],
+            "why_impacts_score": "undermines core evidence and clarity",
+            "evidence": {
+              "baseline_quote": "Figure 1 lists eRank like 'q_proj: 26292630,' implausible given typical matrix ranks, risking misinterpretation.",
+              "final_quote": "Figure 1 eRank 'q_proj: 26292630' implausible given Equation 1 bounds 1 ≤ eRank ≤ r."
+            }
+          },
+          {
+            "diff_type": "new_critique",
+            "summary": "New notation inconsistency: singular-value indexing mismatch",
+            "paperaudit_types": [
+              "METHOD_LOGIC_CONSISTENCY",
+              "CONTEXT_MISALIGNMENT_INCOHERENCE",
+              "RHETORICAL_PRESENTATION_MANIPULATION"
+            ],
+            "why_impacts_score": "reduces reproducibility and clarity",
+            "evidence": {
+              "baseline_quote": "Clarify ordering convention for singular values; correct 'non‑decreasing' if it is a typo.",
+              "final_quote": "Singular-value indexing differs: Equation 1 (σ1…σr) vs Equation 3 (Σ=diag(σ0…σr), risking off‑by‑one confusion."
+            }
+          },
+          {
+            "diff_type": "intensified_critique",
+            "summary": "Contradiction: Top‑K preservation vs non‑decreasing Σ order",
+            "paperaudit_types": [
+              "METHOD_LOGIC_CONSISTENCY",
+              "CONTEXT_MISALIGNMENT_INCOHERENCE"
+            ],
+            "why_impacts_score": "suggests specification error affecting method correctness",
+            "evidence": {
+              "baseline_quote": "Σ in 'non‑decreasing order'; typical SVD orders non‑increasing, potential typo or convention mismatch.",
+              "final_quote": "Σ 'non-decreasing' and Equations 6–7 preserve 'Top‑K'; this contradiction affects reproducibility and correctness."
+            }
+          },
+          {
+            "diff_type": "new_critique",
+            "summary": "Model naming mismatch for merge baseline (Section 5.2 vs Figure 6)",
+            "paperaudit_types": [
+              "CONTEXT_MISALIGNMENT_INCOHERENCE",
+              "RHETORICAL_PRESENTATION_MANIPULATION"
+            ],
+            "why_impacts_score": "causes confusion about evaluated checkpoint, harming clarity",
+            "evidence": {
+              "baseline_quote": "Weighted model merge remains effective (Section 5.2; Figure 6 text).",
+              "final_quote": "Section 5.2 references 'Llama‑3‑1B,' while Figure 6 caption states 'Llama‑3.2‑1B'."
+            }
+          },
+          {
+            "diff_type": "score_rationale_shift",
+            "summary": "Clarity rating lowered due to added notation and naming issues",
+            "paperaudit_types": [
+              "RHETORICAL_PRESENTATION_MANIPULATION",
+              "CONTEXT_MISALIGNMENT_INCOHERENCE"
+            ],
+            "why_impacts_score": "expanded clarity problems justify reduced clarity score",
+            "evidence": {
+              "baseline_quote": "Clarity (10): 6 — generally clear, but numeric inconsistencies in Figure 1 and missing details reduce clarity.",
+              "final_quote": "Clarity (10): 5 — numeric inconsistencies, notation/ordering contradictions, and a model naming mismatch reduce clarity."
+            }
+          }
+        ]
+      },
+      "generated_at": "2026-01-05T20:44:28"
+    }
+  ]
+}

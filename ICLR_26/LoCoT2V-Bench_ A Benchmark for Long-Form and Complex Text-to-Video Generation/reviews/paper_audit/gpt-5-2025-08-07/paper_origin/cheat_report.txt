@@ -1,0 +1,66 @@
+Academic integrity and internal consistency risk report
+
+Summary of high-impact issues observed. Each point includes explicit anchors to the manuscript.
+
+1) Conflicting use of the abbreviation “TQ”
+- Evidence: Section 3.2.1 defines “Technical Quality (TQ)” for static quality (Block #18). Section 3.2.3 titles “TEMPORAL QUALITY (TQ)” (Block #22).
+- Why it matters: Using “TQ” for two distinct dimensions (technical quality vs temporal quality) can cause misinterpretation of results, confusion in tables/figures, and reproducibility errors when referencing “TQ” across the paper.
+
+2) HERD vs HERO naming inconsistency and mismatched sub-dimensions
+- Evidence:
+  - HERD is introduced and defined with seven sub-dimensions in Section 3.2.5 (Block #26).
+  - Appendix B.9 labels plots as “HERO Results” and lists sub-dimensions “Emotional Resonance” and “Interaction Depth” (Block #71), which do not match HERD’s “Emotional Response” and “Interpretive Depth.”
+  - Appendix B.10 radar plots again label the dimension as “HERO” (Block #72).
+- Why it matters: The benchmark’s core high-level metric is inconsistently named and its sub-dimensions differ across sections. This undermines clarity about what was measured and can invalidate comparisons or code implementation aligned to the wrong schema.
+
+3) Content Clarity prompt mislabeled as HERD in the appendix
+- Evidence: Appendix C.5 heading is “CONTENT CLARITY EVALUATION PROMPT” but the prompt block itself begins “HERD Evaluation Prompt” and then describes the four content clarity dimensions (Block #109).
+- Why it matters: Mislabeling evaluation prompts jeopardizes reproducibility and may lead to incorrect usage of prompts for the wrong metric during replication.
+
+4) Source model for high-level evaluations contradicts across sections (Seed1.5-VL vs Qwen2.5-VL-72B)
+- Evidence:
+  - Section 3.1 states Seed1.5-VL was used to evaluate each collected video across seven high-level dimensions whose results were integrated into prompts (Block #16).
+  - Appendix B.8 states Qwen2.5-VL-72B was used to generate dimension-wise assessment results based on the collected videos, with DeepSeek-V3.1 used to generate questions (Block #68).
+- Why it matters: It is unclear which model produced the ground-truth high-level evaluations integrated into test prompts and later used to derive HERD questions. This inconsistency directly affects the correctness of the HERD setup and the validity of subsequent evaluations.
+
+5) Unexplained metric “HPSV2” used in case studies; “Aesthetic” shown separately without a consistent definition
+- Evidence:
+  - Case 1 and Case 2 report “HPSV2” (e.g., “HPSV2: 0.5714”) in Appendix E (Blocks #127, #128, #130, #131).
+  - Case 3 reports “Aesthetic: 0.6425” alongside “Static Quality” (Blocks #137, #138), while elsewhere “Aesthetic Quality” is a sub-dimension of Static Quality (Section 3.2.1, Block #18).
+- Why it matters: HPSV2 is not defined anywhere in Methods or References, and “Aesthetic” is inconsistently presented across cases. Introducing undefined or inconsistently labeled metrics in results sections raises concerns about metric validity and prevents replication.
+
+6) Missing specification of the embedding/similarity models used for TVA scoring
+- Evidence:
+  - Overall Alignment: Section 3.2.2 says they leverage “embedding models that excel at encoding rich and complex textual semantics” and use Qwen2.5-VL-7B to generate video descriptions, but the exact embedding model (name/version) used to compute semantic similarity is not specified (Block #21).
+  - Event-level Alignment: Section 3.2.2 defines similarity computations (semantic and field-level) and the final score formula (Eq. 1), but does not identify the actual encoders or similarity implementations (Block #21, Block #22).
+- Why it matters: TVA is a central dimension of the benchmark. Without precise model names and similarity computation details, results are not independently reproducible and may vary widely depending on the chosen encoder.
+
+7) Ambiguity in error-type metric orientation and normalization (e.g., Warping Error)
+- Evidence:
+  - Section 3.2.3 defines Warping Error as a measure of pixel-level inconsistencies (lower error indicates better temporal consistency) and cites EvalCrafter (Block #23).
+  - Table 3 reports “WarpingError” as high percentages (e.g., up to ~99%) without detailing whether the error was inverted/normalized to a “higher-is-better” percentage (Block #28).
+- Why it matters: Presenting an error metric as a percentage without stating the normalization/inversion scheme can mislead readers, especially when aggregating into “Temporal Quality” averages. Clear orientation (“higher is better” or “lower is better”) and normalization steps are necessary for correct interpretation.
+
+8) Correlation analysis lacks identification of the “three representative methods”
+- Evidence: Table 5 states “Three representative methods are used to assess linear correlations,” but does not specify which methods (Block #33).
+- Why it matters: Not specifying which methods were used prevents verification, reproducibility, and assessment of whether the sample selection biases the reported correlations.
+
+9) Inconsistent labels and sub-dimensions in Appendix B.9 visualizations
+- Evidence: Appendix B.9 states in “Static Quality & T2V Alignment Results” that sub-dimensions include “Technical Quality, Overall Alignment, Semantic Quality, Event-level Alignment,” but “Semantic Quality” is not a defined sub-dimension in the main text (the main text has “Aesthetic Quality” under Static Quality, Section 3.2.1, Block #18), and “Overall Alignment” belongs to TVA, not Static Quality (Block #71).
+- Why it matters: Misgrouping and renaming sub-dimensions in visualizations leads to confusion about what is being averaged and compared, possibly conflating distinct dimensions.
+
+10) Incomplete table in Appendix B.3
+- Evidence: Appendix B.3 shows a table under “Prompt Complexity & Length on Different Theme Categories” with empty values, followed by a bar chart (Blocks #54, #57).
+- Why it matters: Having an empty table in the manuscript suggests missing numerical reporting for a key descriptive statistic, limiting transparency.
+
+11) Content Clarity aggregation and normalization details partly incomplete
+- Evidence: Section 3.2.4 defines the scoring formula (Eq. 2) and states raw scores are normalized by 4 and averaged across rounds (Block #26). However, implementation details such as the chosen MLLM used to score content clarity and the number of rounds R are not specified here (the prompt template is in Appendix C.5, Block #109; model and R are not clearly stated).
+- Why it matters: The lack of concrete evaluator model and R makes replication of CC scores ambiguous.
+
+12) Static Quality normalization via RR-UB lacks a reported numeric reference value
+- Evidence: Section 3.2.1 mentions normalization using an upper bound from Appendix B.5 (Block #18). Appendix B.5 describes computing a Relative Reference Upper Bound (RR-UB) from the top 10% of scores in a dataset (Block #58) but does not report the final RR-UB numeric value used.
+- Why it matters: Without the RR-UB value, it is impossible to confirm the percentage scaling used for AQ in Tables and figures.
+
+If the above issues are addressed with clear corrections and full methodological specification, the paper’s integrity and reproducibility would be substantially improved.
+
+No other clear integrity-related or numerical inconsistencies were identifiable beyond the points above based on the provided manuscript.

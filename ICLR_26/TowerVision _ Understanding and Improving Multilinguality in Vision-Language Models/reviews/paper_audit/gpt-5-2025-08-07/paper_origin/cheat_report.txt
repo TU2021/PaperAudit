@@ -1,0 +1,56 @@
+Academic integrity and consistency risk report
+
+Summary: The manuscript presents TOWERVISION/TOWERVIDEO and the VISIONBLOCKS dataset. While most claims are supported, several high-impact inconsistencies and unsupported statements materially affect clarity, trustworthiness, and reproducibility.
+
+Evidence-based issues
+
+1) Unsupported “surpass” claim for ViMUL-Bench (video tasks)
+- Abstract (Block #2): “By incorporating visual and cultural context during fine-tuning, our models surpass existing approaches trained on substantially larger datasets, as demonstrated on … ViMUL-Bench (video tasks).”
+- Table 3 (Block #23): Per-language accuracies show TOWERVIDEO-9B is not consistently best; it underperforms baselines on multiple languages (e.g., ar: 38.6 vs VideoLLaMA3-7B: 45.6 and ViMUL-7B: 41.5; ru: 40.9 vs ViMUL-7B: 45.7 and VideoLLaMA3-7B: 44.8; zh: 44.8 vs VideoLLaMA3-7B: 48.0; en: 51.9 vs LLaVA-Video-7B: 53.3). No aggregate metric is reported to substantiate an overall win.
+- Conclusion: The “surpass” claim for ViMUL-Bench is not supported by the presented evidence. The models are competitive but not clearly superior overall.
+
+2) Vision encoder token/embedding size inconsistency
+- Method §2.2 (Block #15): “SigLIP2-so400m/14@384px … produces multilingually-aligned embeddings of size 729.”
+- With 384×384 resolution and patch size 14, the number of patches per side is 384/14 ≈ 27.4, implying either 27×27=729 patches at 378×378, or 28×28=784 at 392×392; 729 does not align cleanly with the stated 384×384 resolution. Appendix Table 10 (Block #58) again uses 384×384, patch size 14.
+- Conclusion: There is a clear numerical mismatch between the declared resolution/patch size and the stated “size 729,” which could reflect confusion between the number of patches (visual tokens) and embedding dimensionality. This affects reproducibility and technical correctness of the architecture description.
+
+3) Mislabeling of CC-OCR as “English” in main results table
+- §3.1 (Block #18): “cc-OCR … for English and multilingual OCR-centric capabilities respectively,” and “Within cc-OCR, we report results on the multilingual text reading subset.”
+- Table 1 (Block #20): Column header reads “English (↑) CC-OCR,” contradicting the description that CC-OCR results are multilingual.
+- Table 4 (Block #25): Column correctly labeled “Multilingual (↑) CC-OCR.”
+- Conclusion: The Table 1 label conflicts with the stated evaluation setup (multilingual), risking misinterpretation of results.
+
+4) Baseline checkpoint mismatch for LLaVA-Next
+- §3.2 Baselines (Block #19): Evaluates “Llama3-Llava-Next-8B.”
+- Appendix Table 9 (Block #57): Lists “LLaVA-Next 7B” (llava-v1.6-mistral-7b-hf) as the used checkpoint, not an 8B Llama3-based model.
+- Conclusion: The baseline naming/scale differs between the main text and the checkpoint list, creating a reproducibility risk and potential unfairness in comparisons.
+
+5) Contradiction in claims about SigLIP2 vs SigLIP1 performance
+- §3.4/§4 (Block #26): “Without additional multilingual data, SigLIP2 models consistently outperform SigLIP1…”
+- Table 5 (Block #26): At 9B scale with English-only (“9B En”), SigLIP1-En = 78.3 vs SigLIP2-En = 77.2, contradicting “consistently outperform.” Even if the general trend favors SigLIP2, “consistently” is not accurate given this counterexample.
+- Conclusion: The narrative overgeneralizes; the table shows exceptions at 9B English-only, undermining the absolute phrasing.
+
+6) Table title/content mismatch (instruction tuning)
+- Appendix Table 10 (Block #58) title: “Impact of Vision Encoder Configuration and Instruction Tuning.”
+- The table columns/rows vary resolution, patch size, and tiles only; no instruction tuning variable is present.
+- Conclusion: Misleading title suggests an analysis dimension that is not reflected in the table, reducing clarity of the ablation reporting.
+
+7) Mischaracterization of TextVQA task
+- §3.1 (Block #18): “TextVQA (Singh et al., 2019), assessing scientific understanding.”
+- TextVQA is an OCR-centric VQA task about reading text in images. No direct evidence is provided that this benchmark assesses “scientific understanding.” The manuscript elsewhere associates ScienceQA with scientific reasoning (Appendix Table 8, Block #55).
+- Conclusion: Factual mismatch in task description may confuse readers about what each benchmark measures.
+
+Additional minor numerical/labeling observations
+- Small discrepancies across tables for the same model/language (e.g., TOWERVIDEO-2B English: 45.2 in Table 3, 45.5 in Table 7; Blocks #23 and #29) likely due to rounding or re-runs, but not explained.
+- Figure 1/8 aggregate scores differ from per-pair results in Tables 1–2; no explicit aggregation method or averaging protocol is stated for the figures. No direct evidence found in the manuscript explaining the aggregation.
+
+If addressed, these issues would improve the paper’s technical correctness, transparency, and reproducibility:
+- Provide an aggregate metric or formal comparison for ViMUL-Bench, or rephrase the Abstract to “competitive” rather than “surpass” for video tasks (Blocks #2, #23).
+- Clarify the SigLIP2 token/embedding size at 384×384 with 14-pixel patches, including whether the input is resized/padded to multiples of the patch size and whether “729” refers to tokens or embedding dimension (Block #15; cross-reference Table 10, Block #58).
+- Correct Table 1’s CC-OCR header to “Multilingual” (Block #20) to match §3.1 and Table 4 (Blocks #18, #25).
+- Align baseline names/scales with actual checkpoints used (Blocks #19, #57).
+- Amend the wording around “consistently outperform” for SigLIP2 vs SigLIP1 to reflect Table 5 exceptions (Block #26).
+- Fix Appendix Table 10 title to reflect the variables actually studied (Block #58).
+- Correct the description of TextVQA to its intended OCR/text-reading scope (Block #18).
+
+Based on the manuscript, these are the main integrity-related and internal consistency problems. No further high-impact issues were identifiable beyond the above.

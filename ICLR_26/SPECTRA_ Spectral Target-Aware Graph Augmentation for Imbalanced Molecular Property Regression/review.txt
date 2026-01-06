@@ -1,0 +1,51 @@
+### Summary
+
+This paper introduces **SPECTRA**, a novel framework designed for **imbalanced molecular property regression**. SPECTRA targets the issue of sparse data in the label space, where critical but rare compounds (e.g., high potency) are underrepresented. Standard Graph Neural Networks (GNNs) optimize for average error, which leads to poor performance on these rare cases. SPECTRA enhances the performance by generating realistic molecular graphs using **spectral domain augmentation**. It uses a **target-aware graph matching** technique, interpolating **Laplacian eigenvalues** and **eigenvectors** to preserve the topology and properties of molecules while generating synthetic samples for underrepresented regions of the label space. The framework integrates a **rarity-aware sampling scheme** and uses a **spectral GNN** to improve regression performance on imbalanced molecular datasets. Extensive experiments show that SPECTRA improves error rates for rare target values while maintaining competitive overall performance.
+
+---
+
+### Strengths
+
+1. **Innovative Approach**:
+
+   * SPECTRA introduces **spectral graph augmentation** to address the problem of imbalanced regression in molecular property prediction. By working in the **spectral domain** and focusing on **underrepresented regions** of the label space, the method can generate valid molecular graphs that preserve both **chemical properties** and **topological structure**.
+
+2. **Target-Aware Augmentation**:
+
+   * The **target-aware sampling scheme**, driven by **kernel density estimation** (KDE), effectively concentrates augmentation efforts on sparse regions of the target distribution, ensuring that synthetic data focuses on the rare but critical molecular properties.
+
+3. **Practical and Scalable**:
+
+   * The method provides a significant improvement in **computational efficiency**, achieving **2-5x faster** runtimes compared to existing baselines, such as **SGIR**, without sacrificing predictive accuracy. It also handles the **generation of realistic molecular graphs** without relying on embedding-based methods, making it suitable for **virtual screening** and **molecular design**.
+
+4. **Empirical Validation**:
+
+   * The paper presents a **comprehensive set of experiments** on molecular regression tasks, showing how SPECTRA enhances model performance on rare molecular targets, with results showing improved **uniqueness** and **novelty** of the generated molecules.
+
+---
+
+### Weaknesses
+
+1. **Lack of Comparison with Embedding-Based Methods**:
+
+   * The paper does not extensively compare with **embedding-based methods** for augmentation (e.g., **SGIR**), limiting the understanding of how SPECTRA stacks up against methods that perform augmentation in a different manner. A more thorough comparison with such methods would help solidify the claims of novelty.
+
+2. **Scalability Concerns**:
+
+   * While the paper demonstrates the effectiveness of SPECTRA on smaller datasets, the scalability of the method remains unclear. The use of **spectral decomposition** and **Gromov-Wasserstein alignment** potentially introduces **O(n3)** complexity, which could hinder the method¡¯s application to larger datasets, such as **ZINC**.
+
+3. **Graph Matching Rationale**:
+
+   * The paper introduces **graph matching** as a means of aligning molecular graphs, but it does not provide a compelling theoretical justification for why this step is necessary prior to interpolation. The authors should elaborate on the **importance** of this step and how it influences the quality of the generated molecules.
+
+4. **Generating Valid Molecules**:
+
+   * There is no formal guarantee that the **interpolated graphs** lead to **chemically valid molecules**. Although the paper shows that the generated samples fall within **Lipinski¡¯s Rule of Five**, this does not provide a guarantee of validity. It would be helpful to provide further validation on whether these graphs are truly representative of real-world molecular properties.
+
+5. **Presentation and Clarity**:
+
+   * The **presentation** of figures and tables can be improved. For example, **Figure 2** could benefit from a clearer, more intuitive illustration of the spectral interpolation process, removing unnecessary formulas. Some tables and figures also suffer from **minor formatting issues**, affecting readability.
+
+6. **Hyperparameter Sensitivity**:
+
+   * The **impact of the alpha parameter** (which balances structural and feature similarity) is mentioned but not sufficiently explored. The experiments should consider a broader sensitivity analysis to provide more insight into the parameter's influence on performance.

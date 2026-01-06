@@ -1,0 +1,161 @@
+Here are four distinct and complete reviews of the paper.
+
+***
+
+### **Review 1**
+
+**Summary**
+This paper investigates the existence of scaling laws for predictive uncertainty in deep learning, analogous to the well-established scaling laws for model performance. The authors conduct a comprehensive empirical study across various models (ResNets, ViTs, GPT-2), datasets (CIFAR, ImageNet, algorithmic), and uncertainty quantification (UQ) methods (MC Dropout, Deep Ensembles, MCMC, etc.). They demonstrate that measures of total, aleatoric, and epistemic uncertainty consistently follow a power-law decay with respect to the number of training data points, N. The paper also provides a theoretical connection between total uncertainty and generalization error in the context of Singular Learning Theory (SLT), suggesting a potential explanation for the observed phenomena. The authors argue that these findings are significant, as they provide a way to predict uncertainty at larger scales and counter the notion that Bayesian methods are unnecessary in the "big data" regime.
+
+**Soundness**
+The methodological approach is sound and thorough. The authors systematically vary architectures, UQ methods, and datasets, which provides strong evidence for the generality of their claims. The use of multiple UQ methods, from the simple MC Dropout to more principled MCMC, is a key strength, as the emergence of scaling laws across these different techniques suggests the phenomenon is fundamental rather than an artifact of a specific method. The experimental design, involving training on subsets of data of increasing size, is appropriate for studying scaling with N. The theoretical section correctly derives the uncertainty scaling for Bayesian linear regression and proposes a novel, albeit speculative, link to SLT, which is a reasonable and thought-provoking direction for explaining these empirical results in over-parameterized models.
+
+**Presentation**
+The paper is exceptionally well-written and organized. The introduction clearly motivates the research question and situates it within the existing literature on scaling laws. The figures are clear, well-labeled, and effectively communicate the main results (e.g., Figure 1 provides a compelling initial summary). The use of log-log plots is appropriate for visualizing power-law relationships. The structure flows logically from motivation and background to methods, extensive experiments, theoretical discussion, and conclusions. The appendix is comprehensive, providing necessary experimental details and supplementary results that bolster the main paper's claims.
+
+**Contribution**
+The contribution of this work is highly significant and novel. To my knowledge, this is the first paper to systematically investigate and demonstrate the existence of scaling laws for predictive uncertainty in deep learning. This opens up a new and exciting research direction parallel to the existing work on performance scaling. The key contributions are: (1) strong empirical evidence for uncertainty scaling laws across a wide range of settings; (2) fascinating and non-trivial observations, such as the increasing epistemic uncertainty with SAM (Figure 3) and the dependence on optimization schedules for ViTs (Figure 5); and (3) a novel theoretical bridge to SLT. This work provides a new lens through which to understand and predict the behavior of UQ in deep learning.
+
+**Strengths**
+1.  **Novelty:** The core idea of searching for uncertainty scaling laws is novel and timely, providing a much-needed extension to the scaling law literature.
+2.  **Empirical Breadth:** The experiments are extensive, covering multiple modalities (vision, language), architectures, UQ methods, and datasets. This makes the findings highly credible and likely to be general.
+3.  **Interesting Findings:** The paper uncovers several surprising results, such as the positive scaling of EU with SAM and the sensitivity to optimizers in ViTs, which deepen our understanding of the interplay between optimization and uncertainty.
+4.  **Theoretical Insight:** The proposed connection to SLT (Section 5.2) is a valuable theoretical contribution that provides a promising, principled path toward explaining the empirical observations.
+5.  **Clarity and Impact:** The paper is clearly written and makes a strong case for the practical relevance of its findings, particularly in dispelling skepticism about the utility of Bayesian methods on large datasets.
+
+**Weaknesses**
+1.  **Scaling with Model Size:** The paper acknowledges that it did not find clear scaling laws with respect to model size P (Figure 7). While honestly reported, this is a notable gap compared to traditional scaling law papers that jointly consider N, P, and compute.
+2.  **Single-Fold Experiments:** Some results, such as for WideResNets in Figure 2b, are reported from a single experimental run. While understandable given the computational cost, this reduces confidence in the precise value of the fitted exponents for those specific settings.
+
+**Questions**
+1.  The increasing epistemic uncertainty (EU) when using SAM (Figure 3) is a fascinating result. Have the authors considered whether this increased EU corresponds to better-calibrated or more useful uncertainty estimates for downstream tasks like OOD detection or active learning?
+2.  The theoretical connection to SLT suggests that the scaling exponent γ should be related to the learning coefficient λ. Have the authors attempted to empirically estimate λ for their models using methods from the SLT literature (e.g., via the spectrum of the Fisher information matrix) to see if it correlates with the observed γ?
+3.  In Figure 4, the uncertainty for the GPT-2 model on the algorithmic task shows a sharp uptick for the largest data size. Is this just noise, or could it be related to the model entering a different learning phase (e.g., post-grokking)?
+
+**Rating**
+- Overall (10): 9 — This is a landmark paper that introduces and compellingly demonstrates the novel concept of uncertainty scaling laws.
+- Novelty (10): 10 — The work is highly original, establishing a new research direction at the intersection of scaling laws and Bayesian deep learning.
+- Technical Quality (10): 9 — The experiments are extensive and well-designed, though some results rely on single folds (Figure 2b).
+- Clarity (10): 10 — The paper is exceptionally clear, well-structured, and the figures are highly effective.
+- Confidence (5): 5 — I am very confident in my assessment; I am an expert in Bayesian deep learning and scaling laws.
+
+***
+
+### **Review 2**
+
+**Summary**
+This paper presents an empirical study on the scaling behavior of predictive uncertainty in deep neural networks. The authors hypothesize that, similar to test loss, uncertainty metrics should follow power-law scaling with respect to dataset size N. They test this across various UQ methods (MC Dropout, Deep Ensembles, MCMC), model architectures (ResNet, ViT), and data modalities (vision, language). The main finding is that total (TU), aleatoric (AU), and epistemic (EU) uncertainty, as defined by standard entropy-based decompositions, indeed exhibit power-law decay as N increases. The paper also attempts to ground these findings in theory by connecting them to Singular Learning Theory (SLT).
+
+**Soundness**
+The paper's central claim rests on fitting power laws to empirical data, which raises questions about the robustness and interpretation of the results.
+1.  **Experimental Rigor:** A significant weakness is the lack of consistent error bars or multiple runs for all experiments. The caption for Figure 2 explicitly states that the WideResNet results are from a "single fold," which makes it difficult to assess the statistical significance of the fitted exponent γ. For a paper about discovering "laws," this lack of robustness analysis is a concern.
+2.  **Metric Choice:** The authors use the standard entropy-based decomposition of uncertainty (TU, AU, EU). They acknowledge criticisms of these metrics (Wimmer et al., 2023) but proceed to use them anyway. It is unclear if the observed scaling laws are a property of true model uncertainty or an artifact of this specific, potentially flawed, decomposition. Would the scaling laws hold for alternative uncertainty metrics, such as variance-based ones or those that do not assume additive decomposition?
+3.  **Stability of Exponents:** The reported scaling exponents (γ) vary considerably across different UQ methods, architectures, and even optimization settings (e.g., Figure 2 vs. Figure 3, Figure 5a vs. 5b). This high sensitivity suggests that while a power-law *form* may exist, it is not a stable, universal "law" but rather a behavior highly dependent on implementation details. This undermines the claim of predictability. For instance, the EU exponent for ResNet-50 with MC Dropout changes from -0.38 to -0.60 just by changing the dropout rate (Figure 2a).
+
+**Presentation**
+The paper is generally well-written and easy to follow. The figures are clear and use appropriate log-log scales to display the power-law fits. However, the presentation of the results could be more systematic. For example, the results are scattered across the main text and appendix, and it is sometimes difficult to compare different settings directly. The experimental details in Section 4.1.1 are somewhat vague ("in some experiments we adopt a cosine annealing scheduler... and in others we do not"), which hinders reproducibility. More details should be in the main text or clearly referenced in the appendix.
+
+**Contribution**
+The paper's main contribution is the empirical observation that uncertainty metrics can be modeled by power laws. This is an interesting and novel finding. However, the significance of this contribution is tempered by the methodological issues mentioned above. The claim that this work "provide[s] strong evidence to dispel recurring skepticism against Bayesian approaches" (Abstract) seems overstated. The fact that epistemic uncertainty does not vanish quickly is interesting, but the high variability of the decay rate makes it hard to draw a universally strong conclusion. The theoretical part is speculative and only worked out for a simple linear model, with the connection to deep models being a hypothesis.
+
+**Strengths**
+1.  **Interesting Research Question:** The paper asks a novel and important question about whether uncertainty follows predictable scaling patterns.
+2.  **Broad Scope of UQ Methods:** Testing the hypothesis across many different UQ techniques (MCMC, Ensembles, Dropout) is a major strength.
+3.  **Comprehensive Experiments:** Despite concerns about rigor, the sheer number of experiments across different models and datasets is impressive.
+
+**Weaknesses**
+1.  **Lack of Statistical Rigor:** Many key results appear to be based on single runs or do not report variance, making it hard to trust the specific exponent values (e.g., Figure 2b, Figure 19b).
+2.  **High Sensitivity of Scaling Exponents:** The scaling "laws" seem highly sensitive to hyperparameters (dropout rate, optimizer, LR schedule), which challenges their predictive utility and status as a fundamental "law."
+3.  **Dependence on Potentially Flawed Metrics:** The findings are exclusively based on entropy-decomposed uncertainties, which have known theoretical issues. The conclusions might not generalize to other, perhaps more robust, uncertainty measures.
+4.  **Overstated Claims:** The practical utility (e.g., for extrapolation) and the broader implications for the role of Bayesian methods are presented with more confidence than the evidence warrants, given the variability of the results.
+
+**Questions**
+1.  Given the high sensitivity of the exponent γ to hyperparameters, how can one reliably use these laws for extrapolation, as suggested in the conclusion? Wouldn't you need to run the expensive, large-scale experiment first to find the correct γ for your specific setup, defeating the purpose of extrapolation?
+2.  Why were the WideResNet ensemble experiments (Figure 2b) conducted with only a single fold, while the ResNet MC dropout experiments (Figure 2a) were averaged over 10 folds? Was this purely due to computational cost?
+3.  Have you considered validating your findings with non-entropy-based uncertainty metrics? For example, simply using the variance of the predictive logits/probabilities across the ensemble. Would the power-law relationship still hold?
+
+**Rating**
+- Overall (10): 6 — An interesting idea with extensive but not fully rigorous experiments; the conclusions about predictability and utility are overstated.
+- Novelty (10): 8 — The core question is novel, but the concept of power laws is borrowed from prior work on performance.
+- Technical Quality (10): 5 — The technical quality is mixed; while many experiments were run, the lack of consistent error analysis and single-fold results for key claims is a major flaw.
+- Clarity (10): 8 — The paper is clearly written, but experimental details are sometimes vague or relegated to the appendix.
+- Confidence (5): 5 — I am highly confident in my assessment, having reviewed many papers on both scaling laws and UQ.
+
+***
+
+### **Review 3**
+
+**Summary**
+This paper empirically demonstrates that predictive uncertainty in deep neural networks scales as a power law of the training dataset size, N. The authors evaluate this claim on vision and language tasks using a variety of popular uncertainty quantification (UQ) techniques. They find that total, aleatoric, and epistemic uncertainties all exhibit this scaling behavior. The main theoretical contribution is to propose a link between this empirical finding and Singular Learning Theory (SLT). Specifically, the authors derive a connection between Watanabe's generalization error, G_N, and total uncertainty (TU) for Bayesian linear regression, and hypothesize that this framework can explain the power-law behavior in over-parameterized deep models.
+
+**Soundness**
+The empirical part of the paper is extensive. The theoretical part, however, while intriguing, is underdeveloped and remains largely speculative. The derivation in Section 5 and Appendix A is correct for the Bayesian linear model, showing how TU and G_N are related and both scale as O(1/N) asymptotically. The crucial leap is from this well-understood linear case to the complex, singular, over-parameterized regime of deep networks. The paper asserts this connection via SLT but does not provide a formal derivation. SLT predicts that generalization error scales as λ/N, where λ is the real log canonical threshold (or learning coefficient) related to the singularities of the loss landscape. The paper hypothesizes that the observed uncertainty scaling exponent γ is related to λ, but this is not shown. The connection remains a "speculative theoretical link" (Section 5.2).
+
+**Presentation**
+The paper is well-structured and the writing is clear. The theoretical argument is built up logically, starting from the simple identifiable case (Section 5.1) and moving to the more complex singular case (Section 5.2). The appendix provides the necessary mathematical details for the linear model derivation (Appendix A.2). However, the presentation of the SLT connection could be improved by more explicitly stating the assumptions needed to bridge the gap between the linear model derivation and the deep learning hypothesis. The current presentation mixes a rigorous derivation for a simple model with a hand-wavy argument for a complex one, which could be confusing.
+
+**Contribution**
+The primary contribution is the empirical discovery of uncertainty scaling laws. The theoretical contribution is secondary and serves more as a promising direction for future work than a solid explanation. While connecting empirical findings to SLT is a valuable goal, the current link is too tenuous to be considered a major contribution in its own right. The paper successfully shows *that* uncertainty scales, but the theoretical section does not fully explain *why* it scales with the particular exponents observed. The derivation in Eq. (10) and (31), which decomposes generalization error into aleatoric and epistemic (KL divergence) terms, is an elegant and insightful result for the linear model case.
+
+**Strengths**
+1.  **Novel Theoretical Angle:** Proposing SLT as a framework to explain uncertainty scaling is a creative and promising idea.
+2.  **Rigorous Linear Model Analysis:** The derivation connecting TU and G_N for Bayesian linear regression (Section 5.2, Appendix A.2) is sound and provides a solid foundation for the overall hypothesis.
+3.  **Clear Hypothesis Formulation:** The paper clearly states its central hypothesis and provides a plausible, if incomplete, theoretical motivation.
+
+**Weaknesses**
+1.  **Speculative Theoretical Link:** The main theoretical weakness is the gap between the linear model derivation and the deep learning experiments. The paper does not derive a formal relationship between the observed exponent γ and the SLT learning coefficient λ for a deep neural network.
+2.  **Lack of Empirical Validation of Theory:** The paper does not attempt to empirically validate its theoretical hypothesis. For example, it could have tried to compute or estimate λ for the experimental models and check for a correlation with the measured γ. This would have made the proposed link much more convincing.
+3.  **Limited Scope of Theory:** The theory only addresses scaling with dataset size N. It offers no insight into other potential scaling dimensions, such as model size P, or why the scaling with P appears to be irregular (Figure 7).
+
+**Questions**
+1.  In Section 5.2, you connect the generalization error G_N to TU. SLT provides an asymptotic form for G_N involving the learning coefficient λ (Eq. 35). Does your hypothesis imply that the uncertainty scaling exponent γ should be directly equal to the SLT exponent (which is 1 for G_N, but the paper uses a different definition of γ)? Could you clarify the hypothesized mathematical relationship between your empirical γ and the theoretical λ from SLT?
+2.  The SLT learning coefficient λ is related to the geometry of the loss landscape singularities. Different architectures and optimizers can lead to different learned solutions and thus different effective singularities. Could this be a potential explanation for the high variability of your measured γ values across different experimental settings?
+3.  The derivation in Eq. (10) and (31) is for a regression task with Gaussian noise. The experiments are on classification tasks, where uncertainty is measured via the entropy of a categorical distribution. How does the theoretical link between G_N and TU change when moving from regression to classification?
+
+**Rating**
+- Overall (10): 7 — A strong empirical paper with an interesting but underdeveloped theoretical contribution.
+- Novelty (10): 8 — The empirical finding is novel, and the theoretical angle is creative.
+- Technical Quality (10): 7 — The empirical work is strong, but the theoretical part is largely a hypothesis without a full derivation for the models of interest.
+- Clarity (10): 8 — The paper is clearly written, but the leap from the linear model theory to the deep learning case could be made more explicit.
+- Confidence (5): 5 — I am confident in my evaluation, with expertise in statistical learning theory and Bayesian methods.
+
+***
+
+### **Review 4**
+
+**Summary**
+This paper explores whether the "scaling laws" observed for deep learning model performance also apply to their predictive uncertainty. Through a large number of experiments on vision and language tasks, the authors find that uncertainty metrics generally decrease as a power-law with increasing dataset size (N). They test this with various methods for uncertainty quantification (UQ), such as MC Dropout and Deep Ensembles. The practical implication, they argue, is that one can extrapolate uncertainty to predict how much data is needed to reach a desired level of confidence. They also provide a theoretical discussion linking uncertainty to generalization error.
+
+**Soundness**
+The paper's soundness from a practical perspective is mixed. While the empirical phenomenon is demonstrated across many settings, its utility as a practical "law" is questionable. The experiments reveal several results that challenge the reliability and generality of the findings for real-world application.
+- **Inconsistent Scaling:** The scaling exponent γ is highly variable. For example, in Figure 5, simply changing the training duration and LR schedule for a ViT flips the scaling of epistemic uncertainty (EU) from positive (γ=0.01) to negative (γ=-0.35). This extreme sensitivity implies that one cannot reliably predict the scaling behavior without knowing the optimal hyperparameters in advance, which defeats the purpose.
+- **Failure to Scale with Model Size (P):** A key part of the "scaling laws" paradigm is predictable improvement with model size. The authors honestly report in their limitations and show in Figure 7 that they "did not observe the same for predictive uncertainties." This is a major negative result that significantly limits the scope and practical impact of the work. If uncertainty doesn't predictably improve with bigger models, then one of the main levers for improving ML systems has an unknown effect on uncertainty.
+- **Saturation in Practical Scenarios:** The experiment on fine-tuning a large pre-trained model (Phi-2, Section 4.2, Figure 15) shows completely flat uncertainty curves. This is a very common and practical scenario. The paper's finding suggests that for transfer learning on large models, these scaling laws may not apply at all, as the uncertainty is dominated by the massive pre-training data. This severely curtails the applicability of the proposed laws.
+
+**Presentation**
+The paper is well-written and the results are presented clearly. The figures are informative, and the inclusion of a "Limitations" section is commendable. The practical utility is highlighted via an extrapolation plot in the appendix (Figure 12), which is a nice touch. However, this plot is also a bit misleading, as it suggests a clean, predictable extrapolation based on a fit from just four data points, while other results in the paper (e.g., Figure 5) show how easily this trend can be broken by changing hyperparameters.
+
+**Contribution**
+The paper makes a nice academic contribution by being the first to document this scaling phenomenon for uncertainty. It provides a new perspective and a body of empirical data for the research community to analyze. However, its direct practical contribution is limited at this stage. The core promise of scaling laws is *predictability* for engineering large-scale models. This work shows that while a power-law shape often appears, the specific exponent is too fragile and context-dependent to be truly predictive in an engineering sense. The most practical takeaways are arguably the negative results: the lack of clear scaling with model size and the saturation effect in fine-tuning.
+
+**Strengths**
+1.  **Addresses a Practical Question:** The paper tackles an important and practical question: how does uncertainty behave as we scale up data?
+2.  **Honest Reporting of Limitations:** The authors are transparent about the limitations of their work, particularly the lack of scaling with model size and compute.
+3.  **Demonstration of Edge Cases:** The paper includes important "negative" results, like the flat uncertainty in LLM fine-tuning (Figure 15) and the irregular scaling with model size (Figure 7), which are valuable findings for practitioners.
+
+**Weaknesses**
+1.  **Limited Practical Predictability:** The high sensitivity of the scaling exponent γ to hyperparameters and optimization choices makes the "law" unreliable for practical extrapolation.
+2.  **Lack of Scaling with Model Size:** The failure to find a clear scaling law for model size P is a major limitation, as scaling models is as important as scaling data in modern deep learning.
+3.  **Inapplicability to Transfer Learning:** The results suggest the laws do not hold in the common transfer learning/fine-tuning paradigm, which is a significant boundary on the work's applicability.
+
+**Questions**
+1.  The extrapolation plot in Figure 12 is based on fits to just four data points between 10K and 50K. Given the sensitivity you show elsewhere (e.g., Figure 5), how confident are you that this trend would actually hold out to 1B data points? Have you tried to verify this by, for example, fitting on the first three points and predicting the fourth?
+2.  Your results show that epistemic uncertainty is far from negligible even with the full CIFAR-10 dataset. This is your argument against the "what do we need Bayes for?" skepticism. However, your OOD results (Figure 6) show much flatter scaling. Does this imply that for improving robustness to distribution shift, simply adding more in-distribution data is a very inefficient strategy?
+3.  Considering the flat uncertainty curves when fine-tuning Phi-2 (Figure 15), do you think these scaling laws are primarily a phenomenon of training from scratch? What do you think would happen if you studied scaling during the pre-training phase of a large model itself?
+
+**Rating**
+- Overall (10): 7 — A valuable academic exploration with interesting findings, but its practical utility as a predictive "law" is limited by the high sensitivity of the results and key negative findings.
+- Novelty (10): 8 — The first systematic study of this phenomenon is a novel and worthwhile contribution.
+- Technical Quality (10): 8 — The experiments are extensive and cover many cases, and the honest reporting of limitations is a plus.
+- Clarity (10): 9 — The paper is very clearly written, and the results, including the limitations, are presented transparently.
+- Confidence (5): 5 — I am confident in this review, based on my experience applying machine learning in practical, large-scale settings.

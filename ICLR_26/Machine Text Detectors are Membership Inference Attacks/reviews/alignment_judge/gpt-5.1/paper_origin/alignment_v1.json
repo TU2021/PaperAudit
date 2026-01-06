@@ -1,0 +1,97 @@
+{
+  "paper": "Machine Text Detectors are Membership Inference Attacks",
+  "judge_model": "gpt-5.1",
+  "review_agent": "deepreviewer",
+  "ai_model": "gpt-5-2025-08-07",
+  "ai_review_file": "deep_review_all.txt",
+  "inputs": {
+    "human_review": "review.txt",
+    "ai_review": "reviews/deepreviewer/gpt-5-2025-08-07/paper_origin/deep_review_all.txt"
+  },
+  "multi_review": {
+    "detected": false,
+    "num_reviews": 1,
+    "summarize_used": false,
+    "summary_note": null
+  },
+  "ai_review_consolidated": null,
+  "alignment": {
+    "motivation_strength_alignment": 0.95,
+    "weakness_error_alignment": 0.7,
+    "overall_alignment": 0.85,
+    "explanation": {
+      "strength": "Both reviews converge very strongly on the core motivation and contributions. They agree that the paper (1) theoretically links MIAs and machine-generated text detection via a shared optimal decision function based on a likelihood ratio between the target model and a human-text distribution, (2) empirically validates this connection with a large-scale study across many methods, domains, and generators, demonstrating transferability and strong rank correlation, (3) highlights the surprising strength of Binoculars on MIA tasks, and (4) releases MINT as a unified evaluation suite/toolkit. They also both praise the writing/organization and clarity of exposition. The emphasis, framing, and highlighted positive impacts are very closely aligned.",
+      "weakness": "There is partial but not complete overlap on weaknesses. The AI reviews emphasize in detail that the central theoretical claim is technically mis-specified (ratio of negative log-likelihoods vs true LRT difference, incorrect/underspecified membership-inference modeling, vague optimality conditions). The human review does not touch these theoretical flaws at all; it instead focuses on experimental and methodological limitations: limited diversity of detectors (all likelihood-based), reliance on rank correlation under saturated performance, difficulty interpreting small performance gaps, discrepancies with prior work (e.g., LLaSDe++), and lack of human verification. Some overlap exists: both sides criticize aspects of the empirical evaluation—ceiling/saturated performance and unclear meaningfulness of performance gaps—and both note inconsistencies/discrepancies in reported results across settings or studies. However, the AI reviews add several major theory-centric criticisms and additional statistical/reporting concerns (lack of CIs, aggregation inconsistencies, underexplored hyperparameters) that are absent from the human review, while the human review raises human-evaluation and detector-diversity concerns not present in the AI reviews.",
+      "overall": "On the big-picture assessment, the reviews are broadly aligned: they see the paper as offering a valuable unifying perspective, strong empirical evidence and tooling, and practical insights (especially regarding Binoculars and MINT), while also having notable limitations in how the evidence is presented and interpreted. The alignment on the core story (what the paper is about and why it matters) is very high. Divergence arises mainly in the diagnosis of weaknesses: the AI reviews scrutinize the formal theory and statistical rigor in depth, whereas the human review concentrates on experimental design choices, method coverage, interpretation of saturated results, and external validation (human verification). Because these differences are substantial but do not contradict each other—rather, they are complementary focuses—the overall substantive alignment is good but not perfect."
+    }
+  },
+  "generated_at": "2025-12-27T19:27:28",
+  "runs": [
+    {
+      "config": {
+        "judge_model": "gpt-5.1",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "baseline_review.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180
+      },
+      "config_key": "3b28d70d5731760031a4514ebc98b0afd78edf6d",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/baseline_review.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "motivation_strength_alignment": 0.86,
+        "weakness_error_alignment": 0.62,
+        "overall_alignment": 0.8,
+        "explanation": {
+          "strength": "Both reviews clearly agree on the core motivation: unifying MIAs and machine-generated text detection via a shared optimal likelihood-ratio statistic and demonstrating cross-task transfer empirically. They both emphasize the strength of the theoretical unification, the breadth and rigor of the empirical study (7 MIA methods, 5 detectors, many domains/models), Binoculars’ strong cross-task performance, and the value of the unified evaluation suite MINT; Review B adds more fine-grained technical and empirical detail but does not alter the core picture.",
+          "weakness": "There is overlap in criticizing the empirical evaluation for potential saturation/ceiling effects and difficulty interpreting small performance differences, including concern about aggregation and lack of uncertainty analysis. However, Review B introduces many additional, more theoretical and methodological concerns (rigor and assumptions of the MIA optimality argument, advantage bound interpretation, missing robustness/adversarial tests, implementation biases), while Review A focuses instead on limited diversity of detectors, reliance on rank correlation, unexplained discrepancies with prior work, and lack of human verification—issues largely absent from Review B.",
+          "overall": "Substantively, both reviews share a similar overall judgment: the work offers a strong and useful theoretical–empirical unification with broad experiments and a valuable toolkit, but the empirical evaluation leaves some interpretability and robustness questions. The AI review is more critical and detailed on theoretical rigor and methodology, while the human review highlights different, more practical or design-oriented shortcomings, leading to high but not complete alignment in weaknesses and a largely consistent overall assessment."
+        }
+      },
+      "generated_at": "2025-12-27T19:50:13"
+    },
+    {
+      "config": {
+        "judge_model": "gpt-5.1",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "final_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180
+      },
+      "config_key": "4569a6a97a67c8e2b360606eb74d6eb53b892d06",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/final_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "motivation_strength_alignment": 0.72,
+        "weakness_error_alignment": 0.47,
+        "overall_alignment": 0.6,
+        "explanation": {
+          "strength": "Both reviews strongly agree that the main motivation is unifying MIAs and machine‑generated text detection through a shared likelihood‑ratio‑based decision function, supported by broad empirical evidence and the introduction of a unified evaluation suite. They both highlight similar strengths: theoretical unification, extensive experiments, and the utility of Mint, though Review B adds far more granular technical detail.",
+          "weakness": "There is partial overlap: both note limitations in the empirical evaluation, concerns about saturated performance, and missing diversity in detectors or settings. However, Review B introduces many additional theoretical and methodological criticisms—notation issues, LRT correctness, assumptions, bound validity—that do not appear in Review A, reducing alignment.",
+          "overall": "The two reviews share a broadly consistent judgment of the paper’s contributions and some overlapping concerns about empirical limitations, but diverge substantially in the depth and scope of weaknesses discussed. Strength alignment is high, weakness alignment moderate, yielding an overall moderate-to-high alignment."
+        }
+      },
+      "generated_at": "2025-12-27T19:52:40"
+    }
+  ]
+}

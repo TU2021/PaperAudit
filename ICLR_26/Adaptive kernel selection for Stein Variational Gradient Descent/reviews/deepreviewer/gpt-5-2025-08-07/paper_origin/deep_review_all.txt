@@ -1,0 +1,196 @@
+Summary
+The paper proposes Adaptive SVGD (Ad-SVGD), an algorithm that alternates standard SVGD particle updates with gradient-ascent steps on kernel parameters to maximize the kernelized Stein discrepancy (KSD). The method aims to address the sensitivity of SVGD to kernel choice and the common variance underestimation. Theoretical results extend mean-field convergence under Talagrand’s inequality (T1) to the adaptive case, showing that the supremum of KSD over a kernel class converges to zero and, under a generalized Stein log-Sobolev inequality, provide KL descent bounds and iteration complexity (Sections 4.1–4.2; Theorem 3; Theorem 4). Empirically, Ad-SVGD is evaluated on Gaussian mixtures, Gaussian linear inverse problems tied to an ODE, multivariate Gaussians of increasing dimension, and Bayesian logistic regression; it consistently improves approximation quality and mitigates variance collapse compared to the median heuristic (Figures 1–7, 10–15).
+
+Soundness
+- The reduction from fixed-kernel SVGD descent (Equation (7)) to an adaptive descent using θn (Section 4.1, Block 17) is carefully reasoned and leverages Theorem 3.2 in [32]. The proof of Theorem 3 (Block 19) is straightforward: monotonic decrease of KL plus Assumption 4 yields KSDθn→0 and thus supθ KSDθ→0.
+- The refined analysis under Assumption 5 (Stein log-Sobolev inequality) is technically coherent: maxθ KSDθ lower-bounds KL, ensuring per-iteration contraction up to an optimization-error term εn (Section B, Theorem 4; Blocks 70–73).
+- However, the theoretical assumptions appear stronger than acknowledged:
+  • Assumption 3 requires uniform boundedness and continuity of Φθ and ∇Φθ over θ∈Θ (Block 15), which may be violated by the experimental kernel choice with p=1 (k(x,y)=exp(−|x−y|/hi)), because ∇x∇y k(x,y) involves non-smooth absolute values (Equation (5)), conflicting with the stated C²-like smoothness used in Proposition 3.1 of [32]. This mismatch between theory and practice needs reconciliation.
+  • Uniform bounds B independent of θ (Assumption 3) are nontrivial for product kernels with hi varying widely; ∥∇Φθ∥ often scales like 1/hi, so unless Θ is compact with lower bounds on hi, the constants in (6)–(8) may not hold uniformly.
+  • Assumption 4 (εn→0) is the central unproven ingredient linking the alternating ascent to near-optimal KSD selection. The paper rightly flags this limitation (Section 6), but does not supply conditions (e.g., step-size schedules, smoothness/PL-type conditions) under which the gradient ascent achieves εn→0.
+- The empirical methodology for computing KSD gradients (Equations (4)–(5)) is correct for smooth kernels, but for p=1 kernels, second derivatives are undefined at coincidence; more detail on how non-smooth points are handled (e.g., smoothing, subgradients, or measure-zero arguments) is required.
+
+Presentation
+- The manuscript is clearly structured, with a tight linkage between motivation (Section 1), method (Algorithm 1; Section 3), analysis (Section 4), and experiments (Section 5; Appendix A–B).
+- The figures are informative and well-labeled (Figures 1–7, 10–15), and the anchors to equations are helpful (Equations (1)–(5), (7), Algorithm 1).
+- Minor issues: Section numbering has some inconsistencies (e.g., “## 2 Mathematical background”; “### 2.1” then “### 2.2” followed by “Adaptive kernel selection for SVGD” without an explicit section number header in Block 12); the BLR experiment omits details about the kernel used in MMD (Figure 5, Block 32).
+
+Contribution
+- Conceptually, optimizing kernel parameters by maximizing KSD during SVGD is a simple and compelling idea that isolates kernel choice as the governing factor of performance, situating the work relative to multiple-kernel SVGD [1] but extending to continuous parameter spaces.
+- The theoretical contribution clarifies that even when kernels vary per-iteration, one can retain mean-field KSD convergence (Theorem 3) under T1 and uniform regularity, and further deduce KL descent under a generalized Stein LSI (Theorem 4).
+- Empirically, the paper demonstrates that variance underestimation can be mitigated by adaptive kernel selection, especially in moderate dimensions (d up to 16) and BLR; this addresses a widely observed weakness of SVGD (Sections 5.3–5.4; Figures 3, 7).
+
+Strengths
+- Clear, principled algorithmic design using KSD maximization (Algorithm 1; Block 14).
+- Solid extension of existing SVGD convergence to an adaptive kernel setting (Section 4.2; Lemma 1; Theorem 3; Theorem 4).
+- Thorough empirical evaluation across synthetic and applied tasks; variance-capture improvements are convincingly shown (Figures 3, 4, 5, 7, 10, 15; Tables 1–3).
+- Discussion of computational cost and reuse of gradients ∇ log π (Block 13) and practical update scheduling (every 100 steps).
+
+Weaknesses
+- Theory-practice gap: The smoothness assumptions (Assumption 3; second derivatives in Equation (5)) clash with p=1 kernels used throughout experiments; continuity of ∇Φθ and existence of ∇x∇y k at all points is questionable.
+- Uniformity of constants over Θ (Assumption 3) is not enforced by constraints on bandwidths hi; without bounding Θ, B can be unbounded as hi→0, compromising (6)–(8).
+- Assumption 4 is critical yet unverified; no convergence guarantees for the inner ascent are provided (Section 6 notes this but lacks conditions or diagnostics).
+- Limited dimensional scaling: experiments peak at d=16 for inverse problems and d=8 for Gaussian tests (Sections 5.3 and Appendix A.2), which may not be sufficient to challenge the “high-dimensional failure” narrative decisively (Block 4).
+- Comparisons are missing to other adaptive/preconditioned SVGD variants (e.g., matrix-valued kernels [37], sliced KSD [10], Grassmann SVGD [21], and MK-SVGD [1]) beyond citations; ablation on kernel families (e.g., isotropic vs product, spectral parametrizations) is limited (Section 5.1 mentions but does not test).
+- BLR evaluation lacks detail on MMD kernel choice and hyperparameters (Figure 5; Block 32), which affects fairness of posterior approximation metrics.
+
+Questions
+- How do you reconcile Assumption 3 and the differentiability requirements in Equations (4)–(5) with the use of p=1 kernels (Section 5.1; Blocks 21, 25)? Do you employ smoothing, subgradients, or leverage measure-zero arguments?
+- What constraints on Θ (e.g., lower/upper bounds on hi) are required to ensure uniform B in Assumption 3, and are these constraints enforced in practice?
+- Can you provide conditions (e.g., Lipschitz/Kurdyka–Łojasiewicz or PL-type inequalities) under which the gradient-ascent inner loop yields εn→0 (Assumption 4), perhaps with adaptive step-size schedules?
+- How sensitive is Ad-SVGD to s and nstepstheta (Block 14)? Can you present ablations on these hyperparameters and the paramupdate frequency?
+- Could you compare directly to MK-SVGD [1], matrix-valued kernels [37], and sliced/Grassmann variants [10, 21], to isolate the benefit of continuous kernel parameter optimization versus alternative update directions?
+- For BLR (Section 5.4), what kernel and bandwidth were used for MMD^2, and how are they chosen? Could discrepancies here bias the comparison?
+- In higher dimensions (e.g., d≥50 or 100), can spectral or low-rank kernel parametrizations (Section 5.1, last paragraph) be demonstrated empirically to support scalability claims?
+
+Rating
+- Overall (10): 7 — Strong idea and promising empirical gains; theory extends fixed-kernel results to adaptive selection but relies on unverified Assumption 4 and has smoothness/uniformity gaps (Assumption 3; Equations (4)–(5); Section 6).
+- Novelty (10): 7 — Distinct from MK-SVGD by continuous parameter optimization and KSD ascent within SVGD; conceptually straightforward yet impactful (Sections 1.2(i), 3; comparison to [1]).
+- Technical Quality (10): 6 — Proofs are correct given assumptions; however, key assumptions (Assumptions 3–4) are stringent/unverified relative to experimental kernels (p=1) and unconstrained Θ (Sections 4.1–4.2; Theorem 3; Theorem 4).
+- Clarity (10): 8 — Well-written with clear algorithm and figures; minor missing details in BLR/MMD and section numbering (Algorithm 1; Figures 3–7; Section 5.4).
+- Confidence (5): 4 — High familiarity with SVGD/KSD literature and careful cross-checking of assumptions vs implementations; limited by missing implementation details on differentiability and ascent convergence.
+
+---
+
+Summary
+This paper introduces Ad-SVGD, an SVGD variant that adaptively selects kernel parameters by ascending the KSD, with the goal of accelerating KL decrease (Equation (2)) and improving sample quality. The method alternates kernel updates with particle transport (Algorithm 1). Theoretical development shows descent in KL with per-iteration KSDθn and, under a mild approximation condition (Assumption 4), convergence of supθ KSD to zero (Theorem 3). A refined analysis under a generalized Stein log-Sobolev inequality yields KL contraction rates with an additive optimization error (Theorem 4). Empirical results demonstrate better variance capture and improved Wasserstein/MMD metrics than the median heuristic across Gaussian ODE inverse problems, multivariate Gaussians, and BLR (Figures 2–7, 10, 15).
+
+Soundness
+- The central insight—maximizing KSD increases instantaneous KL descent due to d/dγ KL|γ=0 = −KSD^2 (Equations (2), (7); Section 3)—is sound and motivates kernel adaptation.
+- The adaptive analysis builds correctly on the fixed-kernel descent inequality (Equation (7); Lemma 1 in Section 4.2), substituting the maximal KSD over Θ to control progress.
+- The “approximate maximization” framework (Assumption 4; Theorem 3) is reasonable, but the paper lacks conditions ensuring εn→0 for the given gradient-ascent scheme (Algorithm 1; Block 14). Without such conditions, the theoretical guarantee is contingent and primarily heuristic.
+- The generalized Stein LSI (Assumption 5; Section B) is properly leveraged to obtain linear convergence in KL up to optimization error, but its verification on practical kernel families (e.g., product kernels with anisotropic bandwidths) is not discussed.
+- Potential technical mismatch: the kernel class used in experiments includes p=1 product kernels where ∇x∇y k (Equation (5)) and ∇Φθ continuity (Assumption 3) are not globally smooth; hence, the application of results contingent on C^2-type bounds from [32] may require additional justification or smoothing.
+
+Presentation
+- Exposition is clear and cohesive; algorithmic steps are precise (Algorithm 1), and theoretical statements are self-contained (Assumptions 1–5; Lemma 1; Theorem 3; Theorem 4).
+- Visualizations effectively communicate improvements in variance and convergence (Figures 3–4, 7, 10, 15; Tables 1–3).
+- Minor presentation issues: BLR evaluation (Figures 5–7) lacks details (e.g., kernel in MMD); section headings occasionally inconsistent (Blocks 12–16).
+
+Contribution
+- The paper advances SVGD by formalizing within-iteration kernel parameter learning via KSD ascent, a conceptually simple yet underexplored direction distinct from learning update directions via neural networks [17, 39] or fixed multiple-kernel weights [1].
+- The mean-field convergence for the maximal KSD (Theorem 3) and KL iteration complexity (Theorem 4) contribute to theory by extending fixed-kernel analyses [32] to adaptive selection.
+- Empirical evidence supports the claim that kernel adaptivity substantially reduces variance collapse in moderate-dimensional settings (Appendix A.2 and A.3; Figures 10–15).
+
+Strengths
+- Clear and motivated algorithmic design tied to KL descent (Equations (2), (7); Section 3).
+- Theoretical extension under T1 and Stein LSI adds rigor to adaptive selection (Section 4; Appendix B).
+- Empirical breadth with ablations across particle counts and dimensionality; robust improvements in Wasserstein/MMD and covariance matching (Figures 3, 5, 7, 10, 15).
+- Practical considerations on computational cost and reuse of gradients (Block 13) are helpful.
+
+Weaknesses
+- The ascent’s convergence (Assumption 4) is not established for the proposed gradient-ascent scheme; without diminishing step sizes or curvature assumptions, εn→0 is speculative.
+- Smoothness assumptions (Assumption 3) may not hold for the chosen p=1 kernels; second derivatives used in Equation (5) are undefined at |x−y|=0; the theory relies on bounds/lipschitzness that may require p=2 Gaussian kernels or smoothing.
+- Claims about high-dimensional performance are limited by experiments up to d=16 (Sections 5.3 and A.2, A.3); scalability remains to be demonstrated for d≫100 or complex posteriors.
+- Lack of direct comparison to MK-SVGD [1] and matrix-valued kernels [37] leaves open whether KSD ascent over continuous parameters provides advantages over richer kernel classes.
+
+Questions
+- Can you provide a theoretical or empirical validation that εn→0 holds under your gradient-ascent update (Algorithm 1), e.g., with bounded Θ, step-size schedules, or PL/Lipschitz conditions on KSDθ(μn|π)?
+- Are there constraints on Θ (lower bounds on hi) to ensure Assumption 3’s uniform bounds B? If so, what are they in practice?
+- Would using p=2 Gaussian kernels align better with Assumption 3 and Equation (5), and do results persist under that choice?
+- Could you add experiments comparing to MK-SVGD [1] and matrix-valued kernels [37], keeping particle budgets and compute equal?
+- For BLR, what MMD kernel and bandwidth were used? Is the same kernel applied across methods to avoid bias?
+- How does Ad-SVGD perform for d≥50 with spectral/low-rank kernel parametrizations (Section 5.1)? Any preliminary results?
+
+Rating
+- Overall (10): 8 — Convincing algorithmic idea with supportive theory and strong empirical gains; key assumptions (smoothness, εn→0) need clarification relative to experimental kernels (Assumptions 3–4; Equations (4)–(5); Section 6).
+- Novelty (10): 7 — KSD-driven continuous kernel adaptation within SVGD is a meaningful departure from median heuristics and finite MK-SVGD (Sections 1.2(i), 3; [1]).
+- Technical Quality (10): 7 — Proofs are correct under stated assumptions; core assumptions require additional justification for non-smooth kernels and unconstrained Θ (Section 4; Appendix B).
+- Clarity (10): 8 — Clear algorithm/theory and well-designed figures; minor omissions (MMD settings; section headings) (Algorithm 1; Figures 3–7).
+- Confidence (5): 4 — Based on familiarity with SVGD/KSD and careful reading; confidence tempered by missing ascent convergence details and kernel smoothness handling.
+
+---
+
+Summary
+The authors tackle SVGD’s kernel sensitivity by adaptively tuning kernel parameters via gradient ascent on KSD at each iteration (Algorithm 1). They connect the strategy to immediate KL descent (Equation (2)), extend SVGD convergence under T1 to an adaptive setting (Lemma 1; Theorem 3), and under a generalized Stein LSI, derive KL recursion with optimization-error terms (Theorem 4). Experiments on Gaussian mixture, ODE inverse problems, multivariate Gaussians, GP inference, and BLR show reduced variance collapse and stronger approximation metrics versus the median heuristic (Figures 1–7, 10–15; Tables 1–3).
+
+Soundness
+- The adaptive descent inequality (Block 17) logically follows from Theorem 3.2 in [32] and holds provided the step-size constraint (Equation (8)) and uniform bounds (Assumption 3) are satisfied.
+- The convergence proof (Theorem 3) is concise and sound; the key is the bounded decrease of KL and the residual between max KSD and attained KSD given εn→0. The iteration-complexity bounds under Stein LSI (Theorem 4) are coherent and useful for practice.
+- There is a methodological gap: computing ∇θ KSD^2 requires second derivatives of k (Equation (5)), yet p=1 product kernels lack smooth second derivatives at co-located particles; the paper needs to specify smooth approximations or subgradient methods to make the gradients well-defined and numerically stable.
+- Assumption 3’s uniform bounds and continuity over Θ seem strong unless Θ is compact with lower bounds on hi; Figures 4 and 6 show bandwidths spanning orders of magnitude, so the theoretical constants may be violated unless explicitly constrained.
+
+Presentation
+- The paper is well written, with crisp definitions (Section 2), algorithmic description (Block 14), and carefully annotated figures. Anchoring to prior work is adequate (Section 1.1).
+- The computational cost discussion (Block 13) is practical, but runtime claims could be better quantified (e.g., wall-clock, O(M^2) vs subsampling).
+- Minor missing details include MMD kernel selection (Figure 5) and handling of non-smooth derivatives in practice.
+
+Contribution
+- The central contribution—adaptive kernel selection via KSD ascent—is conceptually impactful and offers an orthogonal lever compared to learning update directions. The theoretical extension to adaptive kernels under T1 and Stein LSI clarifies convergence behavior.
+- Empirical demonstrations across diverse tasks show that tailored bandwidths recover posterior variances more accurately than the median heuristic, addressing a commonly cited SVGD weakness.
+
+Strengths
+- Strong motivation and direct theoretical link between KSD maximization and KL decrease (Equations (2), (7); Section 3).
+- Clean adaptive convergence results (Lemma 1; Theorem 3) and practical complexity guidance (Theorem 4; Section B).
+- Extensive experiments and aggregated statistics across seeds (Figure 3; Tables 1–3), supporting robustness.
+- Discussion of more scalable kernel families (Section 5.1) acknowledges future paths.
+
+Weaknesses
+- Practical differentiation of p=1 kernels in Equation (5) and Assumption 3 is unresolved; this undermines the claimed theoretical coverage of the implemented method.
+- Assumption 4 is essential and unproven for the proposed ascent (Section 6); evidence such as εn measurements would strengthen claims.
+- Comparisons lack MK-SVGD [1], sliced KSD [10], and matrix-valued kernels [37] baselines to benchmark against state-of-the-art kernel choices.
+- High-dimensional claims are modestly supported; experiments peak at d=16 (Sections 5.3, A.3). Scaling beyond moderate d is not demonstrated.
+
+Questions
+- Do you enforce bounds on hi (e.g., hi∈[hmin,hmax]) to meet Assumption 3? If so, what are the ranges?
+- How are non-smooth derivatives handled for p=1 in Equation (5)? Are particles ever co-located enough to cause instability?
+- Can you report εn across iterations to empirically verify Assumption 4 under your step-size/frequency choices (Block 14)?
+- How does subsampling affect ∇θ KSD^2 accuracy (Block 13)? Any bias-variance trade-off analysis?
+- Could you provide direct runtime comparisons and scaling with M (Med-SVGD vs Ad-SVGD) on BLR and ODE inverse problems?
+- Would spectral/low-rank kernel parametrizations (Section 5.1) match or exceed product kernels in BLR? Any initial results?
+
+Rating
+- Overall (10): 7 — Valuable idea and convincing empirical improvements; theoretical coverage of the exact implemented kernels and ascent convergence requires clarification (Assumptions 3–4; Equation (5); Section 6).
+- Novelty (10): 7 — KSD-driven continuous kernel tuning in SVGD distinguishes this work from prior finite-kernel and heuristic approaches (Sections 1.2(i), 3; [1], [12]).
+- Technical Quality (10): 6 — Analysis is correct conditional on assumptions, but practical kernels and unconstrained Θ may violate them; ascent convergence remains assumed (Section 4; Appendix B).
+- Clarity (10): 8 — Clear exposition and figures; minor missing implementation details (Algorithm 1; Figures 3–7; Section 5.4).
+- Confidence (5): 4 — Assessment based on close reading and domain expertise; confidence limited by missing technical details on differentiability and ascent convergence.
+
+---
+
+Summary
+The manuscript presents Ad-SVGD, an adaptive kernel selection mechanism for SVGD that maximizes KSD over a parameterized kernel family at each iteration. It justifies this by the KL descent rate equaling KSD² (Equations (2), (7)), and extends fixed-kernel convergence (under T1) to the adaptive case, showing supθ KSD→0 (Theorem 3). Under a generalized Stein log-Sobolev inequality, it further derives KL contraction bounds with optimization-error terms and iteration complexity under different εn schedules (Theorem 4; Appendix B). Experiments across Gaussian mixture, linear ODE inverse problems, multivariate Gaussians, GP inference, and BLR indicate Ad-SVGD reduces variance collapse and improves sample quality metrics versus the median heuristic (Figures 1–7, 10–15; Tables 1–3).
+
+Soundness
+- The algorithmic rationale is well-founded: selecting the kernel that maximizes KSD should maximize instantaneous KL descent due to Equation (2), and the descent inequality (Equation (7)) extends to θn (Block 17).
+- The adaptive convergence proof (Theorem 3) is sound in the mean-field population setting; it crucially depends on Assumption 4 to bridge the gap between max KSD and the achieved KSD.
+- The generalized Stein LSI (Assumption 5) and resulting KL recursion (Theorem 4) are correctly derived; the cases for εn (constant, geometric decay, polynomial decay) provide useful practical guidance (Blocks 70–73).
+- Concerns:
+  • Smoothness and uniform boundedness (Assumption 3) may fail for p=1 product kernels used in Sections 5.1–5.4; Equation (5) uses second derivatives of k which are not smooth at co-incident particles. The paper should either switch to p=2 or justify non-smooth handling.
+  • Θ must be constrained to ensure uniform B and step-size bounds (Equation (8)); otherwise, hi→0 leads to large ∇Φθ norms and invalidates key inequalities. The manuscript does not specify such constraints.
+
+Presentation
+- The paper is well-organized, with clear derivations and well-annotated figures. Algorithm 1 is explicit and easy to follow.
+- The experimental section is detailed and provides aggregated metrics over seeds (Figure 3; Tables 1–3).
+- Missing details: BLR MMD kernel choice (Figure 5) and precise computational overhead comparisons; section headings occasionally inconsistent in numbering.
+
+Contribution
+- The work advances SVGD by algorithmically optimizing kernel parameters through KSD ascent, providing a clean mechanism to mitigate variance collapse without architectural changes.
+- The theoretical extension to adaptive kernel selection is meaningful and fills a gap in the SVGD literature under T1 and Stein LSI assumptions.
+- Practical value is demonstrated in multiple settings, with improved posterior variance matching.
+
+Strengths
+- Strong conceptual link between KSD maximization and KL descent (Equations (2), (7)).
+- Adaptive convergence analyses (Lemma 1; Theorem 3) and iteration complexity (Theorem 4) enhance understanding of algorithm behavior.
+- Empirical performance gains are consistent and well quantified (Figures 3, 7, 10, 15; Tables 1–3).
+- Clear acknowledgment of limitations (Section 6) and directions for integration with newer SVGD variants.
+
+Weaknesses
+- Core assumptions (Assumptions 3–4) are not aligned with the practical kernel choices (p=1), potentially weakening theoretical support for the reported experiments.
+- No direct baselines against MK-SVGD [1], sliced KSD [10], or matrix-valued kernels [37]; lacking ablations on kernel families beyond product kernels.
+- Claims about high-dimensional efficacy are based on moderate dimensions; scalability remains to be evidenced for d≫16 with realistic posteriors.
+- Limited discussion of optimization landscape for KSDθ(μ|π): convexity, smoothness, and step-size selection for reliable ascent.
+
+Questions
+- Would adopting p=2 Gaussian kernels throughout align theory and practice (Equation (5); Assumption 3)? If p=1 is essential, how are non-smooth derivatives treated?
+- What are the explicit constraints on Θ used in experiments (ranges for hi)? Are these necessary to satisfy uniform boundedness (Assumption 3) and step-size bounds (Equation (8))?
+- Can you include baselines with MK-SVGD [1], matrix-valued kernels [37], and sliced KSD [10] to contextualize gains?
+- Did you measure εn in practice, and can you report its decay behavior to support Assumption 4 and Theorem 4’s iteration complexity?
+- How robust is Ad-SVGD to noisy ∇ log π, subsampling in KSD estimation (Block 13), and different paramupdate frequencies?
+
+Rating
+- Overall (10): 7 — Solid, well-motivated algorithm with supportive theory, but key practical-theory mismatches and missing ascent guarantees limit impact (Assumptions 3–4; Equation (5); Section 6).
+- Novelty (10): 6 — Idea is conceptually simple yet useful; related to MK-SVGD but extends to continuous parameter optimization; empirical breadth adds value (Sections 1.2, 3; [1]).
+- Technical Quality (10): 7 — Theoretical derivations are correct under assumptions; practical kernels and Θ constraints need clarification; iteration complexity under Stein LSI is a plus (Section 4; Appendix B).
+- Clarity (10): 8 — Clear algorithm and results; small missing details on MMD and kernel smoothness handling (Algorithm 1; Figures 3–7; Section 5.4).
+- Confidence (5): 4 — Confident in assessment of theory and experiments; reservation stems from implementation details affecting assumption validity.

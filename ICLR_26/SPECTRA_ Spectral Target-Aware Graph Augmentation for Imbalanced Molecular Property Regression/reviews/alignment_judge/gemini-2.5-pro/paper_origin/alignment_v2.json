@@ -1,0 +1,129 @@
+{
+  "paper": "SPECTRA_ Spectral Target-Aware Graph Augmentation for Imbalanced Molecular Property Regression",
+  "runs": [
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "final_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "0a71ca7d783136ba33fb6b5ec9aad08ece2f0c09",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/final_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 1.0,
+        "weakness_coverage_recall": 0.67,
+        "ai_extra_major_points_rate": 0.41,
+        "symmetric_coverage_similarity": 0.45,
+        "note": "The AI review fully covers all strengths mentioned by the human reviewer. However, it misses some of the human's weaknesses (e.g., presentation, theoretical justification for graph matching) while adding many of its own major concerns regarding experimental rigor, reproducibility, and lack of quantitative metrics."
+      },
+      "generated_at": "2025-12-27T20:40:12"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "baseline_review.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "b3137abdd5dd456ecfb029f7bed4151251d086e2",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/baseline_review.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 1.0,
+        "weakness_coverage_recall": 0.67,
+        "ai_extra_major_points_rate": 0.33,
+        "symmetric_coverage_similarity": 0.42,
+        "note": "The AI review shows excellent coverage of the human's strength points but misses some weaknesses, such as the lack of comparison to embedding-based methods. The main coverage divergence is the AI's introduction of several new, major weaknesses concerning evaluation rigor (e.g., lack of statistical tests, unclear baseline tuning, reliance on qualitative visuals)."
+      },
+      "generated_at": "2025-12-27T20:44:44"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "deepreviewer",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "deep_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "55f39c3e353412551a5ae68e81fc4acc489b4edd",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/deepreviewer/gpt-5-2025-08-07/paper_origin/deep_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 1.0,
+        "weakness_coverage_recall": 0.5,
+        "ai_extra_major_points_rate": 0.5,
+        "symmetric_coverage_similarity": 0.47,
+        "note": "The AI review fully covers the paper's strengths but misses several key weaknesses raised by the human, such as scalability concerns (O(n^3) complexity) and the theoretical rationale for graph matching. Conversely, the AI identifies numerous specific methodological weaknesses not mentioned by the human, including unfair baseline comparisons and inconsistencies in the method's description."
+      },
+      "generated_at": "2025-12-27T20:50:34"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "deepreviewer",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "deep_review_merge.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "752f27bc09e656c7d041a880d0c174422eea6ca4",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/deepreviewer/gpt-5-2025-08-07/paper_origin/deep_review_merge.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 0.67,
+        "weakness_coverage_recall": 0.5,
+        "ai_extra_major_points_rate": 0.53,
+        "symmetric_coverage_similarity": 0.35,
+        "note": "The AI review missed several key weaknesses from the human review, notably scalability concerns and the lack of comparison to embedding-based methods. Conversely, the AI identified numerous new, substantive weaknesses regarding experimental rigor, methodological inconsistencies, and graph reconstruction details."
+      },
+      "generated_at": "2025-12-27T21:20:22"
+    }
+  ]
+}

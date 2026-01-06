@@ -1,0 +1,129 @@
+{
+  "paper": "Towards Understanding Feature Learning in Parameter Transfer",
+  "runs": [
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "final_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "0a71ca7d783136ba33fb6b5ec9aad08ece2f0c09",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/final_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 1.0,
+        "weakness_coverage_recall": 0.33,
+        "ai_extra_major_points_rate": 0.75,
+        "symmetric_coverage_similarity": 0.33,
+        "note": "The AI review perfectly covers all strengths mentioned by the human. However, there is a major divergence on weaknesses: the human focuses on high-level concerns like lack of practitioner guidance, while the AI provides a much more extensive and technical critique, including reproducibility issues and specific assumption violations, which the human does not mention."
+      },
+      "generated_at": "2025-12-27T20:39:38"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "baseline_review.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "b3137abdd5dd456ecfb029f7bed4151251d086e2",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/baseline_review.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 1.0,
+        "weakness_coverage_recall": 0.4,
+        "ai_extra_major_points_rate": 0.6,
+        "symmetric_coverage_similarity": 0.33,
+        "note": "The AI review fully covers the strengths mentioned by the human but misses several key weaknesses, such as the lack of actionable guidance and limited comparison to prior work. Conversely, the AI introduces numerous specific, technical concerns not raised by the human, including reproducibility issues and a lack of empirical evidence for negative transfer on real data."
+      },
+      "generated_at": "2025-12-27T20:44:26"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "deepreviewer",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "deep_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "55f39c3e353412551a5ae68e81fc4acc489b4edd",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/deepreviewer/gpt-5-2025-08-07/paper_origin/deep_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 1.0,
+        "weakness_coverage_recall": 0.5,
+        "ai_extra_major_points_rate": 0.67,
+        "symmetric_coverage_similarity": 0.57,
+        "note": "The AI review perfectly covers all strengths but misses half of the human's weaknesses, such as the limited comparison to prior work and unclear generalization beyond classification tasks. Conversely, the AI raises several major technical weaknesses not mentioned by the human, including stylized data assumptions and specific errors in the proofs."
+      },
+      "generated_at": "2025-12-27T20:50:16"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "deepreviewer",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "deep_review_merge.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "752f27bc09e656c7d041a880d0c174422eea6ca4",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/deepreviewer/gpt-5-2025-08-07/paper_origin/deep_review_merge.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 1.0,
+        "weakness_coverage_recall": 0.4,
+        "ai_extra_major_points_rate": 0.8,
+        "symmetric_coverage_similarity": 0.44,
+        "note": "The AI review achieved perfect coverage of the paper's strengths but missed several key weaknesses raised by the human, notably the lack of actionable guidance for practitioners and insufficient comparison to prior work. Conversely, the AI provided many additional, specific technical weaknesses regarding stylized model assumptions, theoretical requirements, and incomplete experimental details."
+      },
+      "generated_at": "2025-12-27T21:19:46"
+    }
+  ]
+}

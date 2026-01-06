@@ -1,0 +1,91 @@
+# Global Summary
+This paper introduces ExPO-HM (Explain-then-Detect Policy Optimization for Hateful Memes), a novel framework for hateful meme detection that first generates a natural language explanation and then makes a classification decision. The authors identify that prior "Explain-then-Detect" methods, such as those using Chain-of-Thought prompting or LMM agents, underperform simple direct detection baselines. They attribute this to models failing to reason about policy-relevant cues (like attack types) and the insufficiency of binary reward signals for training. ExPO-HM is inspired by the training process of human moderators and consists of three main components: 1) Supervised Fine-Tuning (SFT) warmup on structured policy manuals (SFT-PM) to instill policy knowledge, 2) Group-Relative Policy Optimization (GRPO) with curriculum learning (GRPO-CL) that progresses from fine-grained to binary tasks, and 3) a novel Conditional Decision Entropy (CDE) metric used as a reward to encourage sharp and correct reasoning. The method is evaluated on three datasets (HatefulMemes, MAMI, PrideMM) across binary classification, fine-grained classification, and reasoning quality. ExPO-HM is shown to achieve state-of-the-art results, outperforming both direct detection and previous Explain-then-Detect baselines, with reported F1 score improvements of up to 15% over GRPO and 17% over DPO.
+
+# Abstract
+- **Problem**: Hateful memes are a challenging form of online abuse. Most detection systems provide only binary predictions, lacking the explanations needed for real-world moderation. Prior "Explain-then-Detect" approaches (e.g., Chain-of-Thought, LMM agents) perform worse than simple Supervised Fine-Tuning (SFT) baselines.
+- **Identified Issues**: The paper identifies two key problems with existing systems: 1) models do not hypothesize important policy-relevant cues like targets and attack types in their explanations, and 2) the binary reward signal used in methods like GRPO is insufficient to guide reasoning effectively.
+- **Proposed Method**: The paper proposes ExPO-HM (Explain-then-Detect Policy Optimization for Hateful Memes), a method inspired by human annotator training. It combines SFT warmup, GRPO with curriculum learning, and Conditional Decision Entropy (CDE) as both a metric and a reward for reasoning quality.
+- **Results**: ExPO-HM achieves state-of-the-art performance on three hateful meme benchmarks for binary detection, fine-grained classification, and reasoning quality. It shows up to 15% and 17% F1 improvement over GRPO and DPO baselines, respectively.
+- **Contribution**: The work aims to shift hateful meme detection from simple binary alarms to an explanation-driven process that provides accurate, interpretable, and actionable moderation support.
+
+# Introduction
+- **Motivation**: Automated hateful meme detection systems are needed to support human moderators. Most prior work focuses on direct binary detection, but moderators require more context, such as attack types and explanations, for efficiency.
+- **Human Analogy**: Human annotators are trained using detailed policy manuals, not just binary labels. The paper argues that automated systems could benefit from a similar "Explain-then-Detect" paradigm.
+- **Challenges with Existing Methods**: Recent Explain-then-Detect systems using Chain-of-Thought (CoT) or agent frameworks underperform direct SFT baselines. Applying reinforcement learning methods like Group-Relative Policy Optimization (GRPO) directly also fails to close this gap. The paper identifies two main challenges: explanations often miss the correct violated policy or target, and binary rewards are too weak to guide reasoning.
+- **ExPO-HM Framework**: The proposed method mimics human moderator training.
+    - It starts with SFT warmup on a structured policy manual.
+    - It then applies GRPO with curriculum learning, starting with fine-grained categories before moving to binary judgments.
+    - It introduces Conditional Decision Entropy (CDE) as a metric for explanation quality and as a reward signal to encourage decisive reasoning.
+- **Contributions Summary**:
+    - Introduces the first Explain-then-Detect system for hateful memes that outperforms direct detection.
+    - Proposes a method combining policy manual SFT, GRPO with curriculum learning, and a CDE-based reward.
+    - Establishes a comprehensive evaluation setup covering binary, fine-grained, and reasoning tasks.
+    - Achieves new state-of-the-art results, with up to 15% F1 improvement over GRPO and 17% over DPO.
+
+# Related Work
+- **Direct Hateful Meme Detection**: Most prior work treats this as a binary classification task, fine-tuning CLIP-based models or LMMs. The paper cites RA-HMD (Mei et al., 2025) as the state-of-the-art direct detection model.
+- **Fine-grained Classification**: This area (identifying attack types, target groups) has received less attention. While annotated datasets exist, recent progress is limited. Some models like Mod-Hate and IntMeme use fine-grained data but don't report fine-grained results. MemeCLIP is noted as an exception.
+- **Explain-then-Detect Hateful Meme Detection**: Research in this area is limited. Examples include LOREHM (an agent framework) and a system by Lin et al. (2024) using model debate. A key challenge is the lack of annotated explanation data; the Hatred dataset is the only open-source one mentioned. Existing systems underperform direct detection models. The paper positions ExPO-HM as the first Explain-then-Detect system to surpass direct detection approaches.
+
+# Preliminaries
+- **Problem Statement**: The paper formalizes three tasks: (1) binary classification (predicting `c_i`), (2) fine-grained classification (predicting `z_i`), and (3) explanation generation (generating `e_i`).
+- **Large Multimodal Models (LMMs)**: An LMM is defined as an auto-regressive policy `π_θ(y | x)`.
+- **Explain-then-Detect Format**: The model output `y` is structured as `<think> e </think> <answer> d </answer>`, where `e` is the explanation and `d` is the textualized label.
+- **Supervised Fine-Tuning (SFT)**: The model is trained by maximizing the log-likelihood of a target sequence `y*` using the standard cross-entropy loss `L_SFT`.
+
+# Method
+- **DPO and GRPO Baselines**: The paper defines Direct Preference Optimization (DPO) and Group Relative Policy Optimization (GRPO) as baselines. For DPO, preference pairs are created based on whether the model's decision matches the ground truth. GRPO is an online policy gradient method that estimates advantage by sampling a group of `G` outputs.
+- **Conditional Decision Entropy (CDE)**:
+    - **Principle**: Good reasoning should lead to a sharp and correct decision.
+    - **Definition**: CDE is the entropy of the decision distribution `d` conditioned on the generated explanation `e`, denoted `H(d | e, x)`.
+    - **Estimation**: A Monte Carlo estimator is used, sampling `K=16` explanations for each input to compute the average CDE.
+- **ExPO-HM Framework**:
+    - **1. SFT Warmup on Structured Policy Manuals (SFT-PM)**: The LMM is first fine-tuned on prompts containing a structured policy manual derived from dataset guidelines. The target output is the fine-grained label. Gold human explanations are not used in this stage.
+    - **2. GRPO with Curriculum Learning (GRPO-CL)**: After SFT-PM, GRPO is applied in two stages. The first 50% of training steps use only fine-grained data. The remaining 50% use a 50/50 mix of fine-grained and binary data.
+    - **3. GRPO with CDE Reward**: The total reward function is `r = r_format + r_acc + w * r_CDE`. The CDE reward `r_CDE` is designed to reward confident correct predictions, tolerate uncertainty in wrong predictions, and penalize confident errors. Default hyperparameters are `a=0.1`, `b=0.5`, `w=0.2`, and `ρ=0.25`.
+
+# Experiments
+- **Experimental Setup**:
+    - **Datasets**: HatefulMemes, MAMI, and PrideMM.
+    - **Tasks**: Binary classification, fine-grained classification (attack methods, target groups, stance), and reasoning quality (on HatefulMemes using the Hatred dataset).
+    - **Metrics**: Macro F1 (binary), Micro F1 (fine-grained), LLM-as-a-judge score (reasoning), and CDE.
+- **Baselines**:
+    - **Models**: Qwen2.5-VL-3B and Qwen2.5-VL-7B.
+    - **Methods**: Zero-shot, Direct-SFT, DPO, GRPO.
+    - **SOTA Systems**: RA-HMD (direct detection), LOREHM (34B agent), U-CoT+ (14B CoT).
+- **Main Results (Table 1)**:
+    - On HatefulMemes with Qwen2.5-VL-7B, ExPO-HM achieves 81.1 BF1, outperforming Direct-SFT (75.0), GRPO (74.5), and RA-HMD (80.2).
+    - For fine-grained tasks on HatefulMemes, ExPO-HM achieves 75.6 Attack F1 and 77.2 Target F1, large gains over GRPO (61.2 and 64.5, respectively).
+    - For reasoning, ExPO-HM gets an LLM-as-a-judge score of 6.2, compared to 5.2 for GRPO.
+    - A strong negative correlation is found between LLM-as-a-judge scores and CDE (Pearson r = -0.78, Spearman ρ = -0.81).
+- **Ablation Study (Table 2)**:
+    - Each component of ExPO-HM contributes to performance. Removing the CDE reward drops BF1 from 81.1 to 78.4 and the LLM score from 6.2 to 5.8. Removing GRPO-CL further drops BF1 to 75.8. Removing SFT-PM (the full baseline) results in 74.5 BF1.
+    - GRPO-CL encourages more detailed reasoning, with average response length increasing from 28 tokens (standard GRPO) to 52 tokens.
+- **Warmup Strategies (Table 3)**:
+    - SFT-PM provides the best performance both after SFT and after the full ExPO-HM training.
+    - SFT on binary labels (SFT-B) performs well at the SFT stage but leads to poor performance after RL, suggesting it doesn't teach necessary reasoning concepts.
+- **CDE Analysis**:
+    - **Distribution**: ExPO-HM shows low CDE for correct predictions (mean=0.019) and higher CDE for wrong ones (mean=0.048), indicating better alignment between confidence and accuracy compared to GRPO.
+    - **Calibration**: ExPO-HM improves calibration, reducing the Brier score from 0.590 to 0.283 on the 3B model compared to the zero-shot baseline.
+- **Human Evaluation**:
+    - **Coherence**: ExPO-HM achieves 100% coherence between rationale and decision, versus 96% for the GRPO baseline.
+    - **Helpfulness**: On a 0-4 Likert scale, ExPO-HM scores 2.2, while GRPO scores 1.6. This relative improvement aligns with LLM-as-a-judge results.
+
+# Conclusion
+The paper proposes ExPO-HM, a novel framework for hateful meme detection that integrates SFT warmup on policy manuals, GRPO with curriculum learning, and a Conditional Decision Entropy (CDE) reward. Experiments demonstrate that ExPO-HM achieves state-of-the-art performance in binary detection, fine-grained classification, and reasoning quality, successfully creating an "Explain-then-Detect" system that outperforms direct detection methods.
+
+# Appendix
+- **Ethical Statement**: Discusses societal benefits, intended use with access controls, potential for misuse due to dataset biases, and the need for human oversight and cultural adaptation during deployment.
+- **Dataset Details**: Provides specific prompts for all tasks and datasets, details on how policy manuals were constructed from annotation guidelines, and comprehensive statistics for all datasets used (HatefulMemes, MAMI, PrideMM, Hatred). It also notes dataset licenses (e.g., MAMI is Apache 2.0, PrideMM is not specified).
+- **Experiment Setup Details**:
+    - **Hardware**: GRPO experiments were run on 8 Nvidia H100 GPUs.
+    - **Training**: The vision module was frozen. LoRA was used with rank=64 and α=128. Training time for ExPO-HM was about 4 hours on 8 GPUs.
+    - **Hyperparameters**: Details on DPO's β sweep and a grid search for CDE reward parameters (`a`, `b`, `w`, `ρ`) are provided, along with stable ranges.
+- **Reasoning Evaluation**:
+    - The main LLM judge is GPT-4o mini. The prompt is provided.
+    - Additional evaluations use other judges (GPT-5, Qwen3, Gemma-3, gpt-oss) and a prompt-free metric (BERTScore). ExPO-HM consistently ranks highest.
+    - A prompt sensitivity analysis shows results are robust to paraphrasing.
+- **Human Evaluation**: Provides the annotation interface and details on the coherence and helpfulness tasks. Inter-annotator agreement was strong (Krippendorff’s α = 0.71).
+- **CDE Derivation and Calibration**: Includes the full mathematical derivation for the CDE estimator and a theoretical analysis showing that maximizing the CDE reward upper-bounds the Brier score, thus improving confidence calibration. Calibration metrics (ECE, Brier score) are reported, showing ExPO-HM is superior.
+- **Fine-grained Results**: Tables provide per-class F1 scores for attack types and protected categories on HatefulMemes, showing ExPO-HM's consistent improvements, especially on challenging classes.
+- **Qualitative Analysis**: Presents case studies where ExPO-HM corrects GRPO's errors and analyzes common failure modes, which include highly implicit memes and those requiring external world knowledge.

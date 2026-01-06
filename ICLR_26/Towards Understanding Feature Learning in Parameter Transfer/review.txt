@@ -1,0 +1,55 @@
+### Summary
+
+This paper investigates the process of **parameter transfer**, where parts of a pretrained model (the **upstream model**) are reused in a downstream model to improve task performance. The authors focus on a theoretical analysis of **partial parameter reuse**, where only a subset of the parameters is transferred. This process is commonly used in **transfer learning**, and the paper provides insights into the conditions that determine when parameter transfer is beneficial or harmful.
+
+The authors develop a theoretical framework for **ReLU convolutional neural networks (CNNs)**, showing that parameter transfer can be beneficial if the **shared signal** between tasks is strong and the **task-specific noise** is small. The framework identifies the factors that influence the effectiveness of parameter transfer, explaining why, in some cases, transferring parameters leads to **negative transfer** (i.e., when the downstream model performs worse than a model trained from scratch). Theoretical findings are supported by numerical experiments on **standard vision benchmarks**.
+
+---
+
+### Strengths
+
+1. **Theoretical Contributions**:
+
+   * The paper provides **rigorous theoretical insights** into the **dynamics of parameter transfer**, particularly highlighting the importance of shared knowledge between tasks and its role in positive or negative transfer.
+   * The authors derive conditions under which parameter transfer can either improve or harm downstream task performance, offering new perspectives on **transfer learning**.
+
+2. **Testable Predictions**:
+
+   * The analysis introduces an interpretable **scalar criterion** for predicting whether parameter transfer will be beneficial or lead to negative transfer, which is a valuable tool for understanding when to apply transfer learning.
+
+3. **Mechanistic Understanding**:
+
+   * The paper clarifies the mechanisms behind **negative transfer**, providing actionable insights that could guide future practices in transfer learning.
+
+4. **Experiments**:
+
+   * The authors conduct **well-designed experiments** on **ResNet**, **VGG**, and **DeiT** models with **CIFAR-10** and **CIFAR-100** datasets, providing empirical validation for their theoretical findings.
+
+---
+
+### Weaknesses
+
+1. **Practical Relevance of Assumptions**:
+
+   * The core assumption of **random parameter sampling** (using a fixed proportion of weights for transfer) is somewhat **misaligned with real-world scenarios**. In practical deployments, parameter transfer often occurs from **specific layers** or interfaces (e.g., pre-trained encoders for downstream classifiers), but the paper primarily models **random sampling** across layers, which may not fully represent common real-world practices.
+   * The authors do acknowledge that this assumption is made for **mathematical tractability**, but it limits the direct applicability of the results to real-world tasks.
+
+2. **Lack of Clear Operational Guidance**:
+
+   * While the paper provides theoretical explanations for when and why parameter transfer works, it does not offer **concrete, actionable steps** for practitioners to implement in real-world settings. For example, it does not specify **how to measure transferability** for a new target task or **how to decide** between full fine-tuning, partial initialization, or other adaptation methods.
+   * The **practical guidance** on transferability estimation is **vague** and not sufficiently developed to help practitioners apply the theory directly to their workflows.
+
+3. **Theoretical Assumptions and Clarity**:
+
+   * Some of the **mathematical definitions and notations** (e.g., **noise covariance matrices**) are complex and require clarification for broader accessibility. While the paper aims to be rigorous, parts of it may be difficult to understand for non-experts.
+   * The authors do revise some of the unclear sections in the rebuttal, but the **readability** of the theoretical results could be improved for a broader audience.
+
+4. **Limited Comparison to Prior Work**:
+
+   * The paper does not position its theoretical framework clearly within the context of existing **transfer learning** theories and methods. While the authors cite relevant work, they could have expanded the **related work** section to better demonstrate how their approach differs from or builds upon previous research.
+   * Comparisons to other **transfer learning methods** (e.g., fine-tuning, domain adaptation, etc.) are sparse and could strengthen the paper¡¯s contribution.
+
+5. **Assumption of Classification Tasks**:
+
+   * The paper primarily focuses on **classification tasks**, and it remains unclear whether the theoretical insights can be **generalized** to other types of tasks (e.g., **regression**, **segmentation**, or **generation**). A more thorough discussion on this would enhance the paper¡¯s applicability.
+

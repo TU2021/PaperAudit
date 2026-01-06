@@ -1,0 +1,77 @@
+# Global Summary
+This paper introduces PredNext, a plug-and-play module for unsupervised learning in Spiking Neural Networks (SNNs) designed to improve the modeling of long-range temporal dependencies and feature consistency in video data. The core problem addressed is that existing unsupervised SNNs, often using shallow architectures or local plasticity rules, produce semantically unstable representations for complex video tasks. PredNext explicitly models temporal relationships through two cross-view prediction tasks: Step Prediction (predicting the next time step's feature) and Clip Prediction (predicting a future clip's feature). The authors establish SNN self-supervised learning benchmarks on large-scale video datasets (UCF101, HMDB51, MiniKinetics), adapting methods like SimCLR, MoCo, and SimSiam. Experiments show that PredNext consistently improves performance across these methods. For instance, with SimSiam on UCF101, PredNext improves Top-1 accuracy from 50.81% to 54.93%. Notably, an unsupervised SNN with PredNext, pre-trained on UCF101, achieves performance (72.24% Top-1 on UCF101) comparable to a supervised SNN pre-trained on ImageNet. The paper also demonstrates that PredNext enhances temporal feature consistency, unlike forced consistency constraints which degrade performance.
+
+# Abstract
+The paper addresses the limitations of current unsupervised Spiking Neural Networks (SNNs), which struggle with long-range temporal dependencies and feature consistency, hindering their application to large-scale video data. It proposes PredNext, a method that explicitly models temporal relationships using cross-view Future Step Prediction and Clip Prediction. PredNext is designed as a plug-and-play module for various self-supervised objectives. The authors establish standard benchmarks for SNN self-supervised learning on UCF101, HMDB51, and MiniKinetics, which are larger than typical DVS datasets. Results show that PredNext significantly improves performance across different tasks and self-supervised methods. Unsupervised training with PredNext on UCF101 alone achieves performance comparable to supervised ImageNet-pretrained models. The method is shown to improve temporal feature consistency and network generalization, providing a foundation for deep unsupervised SNNs on large video datasets.
+
+# Introduction
+- The paper argues that while SNNs are a natural fit for unsupervised learning due to their temporal dynamics, current methods are limited to shallow architectures or local plasticity rules, failing to capture long-term dependencies in complex video data.
+- The authors posit that the intrinsic dynamics of LIF neurons are insufficient for complex temporal processing and that explicit temporal modeling is necessary to enhance SNN capabilities.
+- A key goal of effective temporal modeling is to improve the consistency of features extracted across different time steps. Figure 1(a) shows that a baseline SimSiam model's feature similarity degrades after ~100 epochs, while PredNext maintains high consistency. Figure 1(b) conceptually illustrates that high-consistency representations form tighter clusters.
+- The paper introduces PredNext, a plug-and-play module that integrates with existing self-supervised methods. It has two components: Step Prediction for subsequent time steps and Clip Prediction for future temporal clips.
+- PredNext uses a cross-view prediction mechanism, where features from one augmented view predict features of another, to enhance feature discrimination.
+- The hypothesis is that predicting future representations forces the model to learn semantically dense features, which naturally improves temporal consistency.
+- The work establishes SNN benchmarks for self-supervised learning on larger video datasets like UCF101 and MiniKinetics, as detailed in Table 1, moving beyond smaller DVS datasets.
+- An experiment is mentioned where directly forcing temporal consistency via a loss constraint was found to impair performance.
+
+# Method
+- **2.1 SELF-SUPERVISED LEARNING IN SNNs**:
+    - The paper first adapts five common self-supervised learning methods to SNNs to create baselines: SimCLR, MoCo, SimSiam, BYOL, and Barlow Twins.
+    - The general SNN setup involves taking two augmented views of a video clip, passing them through an SNN encoder and MLP projection head, and then time-averaging the output features (z_i = ∑ z_i^t / n) before applying the respective self-supervised loss.
+    - The loss functions for each method (InfoNCE, cosine similarity with predictor, cross-correlation) are briefly described.
+    - The SNN backbone is a SEW ResNet18. Training uses an AdamW optimizer (LR 2e-3, weight decay 1e-4) with cosine annealing and a batch size of 256.
+    - For UCF101/HMDB51, training is for 200 epochs on 128x128 crops (T=16 frames, stride=2). For MiniKinetics, it's 120 epochs on 114x114 crops (T=8 frames, stride=8).
+- **2.2 PREDNEXT**:
+    - PredNext is an auxiliary module with two prediction heads: a Step Predictor (P_T) and a Clip Predictor (P_C), both implemented as 2-layer MLPs.
+    - It operates alongside a primary self-supervised loss (L_ssl).
+    - The module predicts future features in a cross-view manner: features from one augmented view (e.g., p_i^t) are used to predict future features of the other view (e.g., z_j^{t+m}). This is claimed to improve generalization over same-view prediction.
+    - The prediction loss (L_pred) is based on minimizing the negative cosine similarity between the predicted features and the target future features.
+    - The final loss is a weighted sum: L = (1 − α) · L_ssl + α · L_pred.
+    - The training procedure is outlined in Algorithm 1.
+    - The prediction heads (P_T, P_C) use a 128-dimensional hidden layer.
+
+# Related Work
+- PredNext is compared to other predictive coding methods for video, such as DPC, MemDPC, and a CPC-like approach by Lorre et al.
+- A key distinction highlighted in Table 2 is that PredNext is a simple, modular component that does not require complex auxiliary structures like temporal aggregator networks used in DPC/MemDPC.
+- PredNext is also unique in combining both step-level and clip-level prediction.
+
+# Experiments
+- **3.1 DATASET AND IMPLEMENTATION**:
+    - Datasets used are UCF101 (13,320 clips, 101 classes), HMDB51 (6,766 clips, 51 classes), and miniKinetics (200 classes, ~400 train instances/class).
+    - The backbone is SEW ResNet18. Input for UCF101/HMDB51 is 16 frames at 128x128, and for miniKinetics is 8 frames at 112x112. Optical flow is not used.
+- **3.2 RESULTS OF UNSUPERVISED REPRESENTATION EVALUATION**:
+    - Table 3 shows fine-tuning accuracy. PredNext consistently improves performance across all baseline methods.
+    - For example, pre-training on UCF101 and fine-tuning on UCF101, PredNext-SimCLR achieves 59.47% Top-1 vs. SimCLR's 57.04%. PredNext-Barlow Twins achieves 59.76% vs. 56.15%.
+    - A key result is that PredNext-SimSiam (with ImageNet init) pre-trained on UCF101 achieves 72.24% Top-1 on UCF101, outperforming supervised training with ImageNet+MiniKinetics initialization (70.02%).
+    - The results also show that pre-training on a larger dataset (MiniKinetics) yields better transfer performance.
+- **3.3 CONSISTENCY CURVES AND MANIFOLD**:
+    - Feature consistency is measured by the average cosine distance between features from different time steps of the same video.
+    - Figure 4 shows that PredNext models achieve lower consistency error (higher similarity) and avoid the late-stage performance drop seen in baselines.
+    - UMAP visualizations show that PredNext-enhanced features form tighter, more distinct clusters for each video.
+    - An experiment with a "Forced Consistency" loss (Table 4) shows that while it improves the consistency metric (from 0.773 to 0.884), it severely degrades downstream task performance (Top-1 accuracy drops from 70.32% to 60.35% with β=0.8).
+- **3.4 VIDEO RETRIEVAL**:
+    - Table 5 shows video retrieval performance (Recall@K) on UCF101 and HMDB51.
+    - PredNext significantly improves retrieval. For SimSiam on UCF101, R@1 improves from 27.84% to 36.27%. With ImageNet initialization, PredNext-SimSiam reaches 53.19% R@1.
+    - Qualitative results in Figure 5 show retrieval of semantically similar videos despite visual differences.
+- **4 ABLATION STUDIES**:
+    - **Prediction Heads (Table 6)**: Both step prediction (P_T) and clip prediction (P_C) contribute positively. Clip prediction provides a larger boost. Combining them is optimal (e.g., SimSiam Top-1 on UCF101: 50.81% baseline, 51.33% with step, 54.40% with clip, 54.93% with both).
+    - **Prediction Step Length (Fig 6a)**: A step length of 1 performs best.
+    - **Cross-view Prediction (Table 7)**: Cross-view prediction is crucial. It outperforms same-view prediction (54.93% vs 53.66% Top-1 on UCF101). Same-view prediction alone leads to collapse (5.03% Top-1).
+    - **Prediction Head Size (Fig 6b)**: Performance saturates after a hidden dimension of 256. 512 was chosen as the optimal trade-off.
+    - **Time Lengths and Stride (Fig 6c)**: Longer sequences (16 vs. 10 frames) and larger sampling strides (e.g., 4 vs. 1) lead to better performance.
+
+# Conclusion
+The paper concludes that PredNext is an effective algorithm for enhancing unsupervised SNNs by using future feature prediction to improve temporal consistency. Experiments confirm that PredNext provides significant performance gains over baseline unsupervised SNN methods and improves the temporal coherence of learned representations.
+
+# Appendix
+- **Ethics/Reproducibility/LLM Usage**: Standard statements are provided, confirming no ethical issues, commitment to reproducibility with code release, and limited LLM use for language refinement only.
+- **Related Work**: Provides more background on SNNs, video unsupervised learning (DPC, VideoJigsaw, CoCLR, etc.), and unsupervised learning in SNNs (mostly STDP-based or on shallow networks for image data).
+- **Retrieval Visualization**: Figure 7 provides more qualitative examples of successful video retrieval.
+- **KNN Training Curve**: Figure 8 shows KNN classification accuracy during pre-training. PredNext-enhanced models consistently achieve higher Top-1 and Top-5 accuracy than their baselines throughout training.
+- **Setting Details**:
+    - **Pre-training**: AdamW (LR 0.002, WD 1e-6), batch size 128. 200 epochs for UCF101, 120 for MiniKinetics. Detailed data augmentations are listed.
+    - **Fine-tuning**: AdamW (LR 0.0003, no WD), batch size 128. 100 epochs for UCF101/HMDB51, 50 for MiniKinetics.
+    - **Model Details**: Specifies projector/predictor dimensions for all baseline methods (e.g., SimSiam uses 2048-dim output and 512-dim hidden layer). PredNext heads use a 512-dim hidden layer.
+
+# References
+The paper includes references to foundational and recent works in SNNs, unsupervised learning (SimCLR, MoCo, BYOL, etc.), and video representation learning (DPC, Kinetics, VideoMoCo, etc.).

@@ -1,0 +1,45 @@
+Based on a critical review of the manuscript, several significant internal inconsistencies and reporting issues have been identified that affect the paper's scientific validity and trustworthiness.
+
+### **Integrity and Consistency Risk Report**
+
+**1. Major Contradiction Regarding Training Data Size and Composition**
+
+The manuscript's central claim of high data efficiency is based on contradictory information about the training data.
+
+*   **Claim:** The Abstract (Block #2) and Section 4.1.2 (Block #21) repeatedly state that CopyPasteLLM was trained using "only 365 training samples" or "365 query-context pairs." This is presented as a key contribution, being "50× smaller than the strongest baseline."
+*   **Contradictory Evidence:** Appendix A, Table 4 (Block #37), which details the experimental setup, explicitly marks three datasets for training: RAGTruth (839 samples), FaithEval (1,000 samples), and PubMedQA (1,000 samples). The "Train" column is checked for all three. This implies a potential training pool of 2,839 samples.
+*   **Inconsistency:** There is a direct and unexplained contradiction between the prominently claimed training size of 365 samples and the 2,839 samples listed in the experimental setup table. The manuscript fails to specify the origin of the 365 samples or how they were selected from the larger pool described in the appendix. This discrepancy undermines the core claim of data efficiency.
+
+**2. Potential Data Contamination in Evaluation**
+
+The experimental design raises concerns about data leakage between the training and evaluation sets, which could artificially inflate the reported performance.
+
+*   **Evidence:** Appendix A, Table 4 (Block #37) indicates that the FaithEval and PubMedQA datasets were used for both "Train" and "Eval".
+*   **Problem:** The manuscript does not state whether strictly disjoint splits of these datasets were used for training and evaluation. Using samples from the same dataset for both purposes without ensuring a clean separation can lead to overfitting and an overestimation of the model's generalization capabilities. This is particularly concerning given the exceptionally high accuracy reported on FaithEval (e.g., 92.8% for a Llama-3-8B model vs. a reported 47.5% for GPT-4o in Table 5, Block #52).
+
+**3. Duplicated Visual Evidence in Mechanistic Analysis**
+
+The mechanistic analysis in the appendix appears to contain duplicated figures, which questions the integrity of the results presented.
+
+*   **Evidence:** The UMAP visualizations of hidden states for the Mistral-7B-Instruct-v0.2 model are visually identical for two different datasets:
+    *   Appendix Figure 8 (Block #63) for the **FaithEval** dataset.
+    *   Appendix Figure 9 (Block #64) for the **RAGTruth** dataset.
+*   **Problem:** It is statistically highly improbable that UMAP projections of a model's hidden states would produce identical plots when processing two distinct datasets. This strongly suggests that one figure is an erroneous copy of the other, meaning the analysis for one of the datasets was either not performed or not correctly reported. This undermines the credibility of the paper's mechanistic explanation for the model's behavior.
+
+**4. Inconsistent and Garbled Figure Descriptions**
+
+There are clear mismatches between figures and their corresponding descriptions in the text, indicating a lack of careful preparation.
+
+*   **Evidence:** The text block describing Figure 3 (Block #23) is severely garbled. The headers in the text (`CP-DPO CTX — Mistral-7B-Instruct-v0.2`, `CP-DPO Para. — Llama-3.1-8B-Instruct`, etc.) do not align with the figure's structure or legend (Block #25), which clearly separates plots by model (Mistral-7B on the left, Llama-3.1-8B on the right).
+*   **Problem:** This description is nonsensical and fails to accurately explain the figure's content, hindering the reader's ability to interpret the results.
+
+**5. Ambiguity in Data Efficiency Comparison**
+
+The claim of "50x" data efficiency is not rigorously substantiated due to ambiguous terminology.
+
+*   **Evidence:** The paper compares its "365 query-context pairs" to the baseline's "18,000 samples" (Block #21). However, the proposed method generates approximately five preference pairs per source sample (Algorithm 2, Block #43), resulting in ~1,825 actual training instances for DPO.
+*   **Problem:** The comparison is potentially misleading. It is unclear whether the baseline's "18,000 samples" refers to source query-context pairs or final preference pairs. Without this clarification, the "50x" efficiency claim cannot be independently verified and may be an overstatement.
+
+### **Conclusion**
+
+The manuscript contains several high-impact inconsistencies, including a fundamental contradiction in the reported training data size, potential data contamination in the evaluation protocol, and duplicated figures in the analysis. These issues materially affect the trustworthiness of the paper's central claims regarding data efficiency, performance, and the underlying mechanism of the proposed method. The manuscript requires substantial revision to clarify these points and ensure the reported results are sound and reproducible.

@@ -1,0 +1,129 @@
+{
+  "paper": "From Text to Talk_ Audio-Language Model Needs Non-Autoregressive Joint Training",
+  "runs": [
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "deepreviewer",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "deep_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "55f39c3e353412551a5ae68e81fc4acc489b4edd",
+      "inputs": {
+        "human_review": "review_origin.txt",
+        "ai_review": "reviews/deepreviewer/gpt-5-2025-08-07/paper_origin/deep_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 1.0,
+        "weakness_coverage_recall": 0.38,
+        "ai_extra_major_points_rate": 0.33,
+        "symmetric_coverage_similarity": 0.47,
+        "note": "The AI review perfectly covers the paper's strengths but misses several of the human reviewers' primary weaknesses, most notably the lack of comparison to external SOTA models and the limited evaluation scope. Conversely, the AI raises valid, technical concerns not mentioned by the humans, including potential data leakage and a theoretical issue with the scoring function's normalization."
+      },
+      "generated_at": "2025-12-27T23:45:36"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "baseline_review.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "b3137abdd5dd456ecfb029f7bed4151251d086e2",
+      "inputs": {
+        "human_review": "review_origin.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/baseline_review.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 1.0,
+        "weakness_coverage_recall": 0.5,
+        "ai_extra_major_points_rate": 0.14,
+        "symmetric_coverage_similarity": 0.56,
+        "note": "The AI review perfectly covered the paper's strengths but only moderately covered its weaknesses. It notably missed the human reviewers' major concerns about the lack of comparison to external SOTA models and the limited novelty, while adding its own more nuanced technical critiques."
+      },
+      "generated_at": "2025-12-27T23:50:48"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "final_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "0a71ca7d783136ba33fb6b5ec9aad08ece2f0c09",
+      "inputs": {
+        "human_review": "review_origin.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/final_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 0.95,
+        "weakness_coverage_recall": 0.43,
+        "ai_extra_major_points_rate": 0.45,
+        "symmetric_coverage_similarity": 0.52,
+        "note": "The AI review captures the paper's strengths perfectly but significantly fails to identify the primary human criticism: the lack of comparison against external SOTA models (e.g., Mini-Omni, Moshi). While both reviews agree on missing audio metrics and limited task scope, the AI focuses on internal baseline documentation and latency, whereas the human review emphasizes external benchmarking and specific logic issues (SST)."
+      },
+      "generated_at": "2025-12-28T00:01:14"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "deepreviewer",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "deep_review_merge.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "752f27bc09e656c7d041a880d0c174422eea6ca4",
+      "inputs": {
+        "human_review": "review_origin.txt",
+        "ai_review": "reviews/deepreviewer/gpt-5-2025-08-07/paper_origin/deep_review_merge.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 1.0,
+        "weakness_coverage_recall": 0.38,
+        "ai_extra_major_points_rate": 0.63,
+        "symmetric_coverage_similarity": 0.42,
+        "note": "The AI review provides excellent coverage of the paper's strengths, but its coverage of weaknesses is low, missing major human concerns like the lack of comparison to SOTA models and limited novelty. The AI compensates by raising several distinct, substantive critiques, including potential data leakage, a biased evaluation pipeline, and a theoretical flaw in the probabilistic framing."
+      },
+      "generated_at": "2025-12-28T00:17:01"
+    }
+  ]
+}

@@ -1,0 +1,97 @@
+{
+  "paper": "ExaGPT_ Example-Based Machine-Generated Text Detection for Human Interpretability",
+  "judge_model": "gpt-5.1",
+  "review_agent": "deepreviewer",
+  "ai_model": "gpt-5-2025-08-07",
+  "ai_review_file": "deep_review_all.txt",
+  "inputs": {
+    "human_review": "review.txt",
+    "ai_review": "reviews/deepreviewer/gpt-5-2025-08-07/paper_origin/deep_review_all.txt"
+  },
+  "multi_review": {
+    "detected": false,
+    "num_reviews": 1,
+    "summarize_used": false,
+    "summary_note": null
+  },
+  "ai_review_consolidated": null,
+  "alignment": {
+    "motivation_strength_alignment": 0.9,
+    "weakness_error_alignment": 0.8,
+    "overall_alignment": 0.85,
+    "explanation": {
+      "strength": "Both reviews describe essentially the same core contribution and motivations. They agree that ExaGPT is a span-based, k-NN retrieval detector over a labeled datastore (human vs LLM) with dynamic programming segmentation, explicitly designed to provide human-interpretable, example-based evidence. Both highlight: (i) human-centered interpretability via similar-span evidence, (ii) strong empirical performance, especially at low FPR across multiple domains/generators, and (iii) the presence and value of a human evaluation showing that the provided evidence helps users understand or judge decisions. Both also stress practical relevance in high-stakes/real-world scenarios where interpretability matters. The AI review adds more algorithmic detail but is consistent with the human review’s higher-level strengths and framing.",
+      "weakness": "There is substantial overlap on key concerns, though the AI review is more granular and adds several technical points not mentioned by the human reviewer. Clear alignment points: (1) Both note dependence on an in-domain/in-generator datastore and the resulting concerns about generalization to new domains/generators; Review A frames this as datastore coverage and real-world unseen domains, while Review B discusses in-domain evaluation, near-duplicate/memorization, and lack of cross-domain/generator tests. (2) Both point out limitations of the human evaluation: small sample size and expert annotators in A; small scale, no statistical tests/agreement, and interpretability-metric caveats in B. (3) Both mention computational cost/efficiency: A explicitly raises heavy computation and the need for a cost/performance analysis; B repeatedly notes inference cost, k-NN over large span indexes, and missing complexity/latency analysis. (4) Both raise robustness concerns to adversarial changes/paraphrasing or domain shifts, though A mentions paraphrasing attacks explicitly and B generalizes to cross-domain/generator and obfuscation; they are conceptually aligned on robustness being underexplored. Divergences: Review A uniquely emphasizes lack of comparison to non-interpretable SOTA detectors and multilingual/code settings; Review B instead focuses on internal inconsistencies in the alpha (α) analysis, lack of ablations (embedding choice, k, N, similarity, aggregation scheme), unclear threshold calibration for 1% FPR, AUROC anomalies, and baseline configuration fairness (DNA-GPT). These additional issues do not contradict A, but they are not reflected there, so alignment is incomplete but still solid on the main shortcomings.",
+      "overall": "In substance and overall judgment, the two reviews are well aligned. They converge on the same big picture: ExaGPT is a novel, human-aligned, example-based span retrieval detector that offers strong low-FPR performance and useful interpretability, but is currently limited by datastore/generalization issues, modest and methodologically thin human evaluation, and practical concerns around computation and evaluation/reporting details. The AI review is much more detailed and brings in several extra technical criticisms (α inconsistency, ablations, AUROC/thresholding, baseline setup), whereas the human review additionally notes multilingual and non-interpretable-baseline comparisons. Despite these non-overlapping points, both reviews emphasize the same core contributions and primary limitations, leading to a high—though not perfect—overall alignment."
+    }
+  },
+  "generated_at": "2025-12-27T19:29:53",
+  "runs": [
+    {
+      "config": {
+        "judge_model": "gpt-5.1",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "baseline_review.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180
+      },
+      "config_key": "3b28d70d5731760031a4514ebc98b0afd78edf6d",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/baseline_review.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "motivation_strength_alignment": 0.65,
+        "weakness_error_alignment": 0.5,
+        "overall_alignment": 0.55,
+        "explanation": {
+          "strength": "Both reviews agree on the key motivations: interpretable AI‑text detection via span retrieval, strong accuracy at low FPR, and useful human‑aligned evidence. Review B adds many additional strengths (algorithmic clarity, benchmark rigor, ethical framing) that Review A does not discuss, but the core strengths still overlap.",
+          "weakness": "Both reviews identify datastore domain/generator dependence, limited and expert‑heavy human evaluation, and efficiency concerns. Review B introduces numerous additional weaknesses (objective inconsistencies, evaluation protocol issues, metric anomalies, missing ablations) not mentioned in Review A, reducing alignment.",
+          "overall": "The reviews share the same high‑level judgment—innovative, interpretable method with strong results but concerns about generalization and evaluation. However, Review B contains far more granular and additional critiques, producing only moderate substantive alignment overall."
+        }
+      },
+      "generated_at": "2025-12-27T19:51:41"
+    },
+    {
+      "config": {
+        "judge_model": "gpt-5.1",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "final_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180
+      },
+      "config_key": "4569a6a97a67c8e2b360606eb74d6eb53b892d06",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/final_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "motivation_strength_alignment": 0.84,
+        "weakness_error_alignment": 0.68,
+        "overall_alignment": 0.76,
+        "explanation": {
+          "strength": "Both reviews agree that ExaGPT’s core contribution is an interpretable AI-text detector based on retrieving similar spans from a datastore with k-NN and dynamic programming segmentation, and they both emphasize strong performance at low false-positive rates and supportive human evaluation. The AI review adds more detailed strengths around algorithmic clarity, benchmark design, additional analyses, and ethical framing that the human review does not highlight, but these extend rather than contradict the human reviewer’s view.",
+          "weakness": "Both reviews identify dependence on in-domain, per-generator datastores, limitations of the small expert-only human study, and significant computational cost as key weaknesses. The AI review additionally flags inconsistencies in the α objective and figures, metric/reporting anomalies, and missing ablations, while the human review uniquely notes vulnerability to paraphrasing, lack of multilingual/code-domain evaluation, and insufficient comparison to non-interpretable detectors, so several important concerns appear in only one review.",
+          "overall": "Overall, the reviews converge on a similar judgment: a novel, practically motivated, and interpretable detector with strong empirical results but important concerns about generalization and evaluation rigor. The AI review is more exhaustive and surfaces extra technical and reporting issues, while the human review brings in some application-focused gaps, leading to largely consistent but not near-identical substantive assessments."
+        }
+      },
+      "generated_at": "2025-12-27T19:54:22"
+    }
+  ]
+}

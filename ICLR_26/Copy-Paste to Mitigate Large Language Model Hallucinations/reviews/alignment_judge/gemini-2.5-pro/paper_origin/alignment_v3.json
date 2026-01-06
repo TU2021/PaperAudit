@@ -1,0 +1,129 @@
+{
+  "paper": "Copy-Paste to Mitigate Large Language Model Hallucinations",
+  "runs": [
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "deepreviewer",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "deep_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "55f39c3e353412551a5ae68e81fc4acc489b4edd",
+      "inputs": {
+        "human_review": "review_origin.txt",
+        "ai_review": "reviews/deepreviewer/gpt-5-2025-08-07/paper_origin/deep_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 0.83,
+        "weakness_coverage_recall": 0.63,
+        "ai_extra_major_points_rate": 0.23,
+        "symmetric_coverage_similarity": 0.59,
+        "note": "The AI review shows high coverage of the human review's core conceptual points, both strengths and weaknesses. The main coverage gaps are the AI missing human concerns about sensitivity to knowledge complexity and response quality, while the AI uniquely identified more technical issues like an outdated fluency metric and the heuristic nature of the interpretability tool."
+      },
+      "generated_at": "2025-12-27T23:48:47"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "baseline_review.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "b3137abdd5dd456ecfb029f7bed4151251d086e2",
+      "inputs": {
+        "human_review": "review_origin.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/baseline_review.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 1.0,
+        "weakness_coverage_recall": 0.75,
+        "ai_extra_major_points_rate": 0.57,
+        "symmetric_coverage_similarity": 0.22,
+        "note": "The AI review provides complete coverage of the human's specified strengths and high coverage of the weaknesses. The low symmetric similarity score reflects that the AI review is substantially more comprehensive, raising numerous additional major concerns about missing evidence (tables), flawed interpretability methods, and a lack of human evaluation, which the human review did not mention."
+      },
+      "generated_at": "2025-12-27T23:54:37"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "final_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "0a71ca7d783136ba33fb6b5ec9aad08ece2f0c09",
+      "inputs": {
+        "human_review": "review_origin.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/final_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 1.0,
+        "weakness_coverage_recall": 0.5,
+        "ai_extra_major_points_rate": 0.68,
+        "symmetric_coverage_similarity": 0.41,
+        "note": "The AI review perfectly covers the strengths identified by humans but misses several key conceptual weaknesses, such as concerns about response verbosity, copying of irrelevant noise, and generalizability. Conversely, the AI review focuses heavily on 'missing tables' (which likely exist based on human comments), rigor of heuristic definitions, and reproducibility artifacts, which were not major concerns for the human reviewers."
+      },
+      "generated_at": "2025-12-28T00:05:56"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "deepreviewer",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "deep_review_merge.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "752f27bc09e656c7d041a880d0c174422eea6ca4",
+      "inputs": {
+        "human_review": "review_origin.txt",
+        "ai_review": "reviews/deepreviewer/gpt-5-2025-08-07/paper_origin/deep_review_merge.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 0.5,
+        "weakness_coverage_recall": 0.78,
+        "ai_extra_major_points_rate": 0.31,
+        "symmetric_coverage_similarity": 0.58,
+        "note": "The AI review captures most of the human reviewers' major weaknesses but misses about half of the strengths, notably the value of the initial empirical observation. The AI also introduces several new, specific critiques regarding outdated metrics, validation gaps in the interpretability analysis, and reporting inconsistencies, which were not raised by the human reviewers."
+      },
+      "generated_at": "2025-12-28T00:19:22"
+    }
+  ]
+}

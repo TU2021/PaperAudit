@@ -1,0 +1,95 @@
+Summary
+- The paper introduces MCCE, a hybrid multi-LLM co-evolution framework for discrete, multi-objective optimization (demonstrated on molecular design). A frozen closed-source LLM (e.g., GPT-4o) alternates with a lightweight trainable local LLM (Qwen2.5-7B) in an iterative pipeline of candidate generation, multi-objective evaluation, and experience-driven learning (Section 4.1; Figure 1; Eqs. 6–11). To refine the local model, the authors adopt Direct Preference Optimization (DPO) and propose a similarity-based data synthesis procedure to construct stable preference pairs (Section 4.3; Eqs. 12–14; Algorithm 1; Appendix A.4). Experiments on a 5-objective drug design task (QED, SAscore, DRD2, GSK3β, JNK3) report improved Pareto front coverage (hypervolume) and top-molecule quality compared to single-model and co-evolution baselines (Section 5.2; Figure 2; Figure 3; Table 1). The authors analyze training stability via DPO loss curves (Appendix A.2/A.3).Strengths
+- Bold hybrid co-evolution design
+  - The framework explicitly couples a frozen closed-source LLM with a trainable local model, aiming to combine exploration and experience-driven adaptation (Section 4.1; Figure 1). This architectural stance is clear and addresses stated limitations of single-LLM optimization (Section 1; Section 2.1).
+  - Alternating operators and a trajectory memory create a closed loop of generation–evaluation–learning (Eqs. 6–11), which matters for continual improvement (technical soundness and impact).
+  - The design is positioned as broadly applicable to discrete multi-objective settings beyond drug design (Section 1), which matters for potential generality.
+- Concrete, well-specified similarity-based DPO dataset construction
+  - The similarity statistics and global filter (μ, σ, μ±σ) are defined in detail (Section 4.3; Eq. 12; Eq. 13), which improves technical clarity and reproducibility.
+  - Stratification and nested similarity windows (I1–I3) are provided with explicit intervals (Eq. 14) and selection rules (Algorithm 1; Appendix A.4), demonstrating careful engineering to stabilize preference learning (technical soundness).
+  - The rationale for distribution-shift reduction is articulated (Section 4.3, “Why this reduces distribution shift”), which matters for reliability and training stability.
+- Systematic discussion of training paradigms and failure modes
+  - The paper compares SFT, RL, and DPO conceptually, with observed issues (catastrophic forgetting under SFT; instability under RL) and motivation for DPO (Section 4.2), which aids methodological justification and transparency.
+  - The DPO loss formulation and reference model choice are detailed (Appendix A.3; Eq. 15), supporting technical rigor.
+  - Loss dynamics are visualized (Appendix A.2; Figure 4), showing diminishing spikes over time and providing evidence of learning progress (experimental rigor).
+- Expanded multi-objective setting with five realistic drug-relevant targets
+  - The five-objective benchmark (QED, SA, DRD2, GSK3β, JNK3) pushes beyond three-objective prior settings (Section 4; context to ExLLM/MoLLEO references in Section 4), which matters for task difficulty and practical relevance (novelty and impact).
+  - The evaluation includes hypervolume (HV) and multiple diversity/uniqueness metrics (Table 1), indicating an attempt to measure both quality and spread (experimental rigor).
+  - Initialization via ZINC sampling is specified (Section 5.1), which aids reproducibility and diversity at the start (clarity).
+- Empirical improvements over baselines in HV and top-molecule quality
+  - dpo_coevolve achieves higher HV than any listed baseline (Table 1: HV 0.847±0.138 vs e.g., gpt-4o 0.661±0.214), supporting effectiveness (experimental rigor and impact).
+  - avg_top1/hypervolume curves show consistent gains over time for dpo_coevolve (Figure 2; Figure 3 left), substantiating continual optimization (technical soundness).
+  - The output distribution analysis indicates the trained local model’s distribution shifts toward higher fitness compared to frozen and untrained models when sampled via a no-parent prompt (Figure 3 right; Section 5.2.2), evidencing internalization of experience (novelty and impact).
+- Clear presentation and supportive materials
+  - The overview diagram (Figure 1) and staged methodology (Section 4.1) enhance readability (clarity).
+  - Pseudocode and hyperparameter descriptions (Algorithm 1; Appendix A.4; Section 4.3 “Dataset and hyperparameters”) provide actionable detail (reproducibility).
+  - Prompt example (Appendix A.1) and ethics/reproducibility statements (Appendix B/C) further improve transparency (clarity).Weaknesses
+- Baselines and “state-of-the-art” claims insufficiently supported
+  - The paper claims SOTA (Section 5.2.1) but Table 1 compares primarily internal variants and two LLMs; no direct comparison to contemporary multi-objective molecular optimization systems (No direct evidence found in the manuscript for external SOTA baselines), which matters for novelty validation and impact.
+  - Gemini-2.5-flash-nothinking is mentioned in setup (Section 5.1) but does not appear in Table 1 or figures; absent results reduce completeness of the multi-LLM evaluation (clarity and experimental rigor).
+  - The “collaboration” baseline in Table 1 is insufficiently defined (No direct evidence found describing exact setup in the manuscript), which matters for interpretability of gains attributable to DPO co-evolution vs mere ensembling.
+- Evaluation metrics and procedures under-specified
+  - HV computation lacks the reference point and normalization details required for reproducibility and comparability (Section 5.1 states HV is used; Eq. 10 shows per-objective normalization in the population, but no HV reference point specification; No direct evidence found for HV settings), impacting experimental rigor.
+  - The multi-objective scoring functions (DRD2, GSK3β, JNK3 affinities) are not specified (predictors/docking models, calibration, units) beyond generic descriptions (Section 4.1 Stage 3; Appendix A.1), which matters for technical validity.
+  - Metric definitions for “Top1F, Top10F, Top1auc, Top100auc, Diversity, Uniqueness, Validity” are not explained (Table 1; No direct evidence found for metric formulas), impacting clarity and interpretability.
+- Reproducibility and training details incomplete
+  - Appendix C claims an anonymous repository and detailed configurations, but no link or concrete settings (No direct evidence found in the manuscript), which impedes verification.
+  - Update schedule parameters (N/f), dataset sizes per update (|D|), β for DPO, and seeds/hardware/time/cost are only qualitatively discussed (Appendix A.3 mentions f and |D| but no chosen values; Section 4.1 mentions N; No direct evidence found for specific values), affecting reproducibility.
+  - Similarity function specifics (e.g., Morgan fingerprint radius/bit length) are not provided (Section 4.3 Notation mentions Tanimoto/Morgan but no parameterization), which matters for faithful replication.
+- Limited ablations and justification of design choices
+  - The choice of α=0.3 (Section 4.3) lacks sensitivity analysis; no ablation of I1–I3 intervals or μ±σ filter (No direct evidence found), impacting technical thoroughness.
+  - While RL and SFT issues are discussed (Section 4.2), quantitative comparisons of training stability (e.g., invalid rates, loss variance, sample efficiency) are limited to narrative and a single DPO loss plot (Appendix A.2), which reduces empirical support.
+  - No ablation on DPO reference model choice (πref=πθ0) or alternative preference construction strategies (Appendix A.3 describes the choice but no comparative evidence), affecting methodological depth.
+- Diversity and validity trade-offs
+  - dpo_coevolve exhibits lower Uniqueness than “collaboration” and gpt-4o (Table 1: 0.660 vs 0.750 and 0.784), indicating reduced novelty/diversity despite higher HV, which matters for exploration quality.
+  - Validity is lower for dpo_coevolve (0.820) than several baselines (e.g., gpt-4o 0.902; sft_coevolve 0.905; Table 1), potentially reducing practical usability.
+  - Diversity metric is also lower for dpo_coevolve (0.484) relative to dpo_coevolve:local (0.555) and collaboration (0.524; Table 1), suggesting a drift toward exploitation that may risk premature convergence in other settings.
+- Ambiguity around “mutual inspiration” and improvement of the frozen API model
+  - The paper asserts both models are enhanced (Abstract; Section 1; Section 5.2.1), yet the closed API model cannot update parameters; Table 1 “dpo_coevolve:api” likely reflects system-level improvements (selection/prompting) rather than capability changes in the API LLM itself (conceptual clarity issue).
+  - There is no direct measurement showing the frozen LLM’s stand-alone output distribution improves (Figure 3 right analyzes frozen vs local vs fine-tuned local; no analogous shift for API model), which matters for substantiating the mutual-improvement claim.
+  - Co-evolutionary curves primarily compare systems, not causal influence or information flow between models (Figure 2; Figure 3 left), limiting evidence for “mutual inspiration” beyond performance aggregation.
+- Cost and efficiency aspects are not reported
+  - The number of API calls implied by M/2 prompts (Eq. 8) is not contextualized with runtime or monetary cost (No direct evidence found), which matters for practical feasibility.
+  - Fine-tuning cycles, wall-clock time, and compute resources for DPO are unspecified (Appendix A.3 provides conceptual knobs but no measured costs), affecting scalability assessment.
+  - No analysis of throughput or latency trade-offs in alternating API/local operators (Section 4.1), which is important for deployment and real-world adoption.
+- Inconsistencies in reported metrics and analyses
+  - “Top100auc” shows near-identical means across most models (Table 1: 3.93 with minimal variation), which appears implausible and raises concerns about calculation or reporting accuracy (experimental rigor).
+  - The text claims “a monotonically decreasing average loss curve” (Appendix A.3), whereas Figure 4 (Appendix A.2) shows pronounced spikes without an explicit averaged monotonic plot, creating a narrative–figure mismatch (clarity).
+  - Output distribution analysis uses a “no-parent prompt” (Section 5.2.2) while the main generation relies on parent-based prompts (Section 4.1, Stage 2), potentially limiting comparability to the primary optimization regime (clarity).Suggestions for Improvement
+- Strengthen baselines and substantiate SOTA claims
+  - Include head-to-head comparisons with recent multi-objective molecular design methods cited in Related Work (e.g., MoLLEO/Wang et al., 2024; ExLLM/Ran et al., 2025) using the same 5-objective setup, or justify differences; report HV and metric definitions alongside standardization choices (Section 5.2.1; Table 1).
+  - Add results for Gemini-2.5-flash-nothinking as stated in Section 5.1, and clarify the configuration of “collaboration” in Table 1 (algorithms, alternation schedule, prompts) to ensure interpretability.
+  - Clearly define any ensembling/cooperation baselines and isolate the effect of DPO co-evolution vs simple multi-model collaboration; document experimental protocols (No direct evidence currently given).
+- Specify evaluation methodology and metrics
+  - Provide HV computation details: reference point(s), normalization strategy, and whether HV is computed on raw objectives or normalized scores (Section 5.1; Eq. 10), enabling reproducibility and cross-paper comparison.
+  - Detail the property predictors for DRD2/GSK3β/JNK3 (model names, training data, units, calibration), and how synthetic accessibility and QED are computed; validate predictor reliability (Section 4.1 Stage 3; Appendix A.1).
+  - Define all reported metrics (Top1F/Top10F/Top1auc/Top100auc/Diversity/Uniqueness/Validity), including formulas and computation tools, and align “avg_top1” with table metrics (Table 1; Figures 2–3).
+- Improve reproducibility with concrete settings
+  - Provide the anonymous repository URL and commit hash; include full configuration files, seeds, and scripts that reproduce Table 1 and Figures 2–3 (Appendix C).
+  - Report chosen values for N/f, |D| per update, β in Eq. 15, and hardware/time/cost for training and API usage (Section 4.1; Appendix A.3), enabling verifiable replication.
+  - Document similarity function parameters (fingerprint type, radius/bit length, any preprocessing), and exact prompt templates used across experiments; clarify how sim(c,q) is computed when q aggregates parent molecules and how similarities to multiple parents are handled (Section 4.3 Notation; Appendix A.1; Section 4.1 Stage 2).
+- Add ablations and sensitivity analyses
+  - Conduct sensitivity analyses for α (score quantile), similarity windows (I1–I3), and μ±σ filtering; report their impact on HV, diversity, validity (Section 4.3).
+  - Quantitatively compare SFT, RL, and DPO on stability (invalid rate, loss variance, sample efficiency), complementing Appendix A.2 loss plots with per-method training curves and robustness-to-hyperparameters (Section 4.2; Appendix A.3).
+  - Ablate DPO reference model choice (πref variants) and alternative pair construction strategies (e.g., per-prompt vs cross-prompt pairing), reporting metrics and training stability (Appendix A.3; Appendix A.4).
+- Address diversity and validity trade-offs
+  - Introduce diversity-aware selection or controlled exploration steps for the local model (e.g., diversity-regularized DPO or hybrid objective) and report changes in Uniqueness/Diversity without sacrificing HV (Table 1).
+  - Implement validity checks during generation and training (e.g., constrained decoding or post-validation filters), and quantify their impact to raise Validity closer to baselines like gpt-4o/sft_coevolve (Table 1 Validity).
+  - Track premature convergence indicators (diversity vs HV trajectories) and adjust alternation schedules or selection pressure to maintain exploration (Figures 2–3; Section 4.1).
+- Clarify “mutual inspiration” claims
+  - Explicitly distinguish model capability changes (only the local model updates) from system-level performance; rephrase claims to reflect that the API LLM contributes exploration while the local model internalizes experience (Abstract; Section 1; Section 5.2.1).
+  - Provide analyses isolating the API LLM’s stand-alone outputs across co-evolution stages to show whether distributional shifts occur (if any) due to prompting/context (Figure 3 right currently only covers frozen vs local).
+  - Add causal or ablation studies on information flow (e.g., disable experience learning or alternate schedule variants) to demonstrate that collaboration, not mere ensembling, yields the observed gains (Figure 2; Section 4.1).
+- Report cost and efficiency
+  - Include API call counts, wall-clock time, and monetary cost per run; analyze the trade-off between M/2 prompts (Eq. 8) and achieved HV/diversity (Section 4.1; Section 5.1).
+  - Report fine-tuning runtime, GPU types, and energy usage; quantify training frequency f and its effect on responsiveness vs stability (Appendix A.3).
+  - Discuss throughput/latency implications of alternating API/local operators and propose batching or caching strategies; include empirical profiling (Section 4.1).
+- Resolve metric reporting and analysis inconsistencies
+  - Audit and re-compute “Top100auc” to confirm correctness; if values are truly identical, explain the computation and conditions that induce this outcome (Table 1).
+  - Align the training stability narrative with figures by adding the averaged loss curve (Appendix A.3) and clarifying the relationship to the spiky loss in Figure 4 (Appendix A.2).
+  - For the distribution analysis, either use parent-based prompts consistent with the main regime (Section 4.1) or justify the “no-parent prompt” (Section 5.2.2) and discuss implications for comparability.Score
+- Overall (10): 6 — Clear hybrid framework with detailed DPO data synthesis and solid internal gains (Section 4.1; Section 4.3; Table 1; Figures 2–3) but missing external baselines, metric specifics, and cost reporting limit impact.
+- Novelty (10): 7 — Multi-LLM co-evolution with similarity-based preference construction is a thoughtful combination (Section 4.3; Algorithm 1; Appendix A.4), though SOTA claims are not substantiated against external methods (Section 5.2.1; No direct evidence found).
+- Technical Quality (10): 5 — Method is well-motivated and specified (Eqs. 12–15; Algorithm 1), yet evaluation and ablations are underdeveloped (Table 1 metrics undefined; HV settings missing; limited sensitivity analyses).
+- Clarity (10): 6 — Figures and staged description aid readability (Figure 1; Section 4.1), but several key metric and setup details are absent or ambiguous (Table 1 definitions; Section 5.1 missing predictor specifics; Appendix C lacks concrete links).
+- Confidence (5): 3 — Moderate confidence based on provided materials; conclusions rely on internal comparisons (Table 1; Figures 2–3), with missing external baselines and reproducibility artifacts (Appendix C: No direct evidence for repo link).

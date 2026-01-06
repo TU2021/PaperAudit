@@ -1,0 +1,105 @@
+{
+  "paper": "Quadratic Direct Forecast for Training Multi-Step Time-Series Forecast Models",
+  "runs": [
+    {
+      "config": {
+        "judge_model": "gpt-5-2025-08-07",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "baseline_file": "baseline_review.txt",
+        "final_file": "final_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 600,
+        "metric": "regression_v2_minimal",
+        "prompt_hash": "2142c04332"
+      },
+      "config_key": "1a46f14f5902ebb0fc2c14773cec6644d2fa5338",
+      "inputs": {
+        "baseline_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/baseline_review.txt",
+        "final_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/final_review_all.txt"
+      },
+      "regression": {
+        "score_delta": {
+          "baseline_score": 7.0,
+          "final_score": 6.0,
+          "delta": -1.0,
+          "scale_hint": "1-10"
+        },
+        "differences": [
+          {
+            "diff_type": "new_critique",
+            "summary": "Missing log|Σ| term; surrogate not full NLL",
+            "paperaudit_types": [
+              "METHOD_LOGIC_CONSISTENCY",
+              "CLAIM_RESULT_DISTORTION",
+              "RHETORICAL_PRESENTATION_MANIPULATION"
+            ],
+            "why_impacts_score": "undermines correctness of likelihood grounding and stability of Σ optimization",
+            "evidence": {
+              "baseline_quote": "The quadratic objective follows directly from Gaussian NLL (Theorem 3.1; Eq. (2)).",
+              "final_quote": "outer objective and updates use L_Σ without log|Σ|."
+            }
+          },
+          {
+            "diff_type": "new_critique",
+            "summary": "Method–experiment training objective mismatch (L_Σ vs MSE)",
+            "paperaudit_types": [
+              "EXPERIMENTAL_DESIGN_PROTOCOL",
+              "CLAIM_RESULT_DISTORTION",
+              "RHETORICAL_PRESENTATION_MANIPULATION",
+              "METHOD_LOGIC_CONSISTENCY"
+            ],
+            "why_impacts_score": "creates confusion about method and undermines attribution of improvements",
+            "evidence": {
+              "baseline_quote": "QDF trains models using the learned Σ (Algorithm 2; Section 3.3).",
+              "final_quote": "We train all models to minimize MSE on the training set (Section 4.1)."
+            }
+          },
+          {
+            "diff_type": "new_critique",
+            "summary": "Reporting inconsistencies and questionable splits (PEMS averaging, Koopman, small test set)",
+            "paperaudit_types": [
+              "EVIDENCE_DATA_INTEGRITY",
+              "EXPERIMENTAL_DESIGN_PROTOCOL",
+              "CLAIM_RESULT_DISTORTION",
+              "CONTEXT_MISALIGNMENT_INCOHERENCE"
+            ],
+            "why_impacts_score": "reduces reliability and fairness of benchmark comparisons",
+            "evidence": {
+              "baseline_quote": "Table 1’s SOTA claim is not a fully apples-to-apples comparison.",
+              "final_quote": "PEMS uses horizons {12,24,36,48}; mismatch not clarified for PEMS rows."
+            }
+          },
+          {
+            "diff_type": "new_critique",
+            "summary": "PD vs PSD inconsistency for Σ constraint and inversion",
+            "paperaudit_types": [
+              "METHOD_LOGIC_CONSISTENCY",
+              "CONTEXT_MISALIGNMENT_INCOHERENCE"
+            ],
+            "why_impacts_score": "signals conceptual inconsistency affecting validity of Σ−1 use",
+            "evidence": {
+              "baseline_quote": "Cholesky to enforce Σ ⪰ 0 addresses a key constraint.",
+              "final_quote": "constraint 'Σ ⪰ 0' plus Cholesky implies PD; PD vs PSD inconsistency not clarified."
+            }
+          },
+          {
+            "diff_type": "score_rationale_shift",
+            "summary": "Final explicitly cites methodological inconsistencies to justify lower scores",
+            "paperaudit_types": [
+              "METHOD_LOGIC_CONSISTENCY",
+              "CLAIM_RESULT_DISTORTION"
+            ],
+            "why_impacts_score": "explicit reason for lowering overall and technical quality scores",
+            "evidence": {
+              "baseline_quote": "Overall (10): 7 — Strong empirical results... but limited theoretical guarantees and some methodological ambiguities.",
+              "final_quote": "Overall (10): 6 — key methodological inconsistencies... materially affect correctness and clarity."
+            }
+          }
+        ]
+      },
+      "generated_at": "2026-01-05T20:39:42"
+    }
+  ]
+}

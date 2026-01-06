@@ -1,0 +1,52 @@
+An integrity and consistency review of the manuscript "ADVMEM: Adversarial Memory Initialization for Realistic Test-Time Adaptation via Tracklet-Based Benchmarking" has revealed several major internal inconsistencies that affect the validity and trustworthiness of the reported findings.
+
+The issues are detailed below, with direct evidence from the manuscript.
+
+### 1. Contradictory Claims Regarding the Efficacy of the Proposed Method (ADVMEM)
+
+The manuscript presents conflicting accounts of ADVMEM's effectiveness in the i.i.d. (independent and identically distributed) setting, which is a central part of the paper's contribution.
+
+*   **Strong Positive Claim:** The introduction states that ADVMEM provides a massive performance boost in an i.i.d. setting. Specifically, it claims: "...equipping SHOT-IM [28] with ADVMEM reduces error rates by 44% in Tracklet-wise i.i.d. settings (see Table 2)." (Block #8). This claim is reiterated in Section 5: "...ADVMEM reduces the average error rate of... SHOT-IM by over 40%..." (Block #35).
+*   **Contradictory Dismissive Claim:** In contrast, the analysis section claims that the method has minimal impact in the same i.i.d. setting. Section 6.2 states: "...the impact of ADVMEM is less pronounced in the i.i.d. setup, indicating that memory initialization has a limited effect in this scenario." (Block #39). A similar statement appears in Section 8.3 of the appendix (Block #53).
+
+**Inconsistency:** The paper cannot simultaneously argue that its method provides a >40% error reduction and has a "limited effect" under the same i.i.d. conditions. This fundamental contradiction undermines the core claims about the method's benefits.
+
+### 2. Misleading Reporting of the Main Performance Claim
+
+The evidence for the paper's primary quantitative claim (the "44% reduction") appears to be based on a specific experimental condition that is not mentioned when the claim is made, while results from the main, standard experiment show the opposite.
+
+*   **The Claim:** As noted above, a >40% error reduction for SHOT-IM is claimed in the "Tracklet-wise i.i.d." setting (Block #8, #35).
+*   **Evidence in Main Results Table:** The main results table for this setting (Table 6, Block #28) shows SHOT-IM performing catastrophically, with an error rate of 93.4% (with memory). This table does not contain results for ADVMEM.
+*   **Evidence in Appendix:** The >40% improvement seems to originate from "Table 4" in the appendix (Block #60), which evaluates performance under "Dynamic Severity"—a non-standard condition where corruption intensity varies over time. In this specific setting, SHOT-IM's error drops from 91.0% to 40.1%.
+*   **Inconsistency:** The headline result of the paper, promoted in the introduction, is not supported by the main experimental results table. Instead, it is drawn from a supplementary experiment in the appendix without disclosing the specific "dynamic severity" condition. This selective reporting creates a misleading impression of the method's general effectiveness.
+
+### 3. Systematic Errors in Table Referencing
+
+Throughout the experiments section, the text systematically refers to incorrect tables when presenting key results, making the manuscript nearly impossible to verify.
+
+*   **Reference to "Table 2":** The introduction (Block #8) and Section 5 (Block #35) cite "Table 2" for the key performance results of ADVMEM. However, Table 2 (Block #21) is a descriptive table listing the TTA methods evaluated; it contains no numerical results.
+*   **Reference to "Table 3":** Section 5 (Block #36) cites "Table 3" for ADVMEM's performance in the non-i.i.d. setting. However, Table 3 (Block #22) lists the types of corruptions used; it also contains no performance results.
+
+**Inconsistency:** The persistent and incorrect referencing to tables containing descriptive text instead of results prevents a reader from verifying the quantitative claims made in the text.
+
+### 4. Duplicate and Confusing Table Numbering
+
+The manuscript uses duplicate table numbers between the main body and the appendix, which exacerbates the confusion caused by incorrect referencing.
+
+*   There is a "Table 4" in the main paper (Block #24) showing model error rates on the ITD splits. There is a different "Table 4" in the appendix (Block #60) showing ADVMEM performance under dynamic severity.
+*   There is a "Table 5" in the main paper (Block #28) showing frame-wise i.i.d. results. There is a different "Table 5" in the appendix (Block #68) showing tracklet-wise non-i.i.d. results.
+
+**Inconsistency:** This confusing numbering scheme makes it exceptionally difficult to navigate the paper and connect claims to evidence.
+
+### 5. Unexplained Discrepancy in Baseline Results
+
+The baseline performance for the same method under similar conditions is reported with different values across tables without explanation.
+
+*   In Table 6 (Block #28), the error rate for "SHOT-IM" with memory (✓) in the tracklet-wise i.i.d. setting is **93.4%**.
+*   In Appendix Table 4(a) (Block #60), the error rate for "SHOT-IM" without ADVMEM (✗) in the tracklet-wise i.i.d. setting (under dynamic severity) is **91.0%**.
+
+**Inconsistency:** While the experimental settings (static vs. dynamic corruption) are different, these two values both represent the baseline against which ADVMEM is compared. The discrepancy is not discussed, and it further complicates any attempt to validate the magnitude of the claimed improvements.
+
+### Conclusion
+
+The manuscript suffers from critical internal inconsistencies, including contradictory claims, misleading presentation of key results, and pervasive errors in referencing and numbering tables. These issues are not minor and fundamentally impact the reader's ability to trust the paper's conclusions. The evidence presented does not consistently support the main claims, and the structure of the reporting obscures rather than clarifies the method's performance.

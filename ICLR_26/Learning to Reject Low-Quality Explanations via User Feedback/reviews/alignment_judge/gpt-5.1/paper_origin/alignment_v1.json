@@ -1,0 +1,97 @@
+{
+  "paper": "Learning to Reject Low-Quality Explanations via User Feedback",
+  "judge_model": "gpt-5.1",
+  "review_agent": "deepreviewer",
+  "ai_model": "gpt-5-2025-08-07",
+  "ai_review_file": "deep_review_all.txt",
+  "inputs": {
+    "human_review": "review.txt",
+    "ai_review": "reviews/deepreviewer/gpt-5-2025-08-07/paper_origin/deep_review_all.txt"
+  },
+  "multi_review": {
+    "detected": false,
+    "num_reviews": 1,
+    "summarize_used": false,
+    "summary_note": null
+  },
+  "ai_review_consolidated": null,
+  "alignment": {
+    "motivation_strength_alignment": 0.95,
+    "weakness_error_alignment": 0.8,
+    "overall_alignment": 0.9,
+    "explanation": {
+      "strength": "Both reviews clearly identify the same central motivation and contributions. They agree that: (1) the paper defines a new problem setting of learning to reject low-quality explanations (LtX) distinct from traditional learning to reject predictions; (2) ULER is a user-centric rejector trained from explanation-level human feedback and per-feature relevance judgments; (3) the approach is relatively simple, operates on explanations rather than predictions, and is designed to sit on top of feature attribution explainers; (4) empirical evaluation is broad, across eight benchmark tabular datasets plus a new human-annotated soccer xG dataset, and ULER outperforms existing baselines; and (5) the release of a human-annotated dataset is an important community contribution. Review B adds more technical detail (augmentation scheme, formalism, metrics, robustness checks), but these elaborate the same core ideas and strengths emphasized in Review A rather than introducing a divergent picture.",
+      "weakness": "There is strong but not perfect overlap in the weaknesses raised. Clear alignment: both note reliance on feature attribution methods and limited generalization to other explanation types (e.g., counterfactuals, example-based, other modalities); both flag concerns about the realism of non-human judgments/simulated labels versus true human judgments; and both recognize that gains on the human dataset are modest, tempering the impact for real high-stakes settings. Review B additionally focuses on more technical issues: lack of theoretical guarantees for label preservation under augmentation, heuristic choices and limited sensitivity analysis for simulation thresholds and augmentation hyperparameters, absence of a principled utility framework for threshold selection, and some presentation aspects (e.g., inter-rater reliability reporting). Review A, in contrast, emphasizes practical/UX constraints such as scalability of per-feature feedback, assumptions about the reliability of human experts, the overstatement of being explainer-agnostic, choice of baselines for rejection, and loss of nuance by binarizing Likert scores. These concerns are compatible but not identical; they inhabit different layers (practical deployment vs theoretical/simulation detail). Hence the alignment is substantial but not as tight as for strengths.",
+      "overall": "In substance and judgment, the reviews are highly aligned. Both regard the work as a well-motivated, novel contribution that formalizes LtX, proposes a user-centric rejector (ULER) with a feedback-driven augmentation scheme, and demonstrates consistent empirical benefits and a useful dataset. Both see the main caveats as limitations of the explanation modality (feature attributions only) and potential mismatches between simulated and actual human judgments, with relatively modest improvements in the real human study. Review B provides a deeper dive into methodological and experimental nuances, while Review A highlights broader applicability, scalability, and claims framing. These are complementary emphases rather than conflicting assessments, leading to a high overall alignment score."
+    }
+  },
+  "generated_at": "2025-12-27T19:29:25",
+  "runs": [
+    {
+      "config": {
+        "judge_model": "gpt-5.1",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "baseline_review.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180
+      },
+      "config_key": "3b28d70d5731760031a4514ebc98b0afd78edf6d",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/baseline_review.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "motivation_strength_alignment": 0.88,
+        "weakness_error_alignment": 0.78,
+        "overall_alignment": 0.84,
+        "explanation": {
+          "strength": "Both reviews clearly agree on the central motivation (rejecting low-quality explanations in high-stakes XAI) and the core contribution (ULER as a user‑centric rejector using human labels and per‑feature relevance). They both emphasize broad applicability to feature-attribution explainers, the importance of human feedback, extensive multi-dataset experiments, and the value of the new human-annotated soccer dataset. Review B adds more detail (formalization, robustness analyses, transparency) but these extend rather than contradict Review A’s strengths.",
+          "weakness": "The reviews align on key weaknesses: reliance on per-feature feedback and resulting scalability issues, restriction to tabular/feature-attribution explanations (limited generality to other explanation types), and concerns about the realism/human-groundedness of simulated or surrogate human judgments. Review B adds further, somewhat orthogonal criticisms (lack of theoretical guarantees, limited outcome-focused metrics, limited analysis of interaction with prediction correctness and LtR, details on human-study rigor), which are not mentioned in Review A but do not conflict with it.",
+          "overall": "Substantively, both reviews portray a similar picture: an important, well-motivated, user-centric contribution with strong empirical evidence and a useful dataset, but constrained in scope (tabular, feature attributions, per-feature feedback) and with questions about how well the simulated or surrogate judgments match real human assessments. The AI review is more granular and raises several additional methodological and evaluation concerns, but the main judgments and focus are highly consistent."
+        }
+      },
+      "generated_at": "2025-12-27T19:50:58"
+    },
+    {
+      "config": {
+        "judge_model": "gpt-5.1",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "final_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180
+      },
+      "config_key": "4569a6a97a67c8e2b360606eb74d6eb53b892d06",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/final_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "motivation_strength_alignment": 0.83,
+        "weakness_error_alignment": 0.69,
+        "overall_alignment": 0.76,
+        "explanation": {
+          "strength": "Both reviews agree on the core motivation (rejecting low-quality explanations in high-stakes settings) and central contribution (the ULER user-centric rejector using human labels and per-feature judgments), and they both highlight extensive multi-dataset experiments and the new human-annotated dataset as major strengths. They also converge on ULER’s model/explainer-agnostic applicability, though the AI review adds extra strengths around formalization, robustness checks, and reproducibility details that the human review does not emphasize.",
+          "weakness": "Both reviews raise aligned concerns about the simulated 'human' judgments used in benchmarks, the reliance on feature-attribution explanations and per-feature feedback (limiting generality and scalability), and issues around the fairness/appropriateness of baselines. The AI review introduces many additional technical critiques—about augmentation assumptions, metric choices tied to user outcomes, probability/variance computations, and detailed human-study reliability reporting—that do not appear in the human review, while the human review uniquely critiques the Likert-to-binary conversion and assumptions about expert judgment reliability at a higher level.",
+          "overall": "In substance, both reviews view the work as a valuable, novel contribution with strong empirical results but meaningful limitations, especially regarding realism of simulated feedback and generality to broader explanation settings. The AI review is more granular and technical, surfacing additional methodological and reporting issues, yet it does not contradict the human review’s main points; overall judgments and areas of focus are largely consistent, with divergence mainly in depth rather than direction."
+        }
+      },
+      "generated_at": "2025-12-27T19:53:38"
+    }
+  ]
+}

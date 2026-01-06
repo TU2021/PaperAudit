@@ -1,0 +1,359 @@
+OpenReview.net
+Search OpenReview...
+Login
+back arrowGo to ICLR 2026 Conference homepage
+Noise-Guided Transport for Imitation Learning
+Download PDF
+ICLR 2026 Conference Submission24926 Authors
+20 Sept 2025 (modified: 24 Dec 2025)
+ICLR 2026 Conference Submission
+Everyone
+Revisions
+BibTeX
+CC BY 4.0
+Keywords: Reinforcement Learning, Imitation Learning, Optimal Transport
+TL;DR: Noise-Guided Transport (NGT) is a lightweight off-policy imitation learning method for low-data settings that frames imitation as an optimal transport problem solved adversarially.
+Abstract:
+We consider imitation learning in the low-data regime, where only a limited number of expert demonstrations are available. In this setting, methods that rely on large-scale pretraining or high-capacity architectures can be difficult to apply, and efficiency with respect to demonstration data becomes critical. We introduce Noise-Guided Transport (NGT), a lightweight off-policy method that casts imitation as an optimal transport problem solved via adversarial training. NGT requires no pretraining or specialized architectures, incorporates uncertainty estimation by design, and is easy to implement and tune. Despite its simplicity, NGT achieves strong performance on challenging continuous control tasks, including high-dimensional Humanoid tasks, under ultra-low data regimes with as few as 20 transitions.
+
+Supplementary Material:  zip
+Primary Area: reinforcement learning
+Submission Number: 24926
+Filter by reply type...
+Filter by author...
+Search keywords...
+
+Sort: Newest First
+12 / 12 replies shown
+Final Revision, final clarifications and additional results
+Official Commentby Authors04 Dec 2025, 03:57Everyone
+Comment:
+We end the rebuttal with clarifications and new experimental results that directly address the remaining points raised in the reviews.
+
+We undertook a thorough revision of the manuscript in response to the reviewer¡¯s comments, and we believe the updated version resolves the presentation issues they identified. We appreciate the thoughtful feedback and the care devoted to the review.
+
+We have engaged fully with the discussion and believe that we have addressed the reviewers¡¯ questions to the extent allowed by the forum. It is unfortunate that the conversation could not continue due to the OpenReview incident, but we hope that our responses have clarified the main points of concern.
+
+We also conducted an additional round of per-task hyperparameter tuning for DiffAIL. This choice was motivated by the fact that DiffAIL is the only baseline that reports task-specific values; all other baselines we evaluate use a single configuration across tasks, which can reasonably be viewed as an advantage in their favor. Our hyperparameter search highlights a key source of instability: DiffAIL is highly sensitive to the coefficient of the gradient-penalty regularizer. The official configuration files span values from 0.001 to 0.5, and we ran the experiments using the recommended settings for each task. In this form, we observed that DiffAIL is prone to survival-bias pathologies. In locomotion tasks, the learned policies often prioritize staying alive until the horizon rather than making forward progress. This stems from the method¡¯s non-negative reward shaping, which the policy can exploit by avoiding risky actions and accumulating small positive rewards instead of solving the task. The scale of the reward appears especially vulnerable to such reward-hacking behavior. This failure mode is a direct consequence of the evaluation setup used in some OpenAI Gym locomotion tasks, where early resets occur upon falls (e.g. Walker2d, Ant, Humanoid). Under such conditions, a non-negative classifier-based reward encourages the agent to avoid movement and seek safe stationary states. By contrast, tasks such as those in the DeepMind Control Suite avoid this issue by preventing early resets and by allowing real-valued rewards. In that setting, a classifier-based reward of the form log(D) ? log(1 ? D) provides a balanced signal: a policy that remains stationary or collapses accumulates negative reward and cannot terminate early to escape it. This is the reward formulation we use for the real-valued variant of DAC/SAM. DiffAIL might react positively to a similar reward shaping, but we decided against extending how DiffAIL shapes its rewards, as doing so would alter the method beyond its published formulation. Our intention is to evaluate each baseline under its native design choices so that the comparison isolates reward design rather than implementation differences.
+
+Another point of concern was whether the involvement of random priors in the reward-learning mechanism should require a larger number of random seeds. We hope that the revision clarifies how our approach uses random priors and how it leverages the aleatoric uncertainty they introduce. As now explained in the background section, learning from random priors converts their aleatoric variability into a form of epistemic uncertainty captured by the prediction error, which we then use as a reward signal. The new diagram on page 1 illustrates this mechanism and situates it within the overall imitation-learning pipeline. NGT does not rely on this randomness in an uncontrolled way; rather, it structures and exploits it. To further address the reviewers¡¯ concern, we followed the suggestion to run experiments with a larger number of seeds. We conducted an additional set of experiments using 10 seeds (1-10). The statistics for the final returns are:
+
+HalfCheetah-v4 | dems01 | final return: mean = 14107.824, std = 393.042 (n_seeds = 10)
+HalfCheetah-v4 | dems11 | final return: mean = 14358.492, std = 152.678 (n_seeds = 10)
+We also plotted the mean learning curves and their standard deviation bands; this figure will be included in the revision. These results indicate that the variability across seeds is small relative to the achieved performance and decreases further when more demonstrations are available. They directly address the concern that the use of random priors might introduce brittleness or excessive volatility. In practice, we observe tight standard deviation bands and stable behavior across seeds, consistent with the earlier results in the submission.
+
+We thank the reviewers again for their careful assessment and hope that these clarifications and new results address their concerns in full.
+
+Revision 1
+Official Commentby Authors28 Nov 2025, 02:10Everyone
+Comment:
+We have submitted a revised version of the paper that addresses the presentation concerns raised by the reviewers. We have revised the structure of the opening sections, adjusting the sequence in which key ideas are introduced. As such, while the second half of the paper remained largely stable, the first half has been thoroughly revised to improve the reading flow. We thank the reviewers for their detailed feedback on the presentation of the original submission, and we hope that the updated manuscript resolves their concerns.
+
+We have also replaced the original diagram with a new illustration of the method, which we believe is both clearer and more informative. In the revision, this figure now appears on the first page, where it can better guide the reader.
+
+We thank all reviewers again for their time and engagement with the paper.
+
+Official Review of Submission24926 by Reviewer irdk
+Official Reviewby Reviewer irdk05 Nov 2025, 16:02 (modified: 12 Nov 2025, 18:27)EveryoneRevisions
+Summary:
+This paper studies the imitation learning problem in the low-data regime and introduces an offline policy approach called Noise Guided Transport (NGT). The method addresses the problem using adversarial training. The authors evaluate the performance of their approach in several continuous control environments, such as Ants, HalfCheetah, etc.
+
+Soundness: 3: good
+Presentation: 3: good
+Contribution: 2: fair
+Strengths:
+The paper is overall well written with some room for improvement. The problem it addresses is both interesting and relevant. The experimental results demonstrate that the proposed method performs well compared to state-of-the-art approaches.
+
+Weaknesses:
+There is some concern regarding the novelty of the proposed method and its positioning within the existing literature. The idea of using generative adversarial models for imitation learning, i.e., employing a loss function similar to Eq. (2), has been explored in prior work, including studies that establish its connection to optimal transport theory, e.g., [Xiao et al., 2019]. The authors should more clearly emphasize the novelty and specific contributions of their approach to distinguish it from existing methods in the literature.
+
+The Lipschitz constant of the potential function plays an important role in the analysis of this method. However, this constant can become arbitrarily large for functions with sharp transitions, such as ReLU-type functions. How would such large Lipschitz constants affect the performance of the proposed method?
+
+In the experimental results (Figure 2), it appears that the performance of NGT does not improve as the number of demonstrations increases, for instance, in the HalfCheetah, Humanoid, or Walker environments. This raises the question of whether the proposed method is consistent.
+
+Questions:
+Please see the Weaknesses.
+
+Flag For Ethics Review: No ethics review needed.
+Rating: 4: marginally below the acceptance threshold. But would not mind if paper is accepted
+Confidence: 3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.
+Code Of Conduct: Yes
+Official Comment by Authors
+Official Commentby Authors26 Nov 2025, 05:32Everyone
+Comment:
+Thank you for the careful reading and the constructive feedback.
+
+About the summary: We believe the reviewer may have intended to say ¡°off-policy¡± rather than ¡°offline¡±. Our method is not an offline policy approach. NGT interacts with the environment throughout training, collects its own data, and updates from those interactions. The only offline component is the fixed expert dataset used for the adversarial reward learning procedure. In that sense, the method is off-policy, but not offline.
+
+Strengths: We thank the reviewer for the thoughtful review and are glad to read that the reviewer found the problem we address in our submission interesting and timely. We agree that the presentation can use improvement and polish, and are currently revising the manuscript to address that.
+
+Concern regarding novelty: The reviewer is right in that we did not give an exhaustive-enough account of how imitation learning has been tackled through the lens of optimal transport in the first paragraph of the related works section. We will remedy this in our next revision. We thank the reviewer for the reference [Xiao et al., 2019]. Recent prior work include ¡°Imitation Learning from Observation through Optimal Transport¡± (RLC 2024), which we will use, among other prior art, to consolidate the dedicated paragraph.
+
+Regarding ReLU and Lipschitz-continuity: The question raised by the reviewer is indeed key; rephrasing: how can we design a (non-linear) neural net such that Lipschitz-continuity can be allowed and even guaranteed? At the end of page 5 (L265-266), we refer to footnote 4 where we cite the paper ¡°Sorting Out Lipschitz Function Approximation¡± [Anil et al., 2019]. In this paper, the authors investigate this question, and they found that non©\gradient-norm©\preserving activations (like ReLU) when constrained tend to force many activations to be ¡°positive¡± almost all the time (so effectively linear) to maintain enforced Lipschitz bounds. For example, they looked at activation statistics: most units became ¡°undead¡± (always active) in the worst case when ReLU¡¯s with a Lipschitz constraint on the network. We chose the non-linearities of our predictor and prior nets activations based on this paper. In addition, we believe this paper helps explain why LeakyReLU activations have been so popular in GAN¡¯s discriminator designs. In Section 4.3.1 of the submission, we share our choices and why we made them when it comes to network design of the predictor and prior nets.
+
+On the method¡¯s consistency: The reviewer writes ¡°it appears that the performance of NGT does not improve as the number of demonstrations increases¡±. We do agree with that statement. In some environments and tasks, 1 demonstration is sometimes all that is needed to achieve expert performance. It also might be the case that the expert we used shows little variability from one demonstration to another, such that each demonstration is effectively a near-copy of the next. In such a situation, using 11 demonstrations is barely different than using just one. It might even cause harm by presenting the prior and predictor nets with many near-duplicates. We purposely sub-sample the trajectories (20x, with a seed-dependent random offset between 0 and 19 that sets the starting point, after which we take every twentieth transition) to limit that effect, although some repetition may still occur by chance. To put the reviewer¡¯s concern fully to rest and verify the stability of our method, we will re-run a subset of experiments with more random seeds, increasing from 4 in the submission to 10.
+
+Should any questions remain, we are happy to continue the discussion.
+
+Official Review of Submission24926 by Reviewer mgXk
+Official Reviewby Reviewer mgXk01 Nov 2025, 04:40 (modified: 12 Nov 2025, 18:27)EveryoneRevisions
+Summary:
+This paper presents Noise-Guided Transport, an off-policy imitation learning (IL) method that uses an optimal transport formulation of IL and adversarial learning for optimisation. One of the main components of the paper is a frozen random prior network that acts as a ¡°regulariser¡± by moving the optimal solution away from agent data. The primary focus of the paper is to develop a method for IL in data-sparse settings, and its main claims are that it achieves high data and sample efficiency.
+
+Soundness: 2: fair
+Presentation: 2: fair
+Contribution: 2: fair
+Strengths:
+The paper presents an interesting reformulation of the imitation learning problem from the lens of optimal transport. The authors formulate an objective similar to several prior works in imitation learning (matching expert and agent distributions), and approach this as the optimisation of the earth mover distance using a histogram loss. While this is similar to WGANs (and WGAN-based IL), the paper presents some interesting theoretical results and a new learning strategy that uses a frozen random prior network to regularise the predicted rewards. The proposed ideas seem novel and worth exploring.
+
+Weaknesses:
+While the idea of the paper is interesting, I believe that the execution is lacking in presentation and experimentation. Overall, I find the paper poorly written and often unnecessarily hard to digest. Several sections are very long-winded, and explicit mathematical notation is often missing. A clearly written background would have significantly improved the clarity and impact of the paper. Additionally, I find some claims overly bold and the experimental section to be insufficiently rigorous. I address some specific concerns below:
+
+Section 4.1 is very unclear. The paper does not motivate or introduce ¡°learning from random priors¡±. A short background on this would greatly improve the clarity and impact of the paper. On line 133, ¡°By the properties of neural networks,¡± is also a very vague reasoning. If I understand correctly, this is true only given infinite data and if the function is trained till global optimality. This assumption is clearly violated in the data-sparse settings that this paper analyses. Please correct me if I am mistaken.
+
+On line 168, ¡°Methods based on GANs optimise a JS-divergence between distributions 
+ and 
+, which suffers from mode collapse and vanishing gradients¡± is again an unsupported and potentially incorrect statement. If I am not mistaken, optimising the Jensen-Shannon divergence is not necessarily the root cause for GAN instabilities. Rather, the issue likely arises because of perfect discrimination and poorly aligned supports [1, appendix E in 2].
+
+Could you please clarify how Eq 2 is different from the apprenticeship learning setup (Eq 6 in [3])? To my understanding, your objective of ¡°distinguishing the expert and agent distributions¡± is closely aligned with several prior works in IRL. If this is the case, I request the authors to rewrite their claims to mention that their method is a reformulation of the distribution matching idea (but from an OT point of view).
+
+The core functionality of this paper is quite close to Adversarial Motion Priors [4], a method that uses the WGAN style loss for adversarial IL. I believe that this is important prior work that should at least be mentioned in the analysis of this paper (and potentially used as a baseline).
+
+The experiments in this paper only use 4 random seeds per task. In my opinion, this is quite low and not rigorous enough to rule out the possibility that the reported results are due to random fluctuations or chance rather than consistent underlying performance differences. A larger number of seeds (10+) would help to claim statistically significant improvements.
+
+On line 460, the authors state that ¡°we did not carry out per-task tuning for any method.¡± I believe this is a flawed methodology. Each method should be tuned individually for each task, or alternatively, all methods should be tuned to achieve the best average performance across all tasks. Using the same hyperparameters across tasks that differ significantly in dynamics, reward formulations, and optimal expert policies leads to an unfair comparison and potentially misleading conclusions. Different environments naturally require distinct exploration strategies and hyperparameter settings. Consequently, applying a fixed hyperparameter set across all tasks may cause some baselines (such as DiffAIL) to underperform relative to their true potential. I therefore request that the authors clarify their hyperparameter tuning strategy¡ªspecifically, for which environments the methods were tuned and for which they were kept fixed.
+
+Clarity Concerns:
+
+In section 3 (lines 110-117), could you please include the full expressions for the transition dynamics 
+ and reward function 
+. The line ¡°policy ¦Ð(a|s) maps states s ¡Ê S to distributions over actions a ¡Ê A, aiming to maximize cumulative rewards¡± is incorrect as the policy does not map states to distributions. It is a distribution over actions conditioned on a given state. Also, the RL objective is to maximise the expected cumulative reward (unless your work sets up the problem differently). Additionally, could you please clarify the line ¡°We work in the episodic setting, where ¦Ã resets to 0 upon episode termination¡±?
+
+The beginning of section 4 (lines 121-137) is phrased very awkwardly in my opinion. I would prefer if the terms are defined explicitly in mathematical language (eg: 
+ where 
+ is either 
+ ¡­). Please also explicitly define 
+ and 
+. The definitions will change depending on 
+ (eg: 
+). I believe that, unless necessary for the rest of the paper, the explanation of the actor-critic methods can be relegated to the appendix.
+
+I don¡¯t find Figure 1 particularly informative. From what I understand, it is an aggregation of all the curves in Figure 2. However, such aggregation across different tasks loses any nuance/meaning. I also don¡¯t understand how the normalization is done in this figure. Do you consider mean expert performance across tasks? If so, how do you account for the fact that all environments have different max expert performances? Further, the dotted lines in Figure 1 aren¡¯t labelled, nor is Figure 1 referenced in the text. Could you also explain why the humanoid results were omitted?
+
+References
+
+[1] Arjovsky M, Bottou L. Towards principled methods for training generative adversarial networks. arXiv preprint arXiv:1701.04862. 2017 Jan 17.
+
+[2] Diwan AA, Urain J, Kober J, Peters J. Noise-conditioned Energy-based Annealed Rewards (NEAR): A Generative Framework for Imitation Learning from Observation. arXiv preprint arXiv:2501.14856. 2025 Jan 24.
+
+[3] Abbeel P, Ng AY. Apprenticeship learning via inverse reinforcement learning. InProceedings of the twenty-first international conference on Machine learning 2004 Jul 4 (p. 1).
+
+[4] Peng XB, Ma Z, Abbeel P, Levine S, Kanazawa A. Amp: Adversarial motion priors for stylized physics-based character control. ACM Transactions on Graphics (ToG). 2021 Jul 19;40(4):1-20.
+
+Questions:
+Included alongside weaknesses
+
+Flag For Ethics Review: No ethics review needed.
+Rating: 2: reject, not good enough
+Confidence: 2: You are willing to defend your assessment, but it is quite likely that you did not understand the central parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.
+Code Of Conduct: Yes
+[1/2]
+Official Commentby Authors26 Nov 2025, 05:50Everyone
+Comment:
+Thank you for the careful reading and the constructive feedback.
+
+About the summary: The reviewer writes: ¡°One of the main components of the paper is a frozen random prior network that acts as a ¡°regularizer¡± by moving the optimal solution away from agent data¡±. This is a misunderstanding. While the prior net is indeed a main component of NGT, it serves as the target of the predictor net in a task whose objective consists in moving the predictor closer to the prior on expert data and moving the predictor away from the prior on agent data. The optimal solution of this inner task is the one that solves the equivalent optimal transport problem; it is not ¡°[moved] away from agent data¡± like the reviewer writes. We hope this clarifies the crux of NGT. Furthermore, the reviewer writes ¡°its main claims are that it achieves high data and sample efficiency¡±. That is correct; we indeed show that NGT achieves high data-efficiency (w.r.t. Expert data) and high sample-efficiency (w.r.t. Interactions).
+
+Presentation: The reviewer finds the submission difficult to follow and notes that revisions would substantially improve its clarity and impact. We agree. We will revise the presentation and streamline the sections that currently feel long-winded. The last paragraph of the introduction in particular works against the reading experience, and we will correct it. We thank the reviewer for raising concrete points of improvement. We address them below:
+
+The reviewer is right that ¡°learning from random priors¡± should be introduced earlier. At present the first proper introduction is in Section 4.1, with only a brief mention in the related works. We will address this by moving the background section ahead of the related works and placing the existing introduction to learning from random priors (currently in Section 4.1) inside that background section. The reviewer is correct that the phrase ¡°by the properties of neural networks¡± is vague. The specific property we are referring to is simply the behavior of gradient-based optimization on a fixed dataset: when the parameters of a neural network are updated by descending the gradient of an objective, the value of that objective on the training points decreases; reversing the direction increases it. Our method¡¯s use of random priors relies only on this optimization behavior, not on any deeper structural property of neural networks. No assumption of infinite data or global optimality is needed. Our method only requires this local behavior, which holds in the data-sparse regimes we study.
+
+We thank the reviewer for pointing out that the instability of classical GAN training arises from discriminator saturation under imperfect support alignment. Our intent was not to suggest that JS is the sole cause, but rather that GAN objectives based on JS become brittle when supports are disjoint, leading to vanishing gradients. We will revise the wording to make this connection explicit. We do not believe the original text contained unsupported statements, but we appreciate the opportunity to improve its precision.
+
+Eq 6 in [3]: absolute difference between the respective performance objectives of the expert and the agent, where the performance objective is defined as for usual: the expectation of the state-value V over the distribution of initial states. Eq 2 in our paper: difference in potential between the distributions of the expert and of the agent; no return, value, performance objective, and is unsigned. They tell fundamentally different things. What Eq 2 however echoes is the dual form of GAIL, which has been shown equivalent [Finn et al., 2016] to the MaxEnt IRL objective of [Ziebart et al., 2008-2010], in that they both formalize a saddle-point/min-max game over policies and a cost (reward).
+
+ Replying to [1/2]
+[2/2]
+Official Commentby Authors26 Nov 2025, 05:53Everyone
+Comment:
+In the paper, we do make the connection with the dual objective optimized by WGAN. We even dedicated an appendix to it to show how NGT¡¯s objective compares to it. The method ¡°??Adversarial Motion Priors¡± [4] mentioned by the review is indeed relevant and we will cite it in the revision. We will also investigate how its inner workings differ from the WGAN-based baseline that we have already implemented and reported results with.
+
+On the concern that 4 random seeds may be insufficient: we will repeat the experiments with 10 random seeds, as the reviewer requests. We will start with a representative selection of experiments in the next revision. Note: the 4 random seeds with which all the experiments were conducted and reported are exactly the same: 0, 1, 2, 3.
+
+The reviewer writes that each method should be tuned per task. Among the baselines, only DiffAIL shows high inconsistencies between tasks given a set of hyper-parameters. This is probably due to the representational power it has (it involves a diffusion model). We will therefore start by running a search per-task for DiffAIL, since it needs it most.
+
+Clarity concerns:
+
+We will correct the phrasing shortcuts and include the formal definitions of the reward and transition functions of the MDP. The wording ¡°aiming to maximize cumulative rewards¡± was an imprecise shorthand. As the reviewer notes, the paper consistently defines the objective as maximizing the expected return; for instance, L127 states that the agent ¡°learns to represent the expected future return from that decision onward until the episode ends¡±. We hope this clarifies that the issues the reviewer pointed out stem from imprecise wording rather than a conceptual misunderstanding. On ¡°gamma reset¡± phrasing: It clarifies that the discounted return never carries past a terminal state: once an episode ends, future rewards are treated as zero, so the backup stops cleanly at termination. This is the usual episodic convention implemented through the factor (1 ? done) multiplying gamma.
+
+We aligned the degree of maths language with what is standard in the literature. That being said, we can accommodate the reviewer¡¯s request and go deeper in formalism in the appendix when it comes to the presentation of the non-novel architectural elements.
+
+The aggregation of task performance across the tasks of benchmarks is standard practice in RL (e.g., as in ¡°Rainbow: Combining Improvements in Deep Reinforcement Learning¡± from Hessel et al. 2017). We write how curves are normalized at L431-452. For this plot, curves are normalized per task (given the expert performance and random agent performance per task), before being aggregated. We will make that clearer in the text. The humanoid performances are not included because only NGT and DiffAIL managed to solve it. If the reviewer finds it more helpful, we can replace the front-page plot with the diagram illustrating the learning-from-random-priors task.
+
+Should any questions remain, we are happy to continue the discussion.
+
+Official Review of Submission24926 by Reviewer 3RPX
+Official Reviewby Reviewer 3RPX30 Oct 2025, 07:58 (modified: 12 Nov 2025, 18:27)EveryoneRevisions
+Summary:
+The paper is set to address imitation learning in low-data regimes. To this end, the authors define and learn a ¡°potential¡±, 
+, and a trainable predictor, 
+. They then use the difference of potential's expectations over expert vs. agent distributions as an adversarial reward, and argue this is equivalent to optimizing an optimal transport objective provided that the potential is 1-Lipschitz. Large parts of the methodology are focused on providing a practical recipe for the 1-Lipschitz approximation. Empirically, MuJoCo Gymnasium tasks, including a more challenging humanoid control task, and other results report strong performance in low?data regimes.
+
+Soundness: 2: fair
+Presentation: 2: fair
+Contribution: 2: fair
+Strengths:
+I appreciate the authors' effort in presenting a complete and thorough work. I believe that the motivation is strong: the authors properly identify the problem with vanishing gradients in GANs and try to tackle this with a novel formulation, especially under low-data regimes. The literature is sufficiently covered, and the appendix is rather thorough. The paper explains key concepts and design choices in great detail, and attempts to support them with proofs. The authors also compare their method against multiple baselines, some re-implemented, and release the codebase, which helps the credibility and reproducibility of the empirical results.
+
+Weaknesses:
+Introduction
+
+The statement ¡°IRL ¡­ is shielded from compounding errors¡± is not accurate and overstates IRL's capabilities. IRL helps mitigate compounding errors, but it doesn¡¯t guarantee avoidance. If the learned reward is misspecified/ambiguous, if the discriminator overfits, or if optimization stalls, the learned policy can still drift into regions where its behavior is poor and errors cascade.
+
+The method, NGT, is defined in the intro, but the logic behind the chosen name is left to multiple pages into the manuscript, and remains unclear to the reader until then. Please consider aligning the explanation with the method's name.
+
+The last paragraph of the introduction is not cohesive. The text keeps referring to Figure 3, and tries to justify or explain the results. The introduction is better off by focusing on high levels, and explaining specific results can be done in the experiments. It could also benefit from being split into two paragraphs. Maybe consider a more structured, cohesive, and to-the-point version of this paragraph?
+
+Related work
+
+The authors perhaps misuse the LaTeX's \cite and \citep commands, and make the related works section harder to follow.
+
+Some abbreviations are defined multiple times (like OT), and some are defined and never used again, like Maxent IRL.
+
+The related work section could also use some structure, like categorizing the previous work based on their main perspective or application.
+
+Background
+
+What does it mean to reset 
+? Isn't the discount factor fixed while learning?
+Methodology
+
+The definition of actor-critic methods belongs more to the background than the methodology, the same for reply buffer and SAC.
+
+Equation (1) is far from any density estimator, not only because it doesn't integrate to 1, but because it varies based on different seeds, scaling, etc. Given this, is calling it a pseudo-density still justified?
+
+In Equation (2), the authors basically reparameterize the discriminator as a frozen random network + predictor, but it¡¯s still optimizing a divergence between expert and agent distributions. There¡¯s no clear reason why this avoids vanishing gradients. Don't gradient magnitudes depend on how the predictor generalizes, not on its target¡¯s randomness? A clarification on this is indeed needed here.
+
+Why choose an exponential function of potential for the reward (other functions can provide positivity and a suitable range)? Exponentiating the reward makes the system exponentially sensitive to small changes in the potential, which can happen based on noise or initialization.
+
+The reward is a derived quantity, not a general potential. There¡¯s no guarantee this mapping can represent all 1-Lipschitz functions. It¡¯s actually a highly restricted subset of functions shaped by the architecture of loss and the initialization of networks. So how is this an effective search within 1-Lipschitz functions?
+
+Upon reading the proof of Theorem 4.1, I believe that there is an ambiguous logic applied in the last line, where the comparison switches from less than or equal to an equality without any justification. Can you elaborate on this?
+
+In addition to the previous concern, I think the basic properties of Lipschitz compositions are known, and Theorem 4.1 merely restates them? It¡¯s useful to state, but the framing reads stronger than it is, more like part of the paper's contributions. Can you justify this?
+
+Experiments
+
+Running for only 4 random seeds could be insufficient, especially for low-data regimes with higher uncertainty. Is the low number of seeds due to computational problems of the method / baselines?
+
+On the previous note, I expected to see larger error bands for fewer demonstrations, but the plots in the main text do not follow this trend. Why is this the case? And why does lower data not cause higher uncertainty in the predictions, not only in NGT but also across other baselines?
+
+Questions:
+Please refer to the weaknesses, and justify the comments / answer the questions. I am open to discussion and will indeed be willing to raise the score if these points are sufficiently addressed.
+
+Again I thank the authors for their time and dedication.
+
+Flag For Ethics Review: No ethics review needed.
+Rating: 2: reject, not good enough
+Confidence: 4: You are confident in your assessment, but not absolutely certain. It is unlikely, but not impossible, that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work.
+Code Of Conduct: Yes
+[1/2]
+Official Commentby Authors26 Nov 2025, 06:20Everyone
+Comment:
+Thank you for the careful reading and the constructive feedback.
+
+About the summary: the reviewer writes: ¡°learn a potential h and a trainable predictor f¡±. We learn a potential h that involves a trained predictor f, so the predictor is learned and the potential is assembled from the learned predictor. The reviewer also writes: ¡°use the difference of potential¡¯s expectations over expert vs. agent distributions as an adversarial reward¡±. That is incorrect. The difference in potential between expert and agent distribution is how we define our reward learning objective, adversarial in nature. The reward signal is assembled from the learned potential.
+
+Strengths: we are glad to read that the reviewer appreciated the thoroughness of the work.
+
+Weaknesses:
+
+It is true that the statement ¡°IRL ¡­ is shielded from compounding errors¡± is too strong; we will remedy that. We meant that, in the absence of a good coverage of corrective behaviors in the demonstrations, IRL can still learn meaningful policies while BC can not.
+
+¡°[NGT:] the logic behind the chosen name is left to multiple pages into the manuscript¡±. We will align the next version with what the reviewer suggests: make the logic behind the chosen name appear earlier in the paper.
+
+¡°The introduction is better off by focusing on high levels¡± We thank the reviewer for the suggestion and will follow it in the next revision.
+
+On the ¡°misuse the LaTeX's \cite and \citep commands¡±. We will correct those as well.
+
+On abbreviation reuse. ¡°MaxEnt IRL¡± is reused, albeit in the next sentence. We will scan the manuscript for out-of-place ¡°OT¡± abbreviation definitions. We will leave the one present in the appendix however, for the appendix section to be self-contained.
+
+We will add paragraph titles in the related works section, following the reviewer¡¯s advice.
+
+The discount factor is indeed fixed during training. The phrasing ¡°gamma resets to 0 upon episode termination¡± signifies that the discounted return never carries past a terminal state: once an episode ends, future rewards are treated as zero, so the backup stops cleanly at termination. This is the usual episodic convention implemented through the factor (1 ? done) multiplying gamma.
+
+Following the reviewer¡¯s suggestion, we will move the presentation of the standard RL parts of the method to the background section.
+
+The reviewer is right in that what is learned via Eq 1 can be a rather rough estimation that arguably could not be deserving of adopting the name of ¡°pseudo-density¡±. We called it ¡°pseudo¡± since it does not integrate to one a priori. That appellation can be further relaxed, e.g. by calling what is learned in Eq a ¡°pseudo-indicator¡±. This would signify that the value of what is learned could be used to determine whether a given sample is in the support of a distribution or not. This term by itself would not in itself implicitly claim to be something that could be turned into something akin to a density. Would that other name satisfy the reviewer?
+
+Our method does not optimize a GAN-style divergence whose gradients vanish when the discriminator becomes perfect. The objective is an Earth Mover type discrepancy, computed by comparing predictor outputs to those of a frozen prior network that is randomly initialized but deterministic. This yields non-saturating gradients because the predictor is trained against a continuous regression landscape rather than a binary classification signal. The purpose of the frozen prior is not to replace the divergence but to induce a multi-task structure: each random projection defines an independent regression subtask. When the expert and agent distributions differ, these subtasks disagree in systematic ways, which reveals epistemic uncertainty in the predictor. The EMD aggregates these structured mismatches. Since the predictor can only satisfy all subtasks when the policy distribution aligns with the expert distribution, the gradients do not collapse to zero unless the two distributions coincide. In this sense, gradient vanishing does not arise for the same reasons it does in JS-based GANs. The gradients remain informative as long as the predictor has residual epistemic uncertainty on agent samples, and the frozen randomly initialized prior ensures this uncertainty persists until the policy aligns with the expert data.
+
+ Replying to [1/2]
+[2/2]
+Official Commentby Authors26 Nov 2025, 06:22Everyone
+Comment:
+The reviewer is right in that exponentiating the reward makes it tedious to tame. We do so before applying the numerics we laid out in the appendix, in order to create a wider gap between the higher and lower percentiles of rewards in a given batch. Applying an exponential after the numerical treatment can indeed cause numerical outliers in rewards and therefore introduce instabilities in the critic¡¯s training.
+
+The reviewer¡¯s premise assumes that the goal is to span the entire class of 1-Lipschitz functions. That is not a requirement for our method. What matters is that the reward belongs to a controlled subset of 1-Lipschitz functions suitable for learning a transport signal between the two distributions. In other words, we do not aim to recover an arbitrary 1-Lipschitz function. We only need to search within a stable, expressive, and well-regularized subset of that space. Our design choices yield a search space that is deliberately narrower than the full 1-Lipschitz class, but still fully effective for the divergence we optimize. The question is not whether the architecture spans all 1-Lipschitz functions, but whether the subset it explores is expressive enough to drive the EMD between the two distributions toward zero. Empirically and theoretically, this restricted class is sufficient for that purpose.
+
+We followed a convention where the last step of a chain of inequalities may be written with an equality when it is only an algebraic simplification of the previous line. We understand this might not be the reviewer¡¯s preferred convention, and we are happy to keep the ¡°less than¡± symbol throughout to avoid any ambiguity.
+
+Theorem 4.1 is a standard result, and we did not intend to present it as novel. We include it because it is needed for completeness and may not be immediately obvious to all readers. We will restate it in a way that makes its classical nature explicit.
+
+We indeed chose to run all methods with 4 seeds to remain within a certain compute budget. Our re-implementations took engineering effort and made a significant dent in the said budget. Also, our distributed setting is such that each environment is vectorized over a pool of 4 parallel environments (each with its own seed derived from the main one, which means 16 different seeds were involved per reported curve). We will re-run experiments on 10 seeds without vectorizing the environments, starting from a subset. Another point: we believe the grid in Fig 3 gives a good idea of how the method reacts to changes in data scarcity and covers a wide range of scenarios.
+
+In some settings a single demonstration can already suffice to reproduce expert-level behavior. Moreover, the expert we rely on can exhibit limited variability across demonstrations, so each trajectory is effectively a close replica of the others. Under these conditions, using eleven demonstrations offers little advantage over a single one and can even be counterproductive, since it exposes the prior and predictor networks to many near-duplicate samples. We therefore sub-sample each trajectory 20 times (with different sub-sampling starting points, randomly sampled between 0 and 19) to mitigate this issue, although some repetition may still occur by chance.
+
+Should any questions remain, we are happy to continue the discussion.
+
+Official Review of Submission24926 by Reviewer LAAH
+Official Reviewby Reviewer LAAH28 Oct 2025, 06:12 (modified: 12 Nov 2025, 18:27)EveryoneRevisions
+Summary:
+This work proposes Noise-Guided Transport (NGT), a lightweight off-policy imitation learning method for low-data regimes. NGT formulates imitation as an optimal transport problem solved via adversarial training, requiring no pretraining or specialized architectures. It naturally models uncertainty, is simple to implement, and achieves strong performance on challenging continuous control tasks with as few as 20 expert transitions.
+
+Soundness: 2: fair
+Presentation: 1: poor
+Contribution: 2: fair
+Strengths:
+The paper proposes a novel approach to enforce the Lipschitz condition and measure distributional distance under the Wasserstein-1 metric without relying on a gradient penalty.
+
+Empirical results demonstrate that the proposed method outperforms state-of-the-art adversarial imitation learning (AIL) approaches in terms of episode rewards.
+
+The ablation studies are comprehensive, and the paper provides theoretical justifications supporting the proposed method.
+
+Weaknesses:
+The writing quality of the paper needs improvement. There are numerous unnecessary bolded words, and missing hyperlinks (e.g., line 706 in the appendix).
+
+Although the authors claim improved computational efficiency by avoiding gradient penalties for enforcing the Lipschitz condition, Table 3 shows that the proposed method does not demonstrate a clear advantage in computation time compared to existing approaches.
+
+Questions:
+Could the authors provide a more detailed explanation or empirical justification for the claimed computational efficiency of the proposed method compared to approaches that use gradient penalties?
+Flag For Ethics Review: No ethics review needed.
+Rating: 6: marginally above the acceptance threshold. But would not mind if paper is rejected
+Confidence: 3: You are fairly confident in your assessment. It is possible that you did not understand some parts of the submission or that you are unfamiliar with some pieces of related work. Math/other details were not carefully checked.
+Code Of Conduct: Yes
+Official Comment by Authors
+Official Commentby Authors26 Nov 2025, 06:46Everyone
+Comment:
+Thank you for the careful reading and the constructive feedback.
+
+Strengths: we are pleased to read that the reviewer found our work rigorous and valuable.
+
+Weaknesses: we will revise the manuscript to improve presentation. ¡°There are numerous unnecessary bolded words, and missing hyperlinks¡±: thank you for pointing this out. We will remove unnecessary emphasis and restore the missing hyperlinks in the revised manuscript.
+
+Questions: Our method is not the absolute fastest across all baselines, but it offers the best trade-off between computation time and achieved return. The claim about computational savings refers specifically to the cost avoided by not relying on gradient penalties to enforce Lipschitz constraints. NGT reward learning solves n regression problems rather than a single binary classification problem, which is inherently more expensive. Even so, its overall compute cost remains comparable to cheaper methods because those methods require gradient penalties to remain stable. In practice, these penalties dominate their runtime overhead, whereas NGT attains its performance without them.
+
+Should any questions remain, we are happy to continue the discussion.
+
+About OpenReview
+Hosting a Venue
+All Venues
+Contact
+Sponsors
+Donate
+FAQ
+Terms of Use / Privacy Policy
+News
+OpenReview is a long-term project to advance science through improved peer review with legal nonprofit status. We gratefully acknowledge the support of the OpenReview Sponsors. ? 2025 OpenReview
+
+Noise-Guided Transport for Imitation Learning | OpenReview

@@ -1,0 +1,54 @@
+Academic integrity and internal consistency assessment report
+
+Summary
+The manuscript proposes formal definitions and a methodology for classifying and evaluating memory in RL agents, and presents experiments in Passive T-Maze and MiniGrid-Memory. While the conceptual framework is thoughtful, there are several high-impact internal inconsistencies, misreferences, and missing details that materially affect the correctness and interpretability of the claims and experiments.
+
+Major inconsistencies and evidence
+
+1) Declarative vs procedural memory definition conflicts with the experimental setup
+- Claim: “Declarative Memory ⇔ n_envs × n_eps = 1” and “Memory DM framework validates the agent’s declarative memory” (Section 5, Definition 3; Block #12–13). Table 1 also classifies Memory DM as nenvs = 1, neps = 1 (Block #17, Table 1).
+- Experiment reality: Training curves over 1e6 timesteps (Figure 4; Block #26) and a time limit of 95 steps per episode in MiniGrid-Memory (Appendix E.1; Block #50) imply many episodes (n_eps >> 1). Appendix E.2 (Block #51) describes “validation during training using 100 random seeds,” and large replay buffers (up to 1e6), further indicating multiple episodes per environment.
+- Contradiction: By the paper’s own Definition 3, experiments with multiple episodes fall under “Procedural Memory” (n_envs × n_eps > 1), not declarative memory. Yet Section 6 asserts experiments are “within the Memory DM framework” (Block #24), and Section 4.2/5 emphasize focus on declarative memory (Blocks #10–12). This undermines the core claim that the paper validates declarative memory and the alignment between the taxonomy and the empirical validation.
+
+2) Referencing STM/LTM criteria to L (corridor length) instead of ξ (correlation horizon)
+- Definitions: STM/LTM are formally defined via ξ and K (Section 5, Definition 4; Block #13).
+- Experiment description: In Section 6.1 (Block #25), STM/LTM are labeled using K relative to L: “K = 14 (representing LTM, since K < L) or K = 22 (representing STM, since K > L).”
+- Issue: The formal criteria require comparing K to ξ, not L. For the MiniGrid-Memory configuration, ξ is defined to vary (ξ ∈ [7, L + 1]). Using L rather than ξ misclassifies memory conditions and contradicts the formal framework introduced earlier.
+
+3) Contradictory statements on “weak condition” for STM/LTM validation
+- Section 5.1 (Block #20) states: “Weak condition to validate short-term memory: if K̄ < K < max Ξ, then … used to validate both short-term and long-term memory.”
+- Immediately after, same section (Block #20) states: “In such a case it is not possible to estimate long-term memory explicitly.”
+- Contradiction: Saying the setup “validates both” but also that “it is not possible to estimate LTM explicitly” is internally inconsistent and confuses the interpretation of mixed STM/LTM regimes.
+
+4) Missing figure referenced in the core argumentation
+- Section 5 (Block #13) refers to “see Figure 3” for classifying inner-loop tasks as declarative STM/LTM. No Figure 3 appears in the manuscript (available figures are 1, 2, 4, 5, 6, plus conclusion figures in Blocks #31–33).
+- Impact: The missing figure impairs the reader’s ability to verify and understand a key component of the task taxonomy.
+
+5) Misreference to Appendix C for benchmark details
+- Related Works (Section 3; Block #6) says: “see Appendix C for details” regarding benchmarks.
+- Appendix C (Block #43) is “Memory mechanisms” and does not provide benchmark details.
+- Impact: Misreference prevents readers from accessing promised content and obstructs reproducibility and context.
+
+6) Ambiguity about reward configuration used in Passive T-Maze experiments
+- Appendix E.1 (Block #50) defines both sparse (terminal 0/1) and dense reward via step penalty (penalty = −1/(T−1)).
+- Section 6.2 (Blocks #28–29, Figures in Blocks #31–33) reports return curves reaching 1.0 but does not specify whether sparse or dense reward was used in each experiment.
+- Impact: Without specifying reward configuration per experiment, results are ambiguous and not reproducible. The maximum achievable return differs between configurations, so interpreting return values (e.g., 1.0 vs ~0.5) for LTM/STM claims is unclear.
+
+7) Citation mismatch: “Bartlett & Kintsch (1995)” not present in references
+- Section 4.2 (Block #9) cites “Bartlett & Kintsch (1995).”
+- References include Bartlett (1995) (Block #34), but not a co-authored Bartlett & Kintsch entry.
+- Impact: In-text citation not supported by the reference list reduces trust in source attribution for reconstructive memory claims.
+
+Additional observations (lower impact but noteworthy)
+- Table 1 header duplication (“Tasks that require agent memory” appears twice) complicates reading (Block #17). Evidence of formatting inconsistency rather than scientific content.
+- The corollary “max_n Ξ = 1 ⇔ M — MDP” (Section 5.1, Block #18) is asserted without derivation. While possibly intuitive, no direct justification is provided. No direct evidence found in the manuscript.
+
+Recommendations to resolve core issues
+- Align taxonomy and experiments: If experiments necessarily use multiple episodes, either redefine declarative/procedural memory so Memory DM can be evaluated across episodes, or reclassify the experiments under procedural memory per Definition 3 (n_envs × n_eps > 1). Explicitly report n_eps to avoid ambiguity.
+- Use ξ consistently: Reframe all STM/LTM experimental conditions using ξ and K; avoid using L as a proxy. For variable mode, specify the distribution of ξ and how correlations are sampled.
+- Clarify mixed regimes: Replace “validates both” wording with precise language about why LTM cannot be isolated in the weak condition, and how to design experiments that cleanly separate STM and LTM.
+- Fix references and missing materials: Provide the missing Figure 3 or remove references to it; correct the Appendix pointer (benchmark details) and the “Bartlett & Kintsch (1995)” citation to match the reference list.
+- Specify reward settings: For each Passive T-Maze experiment, state whether sparse or dense rewards were used and the penalty value; ensure return scales are comparable across conditions.
+
+Conclusion
+The manuscript presents a promising formalization and useful experimental guidance for memory evaluation in RL. However, the most critical integrity issue is the contradiction between the declarative/procedural memory definitions and the multi-episode experimental setup, which affects the central claim that Memory DM/declarative memory is being validated. Addressing the taxonomy–experiment mismatch, fixing citation and figure references, and clarifying experimental conditions would materially improve correctness, interpretability, and trustworthiness.

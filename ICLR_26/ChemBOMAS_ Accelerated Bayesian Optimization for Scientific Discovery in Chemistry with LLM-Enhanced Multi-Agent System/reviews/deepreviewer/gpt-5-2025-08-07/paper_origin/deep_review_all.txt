@@ -1,0 +1,179 @@
+Review 1
+
+Summary
+The paper proposes ChemBOMAS, a large‑language‑model (LLM)–enhanced multi‑agent framework to accelerate Bayesian Optimization (BO) for chemical reaction optimization. It integrates a data‑driven module (an 8B LLaMA 3.1 regressor pre‑trained on Pistachio and fine‑tuned on 1% labeled data to generate pseudo‑labels) and a knowledge‑driven module (GPT‑4o with hybrid RAG to rank variable importance, cluster candidates by physicochemical properties, construct a hierarchical subspace tree, and select promising subspaces via UCB). BO is then run within selected subspaces using a GP surrogate initialized with both real data and pseudo‑data. Across four reaction datasets (Suzuki, Arylation, Buchwald_sub‑1/sub‑2), ChemBOMAS shows faster convergence and higher final yields than baselines; ablations indicate both modules contribute substantially; a wet‑lab case study reports a 96% optimal yield in 43 evaluations.
+
+Soundness
+- Methodologically, the two‑stage design (knowledge‑driven space decomposition + data‑driven pseudo‑data warm‑start) is coherent and aligns with known acceleration levers for BO [§3.2–3.5; Fig. 1; Algorithm 1 in App. F]. The UCB‑guided tree search is a sensible way to allocate experimental budget across subspaces [§3.4].
+- Use of pseudo‑data raises bias/overfitting risks. The GP surrogate is trained on a mixture of real and pseudo labels with simple L2 fine‑tuning and no explicit uncertainty on pseudo‑labels [§3.3, §3.5]. Although App. D introduces similarity‑based pruning and global removal, there is no principled weighting or calibration of pseudo‑data vs. real data (e.g., heteroscedastic likelihoods or down‑weighting schemes). This could distort posterior variance and acquisition decisions, especially early on.
+- The knowledge module depends on GPT‑4o/RAG to partition by physicochemical properties. While App. G.2 outlines prompts, the retrieval sources, clustering criteria, and quantitative property thresholds are not fully specified, making the partitioning somewhat heuristic and potentially sensitive to prompt and API behavior [§3.4; App. G.2, App. A].
+- Statistical claims need tightening. The “2000% R² improvement” wording [Table 1] is misleading because improvements over near‑zero baselines inflate percentage gains; significance tests and error bars for regression metrics are absent. BO performance is averaged over five seeds [§4.2], but no confidence intervals or statistical tests are reported for between‑method differences in Fig. 2/Table 2/Table 4.
+- Minor inconsistencies: exploration constant is denoted C_p in §3.4 but κ=20 in §4.2; the UCB policy selects top‑5 children per layer [§3.4], yet justification for this fixed breadth is not provided.
+
+Presentation
+Overall clear and well structured: motivation and limitations [§1, §5], method overview [§3.2], module details [§3.3–3.5], experiments [§4], and thorough appendices (prompts, pseudocode, datasets) [App. A–J]. Figures and tables support the narrative (Fig. 1 pipeline, Fig. 2 performance curves, Tables 1–4 and App. Tables 5–9). However, some language overstates results (e.g., “34‑fold” speed claims in §4.3.2 without consistent quantification across datasets) and some notation inconsistency (C_p vs κ). Reproducibility is hindered by the proprietary GPT‑4o dependency and unspecified RAG sources/tooling.
+
+Contribution
+The main contribution is demonstrating a synergistic integration of LLM‑assisted knowledge partitioning and LLM‑generated pseudo‑data to accelerate BO under severe data scarcity and large, categorical‑heavy design spaces [§3.2–3.5]. Compared to prior LLM‑BO work focusing on single aspects (surrogates, acquisition, in‑context learning), ChemBOMAS targets both the cold start and curse of dimensionality and validates across multiple chemical datasets and a wet‑lab task [§4.3, §H]. While the individual components are not novel per se (RAG, LoRA fine‑tuning, GP‑BO, UCB tree search), their joint, closed‑loop orchestration for chemistry optimization is a meaningful, practically relevant contribution.
+
+Strengths
+- Well‑motivated synergy between data‑driven and knowledge‑driven acceleration; ablations verify both are necessary [Table 4; §4.4].
+- Strong empirical coverage with consistent improvements in convergence and final yields across four benchmarks; variance reduction noted [Fig. 2; §4.3.3].
+- Practicality: low labeled data (1%), scalability to categorical spaces, and wet‑lab validation on a previously unreported reaction with high yield [§4.2; §H.1].
+- Transparent implementation details: learning rates, epochs, LoRA rank, acquisition choices, and pseudocode [§4.2; App. F].
+
+Weaknesses
+- Pseudo‑data treatment lacks principled uncertainty modeling or weighting; refinement (App. D) is heuristic and may discard informative points.
+- Knowledge‑driven partitioning depends on GPT‑4o and loosely specified RAG pipelines; reproducibility and sensitivity analyses are limited [§3.4; App. G.2].
+- Statistical reporting is insufficient: percentage improvements on R² [Table 1] are misleading; no CIs or tests on BO curves/tables; “34‑fold” efficiency claim is not consistently evidenced across datasets [§4.3.2].
+- Limited discussion on acquisition function choice/interplay (UCB for tree vs EI/UCB for BO) and on the impact of “top‑5” selection per layer [§3.4–3.5].
+- Safety constraints absent, acknowledged in §5 but not mitigated in the proposed pipeline.
+
+Questions
+1. How are pseudo‑labels weighted relative to real observations during GP fitting—are you using different noise levels or a down‑weighting scheme? If not, why, and what is the impact (calibrated risk) [§3.5; App. D]?
+2. Can you detail the quantitative property data sources and thresholds used in clustering (pKa ranges, dielectric constants, steric descriptors), and share the RAG corpus/tools to enable reproducibility [§3.4; App. G.2; App. A]?
+3. Why “top‑5” nodes per layer in the UCB tree search—did you tune breadth vs depth, and how sensitive are results to this choice [§3.4]?
+4. Could you provide confidence intervals and statistical tests for regression metrics [Table 1, Table 3] and BO outcomes [Fig. 2, Table 2, Table 4]?
+5. How do you calibrate the LLM regressor’s predictions (e.g., Platt scaling, isotonic regression) to avoid over‑confident pseudo‑labels? Any diagnostics [§3.3]?
+6. In the wet‑lab study, what were the 6D variables and their ranges? Please share the full set of tested conditions and raw yields to assess generality and avoid cherry‑picking [§H.1–H.2].
+
+Rating
+- Overall (10): 8 — A well‑executed, practically relevant synergy of LLM‑assisted space partitioning and pseudo‑data warm‑starts with strong empirical results and ablations, tempered by reproducibility and statistical reporting gaps [§3.2–3.5; Fig. 2; Table 4; §5].
+- Novelty (10): 8 — The integration and closed‑loop design across knowledge/data modules for BO in chemistry is novel in practice, beyond prior single‑module LLM‑BO works [§2; §3.2; App. F].
+- Technical Quality (10): 7 — Sound overall design, but pseudo‑data uncertainty handling and statistical rigor need strengthening; some heuristic choices under‑justified [§3.3–3.5; Table 1; §4.3.2].
+- Clarity (10): 7 — Clear pipeline and appendices, with minor inconsistencies (C_p vs κ) and over‑assertive phrasing on improvements; limited reproducibility details for RAG [Fig. 1; §3.4; App. G].
+- Confidence (5): 4 — High due to detailed method/experiments and ablations, but limited access to RAG corpus, GPT‑4o prompts, and wet‑lab raw data constrain full verification [§4; App. G; §H].
+
+
+Review 2
+
+Summary
+ChemBOMAS accelerates BO for chemical reactions by combining (i) a knowledge‑driven subspace partition via GPT‑4o + hybrid RAG and UCB tree search and (ii) a data‑driven pseudo‑label generator based on a fine‑tuned LLaMA‑3.1‑8B regression head. The GP surrogate is initialized with pseudo‑labels and real data to guide acquisition within high‑potential subspaces. Benchmarks on Suzuki, Arylation, and two Buchwald subsets show faster convergence and higher final yields than BO, LA‑MCTS, BO‑ICL, and GoLLuM; ablations suggest both modules are necessary; a wet‑lab case shows a 96% yield after 43 samples.
+
+Soundness
+The architecture is reasonable for high‑dimensional categorical spaces typical in reaction optimization. However:
+- The reliance on GPT‑4o for ranking/clustering with “hybrid RAG” lacks explicit controls against hallucinations beyond citing RAG; concrete retrieval pipelines, property tables, and validation of cluster quality are missing [§3.4; App. G.2].
+- The UCB formula is standard, yet child selection (top‑5 at each layer) is arbitrary; breadth vs depth trade‑offs and sensitivity are not studied [§3.4].
+- Pseudo‑label generation is trained with only 1% of data; while Table 7/8 explore data volume effects, the observation that better R² does not always translate to better BO performance suggests potential mismatch between surrogate accuracy and acquisition behavior, but no formal analysis is provided [§4.3.1; App. I.2].
+- GP modeling on pseudo‑data lacks uncertainty calibration; refinement strategy (cosine similarity pruning + performance‑biased random removal) is heuristic and may delete informative points, risking under‑exploration [App. D].
+- Evaluation design is mostly sound, but statistical rigor is limited: five random seeds without CIs, and percentage statements for R² gains are misleading [Table 1; §4.2].
+
+Presentation
+Readable and comprehensive. The method overview and algorithmic pseudocode are helpful [Fig. 1; App. F]. Yet some claims are stated too strongly (“34‑fold improvement” [§4.3.2]) without uniform evidence, and citation of “GPT‑5” [Table 1; §References] blurs the baseline realism. Notation inconsistencies (C_p vs κ) and occasional typographic errors reduce polish. Reproducibility is hindered by proprietary LLM use and unspecified RAG sources/toolkits.
+
+Contribution
+The main contribution is operational: demonstrating that an LLM‑guided partition + LLM‑generated pseudo‑data can synergistically mitigate cold starts and dimensionality in chemical BO. The empirical breadth (four datasets, ablations, batch‑size study, data‑volume study, materials science extension) makes the case that the approach is broadly applicable [§4; App. I–J]. Conceptual novelty is moderate (components exist in literature), but the integrated system and wet‑lab validation add value.
+
+Strengths
+- Clear problem focus (cold start + high dimensionality) and practical system addressing both [§1; §3.2].
+- Strong empirical gains and fast convergence, especially on Suzuki and Buchwald_sub‑2 [Fig. 2; Table 2, Table 4].
+- Ablations demonstrate necessity of both modules; batch‑size sensitivity is minimal [§4.4; App. I.1].
+- Inclusion of a wet‑lab case and a non‑chemical dataset (LNP3) suggests practical utility and generality [§H; App. J].
+
+Weaknesses
+- Reproducibility issues: GPT‑4o dependency; unspecified RAG sources; limited details on property data and clustering decisions [§3.4; App. G.2].
+- Limited theoretical grounding for mixing pseudo‑labels with real data in GP; no uncertainty calibration or weighting scheme [§3.5; App. D].
+- Over‑assertive statistical claims and lack of confidence intervals weaken empirical credibility [Table 1; Fig. 2; §4.3.2].
+- Baseline comparisons could be expanded (e.g., hierarchical BO methods beyond LA‑MCTS, or GP with task‑specific embeddings) [§2; §4.3].
+
+Questions
+1. Can you release the RAG corpus (literature/database identifiers) and property tables used to cluster catalysts/ligands/bases/solvents for each dataset [§3.4; App. G.2]?
+2. How are pseudo‑labels incorporated into the GP likelihood—are they assigned larger noise or down‑weighted to avoid bias? If not, why [§3.5]?
+3. Please justify the “top‑5” node choice per layer and report sensitivity analyses on breadth/depth [§3.4].
+4. Can you add CIs to Fig. 2 and conduct statistical tests on Table 2/4 differences [§4.3]?
+5. What is the computational overhead for the GPT‑4o partitioning; does it materially affect optimization latency vs baselines [§4.2]?
+
+Rating
+- Overall (10): 6 — Useful integrated system with promising results, but reproducibility and statistical rigor issues limit confidence in generality [§3.4; Fig. 2; Table 2; §4.2].
+- Novelty (10): 7 — Moderately novel integration of LLM knowledge partitioning and pseudo‑label warm‑starts in a closed loop, beyond prior single‑module approaches [§2; §3.2].
+- Technical Quality (10): 5 — Sound high‑level design but weak uncertainty treatment of pseudo‑data, heuristic clustering/selection, and limited sensitivity analyses [§3.3–3.5; App. D].
+- Clarity (10): 6 — Generally clear with helpful figures/pseudocode, marred by inconsistent notation and over‑stated claims; limited reproducibility details [Fig. 1; App. F; §4.3.2].
+- Confidence (5): 3 — Medium‑low; results are encouraging but dependent on proprietary tools and missing statistical/reporting details constrain verification [§3.4; §4.3; App. G].
+
+
+Review 3
+
+Summary
+The authors introduce ChemBOMAS, coupling an LLM‑guided hierarchical partition (via GPT‑4o and hybrid RAG with UCB traversal) with an LLaMA‑3.1‑8B regressor that generates pseudo‑labels to warm‑start BO. The GP surrogate uses a Matérn kernel fitted on real and pseudo‑data; EI/UCB acquisition is optimized within selected subspaces. On four reaction datasets, the method achieves faster convergence and higher final yields than BO, LA‑MCTS, BO‑ICL, and GoLLuM; ablations and sensitivity studies support the contribution; a wet‑lab case demonstrates practical gains.
+
+Soundness
+- The hierarchical partitioning aligns with established ideas (LA‑MCTS, hierarchical BO), but the impact ranking and clustering via RAG‑assisted LLM reasoning is novel operationally for chemistry [§3.4]. The UCB tree traversal is adequate; however, fixed top‑5 child selection may limit exploration of broader branches.
+- The regression head formulation is standard; pre‑training on Pistachio Q&A (conditions prediction) followed by 1% supervised yield fine‑tuning is plausible, and ablations indicate SFT drives accuracy [Table 3]. Still, using hidden state h_T projected by an MLP without uncertainty calibration places heavy reliance on GP to handle noise in pseudo‑labels [§3.3].
+- GP surrogate on combined pseudo+real points risks miscalibration: white‑noise kernel is too simplistic for heteroscedastic pseudo‑data; no weighting or separate noise levels are specified [§3.5]. The heuristic pruning (cosine similarity τ and performance‑biased discarding) is reasonable but unprincipled [App. D].
+- Experimental setup is sensible (consistent acquisition across methods; fixed iteration budgets; five seeds) [§4.2]. Yet statistical reporting lacks CIs and tests; and claims of “34‑fold efficiency” are dataset‑dependent and should be presented more cautiously [§4.3.2].
+
+Presentation
+Clear method exposition with helpful diagrams and pseudocode [Fig. 1; App. F]. Tables are comprehensive (regression metrics, BO outcomes, ablations). Some notational drift (C_p vs κ), and performance claims are sometimes exaggerated. Appendices provide prompts and benchmark context, improving transparency, though RAG sources and clustering thresholds are still under‑specified.
+
+Contribution
+A practical system that unifies knowledge‑based partitioning and pseudo‑data warm‑starts for BO in chemical reaction spaces is a valuable contribution. The wet‑lab demonstration adds impact. The approach does not offer theoretical guarantees, but its empirical gains and engineering choices address real bottlenecks in self‑driving labs (cold start and high‑dimensional categorical spaces) [§1; §4; §H].
+
+Strengths
+- Comprehensive empirical validation with multiple datasets, ablations, and sensitivity analyses [Fig. 2; Table 2; Table 4; App. I].
+- Practical details (LoRA rank, training settings) and algorithmic pseudocode [§4.2; App. F].
+- Demonstrated robustness to batch size and cross‑domain generalization to materials science [App. I.1; App. J].
+- Wet‑lab case with constrained budget yielding rapid discovery (96%) [§H.1].
+
+Weaknesses
+- Limited uncertainty treatment for pseudo‑labels in GP; lack of principled weighting and calibration [§3.5; App. D].
+- RAG pipeline details insufficient for replication; property thresholds and clustering methodology are opaque [§3.4; App. G.2].
+- Statistical rigor: absence of confidence intervals/tests; over‑stated R² percentage improvements [Table 1; §4.3.2].
+- Fixed “top‑5” UCB breadth may be suboptimal; no ablation on search breadth/depth [§3.4].
+
+Questions
+1. How do you set the similarity threshold τ in App. D, and how sensitive are results to τ across datasets?
+2. Could you model pseudo‑data with larger observation noise (or separate likelihoods) to better calibrate GP uncertainty? Any preliminary results [§3.5]?
+3. What quantitative property features (e.g., Hammett parameters, bite angles, pKa, dielectric constants) were used for clustering, and can you release the property tables and retrieval indices [§3.4; App. G.2]?
+4. Have you tried variable breadth in UCB (e.g., top‑k with k∈{3,5,10}) and examined convergence/coverage trade‑offs [§3.4]?
+5. Can you provide CIs for Fig. 2 and quantify variance reduction claims [§4.3.3]?
+
+Rating
+- Overall (10): 7 — Solid practical advance combining knowledge partitioning and pseudo‑data warm‑starts, with strong empirical evidence and a wet‑lab demo, though methodological and statistical gaps remain [§3.2–3.5; Fig. 2; §H].
+- Novelty (10): 8 — The integrated, closed‑loop use of LLMs for both partitioning and warm‑starting BO in chemistry is a meaningful systems‑level innovation [§2; §3.2].
+- Technical Quality (10): 7 — Good engineering and experiments; needs better uncertainty modeling and sensitivity analyses for UCB breadth and pseudo‑data weighting [§3.3–3.5; App. D].
+- Clarity (10): 6 — Clear pipeline and appendices, but some notational inconsistency and incomplete RAG details impede full reproducibility [Fig. 1; App. F; App. G].
+- Confidence (5): 4 — Reasonably confident based on breadth of experiments/ablations; lowered by proprietary dependencies and missing statistical CIs [§4; §3.4; App. G].
+
+
+Review 4
+
+Summary
+ChemBOMAS is a multi‑agent BO framework for chemical optimization that leverages LLMs in two ways: a fine‑tuned LLaMA‑3.1‑8B regressor generates pseudo‑labels for cold‑start initialization, and GPT‑4o with hybrid RAG partitions the search space into subspaces based on ranked variable importance and physicochemical clustering; UCB selects promising subspaces; GP‑BO with EI/UCB runs within them. The method yields faster convergence and higher best‑found values than several baselines across four chemical datasets, passes ablation checks, generalizes to a materials task, and shows a wet‑lab win.
+
+Soundness
+- The high‑level design is sensible for large categorical spaces and sparse labels. UCB traversal over a knowledge‑guided tree can focus exploration effectively [§3.4].
+- The pseudo‑data strategy is pragmatic but lacks probabilistic calibration (e.g., predictive variance from the LLM regressor or label noise modeling). Heuristic pruning may help but risks discarding informative points and is not justified theoretically [§3.3; App. D].
+- Mixing pseudo‑labels and real observations in GP without separate noise models may bias posterior mean and variance; acquisition functions could be misled by over‑confident regions [§3.5].
+- The experimental design is thoughtful (five seeds, consistent acquisition across methods, batch size study). Nonetheless, statistical support (CIs, hypothesis testing) is missing; some performance statements (e.g., “34‑fold”) appear dataset‑specific and should be contextualized [§4.2; §4.3.2].
+
+Presentation
+The manuscript is well organized with a clear pipeline diagram and algorithmic pseudocode [Fig. 1; App. F]. The dataset descriptions are detailed [App. C], and prompt examples are shared [App. G]. Areas needing improvement include: explicit RAG sources/tooling, property thresholds used for clustering, notation consistency (C_p vs κ), and tightening of claims around percent improvements in R² [Table 1].
+
+Contribution
+The system contribution—deploying LLM‑assisted knowledge partitioning together with pseudo‑data warm‑starts for BO in chemistry—is valuable, especially with low labeled data and real‑world constraints. The wet‑lab demonstration adds credibility for practical deployment. The framework’s extension to LNP formulation suggests broader applicability [App. J].
+
+Strengths
+- Addresses two core bottlenecks (cold start and high dimensionality) in chemical BO with a cohesive, closed‑loop system [§1; §3.2].
+- Strong empirical improvements and faster convergence across datasets; ablations support the synergy of modules [Fig. 2; Table 2; Table 4].
+- Extensive appendices with pseudocode, prompts, and dataset details [App. F; App. G; App. C].
+- Practical validation via wet‑lab study under tight experimental budgets [§H.1–H.2].
+
+Weaknesses
+- Reproducibility concerns: GPT‑4o reliance; unspecified RAG corpora, property sources, and quantitative clustering criteria [§3.4; App. G.2].
+- Limited uncertainty modeling for pseudo‑labels and lack of weighting in GP; potential for biased acquisition [§3.5; App. D].
+- Insufficient statistical reporting (lack of CIs/tests), and over‑stated percentage gains for R² [Table 1].
+- Safety constraints are absent (acknowledged), which is critical for real deployment [§5].
+
+Questions
+1. Will you release the code, LLM fine‑tuning checkpoints, and RAG corpora/property tables to enable replication of the knowledge‑driven partitioning [§3.3–3.4; App. G]?
+2. Have you considered a two‑stage GP where pseudo‑labels inform a prior mean but are not treated as observations (e.g., empirical Bayes), or using a multi‑fidelity BO approach [§3.5]?
+3. What are the costs/latency of GPT‑4o calls per partitioning cycle, and how do they compare to overall optimization time [§4.2]?
+4. Can you provide per‑dataset sensitivity to the exploration constant (C_p/κ) and the top‑k selection breadth [§3.4; §4.2]?
+5. In the wet‑lab case, were all recommended conditions feasible/safe, and what safeguards were in place given §5’s limitation?
+
+Rating
+- Overall (10): 8 — Persuasive practical system with strong empirical gains and a wet‑lab validation; reproducibility and uncertainty/statistics shortcomings prevent a higher score [§3.2–3.5; Fig. 2; §H; §5].
+- Novelty (10): 7 — The integrated application of LLMs for both partitioning and warm‑starts in chemistry BO is a meaningful systems contribution, though components are known [§2; §3.2–3.4].
+- Technical Quality (10): 7 — Sound design and thorough experiments; needs principled pseudo‑label uncertainty/weighting and fuller sensitivity/statistical analyses [§3.3–3.5; App. D; §4.3].
+- Clarity (10): 8 — Clear structure, figures, and algorithmic description; minor inconsistencies and missing RAG specifics to fix [Fig. 1; App. F; §3.4].
+- Confidence (5): 3 — Moderate; strong empirical narrative but proprietary dependencies and limited statistical reporting reduce verification confidence [§4; §3.4; App. G].

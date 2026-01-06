@@ -1,0 +1,138 @@
+# Global Summary
+- Problem: The term “memory” in RL is inconsistently defined and evaluated, leading to misleading claims about agents’ memory capabilities. The paper seeks to formalize memory types (short-term vs long-term; declarative vs procedural) and provide a standardized experimental methodology for Memory Decision-Making (Memory DM) tasks.
+- Core approach: Formal quantitative definitions of agent memory using context length K and correlation horizon ξ; a distinction between Memory DM (declarative memory in a single environment/episode) and Meta-RL (procedural memory across environments/episodes); a definition of memory-intensive environments; Theorem 1 introducing a context memory border K̄ = min Ξ − 1; Algorithm 1 to configure experiments validating STM (ξ ≤ K) and LTM (ξ > K) including memory mechanisms μ(K) that extend effective context K_eff ≥ K.
+- Evaluation scope: Experiments in two memory-intensive environments (Passive T-Maze, MiniGrid-Memory) using agents DTQN, DQN-GPT-2, and SAC-GPT-2. Protocol: 3 runs per agent, validation during training using 100 random seeds (0–99), results reported as mean success rate or reward ± SEM. Hyperparameters detailed.
+- Key findings:
+  - Misconfigured experiments can conflate LTM and STM, yielding incorrect conclusions. In MiniGrid-Memory with map size L = 21: variable mode with ξ ∈ [7, L + 1] produced success rate near 1.0 for both K = 22 (STM) and K = 14 (intended LTM), while fixed mode with ξ = L + 1 demonstrated STM success but LTM failure, revealing lack of LTM mechanisms in SAC-GPT-2 as claimed by authors.
+  - In Passive T-Maze: STM with K = 15, ξ = 15 achieved return 1.0; reducing K to 5 with ξ = 15 (LTM test) reduced return to 0.5; further reducing ξ to 5 with K = 5 (STM again) restored return to 1.0.
+- Explicitly stated caveats: The work focuses on declarative memory within Memory DM and does not attempt to replicate full human memory. Procedural memory is defined but not the primary experimental focus. Some environment parameters (e.g., specific success rate numeric values beyond “almost 1.0”), compute budgets, and exact SEM values are not specified.
+
+# Abstract
+- Motivation: Memory is vital for RL tasks requiring past information, adaptation, and sample efficiency, but “memory” is ambiguous and lacks unified validation.
+- Contributions:
+  - Practical precise definitions of agent memory types inspired by cognitive science: LTM vs STM; declarative vs procedural.
+  - Categorization of memory classes; robust experimental methodology to evaluate memory capabilities and standardize evaluations.
+  - Empirical demonstration that adhering to methodology is crucial; violating it leads to erroneous judgments about agent memory.
+- Scope: Focus on evaluating different RL agents across memory types; emphasis on Memory DM tasks.
+
+# Introduction
+- Context: RL solves MDP problems but struggles in partially observable settings (POMDPs), where history processing is needed. Sequence models (e.g., Transformers, RNNs) are applicable.
+- Challenge: Observational complexity/noise, sparse events/rewards, long episodes make storing/retrieving important information hard; “memory” is inconsistently defined across literature.
+- Literature examples:
+  - Memory as dependencies within fixed-size context (Esslinger et al., 2022; Ni et al., 2023; Grigsby et al., 2024).
+  - Memory as out-of-context information via external mechanisms (Parisotto et al., 2020; Lampinen et al., 2021; Cherepanov et al., 2024).
+  - Meta-RL uses “memory” to adapt across tasks or episodes (Team et al., 2023; Kang et al., 2024a; Grigsby et al., 2024).
+- Contributions summarized:
+  1) Formalize RL agent memory types: LTM/STM and declarative/procedural (section 5).
+  2) Decouple Memory DM vs Meta-RL tasks (section 5).
+  3) Propose experimental methodology for testing LTM/STM in Memory DM (subsection 5.2).
+  4) Show violations of methodology mislead memory capability assessments (section 6).
+
+# Preliminaries
+- POMDP definition: 𝓜_P = ⟨S, 𝒜, 𝒪, 𝒫, 𝒭, 𝒵⟩, observation function 𝒵(o_{t+1}|s_{t+1}, a_t), agent acts using policy π(a_t | o_t, h_{0:t-1}); state s_t is not observed; memory mechanisms required to use history h_{0:t-1}.
+- Memory in cognitive science: Memory distinguished by temporal scale (STM: seconds; LTM: lifetime) and type (declarative/explicit vs procedural/implicit). Adopt “retain and recall later” as high-level definition.
+- Mapping to RL: Two POMDP interpretations—dependencies within context (STM) and out-of-context (LTM), both aligning with declarative memory. Meta-RL aligns with procedural memory (skills transfer). Clarifies that focus is on declarative memory for current decisions in same environment/episode.
+- Memory vs credit assignment: Uses Ni et al. (2023) distinction but treats both under a unified memory definition centered on temporal dependencies; definitions apply to both since they concern temporal correlation rather than essence.
+
+# Related Work
+- Varied definitions and mechanisms of memory in RL across architectures and benchmarks (e.g., PopGym, Memory Gym).
+- Examples:
+  - External buffers and retrieval (Oh et al., 2016).
+  - Long-interval recall (Lampinen et al., 2021).
+  - Working and episodic memory (Fortunato et al., 2020) enabling use of past events for current decisions.
+  - Decoupling memory vs credit assignment (Ni et al., 2023).
+- The paper notes prevalent ambiguity and misaligned benchmark selection; fuller details in Appendix C.
+
+# Method
+- Memory Decision-Making (Memory DM): Distinguishes Memory DM (declarative memory within one POMDP/episode) vs Meta-RL (procedural memory across tasks/episodes).
+- Definition 1 (Agent context length): K ∈ ℕ is maximum number of prior (o, a, r) triplets processed at time t; e.g., MLP: K = 1; Transformer: K = K_attn.
+- Definition 2 (Memory DM): π*(a_t | o_t, h_{0:t-1}) maximizes J^π = E_π[∑_{t=0}^{T−1} γ^t r_t] within a single POMDP.
+- Definition 3 (Declarative vs Procedural):
+  - Declarative memory ⇔ n_envs × n_eps = 1 (within single environment and episode).
+  - Procedural memory ⇔ n_envs × n_eps > 1 (across multiple environments or episodes).
+- Definition 4 (STM vs LTM via correlation horizon ξ): For event α_{t_e}^{Δt} and recall β_{t_r}(α):
+  - ξ = t_r − t_e − Δt + 1.
+  - STM ⇔ ξ ≤ K.
+  - LTM ⇔ ξ > K.
+- Classification schema: Distinguishes Memory DM (declarative STM/LTM) and Meta-RL (procedural), with inner-loop task possibly POMDP (green) or MDP (blue). Table 1 organizes task types by n_envs, n_eps, inner-loop MDP/POMDP, and whether ξ > K or ξ ≤ K.
+- Definition 5 (Memory-intensive environments): 𝓜̃_P is memory-intensive ⇔ min Ξ > 1, where Ξ is the set of all event–recall correlation horizons; corollary: max Ξ = 1 ⇔ MDP.
+- Theorem 1 (Context memory border): ∃ K̄ ≥ 1 such that ∀ K ∈ [1, K̄]: K < min_n Ξ; i.e., with K ≤ K̄ = min Ξ − 1, environment validates exclusively LTM.
+  - Equation (4): K̄ = min Ξ − 1 = min_n{(t_r − t_e − Δt + 1)_n} − 1.
+  - Validation conditions:
+    - If K ∈ [1, K̄]: validate LTM only.
+    - If K ∈ (K̄, max Ξ): validate both STM and LTM (ambiguous for LTM estimation).
+    - If K ∈ [max Ξ, ∞): validate STM only.
+- Definition 6 (Memory mechanisms): μ(K) yields K_eff = μ(K) ≥ K, enabling processing of out-of-context information; example: RNN recurrent hidden state increases effective context beyond K = 1.
+- Condition for LTM testing (Equation 6): 𝓜̃_P : K ≤ K̄ < ξ ≤ K_eff = μ(K).
+- Algorithm 1 (experiment setup):
+  1) Count event–recall pairs n; if n = 0, environment unsuitable; if n ≥ 1, suitable.
+  2) Compute K̄ as min ξ_n − 1.
+  3) Conduct experiment:
+     - STM: set K > K̄.
+     - LTM: set K ≤ K̄ ≤ K_eff = μ(K).
+  4) Analyze results.
+- Example setup—Passive T-Maze:
+  - One event–recall pair (clue at start; turn at junction): n = 1; Δt = 0; ξ = T (with t_e = 0, t_r = T − 1); hence K̄ = T − 1.
+  - STM test: fix T and set K > K̄ = T − 1.
+  - LTM test: set K ≤ K̄ = T − 1 ≤ K_eff = μ(K); recommend choosing K near left boundary of [1, K̄] to more clearly expose μ(K).
+
+# Experiments
+- Environments: Passive T-Maze (Ni et al., 2023) and MiniGrid-Memory (Chevalier-Boisvert et al., 2023). See Appendix E.1 for detailed specs and reward structures.
+- Agents/baselines: DTQN (Esslinger et al., 2022), DQN-GPT-2 (Ni et al., 2023), SAC-GPT-2 (Ni et al., 2023).
+- Protocol: 3 runs per agent with different initializations; validation using 100 random seeds (0–99); results reported as mean success rate/reward ± SEM.
+
+6.1 Impact of experiment configuration on memory type tested
+- MiniGrid-Memory with map size L = 21; two modes:
+  - Fixed corridors: ξ = L + 1.
+  - Variable corridors: ξ ∈ [7, L + 1].
+- SAC-GPT-2 configurations:
+  - STM intended: K = 22 (> L).
+  - LTM intended: K = 14 (< L).
+- Results (Figure 4):
+  - Variable mode (green): success rate nearly 1.0 for both K = 22 and K = 14, which can misleadingly suggest both memory types.
+  - Fixed mode (red): STM success with K = 22; LTM failure with K = 14.
+- Interpretation stated by authors: SAC-GPT-2 lacks mechanisms to solve LTM; performance confusion arises when K is chosen naively relative to L without isolating STM vs LTM per Algorithm 1.
+
+6.2 The relative nature of an agent’s memory
+- Passive T-Maze experiments varying K and ξ with DTQN and DQN-GPT-2:
+  - STM test: K = ξ = 15 → return 1.0 (both agents), confirming STM capability.
+  - LTM test: K = 5, ξ = 15 → return drops to 0.5 (both agents), indicating inability to recall clue when out of context (lack of LTM).
+  - STM again: K = 5, ξ = 5 → return returns to 1.0.
+- Summary: Verifying LTM vs STM can be done by adjusting K or ξ while keeping the other fixed; Passive T-Maze enables parameterization via corridor length L with ξ = L + 1.
+
+# Conclusion
+- The paper formalizes RL memory types (LTM vs STM; declarative vs procedural) and separates Memory DM from Meta-RL, inspired by neuroscience but tailored to RL with quantitative definitions.
+- Provides a methodology (Theorem 1, Algorithm 1) to design experiments that isolate STM and LTM and avoid conflation.
+- Empirical demonstrations show that neglecting the methodology yields misleading conclusions (e.g., variable ξ mode suggesting LTM where fixed mode reveals none).
+- The approach aims to standardize memory evaluations, enabling fair comparisons and identifying architectural limitations. Focus remains on declarative memory in Memory DM; full human memory replication is not attempted.
+
+# References
+- Cites foundational and recent works across RL memory mechanisms (RNNs, Transformers, SSMs), external memory architectures, Meta-RL surveys and algorithms, and memory benchmarks.
+- Not specified in this section: explicit numeric comparative SOTA margins or compute budgets.
+
+# Appendix
+- Glossary (Appendix A): Defines key symbols and concepts:
+  - 𝓜 (MDP), 𝓜_P (POMDP), 𝓜̃_P (memory-intensive), h history, K base context length, K̄ context memory border, μ(K) memory mechanism, K_eff = μ(K), α event, β recall, ξ correlation horizon.
+- Motivation notes (Appendix B): Uses neuroscience definitions already familiar in RL; aims for quantitative clarity without introducing new terminology; practical applications emphasize simple numeric parameters (n_envs, n_eps), and balancing K with ξ for unambiguous memory type determination.
+- Memory mechanisms (Appendix C): Overview of architectures and strategies:
+  - RNNs (hidden state), Transformers (self-attention in context), SSMs (state preservation), temporal convolutions, world models, graph-structured memory, external memory buffers (read-only and read/write), policy-encoded timing (no architectural memory).
+- Meta-RL (Appendix D): Formal definition:
+  - Meta-RL function f_θ maps data 𝒟 (H episodes of length T in tasks sampled from p(𝒮𝑀)) to policy π_ϕ with objective J^θ = E_{𝒮𝑀_i∼p(𝒮𝑀)}[E_𝒟[∑_{τ∈𝒟_{I:H}} G_i(τ) | f_θ, 𝒮𝑀_i]]. Differentiates outer-loop (θ) and inner-loop (ϕ). Tasks typically share S and 𝒜; differ in 𝒭, 𝒫, P_0.
+- Environments (Appendix E.1):
+  - Passive T-Maze:
+    - Actions: {left, up, right, down}.
+    - Observation vector o = [y, clue, flag, noise]; clue ∈ {1, −1} at t = 0; flag = 1 one step before junction; noise ∈ {−1, 0, +1}.
+    - Episode duration T = L + 1; reward 1 for correct turn; 0 otherwise.
+    - Dense reward variant: per-step penalty = −1/(T − 1).
+    - 1D observations, discrete actions; sparse/dense reward configurations.
+  - MiniGrid-Memory:
+    - 2D grid; agent observes 3 × 3 frame; corridor with room containing object; turn toward matching object at junction.
+    - Reward r = 1 − 0.9 × t/T for success; 0 otherwise; episode ends on turn or at 95 steps (time limit).
+    - Discrete actions; sparse reward.
+- Experimental protocol (Appendix E.2):
+  - Runs: 3; validation: 100 random seeds (0–99); report mean SR/reward ± SEM.
+  - Hyperparameters:
+    - SAC-GPT-2: layers = 2; attention heads = 2; hidden dim = 256; batch size = 64; optimizer = Adam; learning rate = 3e−4; dropout = 0.1; replay buffer size = 1e6; discount γ = 0.99; entropy temperature = 0.1.
+    - DQN-GPT-2: layers = 2; attention heads = 2; hidden dim = 256; batch size = 64; optimizer = Adam; learning rate = 3e−4; dropout = 0.1; replay buffer size = 1e6; discount γ = 0.99.
+    - DTQN: layers = 4; attention heads = 8; hidden dim = 128; batch size = 32; optimizer = Adam; learning rate = 3e−4; dropout = 0.1; replay buffer size = 5e5; discount γ = 0.99.
+- Not specified in this section: exact compute resources, training wall-clock time, SEM values, or detailed network architectures beyond listed hyperparameters.

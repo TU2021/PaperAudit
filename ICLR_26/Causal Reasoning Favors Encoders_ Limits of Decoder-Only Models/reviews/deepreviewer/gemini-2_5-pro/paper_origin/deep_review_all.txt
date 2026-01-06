@@ -1,0 +1,172 @@
+Here are four separate reviews of the paper.
+
+***
+
+### **Review 1**
+
+**Summary**
+This paper investigates the architectural suitability of encoder-only, encoder-decoder, and decoder-only models for causal reasoning, which the authors frame as a multi-hop logical deduction task. The central hypothesis is that encoder-based architectures, due to their ability to create a global representation of the input, are inherently better suited for the compositional and conjunctive nature of this reasoning than autoregressive decoder-only models. The authors test this by comparing fine-tuned encoder and encoder-decoder models (BERT, BART) against large decoder-only models (GPT series, Claude, Qwen) using in-context learning (ICL). Experiments are conducted on a synthetic first-order logic dataset with out-of-distribution splits designed to test generalization to deeper reasoning chains and non-natural language inputs. The results indicate that fine-tuned encoder-based models are more robust and resource-efficient, while ICL on even large decoder-only models is brittle, with the exception of the very large-scale GPT-5.
+
+**Soundness**
+The methodology is sound and well-designed to test the paper's central hypothesis. The use of the SimpleLogic framework to generate controlled data is appropriate, and the creation of two distinct OOD test sets—one for compositional generalization (deeper chains) and one for lexical robustness (non-natural language)—is a key strength (Section 4.1). The comparison between fine-tuned smaller models and ICL on larger models is a pragmatic and relevant setup for real-world applications. The inclusion of a mechanistic interpretability analysis using curvature similarity (Section 7) is particularly impressive, as it provides a plausible theoretical explanation for the empirical results, linking performance to the geometric stability of the models' internal representations. The evaluation metrics, including accuracy, AUROC, and depth-wise F1 scores, are comprehensive and provide a nuanced view of model performance.
+
+**Presentation**
+The paper is well-written, and the core argument is presented clearly and logically. The introduction effectively motivates the problem and outlines the hypothesis and experimental plan (Section 1). Figure 1 provides an excellent, concise overview of the entire research pipeline. The main results are supported by clear figures (e.g., Figure 4, Figure 5) and tables (Table 1) that effectively communicate the key takeaways regarding performance degradation with depth and the efficiency trade-offs. The appendices are exceptionally detailed, providing all necessary information for reproducibility (Appendix B, C, D, E).
+
+**Contribution**
+The paper makes a significant contribution to the field. It provides strong, systematic evidence that architectural choices, not just scale, are a critical factor for robust logical reasoning. By challenging the prevailing focus on decoder-only models, it re-opens an important discussion about the role of different architectures for specific cognitive tasks. The finding that smaller, fine-tuned encoder-based models can outperform larger, more general models in a cost-effective manner is a valuable practical insight. Furthermore, the novel application of mechanistic interpretability tools (Section 7) to compare architectural families on a reasoning task is a notable methodological contribution that deepens our understanding of *why* these models behave differently.
+
+**Strengths**
+- A clear, testable hypothesis grounded in an intuitive architectural argument (Section 3.2).
+- A rigorous experimental setup with well-designed OOD datasets to test robustness to distributional shifts (Section 4.1).
+- The inclusion of a novel mechanistic analysis (Section 7) that provides a deeper, geometric explanation for the observed performance differences, which strongly supports the main claims.
+- A comprehensive evaluation that includes both performance and inference efficiency (Section 6.2), leading to practical and impactful conclusions.
+- Excellent reproducibility, with extensive details on methods, data, and results provided in the appendices.
+
+**Weaknesses**
+- The paper uses the term "causal reasoning" to describe a task that is, by its own definition, a subset of first-order logic deduction (Section 3.1). While the link is explained, this might overstate the generality of the findings for broader causal inference problems.
+- The exceptional performance of GPT-5 is a fascinating counterpoint that is somewhat downplayed by focusing only on its cost (Section 8). A deeper discussion of what might allow it to overcome the hypothesized architectural limitations (e.g., scale, specific training, or different internal strategies) would strengthen the paper.
+- There are minor inconsistencies in the presentation, such as the introduction of Flan-T5 in the results (Figure 3, Section 5.2) without it being listed in the primary model table (Table 2).
+
+**Questions**
+1. The near-perfect performance of GPT-5 is a powerful counter-example to the architectural limitations thesis. Beyond scale and cost, do the authors have any hypotheses about *how* it achieves this? Could it be that at a certain scale, decoder-only models learn to simulate a global workspace, or could it be due to specific alignment/training techniques for reasoning?
+2. The mechanistic analysis in Section 7 is very compelling. Did the authors also perform this curvature analysis on the NNL dataset? It would be interesting to see if the geometric degradation is even more pronounced there, mirroring the sharper performance drop.
+3. Given the findings, what are the authors' thoughts on hybrid architectures that might combine the global context of an encoder with the generative capabilities of a decoder for complex reasoning tasks that require both understanding and explanation?
+
+**Rating**
+- Overall (10): 9 — The paper presents a strong, well-supported argument with novel analysis and significant practical implications.
+- Novelty (10): 9 — The direct architectural comparison for logical reasoning, combined with the mechanistic curvature analysis, is highly novel.
+- Technical Quality (10): 9 — The experimental design is rigorous, the OOD tests are well-conceived, and the analysis is thorough.
+- Clarity (10): 8 — The paper is mostly very clear, but minor organizational issues and inconsistencies (e.g., Flan-T5 introduction) slightly detract from it.
+- Confidence (5): 5 — I am highly confident in my evaluation, based on a thorough reading of the paper and its extensive appendices.
+
+***
+
+### **Review 2**
+
+**Summary**
+The paper claims that encoder and encoder-decoder architectures are fundamentally better suited for "causal reasoning" than decoder-only models. This claim is evaluated by comparing fine-tuned BERT, BART, and Flan-T5 models against several large decoder-only models (like GPT-4.1 and Claude Opus 4.1) prompted via ICL. The task is a synthetic binary classification problem on a subset of first-order logic. The authors report that their fine-tuned encoder-based models are more robust to increasing reasoning depth and lexical perturbations than the ICL-based decoders, and are more efficient.
+
+**Soundness**
+The methodological soundness of this paper is questionable, and the conclusions seem to be built on an unfair comparison.
+1.  **Conflation of Task and Claim**: The paper makes broad claims about "causal reasoning" (Abstract, Section 1) but tests on a narrow, deterministic, symbolic logic task (Section 4.1). This is a significant overstatement. The task is logical deduction, not causal inference in a broader sense (e.g., involving interventions or counterfactuals).
+2.  **Unfair Comparison**: The core experimental setup compares models under two completely different conditions: fine-tuning versus zero/few-shot ICL. It is well-established that fine-tuning on a specific task distribution leads to better in-distribution (and near-OOD) performance than general-purpose ICL. The conclusion that fine-tuned models are better is therefore expected and not necessarily indicative of an architectural advantage.
+3.  **Lack of Controlled Comparison**: To truly test the architectural hypothesis, one would need to fine-tune an encoder-only, encoder-decoder, and a decoder-only model of *comparable size* on the same dataset. While Qwen3-1.7B is fine-tuned, it is vastly larger than BERT-Base (110M) and BART-Base (139M), making a direct comparison of its performance difficult to interpret. The poor performance of non-finetuned BERT/BART (Figure 3, Section 5.1) is correctly reported but makes their inclusion in the "non-finetuned" comparison against ICL models moot.
+4.  **Interpretation of NNL Results**: The performance drop on the non-natural language (NNL) dataset (Section 6.1, Figure 4) is attributed to a failure in abstract reasoning. However, this could equally be a failure of the models' tokenizers on out-of-vocabulary, random character strings. This alternative explanation is not discussed or investigated.
+5.  **Dismissal of Counter-evidence**: The perfect accuracy of GPT-5 (Section 5.1) is a direct contradiction to the paper's central thesis that decoder-only models are architecturally limited. This result is brushed aside by citing high inference cost (Section 6.2, Section 8), but it fundamentally undermines the claim of an inherent architectural *inability*.
+
+**Presentation**
+The paper's argument is stated clearly, but the presentation of results is confusing. The distinction between "reasoning" and "non-reasoning" models in Section 4.2 seems arbitrary and is not defined; for instance, GPT-4.1 is labeled "non-reasoning" while Claude Opus 4.1 is "reasoning," without justification. The class distribution results in Figure 3 are presented as text, while very similar plots appear in the appendix (Figures 23-26), suggesting an organizational issue. The main text often describes a figure (e.g., Figure 4) which is then located in a later section, disrupting the flow.
+
+**Contribution**
+The contribution is limited. The primary finding—that smaller models fine-tuned on a specific task are more efficient than large, general models performing the same task via ICL—is not new. The claim of architectural superiority is not convincingly proven due to the flawed experimental comparison. While the question is interesting, the evidence provided is not sufficient to support the strong conclusions drawn.
+
+**Strengths**
+- The paper asks an interesting and important question about architectural priors for reasoning.
+- The design of the OOD datasets (depth and NNL) is clever and provides a clear way to measure specific types of generalization.
+- The code and data are being made available, which is commendable for reproducibility.
+
+**Weaknesses**
+- The central claim about architectural superiority is not well-supported due to the confounding variable of fine-tuning vs. ICL.
+- The paper overclaims its scope by using the term "causal reasoning" for a simple logic task.
+- The strong counter-evidence from GPT-5's performance is not adequately addressed in the context of the architectural hypothesis.
+- The potential role of tokenization failure in the NNL results is ignored.
+- The comparison between models of vastly different scales (e.g., BERT-Base vs. Qwen3-1.7B) is not properly controlled.
+
+**Questions**
+1. To establish a fair architectural comparison, would it not be necessary to fine-tune a decoder-only model of a size comparable to BERT-Base (e.g., GPT-2 Small/Medium)? How do you expect such a model would perform?
+2. Can you provide any analysis to disentangle the effects of abstract reasoning failure from tokenization failure on the NNL dataset? For example, how many tokens do the random character strings in the NNL set map to on average for each model?
+3. How do you reconcile the claim that decoder-only architectures are inherently limited for this task with the fact that GPT-5 achieves 100% accuracy? Does this not suggest that the limitation is one of scale/training, rather than a fundamental architectural flaw?
+4. Why was Qwen3-1.7B chosen as the decoder-only model for fine-tuning, given its much larger size compared to the BERT and BART models?
+
+**Rating**
+- Overall (10): 4 — The paper addresses an interesting question but the central claims are not supported due to significant methodological flaws in the experimental comparison.
+- Novelty (10): 6 — The question is novel, but the approach and findings (fine-tuning beats ICL for efficiency) are not surprising.
+- Technical Quality (10): 4 — The experimental design is fundamentally confounded, making the conclusions about architectural superiority unreliable.
+- Clarity (10): 6 — The writing is mostly clear, but the presentation of results is disorganized and some key terms are ill-defined.
+- Confidence (5): 5 — I am confident in my assessment of the methodological weaknesses of the study.
+
+***
+
+### **Review 3**
+
+**Summary**
+This paper compares the performance of encoder-only, encoder-decoder, and decoder-only architectures on a logical reasoning task derived from the SimpleLogic benchmark. The authors fine-tune smaller models (BERT, BART, Flan-T5, Qwen3) and compare them to large, proprietary models (GPT, Claude) using in-context learning. They find that fine-tuned encoder-based models show more robust generalization to longer reasoning chains and non-natural language inputs, and are more computationally efficient. A mechanistic analysis is also presented to suggest that encoders better preserve geometric invariants during reasoning.
+
+**Soundness**
+The technical approach appears to be mostly sound. The dataset generation process is well-described and the use of OOD splits to test generalization is a good experimental practice. The choice of metrics (accuracy, AUROC, depth-wise F1) is appropriate. The mechanistic analysis in Section 7, while relying on a very recent (and possibly not yet peer-reviewed) framework, is an interesting and sophisticated addition that attempts to ground the empirical findings in theory. The core experiments seem to have been executed correctly, based on the extensive details in the appendices.
+
+**Presentation**
+The paper's presentation is its greatest weakness and significantly hinders its quality. The organization is confusing, and there are numerous inconsistencies that make the paper difficult to read and verify.
+- **Figure and Table Chaos**: The relationship between the main text and the figures is disjointed.
+    - Figure 3 is presented as a text table in the main paper (Block #21), but corresponding bar charts are shown in the appendix (Blocks #23-26).
+    - The text in Section 6.1 introduces and describes "Figure 4" (Block #29), but the actual plots for this figure appear in Blocks #30 and #31.
+    - Similarly, "Figure 5" is a text table in Section 7 (Block #34), but the corresponding plot is in Block #36. This forces the reader to jump back and forth.
+- **Massive and Uncurated Appendix**: The appendix is a sprawling data dump that runs for over 90 blocks. It contains a mix of useful details, but also redundant information and confusing artifacts. For example, Blocks #63 and #64 contain text descriptions of ROC curves and accuracy plots instead of the plots themselves, even though the plots are also included (e.g., Blocks #66-69). Many tables are presented as images of text with strange formatting (e.g., Tables in Blocks #71-76 use `~` without explanation). This section needs to be heavily edited, structured, and curated.
+- **Inconsistent Model Reporting**: The Flan-T5-Base model is a key subject in the results (Sections 5.1, 5.2, 6.1, 7) and appendix, but it is completely missing from the main "Models Used" section (4.2) and the primary model specification table (Table 2, Block #49). This is a major oversight.
+- **Unclear Figures**: Many plots in the appendix are difficult to read due to overlapping markers and lines, especially the depth-wise metric plots (e.g., Figures 10-13). The legends are sometimes unhelpful. For example, the plots in Figure 9 (Blocks #68-69) have two y-axes labeled "Accuracy" which is confusing.
+
+**Contribution**
+The potential contribution of this work is interesting, as it weighs in on the important debate around architecture vs. scale. However, the poor presentation makes it difficult for the reader to confidently accept the results. A well-presented paper on this topic would be a strong contribution, but in its current state, the work is undermined by its lack of clarity and polish.
+
+**Strengths**
+- The experimental design itself is thoughtful, particularly the creation of the NL and NNL OOD datasets.
+- The authors provide an extraordinary amount of supplementary material, demonstrating a commitment to transparency, even if it is poorly organized.
+- The core idea of comparing architectures on a fundamental reasoning primitive is valuable.
+
+**Weaknesses**
+- **Severe presentation and organizational issues**, as detailed above. The paper reads like a draft where figures and appendices have not been properly integrated or edited.
+- **Inconsistent reporting of experimental details**, most notably the omission of Flan-T5 from the main methods section.
+- The appendix is not a useful supplement in its current form; it is an obstacle to understanding and verification.
+
+**Questions**
+1. Could the authors please thoroughly revise the paper to integrate figures and tables logically within the text? For example, a figure should appear after it is first mentioned, not several pages later.
+2. Please clarify the role of Flan-T5-Base in the experiments by adding it to Section 4.2 and Table 2, and ensuring its consistent treatment throughout the paper.
+3. The appendix needs to be significantly restructured. Can you please curate it to include only the most essential supporting details and ensure all figures are properly rendered, captioned, and referenced? Redundant text descriptions of plots should be removed.
+4. What does the `~` symbol signify in the many tables in the appendix (e.g., Blocks #71-76, #84-89)? Please clarify this in a caption or footnote.
+
+**Rating**
+- Overall (10): 5 — An interesting idea and seemingly thorough experiment are severely hampered by poor presentation, making the paper difficult to trust and follow.
+- Novelty (10): 7 — The architectural comparison on this task is fairly novel.
+- Technical Quality (10): 7 — The underlying technical work seems solid, but the reporting is flawed.
+- Clarity (10): 2 — The paper is very difficult to read due to major organizational problems, inconsistent reporting, and a messy appendix.
+- Confidence (5): 4 — I am confident that the presentation is a major issue, though I believe the underlying work may be sound.
+
+***
+
+### **Review 4**
+
+**Summary**
+This paper investigates whether transformer architecture (encoder-only, encoder-decoder, vs. decoder-only) influences performance on multi-step logical reasoning. Using a synthetic dataset based on first-order logic, the authors compare smaller, fine-tuned models (BERT, BART) with large, decoder-only LLMs accessed via in-context learning (ICL). The key findings are that fine-tuned encoder-based models demonstrate superior robustness to out-of-distribution shifts (increased reasoning depth and lexical ablation) and are far more computationally efficient than their large decoder-only counterparts. The paper concludes that for specialized, robust reasoning, targeted fine-tuning of encoder-based models is preferable to relying on ICL with massive decoder-only models.
+
+**Soundness**
+The study is conducted with a high degree of technical rigor within its defined scope. The methodology for dataset creation is transparent and allows for controlled experiments on compositional generalization (Section 4.1). The choice to test on both natural language (NL) and non-natural language (NNL) versions of the task is a strong design choice that helps isolate logical reasoning from lexical pattern matching. The inclusion of a mechanistic analysis (Section 7) using curvature similarity is a sophisticated and welcome addition, providing a potential explanation for the observed performance gap. The main experimental flaw is the confounding of architecture with training paradigm (fine-tuning vs. ICL), which complicates a pure architectural comparison. However, the authors' framing of the study as a practical trade-off between specialized fine-tuning and general-purpose ICL is valid and interesting in its own right.
+
+**Presentation**
+The paper is well-structured and the arguments are articulated clearly. The introduction sets up the problem space effectively, and the preliminaries section (Section 3.2) gives a clear, intuitive motivation for the central hypothesis. The results are presented logically, starting with non-finetuned models, then finetuned models, and followed by ablations. The conclusion (Section 8) provides a concise and balanced summary of the findings and their implications. The figures in the main body (e.g., Figure 4, Figure 5 plot) are effective at illustrating the key trends.
+
+**Contribution**
+This paper makes a valuable and timely contribution to the ongoing discussion about the capabilities and limitations of LLMs. Its primary contribution is providing strong empirical evidence that challenges the "scale is all you need" paradigm, demonstrating that for certain fundamental reasoning tasks, architectural choice matters significantly for both robustness and efficiency. By highlighting the strengths of older, smaller encoder-based architectures, the work encourages a more nuanced perspective on model selection. However, the contribution's impact is somewhat limited by its reliance on a single, synthetic, and deterministic reasoning task. The claims about "causal reasoning" are an overreach; the task is one of logical deduction. The extent to which these findings generalize to more complex, ambiguous, and probabilistic reasoning seen in the real world remains an open question.
+
+**Strengths**
+- Addresses a fundamental and relevant question regarding architectural priors for logical reasoning.
+- Provides a compelling and practical argument for the cost-efficiency of smaller, specialized models over massive, general-purpose ones (Table 1).
+- The experimental design is robust, with good controls for testing generalization (OOD depth and NNL data).
+- The mechanistic analysis (Section 7) adds a significant layer of depth and provides a plausible "why" that strengthens the paper's conclusions.
+
+**Weaknesses**
+- The generalizability of the findings is uncertain due to the use of a single, highly structured, synthetic dataset (SimpleLogic). The results may not hold for reasoning tasks that are less formally structured or that rely heavily on world knowledge.
+- The paper frames the comparison as "encoder vs. decoder" but the experiment is more accurately "fine-tuning vs. ICL". This confounding factor should be acknowledged more explicitly.
+- The discussion lacks a counter-perspective on tasks where the autoregressive nature and vast knowledge of decoder-only models might be an advantage (e.g., generating natural language proofs, creative problem solving, or reasoning over unstructured text).
+
+**Questions**
+1. The supervision for fine-tuning included the proof chain (Appendix B.3). How critical was this intermediate supervision to the success of the fine-tuned models? Did the fine-tuned decoder-only model (Qwen3-1.7B) also receive this supervision, and if so, does this not give the fine-tuned models an unfair advantage over the ICL models which must generate their reasoning path implicitly?
+2. How do you expect your findings to translate to more complex reasoning domains that are not easily formalized into a deterministic FOL structure, such as legal or medical reasoning? In such cases, could the vast, implicit knowledge of large decoder-only models outweigh the structural advantages of encoders?
+3. The "global projection" of encoders is presented as an advantage for this task. Can you speculate on tasks where this might be a disadvantage? For instance, in tasks requiring a sequential, step-by-step articulation of thought, might an autoregressive decoder have a more natural architectural prior?
+
+**Rating**
+- Overall (10): 8 — A well-executed study with important practical and theoretical implications, despite some limitations in generalizability.
+- Novelty (10): 8 — The head-to-head comparison of architectures for robustness in logical reasoning, especially with the mechanistic analysis, is a novel and valuable angle.
+- Technical Quality (10): 8 — The experiments are technically solid and well-controlled, though the comparison is confounded by the training paradigm.
+- Clarity (10): 9 — The paper is very well-written and easy to follow.
+- Confidence (5): 5 — I am confident in my assessment of the paper's strengths and weaknesses.

@@ -1,0 +1,79 @@
+# Global Summary
+This paper introduces the problem of Learning to Reject Low-Quality Explanations (LtX), where a machine learning model should abstain from making a prediction if it cannot provide a satisfactory explanation to the user. This contrasts with traditional Learning to Reject (LtR), which focuses only on prediction quality. The authors propose ULER (User-centric Low-quality Explanation Rejector), a framework that learns a rejector to mirror human judgments of explanation quality. ULER is trained on a small set of human-annotated data, which includes both overall quality ratings for explanations and per-feature relevance judgments. It employs a novel data augmentation strategy to expand this small dataset before training a simple classifier (e.g., an SVM) as the rejector.
+
+The evaluation is conducted on eight benchmark datasets with simulated human feedback and on a new, publicly released dataset of 1050 human-annotated explanations for a soccer expected goals (xG) model. ULER is compared against eight baselines, including standard LtR strategies and methods based on explanation quality metrics (e.g., faithfulness, stability, PASTA). Empirically, ULER consistently outperforms all competitors. On the benchmark datasets, it achieves an average AUROC improvement of 20% over the runner-up, PASTARej. In the human user study, ULER achieves an AUROC of 0.63, significantly outperforming PASTARej's 0.51 (p < 0.01). A key limitation is the reliance on high-quality human annotations, though the authors argue this is necessary for high-stakes applications and that ULER is sample-efficient.
+
+# Abstract
+The paper addresses the issue of low-quality explanations from machine learning models in high-stakes applications. It argues that classifiers should be able to reject inputs for which they cannot generate a proper explanation. The authors introduce a framework for Learning to Reject Low-Quality Explanations (LtX). The proposed method, ULER (User-centric Low-quality Explanation Rejector), learns a rejector from human ratings and per-feature relevance judgments to mimic human assessment of explanation quality. Experiments on eight classification and regression benchmarks, as well as on a new publicly released human-annotated dataset, show that ULER outperforms state-of-the-art and explanation-aware rejection strategies.
+
+# Introduction
+- Traditional Learning to Reject (LtR) strategies focus on predictive performance, allowing models to defer uncertain predictions to human experts. However, they neglect explanation quality.
+- The paper argues that low-quality explanations can negatively impact user trust and decision-making, even if the prediction is correct.
+- It introduces the Learning to Reject Low-Quality Explanations (LtX) problem, where a model abstains if it cannot provide a satisfactory explanation from the user's perspective.
+- The proposed solution is ULER (User-centric Low-quality Explanation Rejector), which trains a rejector to assess explanation quality based on expert annotations.
+- ULER uses a novel quality-aware data augmentation strategy that leverages human annotations (quality judgments and per-feature relevance judgments) to expand the training set.
+- The paper contributes a new, large-scale dataset of 1050 machine explanations, each with 5 human annotations, to support research in LtX.
+
+# Preliminaries
+- The paper considers a predictor `f` and an explainer `e` that produces a local feature importance explanation `z` for each prediction `f(x)`.
+- Learning to Reject (LtR) combines a predictor `f` with a rejector `r`. Two main types are ambiguity rejection (model is uncertain) and novelty rejection (input is out-of-distribution). Current LtR methods focus only on prediction performance.
+- Several metrics exist for explanation quality, such as faithfulness (reflects model's reasoning) and stability (consistency of explanations).
+- The paper notes that existing machine-side metrics often do not align with human judgment. An exception is PASTA, a perceptual quality metric that mimics human preferences, which is used as a baseline.
+- The paper identifies a gap: no existing rejection strategies integrate user-perceived explanation quality into their decisions.
+
+# Method
+- The paper defines an LtX model `m` as a combination of a predictor `f`, an explainer `e`, and a rejector `r`. The rejector `r` scores the explanation `z`, and if the score is below a threshold `τ`, the model abstains.
+- The core contribution is ULER (User-centric Low-quality Explanation Rejector), which learns the rejector `r`.
+- ULER requires two types of expert feedback:
+    1. A set of explanations with binary human quality judgments (0=low-quality, 1=high-quality).
+    2. Per-feature labels for each explanation, indicating which feature relevance scores the user deems incorrect (`W_z`) or correct (`C_z`).
+- ULER uses a feedback-driven data augmentation strategy. For each explanation `z`, it generates `K` new explanations `z_aug` by adding Gaussian noise `N(z, ε0 s × Σ)`. The binary vector `s` selectively perturbs features: for low-quality explanations, it perturbs correct features (in `C_z`), and for high-quality explanations, it perturbs incorrect features (in `W_z`).
+- The rejector `r` is a binary classifier (e.g., a kernel SVM) trained on the augmented dataset to predict the human quality judgments. The rejection threshold `τ` is tuned on a validation set.
+- **Benefits and Limitations**: ULER is designed to reject unsatisfactory explanations, not primarily to improve predictive accuracy. It relies on high-quality human annotations but is claimed to be sample-efficient, outperforming SOTA with less than 1000 annotations. The study focuses on tabular data; larger feature spaces might increase sample complexity.
+
+# Experiments
+- **Research Questions**: (Q1) Does ULER reject more low-quality explanations? (Q2) What inputs does ULER need? (Q3) Can ULER mimic human judgments in a user study?
+- **Competitors**: Eight baselines are used:
+    - Standard LtR: RandRej, NovRej_X (novelty in input space), PredAmb (prediction confidence).
+    - Explanation-aware: StabRej (stability), FaithRej (faithfulness), ComplRej (complexity), PASTARej (SOTA human-side metric), NovRej_Z (novelty in explanation space).
+- **Evaluation Metrics**: Percentage of low-quality explanations in accepted/rejected sets, and AUROC.
+- **Setup**: Experiments are run 10 times with a 70%/10%/20% train/val/test split. Explanations are generated using KernelSHAP.
+
+- **Q1 & Q2 (Benchmark Datasets)**:
+    - Evaluation on 8 datasets (4 classification, 4 regression) with simulated human judgments.
+    - Judgments are simulated using an ML oracle (`O`, a Random Forest). An explanation `z` from the main predictor `f` (a linear SVC/SVR) is labeled low-quality if its correlation with the oracle's explanation `z_O` is below 0.25.
+    - **Q1 Results**: ULER reduces low-quality explanations in the accepted set by ~20% vs. PASTARej. It achieves the highest AUROC on all 8 datasets (Table 1), with an average improvement of 20% over PASTARej. For example, on `creditcard`, ULER AUROC is 0.87 ± 0.02 vs. PASTARej's 0.82 ± 0.03.
+    - **Q2 Results**: ULER, using only the explanation `z` as input, outperforms variants that also use the instance `x` and/or prediction `y`. Including `x` decreases performance by ~16% on average. The data augmentation step provides a consistent but modest AUROC improvement of ~2%.
+
+- **Q3 (User Study)**:
+    - A new dataset was created for explaining an expected goals (xG) model in soccer.
+    - 1050 explanations were annotated by 5 annotators each (5250 total annotations) via Prolific. After filtering, 149 participants and 718 explanations remained.
+    - Annotators rated their agreement with the explanation on a 5-point Likert scale and identified features with incorrect relevance scores.
+    - **Results**: ULER achieves an AUROC of 0.63 ± 0.05, significantly outperforming PASTARej (0.51 ± 0.09, p < 0.01). This confirms ULER's superior ability to predict human judgments.
+
+# Related Work
+- **Learning to Reject**: Existing work focuses on machine uncertainty or joint team performance, but none consider explanation quality as a rejection criterion. ULER is presented as a complementary, not a replacement, strategy.
+- **Explainable AI (XAI)**: The paper focuses on feature attribution techniques. ULER is model-agnostic regarding the explainer used. It is orthogonal to work that explains the rejection decision itself.
+- **Evaluating explanations**: The paper distinguishes ULER from machine-side metrics (faithfulness, stability) by learning directly from human judgments. It is closest to PASTA, but PASTA is not designed for rejection and underperforms ULER in the experiments.
+
+# Conclusion
+- The paper introduced the Learning to Reject Low-Quality Explanations (LtX) problem.
+- It proposed ULER, a method to learn a rejector from limited expert feedback, which outperforms existing LtR and explanation-quality-based strategies on both simulated and real human-annotated tasks.
+- Future work includes jointly learning the rejector and classifier, and using the rejector as a loss term for debiasing ML models.
+
+# Appendix
+- **B. Explanation quality metrics**: Provides formal definitions for stability, faithfulness (as the harmonic mean of sufficiency and necessity), and complexity. Details the PASTA metric, which uses an embedding network and a scoring network.
+- **C. Experiments: extended details**:
+    - **C.1**: Provides characteristics for the 8 benchmark datasets, including size, number of features, and proportion of low-quality explanations (ranging from 2% to 48%).
+    - **C.2**: Details the hyperparameter grid search for ULER and baselines.
+    - **C.3**: Shows robustness to the choice of explainer by repeating experiments with LIME. ULER still outperforms all competitors, e.g., achieving an AUROC of 1.00 on `compas` and `news` with LIME.
+    - **C.4**: Shows robustness to the choice of oracle by using an SVM. ULER again outperforms competitors, reducing low-quality explanations in the accepted set by 26% vs PASTARej.
+    - **C.5**: An ablation study shows that ULER without data augmentation (ULER-NOAUG) still outperforms all baselines, but with augmentation, performance consistently improves by ~2% AUROC.
+    - **C.6**: Provides full competitor results for the user study. ULER's AUROC of 0.63 is at least 8% higher than any other competitor.
+- **D. User study**:
+    - **D.1-D.2**: Details the StatsBomb soccer dataset and the XGBoost model trained to predict expected goals (xG), which achieved an AUROC of 0.81 on the test set.
+    - **D.3**: Describes the human annotation process on Prolific, including participant vetting, task instructions, and the three questions asked per trial (prediction agreement, explanation agreement, incorrect features).
+    - **D.4**: Explains the annotation preprocessing, including filtering participants who failed attention checks and removing explanations with high inter-annotator disagreement (std. dev. > 1.25), resulting in 718 usable explanations.
+
+# References
+This section contains the bibliographic references cited in the manuscript.

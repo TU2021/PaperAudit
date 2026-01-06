@@ -1,0 +1,129 @@
+{
+  "paper": "Emergent Bayesian Behaviour and Optimal Cue Combination in LLMs",
+  "runs": [
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "deepreviewer",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "deep_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "55f39c3e353412551a5ae68e81fc4acc489b4edd",
+      "inputs": {
+        "human_review": "review_origin.txt",
+        "ai_review": "reviews/deepreviewer/gpt-5-2025-08-07/paper_origin/deep_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 0.88,
+        "weakness_coverage_recall": 0.17,
+        "ai_extra_major_points_rate": 0.35,
+        "symmetric_coverage_similarity": 0.32,
+        "note": "The reviews show high alignment on strengths but diverge significantly on weaknesses. The AI review misses major conceptual concerns from the human (e.g., task generalizability, failure to rule out simpler heuristics), while raising numerous specific methodological flaws not mentioned by the human (e.g., arbitrary BCS design, lack of cue-conflict trials, appendix errors)."
+      },
+      "generated_at": "2025-12-27T23:48:17"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "baseline_review.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "b3137abdd5dd456ecfb029f7bed4151251d086e2",
+      "inputs": {
+        "human_review": "review_origin.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/baseline_review.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 1.0,
+        "weakness_coverage_recall": 0.42,
+        "ai_extra_major_points_rate": 1.0,
+        "symmetric_coverage_similarity": 0.57,
+        "note": "The AI review perfectly covers the strengths but misses several high-level conceptual weaknesses raised by humans, such as the failure to rule out non-Bayesian heuristics. Conversely, the AI identifies numerous specific, technical flaws (e.g., reporting errors, experimental confounds) that the human reviewers did not mention."
+      },
+      "generated_at": "2025-12-27T23:53:11"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "final_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "0a71ca7d783136ba33fb6b5ec9aad08ece2f0c09",
+      "inputs": {
+        "human_review": "review_origin.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/final_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 0.67,
+        "weakness_coverage_recall": 0.25,
+        "ai_extra_major_points_rate": 0.78,
+        "symmetric_coverage_similarity": 0.19,
+        "note": "The AI review misses several fundamental theoretical critiques raised by the human (circularity of the capability/strategy metrics, validity of uniform priors, and need for non-Bayesian heuristic baselines). Instead, the AI focuses heavily on technical reporting issues (e.g., probability values >100%, plot consistency, sampling noise confounds) and methodology details (e.g., BCS design, normative assumptions) that the human did not mention."
+      },
+      "generated_at": "2025-12-28T00:05:25"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "deepreviewer",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "deep_review_merge.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "752f27bc09e656c7d041a880d0c174422eea6ca4",
+      "inputs": {
+        "human_review": "review_origin.txt",
+        "ai_review": "reviews/deepreviewer/gpt-5-2025-08-07/paper_origin/deep_review_merge.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 0.86,
+        "weakness_coverage_recall": 0.18,
+        "ai_extra_major_points_rate": 0.71,
+        "symmetric_coverage_similarity": 0.31,
+        "note": "Coverage alignment is high for strengths but very low for weaknesses. The AI review misses major conceptual concerns from the human reviewers, such as the confounding role of in-context learning and the limited generalizability from artificial tasks. Conversely, the AI review introduces several specific, technical critiques of the metrics (BCS design), statistical methods (AIC fairness), and experimental protocol not mentioned by the human reviewers."
+      },
+      "generated_at": "2025-12-28T00:19:05"
+    }
+  ]
+}

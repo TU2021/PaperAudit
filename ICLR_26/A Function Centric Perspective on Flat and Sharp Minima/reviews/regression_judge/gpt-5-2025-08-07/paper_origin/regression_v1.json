@@ -1,0 +1,74 @@
+{
+  "paper": "A Function Centric Perspective on Flat and Sharp Minima",
+  "runs": [
+    {
+      "config": {
+        "judge_model": "gpt-5-2025-08-07",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "baseline_file": "baseline_review.txt",
+        "final_file": "final_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 600,
+        "metric": "regression_v2_minimal",
+        "prompt_hash": "2142c04332"
+      },
+      "config_key": "1a46f14f5902ebb0fc2c14773cec6644d2fa5338",
+      "inputs": {
+        "baseline_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/baseline_review.txt",
+        "final_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/final_review_all.txt"
+      },
+      "regression": {
+        "score_delta": {
+          "baseline_score": 6.0,
+          "final_score": 6.0,
+          "delta": 0.0,
+          "scale_hint": "1-10"
+        },
+        "differences": [
+          {
+            "diff_type": "new_critique",
+            "summary": "Table 7 mislabeling/bolding inconsistency undermines identification of best controls",
+            "paperaudit_types": [
+              "RHETORICAL_PRESENTATION_MANIPULATION",
+              "CLAIM_RESULT_DISTORTION"
+            ],
+            "why_impacts_score": "Misleads readers on which method performs best, weakening evidentiary reliability.",
+            "evidence": {
+              "baseline_quote": "Clear reporting of mean ± SEM across 10 matched seeds (Sections 5–6; Tables 3, 5, 7).",
+              "final_quote": "Table 7 caption states “Bolded values indicate the best performance per metric,” but Augmentation+SAM is bolded while WD+SAM has higher accuracy."
+            }
+          },
+          {
+            "diff_type": "new_critique",
+            "summary": "Ambiguity in SAM-sharpness ρ used for metric computation across controls",
+            "paperaudit_types": [
+              "METHOD_LOGIC_CONSISTENCY",
+              "EXPERIMENTAL_DESIGN_PROTOCOL"
+            ],
+            "why_impacts_score": "Undermines cross-condition comparability and validity of sharpness conclusions.",
+            "evidence": {
+              "baseline_quote": "Table 9 vs Table 10 show large numeric differences in SAM-sharpness despite similar trends (Appendix F.1).",
+              "final_quote": "Appendix B defines SAM-sharpness using offsets “0.005ρ,” but the manuscript does not specify which ρ is used."
+            }
+          },
+          {
+            "diff_type": "intensified_critique",
+            "summary": "Matched-seed fairness caveat under augmentation; effective training distribution differs",
+            "paperaudit_types": [
+              "EXPERIMENTAL_DESIGN_PROTOCOL",
+              "CONTEXT_MISALIGNMENT_INCOHERENCE"
+            ],
+            "why_impacts_score": "Raises concerns about fairness of geometric comparisons across conditions.",
+            "evidence": {
+              "baseline_quote": "Matched seeds across controls ensure the same initial weights and data order for fair geometric comparisons.",
+              "final_quote": "under augmentation the effective training distribution differs (Appendix D), acknowledged via “approximately converge.”"
+            }
+          }
+        ]
+      },
+      "generated_at": "2026-01-05T20:43:20"
+    }
+  ]
+}

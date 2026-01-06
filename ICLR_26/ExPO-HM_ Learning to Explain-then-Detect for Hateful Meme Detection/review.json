@@ -1,0 +1,21 @@
+{
+  "paper_title": "ExPO-HM: Learning to Explain-then-Detect for Hateful Meme Detection",
+  "file_name": "2510.08630v2",
+  "reviewers": [
+    {
+      "reviewer_id": "ttL2",
+      "score": 6,
+      "confidence": 4
+    },
+    {
+      "reviewer_id": "oNni",
+      "score": 8,
+      "confidence": 3
+    },
+    {
+      "reviewer_id": "nfaS",
+      "score": 6,
+      "confidence": 3
+    }
+  ]
+}

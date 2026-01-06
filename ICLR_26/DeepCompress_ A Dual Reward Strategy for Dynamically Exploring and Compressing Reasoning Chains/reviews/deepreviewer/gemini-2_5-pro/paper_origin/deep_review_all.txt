@@ -1,0 +1,211 @@
+### Review 1
+
+**Summary**
+
+This paper introduces DeepCompress, a novel reinforcement learning framework designed to address the cognitive inefficiencies of Large Reasoning Models (LRMs). The core problem identified is that LRMs tend to "overthink" simple problems and "underthink" complex ones. DeepCompress tackles this by proposing a dual reward strategy. It dynamically classifies problems as "Simple" or "Hard" based on the model's real-time performance (group pass ratio vs. batch pass ratio). For simple problems, it rewards shorter, more efficient reasoning chains. For hard problems, it encourages longer, more exploratory chains. This adaptive mechanism allows the model to simultaneously improve both reasoning accuracy and token efficiency, as demonstrated by strong empirical results on several challenging mathematical benchmarks.
+
+**Soundness**
+
+The methodology is sound and elegantly designed. The paper's initial premise, established in Section 3, that longer responses can contain a higher density of correct solutions for difficult problems (evidenced by `pass@32` scores in Figure 1), provides a strong motivation for the dual-reward approach. The proposed "model-aware difficulty" mechanism (Section 4.3) is a clever, self-adaptive solution that avoids the need for static, pre-annotated difficulty labels. By comparing a question's group pass ratio to the batch pass ratio (Equation 7 & 8), the system defines difficulty relative to the model's current capabilities, allowing the reward strategy to evolve with the model. The two robustness enhancements—correctness-conditioned reward (Equation 10) and EMA smoothing for the batch pass ratio (Equation 11)—are thoughtful additions that address potential pitfalls like reward hacking and training instability. The experimental setup is rigorous, using well-established benchmarks and appropriate metrics.
+
+**Presentation**
+
+The paper is exceptionally well-written, clear, and logically structured. The introduction effectively frames the problem and situates the work within the existing literature. The method is explained with clarity, and the use of figures helps build intuition. Figure 1 provides a compelling visualization of the length-accuracy trade-off that motivates the entire work. Figure 2 (specifically, images 17 and 18) clearly illustrates how the length reward `R_l` modulates the base outcome reward `R_o` for simple and hard questions. The main results in Table 1 are presented clearly, and the efficiency gains are effectively communicated through the text and bar charts in Figure 3. The analysis of training dynamics in Figure 4 provides valuable insight into how DeepCompress balances exploration and exploitation compared to simpler reward schemes.
+
+**Contribution**
+
+The paper makes a significant and novel contribution to the field of LLM reasoning and efficiency. While prior work has focused on either improving accuracy (often at the cost of length) or improving efficiency (often at the cost of accuracy), DeepCompress presents a framework that successfully achieves both. The core novelty lies in the dynamic, model-aware difficulty assessment coupled with a dual-mode length reward. This challenges the prevailing wisdom of uniformly penalizing length and provides a more nuanced approach to optimizing reasoning paths. The demonstration that a model can be trained to autonomously decide when to "think more" and when to "think less" is a valuable step towards more efficient and capable autonomous reasoners.
+
+**Strengths**
+
+1.  **Novel and Intuitive Method:** The core idea of a dual-reward strategy based on a dynamic, model-aware difficulty metric is both novel and highly intuitive. It directly addresses the overthinking/underthinking paradox.
+2.  **Simultaneous Improvement in Accuracy and Efficiency:** The most compelling strength is the empirical evidence that DeepCompress improves accuracy while significantly reducing response length (Table 1, Figure 3). This is a crucial achievement, as previous methods often presented a trade-off.
+3.  **Strong Empirical Results:** The method establishes a new state-of-the-art on a wide range of challenging math benchmarks, with particularly impressive gains on difficult datasets like AIME 24/25 (Table 1).
+4.  **Excellent Analysis:** The paper provides strong analysis to support its claims, including the preliminary study on length vs. pass@k (Section 3.2), the ablation on reward types (Section 5.3), and the investigation into cognitive behaviors (Section 5.4).
+
+**Weaknesses**
+
+1.  **Limited Discussion on Computational Cost:** While the method improves inference efficiency, the training process requires sampling a large group of responses (G=32) for each question, which could be computationally expensive. A brief discussion on the training cost trade-offs would be beneficial.
+2.  **Dependence on Length Variation:** As the authors note in the conclusion, the method's effectiveness relies on sufficient length variation within the sampled group of responses. It would be interesting to see an analysis of how the method performs if the initial policy is already biased towards very uniform response lengths.
+
+**Questions**
+
+1.  The analysis of "reflection" in Section 5.4 is very interesting. Could you elaborate on why DeepCompress might lead to more *efficient* reflection? Does it learn to backtrack earlier or explore more promising sub-paths, and is this something that can be qualitatively observed in the generations?
+2.  The framework is evaluated on mathematical reasoning. Do you have any insights or preliminary results on how this method might generalize to other complex reasoning domains, such as code generation, scientific QA, or long-form abstractive summarization?
+3.  The EMA smoothing parameter `λ` and the reward weight `α` are important hyperparameters. How sensitive is the model's performance to these values, and what was the process for selecting them?
+
+**Rating**
+
+- Overall (10): 9 — The paper presents a novel, well-motivated, and highly effective method that simultaneously improves accuracy and efficiency, supported by strong empirical results and analysis (Table 1, Figure 3).
+- Novelty (10): 9 — The core idea of a dynamic, model-aware dual length reward is a significant and original contribution to RL for LLMs (Section 4).
+- Technical Quality (10): 9 — The methodology is sound, well-justified, and includes thoughtful enhancements for robustness (Section 4.4), and the experiments are comprehensive (Section 5).
+- Clarity (10): 10 — The paper is exceptionally clear, well-organized, and effectively uses figures to communicate its core concepts and results (Figure 1, Figure 4).
+- Confidence (5): 5 — I am highly confident in my assessment, as the paper's claims are well-supported by the provided evidence and analysis.
+
+---
+### Review 2
+
+**Summary**
+
+The paper proposes DeepCompress, a reinforcement learning method to improve the accuracy and efficiency of large reasoning models. The authors claim that uniformly penalizing longer responses is suboptimal. Instead, they propose a dual reward system: for problems the model finds "Simple," shorter responses are encouraged, and for "Hard" problems, longer responses are encouraged. Problem difficulty is determined dynamically by comparing the pass rate for a given problem within a group of samples (`P_g`) to the average pass rate across the batch (`P_b`). The authors present experimental results on math benchmarks showing their method improves pass@1 scores while reducing the average number of tokens per response.
+
+**Soundness**
+
+The methodological soundness of the core contribution is questionable. The entire framework hinges on the "model-aware difficulty" metric, `β = P_g(x_i) - P_b` (Equation 8). This metric seems noisy and potentially unreliable.
+
+1.  **Dependency on Batch Composition:** The classification of a question as "Simple" or "Hard" is not absolute but relative to the other questions in a mini-batch. A moderately difficult question could be labeled "Hard" in a batch of easy questions, or "Simple" in a batch of very hard questions. This introduces significant variance into the training signal, and it's not clear if the EMA smoothing (Equation 11) is sufficient to mitigate this.
+2.  **Reward Hacking Potential:** The initial reward formulation `R = R_o + R_l` (Equation 9) is problematic. For a hard problem (`β < 0`), a long, incorrect response could receive a higher total reward than a short, correct one if `α` is large enough. The authors seem to recognize this and patch it with the "Correctness-Conditioned Length Reward" (Equation 10), which applies the length reward only to correct solutions. While this fix is necessary, it highlights a fundamental flaw in the initial design and feels like an ad-hoc solution rather than a principled one.
+3.  **Subjective Analysis:** The analysis in Section 5.4, which claims DeepCompress fosters "smarter thinking," is based on using GPT-4o to classify "aha moment" behaviors. This is a highly subjective and non-reproducible evaluation method. Using one proprietary black-box model to evaluate the output of another is not scientifically rigorous. The claims derived from this analysis (Table 2) are therefore weak.
+
+The preliminary experiment in Section 3 is interesting but may be misinterpreted. The fact that `pass@32` increases with length (Figure 1) simply means that with more diverse (and longer) samples, the chance of finding one correct answer increases. This is an property of sampling, not necessarily proof that the model should be explicitly trained to generate longer responses.
+
+**Presentation**
+
+The presentation is generally clear, but some aspects are confusing or misleading.
+
+1.  **Figure Clarity:** In Figure 1, the use of dual y-axes with different scales for `pass@1` and `pass@32` makes direct visual comparison difficult and can exaggerate trends. The text in Figure 3 is rendered as an image and is too small to be easily legible; this data should have been presented in a proper table.
+2.  **Inconsistent Terminology:** The paper often uses the binary "Simple" vs. "Hard" framing, but the actual mechanism `β = P_g - P_b` is a continuous value. This simplification in the text can be misleading.
+3.  **Overstated Claims:** The paper makes strong claims like achieving "simultaneous optimality" and enabling "smarter thinking" (Section 5.4) that are not fully substantiated by the presented evidence, especially given the methodological weaknesses.
+
+**Contribution**
+
+The contribution is incremental. The idea of adapting rewards based on difficulty is not new. The novelty lies in the specific implementation of a *model-relative* difficulty metric. However, given the questionable soundness of this metric, the significance of the contribution is limited. The paper does show good empirical results, but it's unclear if these are due to the proposed mechanism or other confounding factors in the complex RL training setup (e.g., the interaction with DAPO, the specific hyperparameters).
+
+**Strengths**
+
+1.  **Addresses an Important Problem:** The paper tackles the critical trade-off between accuracy and efficiency in LRMs.
+2.  **Strong Empirical Results:** Despite methodological concerns, the final models achieve impressive results on several math benchmarks, outperforming strong baselines (Table 1).
+3.  **Efficiency Gains:** The reduction in average response length is significant and practically valuable (Figure 3).
+
+**Weaknesses**
+
+1.  **Unsound Difficulty Metric:** The core metric `β = P_g - P_b` is noisy and dependent on batch composition, making the training signal potentially unstable and arbitrary (Section 4.3).
+2.  **Ad-hoc Reward Design:** The need for a "Correctness-Conditioned" reward (Section 4.4) suggests the primary reward function was not well-designed and could be exploited.
+3.  **Subjective and Weak Analysis:** The analysis of cognitive behaviors using GPT-4o is not a rigorous scientific evaluation and leads to overstated conclusions (Section 5.4).
+4.  **Insufficient Ablation:** The paper does not ablate the effect of the EMA smoothing (`λ`) or the initial value of `P_b`. It is also missing an ablation on the impact of batch size `B` and group size `G` on the stability of the difficulty metric.
+
+**Questions**
+
+1.  How does the `β` distribution look during training? Does it remain stable, or does it fluctuate wildly depending on the batch composition?
+2.  Have you considered alternative, more stable metrics for question difficulty, such as those based on model uncertainty (e.g., token-level entropy) or a running average of the pass rate for each specific question over time?
+3.  The "Correctness-Conditioned Length Reward" (Eq. 10) seems crucial. What happens if you train without it? Does the model indeed learn to generate long, incorrect answers for hard problems?
+4s. The paper argues against a constant length penalty. However, your method still applies a length penalty for "Simple" questions. How is this fundamentally different from prior work, other than being conditional? Could the gains come entirely from the "bonus" part for hard questions?
+
+**Rating**
+
+- Overall (10): 5 — The paper has an interesting idea and strong empirical results, but the core methodological contribution is not sound and the analysis includes subjective, weak evidence (Section 4.3, Section 5.4).
+- Novelty (10): 6 — The idea of a model-relative, dynamic difficulty metric is somewhat novel, but the implementation is questionable and builds on existing adaptive reward concepts.
+- Technical Quality (10): 4 — The core difficulty metric is not robust, the reward design required an ad-hoc patch, and the analysis in Section 5.4 lacks rigor.
+- Clarity (10): 7 — The paper is mostly well-written, but some figures are poorly designed (Figure 1, Figure 3) and the framing of "Simple/Hard" is an oversimplification.
+- Confidence (5): 5 — I am very confident in my assessment of the methodological weaknesses and the lack of rigor in parts of the analysis.
+
+---
+### Review 3
+
+**Summary**
+
+This paper presents DeepCompress, a reinforcement learning (RL) framework aimed at making Large Reasoning Models (LRMs) both more accurate and more efficient. The method introduces a dual length reward that is conditioned on a real-time, model-aware assessment of problem difficulty. For problems the model is already good at ("Simple"), it is rewarded for shorter answers, compressing the reasoning chain. For problems it struggles with ("Hard"), it is rewarded for longer answers, encouraging exploration. The difficulty is measured by comparing a problem's success rate within a sampled group to the model's average success rate on the current batch. Experiments on math datasets show that models trained with DeepCompress outperform baselines in accuracy while using significantly fewer tokens on average.
+
+**Soundness**
+
+The methodology appears sound from a practical standpoint. The core idea of dynamically allocating "thought" (i.e., tokens) based on perceived difficulty is logical. The implementation details show a good understanding of the practical challenges of RL for LLMs.
+
+The model-aware difficulty metric (`P_g - P_b`) is a pragmatic choice that is easy to compute during training. While it might have some noise, the authors proactively address this with a smoothed batch pass ratio using an EMA (Equation 11), which should improve training stability. Initializing the smoothed `P_b` at 1.0 is a clever trick to prevent the model from being overly penalized for length early in training when performance is low.
+
+The introduction of the "Correctness-Conditioned Length Reward" (Equation 10) is another crucial, practical detail. It prevents the model from simply padding incorrect answers to gain rewards on hard problems, ensuring the exploration is productive. The overall framework is built on top of existing, scalable RL systems (DAPO, verl), which adds to its credibility.
+
+**Presentation**
+
+The paper is well-structured and easy to follow. The authors do a good job of first motivating the problem with a preliminary experiment (Section 3), then clearly detailing their proposed method (Section 4), and finally presenting comprehensive results and analysis (Section 5). The appendices provide necessary training details (Appendix B), which is helpful for reproducibility.
+
+The figures are mostly effective. Figure 4 is particularly useful, as it visualizes the training dynamics and clearly shows how DeepCompress adaptively balances exploration (higher entropy, longer initial length) and exploitation (stabilizing entropy, decreasing length) over time, in contrast to fixed-reward strategies. The main results table (Table 1) is clear and convincing.
+
+**Contribution**
+
+The main contribution is a practical and effective RL-based method for jointly optimizing the accuracy and inference efficiency of LRMs. While other methods have tried to compress reasoning chains, they often do so at the expense of accuracy. DeepCompress provides a working recipe for achieving both goals. Its simplicity is a key part of its contribution; the proposed reward shaping can be implemented as a lightweight addition to existing RL pipelines like Zero RL. The strong empirical results, showing SOTA performance and significant token reduction, validate the approach and make it a valuable contribution for practitioners looking to build more efficient and powerful reasoning models.
+
+**Strengths**
+
+1.  **Practicality and Simplicity:** The method is conceptually simple and seems relatively straightforward to implement on top of existing RL frameworks, making it accessible to other researchers and practitioners.
+2.  **Significant Efficiency Gains:** The reported reductions in response length are substantial (e.g., 57.9% for the 3B model on average, Figure 3), which translates to real-world savings in inference cost and latency.
+3.  **Robustness Features:** The inclusion of EMA smoothing and correctness-conditioning shows careful engineering to ensure stable and effective training, addressing obvious failure modes.
+4.  **Strong Baselines and Benchmarks:** The paper compares against very strong, relevant baselines (e.g., DeepMath-Zero) on a comprehensive suite of modern, challenging math benchmarks.
+
+**Weaknesses**
+
+1.  **Training Cost:** The method relies on sampling a large group of responses (`G=32`) per prompt during RL training. This is computationally intensive and may be a barrier for those with limited resources. It would be useful to understand how performance degrades with smaller `G`.
+2.  **Generalizability:** The experiments are confined to the domain of mathematical reasoning. While this is a good domain for testing complex reasoning, it's unclear how well the "longer is better for hard problems" assumption holds in other domains like creative writing, summarization, or general instruction following.
+3.  **Hyperparameter Sensitivity:** The method introduces new hyperparameters like the reward weight `α` and the EMA decay `λ`. The paper could benefit from a sensitivity analysis to understand how critical their exact values are for successful training.
+
+**Questions**
+
+1.  The training configuration (Table 3) shows a `max_response_length` of 10K tokens. The conclusion mentions this as a limitation. Did you observe the model hitting this limit frequently, especially for "Hard" problems where longer generation is encouraged? Could this cap be artificially limiting the potential gains on the most difficult problems?
+2.  How does the performance of DeepCompress vary with the group size `G`? Is `G=32` the minimum required to get a stable `P_g` signal, or could similar results be achieved with a smaller, more computationally friendly group size like `G=8` or `G=16`?
+3.  The `β` value is determined by `P_g - P_b`. In the early stages of training, `P_g` and `P_b` are likely both very low and noisy. The EMA initialization helps, but did you observe any instability in the first few hundred training steps before the model's performance started to improve?
+
+**Rating**
+
+- Overall (10): 8 — A practical, well-engineered, and effective method that delivers strong results on an important problem, with clear real-world benefits for model efficiency.
+- Novelty (10): 7 — The combination of a model-relative difficulty metric and a dual length reward is a novel and clever engineering solution, though the individual components have precedents.
+- Technical Quality (10): 8 — The method is technically sound and includes important features for robustness (Section 4.4). The experimental evaluation is thorough and uses strong baselines (Table 1).
+- Clarity (10): 9 — The paper is very clearly written, well-structured, and provides good details for reproducibility (Appendix B).
+- Confidence (5): 5 — I am confident in my assessment. The paper presents a practical and well-executed study.
+
+---
+### Review 4
+
+**Summary**
+
+This paper introduces DeepCompress, a reinforcement learning framework designed to optimize the trade-off between accuracy and computational efficiency in Large Reasoning Models (LRMs). The authors first establish an interesting dichotomy: shorter reasoning paths are better for `pass@1`, but longer paths provide better solution coverage for `pass@k` (with large `k`). To leverage this, DeepCompress uses a "model-aware difficulty" metric, which compares a problem's group pass rate to the batch pass rate, to dynamically classify problems on a simple-to-hard spectrum. It then applies a dual length reward: compressing reasoning for simpler problems and encouraging longer, exploratory reasoning for harder ones. Experiments on several math benchmarks show that this approach improves accuracy over strong baselines while also significantly reducing average response length.
+
+**Soundness**
+
+The overall methodology is sound and well-motivated. The preliminary experiment in Section 3 provides a solid empirical foundation for the core idea. The insight that `pass@k` (for large `k`, as used in RL) benefits from longer chains is a key justification for not always penalizing length.
+
+The "model-aware difficulty" mechanism (Section 4.3) is the paper's central technical component. Defining difficulty `β` as `P_g(x_i) - P_b` is an elegant, self-normalizing approach that allows the reward landscape to adapt as the model learns. The authors correctly identify potential instability issues with this metric and propose reasonable solutions: EMA smoothing for `P_b` and conditioning the length reward on correctness (Section 4.4). These additions make the framework more robust.
+
+The RL setup builds upon the established Zero RL recipe and DAPO, which is a reasonable choice. The experimental design is strong, using multiple challenging benchmarks and comparing against state-of-the-art open models.
+
+One point of weakness is the analysis in Section 5.4. While the idea of measuring "reflection" is interesting, using GPT-4o with a prompt as the measurement tool is highly subjective and lacks the rigor expected for a scientific claim. The conclusion that DeepCompress learns "smarter thinking" is an over-interpretation of this weak evidence. The results in Table 2 are interesting correlations but should be presented with more caution.
+
+**Presentation**
+
+The paper is well-written and the narrative flows logically from motivation to method to results. The introduction and related work sections are comprehensive.
+
+However, there are several areas for improvement in the presentation of figures:
+-   **Figure 1:** The dual y-axes are not ideal. It would be clearer to either normalize the scores or plot them in separate, aligned graphs to facilitate comparison without misleading visual scaling.
+-   **Figure 2:** The figure caption refers to subfigures (a) and (b), and the figure itself (Block 15) has these labels, but the more detailed plots below (Blocks 17 & 18) are also labeled (a) and (b). This is confusing. The hand-drawn style of Figure 15 is inconsistent with the cleaner plots in 17 & 18. It seems Figure 15 is a conceptual sketch that could be merged with the text.
+-   **Figure 3:** The data is presented as a bar chart, but the exact numbers are listed below as plain text. This is unconventional and hard to read. This information should be presented in a proper, well-formatted table for clarity and accessibility.
+
+These are minor but important presentation issues that detract from an otherwise clear paper.
+
+**Contribution**
+
+The paper's primary contribution is a novel and effective RL reward-shaping strategy that dynamically balances reasoning length based on a model-relative difficulty metric. This moves beyond the static "shorter is always better" paradigm of many previous efficiency-focused methods. By showing that it's possible to improve accuracy *and* efficiency simultaneously, the paper makes a valuable contribution to the ongoing research on building more capable and practical LRMs. The method itself is a clever piece of engineering that elegantly solves a well-defined problem.
+
+**Strengths**
+
+1.  **Excellent Motivation:** The `pass@1` vs. `pass@k` analysis in Section 3 provides a clear and compelling justification for the entire approach.
+2.  **Effective and Adaptive Method:** The core mechanism is simple, adaptive, and demonstrably effective. The model learns to allocate its computational budget intelligently.
+3.  **State-of-the-Art Results:** The method achieves significant improvements over very strong baselines on difficult benchmarks, particularly AIME (Table 1), demonstrating its ability to push the performance frontier.
+4.  **Joint Optimization:** The key strength is successfully optimizing for two competing objectives—accuracy and efficiency—and showing improvements on both fronts.
+
+**Weaknesses**
+
+1.  **Weak "Cognitive Behavior" Analysis:** The analysis in Section 5.4 is based on a subjective evaluation by another LLM (GPT-4o). This is not a rigorous methodology, and the conclusions about "smarter thinking" are overstated.
+2.  **Presentation of Figures:** Several figures have presentation issues that hinder clarity and professionalism, as noted above (Figure 1, Figure 2, Figure 3).
+3.  **Oversimplified Framing:** The text often frames the method as a binary choice between "Simple" and "Hard" modes. While this helps with intuition, it's an oversimplification of the continuous `β` parameter, which provides a graded reward signal. A more nuanced description would be more accurate.
+
+**Questions**
+
+1.  In the preliminary analysis (Figure 1), you show `pass@1` and `pass@32`. What does the trend look for intermediate values of `k`, for example `k=4` or `k=8`? At what point does the trend invert from favoring shorter responses to favoring longer ones?
+2.  The difficulty metric `β = P_g - P_b` is based solely on the outcome reward. Have you considered incorporating other signals that might correlate with difficulty, such as the model's uncertainty (e.g., generation probability, entropy) or the variance in answers within the group?
+3.  The ablation study in Figure 4 compares DeepCompress to fixed `β=1` (penalty) and `β=-1` (bonus). What would happen with a fixed `β=0`, which would be equivalent to the DeepMath-Zero baseline? The blue line is labeled "DeepMath-Zero-7B", but it's not clear if it was retrained under the exact same conditions for this ablation. Clarifying this would strengthen the comparison.
+
+**Rating**
+
+- Overall (10): 7 — A strong paper with a novel method and impressive results, but held back by some presentation issues and a weak, subjective analysis in one section.
+- Novelty (10): 8 — The dynamic, model-relative difficulty metric for reward shaping is a novel and significant contribution to the field.
+- Technical Quality (10): 7 — The core method is sound, but the analysis in Section 5.4 is weak and lacks rigor. The experiments are otherwise well-conducted.
+- Clarity (10): 7 — Mostly clear, but the presentation of several key figures (Figure 1, Figure 3) is confusing and should be improved.
+- Confidence (5): 5 — I am highly confident in my assessment, having carefully reviewed the methodology, results, and analysis.

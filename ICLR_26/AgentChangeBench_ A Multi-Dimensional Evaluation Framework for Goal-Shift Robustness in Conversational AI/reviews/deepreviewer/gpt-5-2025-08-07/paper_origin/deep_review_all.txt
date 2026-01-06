@@ -1,0 +1,184 @@
+Summary
+The paper introduces AgentChangeBench, a benchmark and evaluation framework for tool-augmented conversational AI agents under mid-dialogue goal shifts across three enterprise domains (banking, retail, airline). It proposes four complementary metrics—Task Success Rate (TSR), Tool Usage Efficiency (TUE), Tool-Call Redundancy Ratio (TCRR), and Goal-Shift Recovery Turns (GSRT)—and provides 315 tasks with five user personas and explicit goal sequences. Using the τ²-bench harness (Section 3.5), the authors conduct cross-model evaluations (GPT-4o, Claude-3.7-Sonnet, Gemini-2.5-Flash) and report domain- and persona-level results (Tables 4, 5, 7, 9, 10), highlighting differences in recovery under goal shifts and inefficiencies obscured by pass@k.
+
+Soundness
+- Metric design is principled and operationally motivated: TSR is a weighted composite across communication, actions, and policy-compliance channels (Eq. 1 in Section 4.3; Table 9 shows channel breakdowns), and TUE decomposes into tool correctness and parameter validity (Eq. 2; Table 10 demonstrates PA near ceiling with TC driving differences). TCRR and GSRT are clearly specified in Sections 4.3 and 4.3/4.4, with concrete failure modes and worked examples (Sections 4.3–4.4; “Worked example” and “Failure modes”).
+- The evaluation harness enforces one-tool-per-turn and policy constraints (Section 3.5), improving internal validity for tool correctness and parameter validation.
+- However, several methodological issues weaken soundness: (i) GSRT is defined as “turns” (Section 4.3) but is often reported as “recovery rate” and labeled as GSRT in figures/tables (Figure 1; Table 5; Table 10), blurring time vs. rate constructs. (ii) Recovery success requires only acknowledgment and no human transfer (Section 4.3), not outcome achievement; this can inflate “recovery” despite failed goal completion (Table 10 shows transfers separately). (iii) TSR/TUE weights are justified qualitatively (“operational cost analysis,” Appendix B.2/B.3) without sensitivity analyses; robustness of conclusions to alternative weightings is untested. (iv) Statistical rigor is limited: no confidence intervals or hypothesis tests are reported despite three-run protocols (Appendix B.2); comparisons rely on point estimates. (v) Incomplete reporting for Gemini Airline-new GSRT due to “insufficient credits” (Table 10), which compromises comparative fairness.
+- Dataset description is thorough (Sections 3.1–3.4; Appendix A.1–A.2), but the Abstract claims “2,835 task sequences,” while the body consistently states “315 tasks” (Sections 3.1–3.3; Table 6); this discrepancy requires clarification.
+
+Presentation
+- The paper is generally clear and well organized: motivation (Sections 4.1–4.2), metrics (Section 4.3), results (Sections 4.4–4.5), and limitations (Section 5) flow logically. Tables 4–10 concisely summarize outcomes; persona definitions (Appendix A.3) add interpretability.
+- Visuals are helpful: Figure 1 contrasts recovery across domains; Figures 2 and the TUE boxplots (Appendix D.5; Figures 93–95) illustrate TC tails vs. PA ceiling.
+- Clarity issues: (i) GSRT labeling mixes rate and time (Figure 1 caption vs. Section 4.3 definitions; Table 10 field names), (ii) “threefold contributions” in Introduction lists four items (Section 1), (iii) persona documentation duplicates “EASY_1” header and mixes airline-specific details into generic persona blocks (Appendix A.3, Blocks 53–59), (iv) Abstract claims 2,835 sequences vs. 315 tasks elsewhere, and (v) conclusion claims “Claude-3.7-Sonnet recovers fastest” (Section 6), which is not consistently supported (e.g., Airline-new recovery is higher for GPT-4o at 92.2% vs. Claude 79.2% in Table 10).
+
+Contribution
+- Novelty: The benchmark explicitly targets dynamic goal-shift robustness and introduces GSRT, TCRR, and a multi-channel TSR—addressing an evaluation gap beyond pass@k (Sections 4.1–4.3; Table 3). The persona-conditioned user simulator and goal sequence schema (Section 3.4) operationalize realistic enterprise shifts.
+- Significance: Results reveal nontrivial divergences in recovery and redundancy (Tables 5 and 10), demonstrating why accuracy alone is insufficient. The framework’s alignment to enterprise deployment (Section 4.2) makes the contribution practical.
+- Scope: Three domains and five personas with cross-model evaluation are substantive (Table 6; Table 8), and openness to OSS models (Appendix E; Table 11) suggests generality, though OSS integration remains partial (Appendix E; compatibility challenges).
+
+Strengths
+- Clear, actionable metrics that capture efficiency and adaptation beyond success (Sections 4.2–4.3; Table 3).
+- Strong empirical coverage across domains and personas with detailed decompositions (Tables 4, 5, 7, 9, 10).
+- Reproducibility emphasis: explicit schema, tool catalogs, harness constraints, and worked examples (Sections 3.4–3.5; Appendix A.2; Appendix C).
+- Insightful analyses of redundancy and communication failure modes (Sections 4.4.1–4.4.3; “Failure modes” in Section 4.3; Retail-new communication collapse for GPT-4o in Table 9).
+
+Weaknesses
+- Metric construct drift: GSRT time vs. recovery rate conflation (Figure 1; Sections 4.3–4.4; Table 10).
+- Recovery success definition (ack-only, no transfer) may overstate adaptation without ensuring tool-action completion (Section 4.3; Table 10 outcome columns absent).
+- Lack of statistical significance tests, error bars, or confidence intervals (Appendix B.2 mentions three runs but no statistical reporting).
+- Weight choices for TSR/TUE lack sensitivity analyses (Sections 4.3; Appendix B.2/B.3).
+- Incomplete reporting due to budget constraints (Gemini Airline-new GSRT “—” in Table 10).
+- Minor inconsistencies/typos: contributions count (Section 1), persona duplication/mixing (Appendix A.3), Abstract count mismatch (2,835 vs. 315), and conclusion claim about “fastest recovery” (Section 6) contradicted by Table 10.
+
+Questions
+1. GSRT definition: Will you separate “GSRT time” from “GSRT recovery rate” consistently in figures/tables, and report outcome_s distributions as part of recovery quality (Section 4.3; Figure 1; Table 10)?
+2. TSR/TUE weights: Can you provide sensitivity analyses showing conclusion stability under alternative weightings (Eq. 1–2; Appendix B.2/B.3)?
+3. Abstract discrepancy: What does “2,835 task sequences” refer to relative to “315 tasks” (Sections 3.1–3.3; Table 6)? Is this runs × tasks or shift instances?
+4. Statistical rigor: Will you add confidence intervals and significance tests across models/domains/personas, given three-run protocols (Appendix B.2; Tables 4–5, 9–10)?
+5. Recovery success criterion: Why is acknowledgment sufficient for recovery classification (Section 4.3), and will you consider a stricter definition requiring a relevant tool call or outcome?
+6. Judge-model bias: Since GPT-4o-mini is the judge (Section 4.2), how do you mitigate vendor bias when evaluating GPT-4o vs. others? Any cross-judge validation?
+7. Incomplete GSRT: Can you re-run Airline-new for Gemini to provide GSRT rather than “—” (Table 10) to ensure fair comparisons?
+
+Rating
+- Overall (10): 8 — Substantial, well-motivated benchmark with actionable metrics and broad results, tempered by GSRT reporting inconsistencies and limited statistical rigor (Sections 4.3–4.4; Figure 1; Tables 5, 9–10).
+- Novelty (10): 8 — Explicit goal-shift evaluation and multi-dimensional metrics (TSR/TUE/TCRR/GSRT) extend beyond pass@k and prior static benchmarks (Table 3; Sections 4.1–4.3).
+- Technical Quality (10): 7 — Solid harnessing and metric definitions with clear failure-mode analyses, but recovery criterion and missing significance tests weaken rigor (Section 3.5; Section 4.3; Appendix B.2; Table 10).
+- Clarity (10): 7 — Good structure and visuals, but GSRT labeling, contribution count, Abstract/task-sequence mismatch, and conclusion recovery claim require fixes (Figure 1; Section 1; Sections 3.1–3.3; Section 6).
+- Confidence (5): 4 — High confidence based on detailed reading and cross-checking across main text and appendices (Tables 4–10; Appendix A–E), with some open questions on weights/statistics.
+
+
+Summary
+The paper presents AgentChangeBench, a benchmark focused on multi-turn goal-shift robustness in conversational agents, spanning 315 tasks across banking, retail, and airline domains with five personas and explicit goal sequences (Sections 3.1–3.4). It introduces multi-dimensional evaluation—TSR (Eq. 1), TUE (Eq. 2), TCRR, and GSRT—to capture success, efficiency, redundancy, and adaptation (Section 4.3). Results reveal cross-model differences (GPT-4o, Claude-3.7-Sonnet, Gemini-2.5-Flash) in recovery rates and redundancy patterns (Tables 4, 5, 9, 10) and persona effects (Table 7).
+
+Soundness
+- The experimental protocol is grounded in a reproducible harness (τ²-bench; Section 3.5) and detailed tool schemas (Appendix C), with three runs per task and reset states (Appendix B.2), which supports internal validity of tool correctness (TC) and parameter accuracy (PA).
+- The metrics are coherently defined and motivated, especially TUE decomposition and TCRR definitions (Section 4.3; Table 10).
+- Concerns: (i) GSRT is defined in terms of turn counts (ack/tool/outcome; Section 4.3), yet Figure 1 and Table 5 report “Goal-Shift Recovery Rate (%)” under the GSRT label; consistency and construct validity are at risk. (ii) Using acknowledgment + no transfer as the recovery success criterion (Section 4.3) may overestimate adaptation without verifying outcome_s. (iii) Statistical analysis is limited; despite three runs, there are no confidence intervals or tests (Appendix B.2), and some results are omitted due to credit constraints (Table 10: Airline-new for Gemini).
+- Data statements are mostly consistent, but the Abstract’s “2,835 task sequences” conflicts with “315 tasks” (Sections 3.1–3.3; Table 6) and needs clarification.
+
+Presentation
+- The paper is readable and well-structured (Sections 4.1–4.5; 5–6), with informative tables (Tables 4–10) and detailed persona/task examples (Appendix A.2–A.3).
+- The visuals support claims (Figure 1; Appendix D.5 boxplots), but GSRT nomenclature (time vs rate) is confusing (Figure 1 caption vs. Section 4.3).
+- Minor editorial issues: “threefold contributions” lists four items (Section 1), duplicated persona heading and domain-specific details in persona blocks (Appendix A.3), and conclusion claim (“Claude recovers fastest,” Section 6) conflicts with several reported recoveries (e.g., Airline-new GPT-4o 92.2% vs. Claude 79.2%, Table 10).
+
+Contribution
+- The benchmark advances evaluation of agents in dynamic, realistic enterprise settings by operationalizing goal shifts through task schemas, personas, and an evaluation harness (Sections 3.4–3.5).
+- The four metrics provide actionable levers (efficiency, redundancy, recovery) for deployment decisions (Section 4.5) and expose differences unseen by pass@k (Sections 4.1–4.3; Table 3).
+- The comparative analysis across domains and personas is valuable (Tables 4, 5, 7, 9, 10), and the discussion of OSS integration highlights generalizability challenges (Appendix E).
+
+Strengths
+- Clear, operationally relevant metric suite; strong alignment to enterprise needs (Section 4.2; Table 3).
+- Rich dataset and persona coverage with explicit goal sequences (Sections 3.1–3.4; Table 6; Table 8).
+- Insightful diagnostics of redundancy and communication failures (Section 4.3 failure modes; Table 9 communication drops; Table 10 TCRR).
+- Transparent limitations and a concrete roadmap (Section 5; Appendix F/G).
+
+Weaknesses
+- GSRT construct inconsistency (time vs rate) and recovery criterion (ack-only + no transfer) risk overstating robustness (Sections 4.3–4.4; Figure 1; Table 10).
+- No statistical confidence (CIs/tests), despite multi-run setup; partial reporting for some model/domain (Appendix B.2; Table 10).
+- Weight choices in TSR/TUE lack sensitivity analyses (Eq. 1–2; Appendix B.2/B.3).
+- Abstract/task-sequence mismatch and conclusion recovery claim conflict (Abstract; Section 6; Table 10).
+
+Questions
+1. Can you harmonize GSRT as time (turns) and introduce a distinct “Recovery Rate” metric to avoid construct confusion (Section 4.3; Figure 1; Table 5)?
+2. Will you tighten recovery success to require a relevant tool call or outcome achievement instead of acknowledgment alone (Section 4.3)?
+3. Please clarify what “2,835 task sequences” represents relative to 315 tasks (Abstract; Sections 3.1–3.3; Table 6).
+4. Can you add confidence intervals or statistical tests for TSR/TUE/TCRR/Recovery (Appendix B.2; Tables 4–5, 9–10)?
+5. Will you re-run Airline-new for Gemini to fill GSRT gaps (Table 10)?
+6. Given GPT-4o-mini as LLM judge for communication, have you cross-validated with a different judge to reduce potential vendor bias (Section 4.2)?
+
+Rating
+- Overall (10): 7 — Strong, practical benchmark with meaningful metrics, but GSRT construct drift and limited statistical rigor weaken claims (Section 4.3; Figure 1; Tables 5, 9–10).
+- Novelty (10): 8 — Explicit goal-shift evaluation with multi-dimensional metrics substantially extends prior static-task agent benchmarks (Table 3; Sections 4.1–4.3).
+- Technical Quality (10): 6 — Solid harness and metric definitions, yet recovery success criterion, missing significance tests, and incomplete GSRT reporting limit robustness (Section 3.5; Section 4.3; Table 10).
+- Clarity (10): 7 — Generally clear with helpful tables/figures, but GSRT labeling issues and minor editorial inconsistencies remain (Figure 1; Section 1; Appendix A.3; Section 6).
+- Confidence (5): 4 — High confidence from cross-checking main text and appendices; remaining questions relate to definitions and statistics (Sections 3–4; Tables 4–10; Appendix B–E).
+
+
+Summary
+AgentChangeBench is a new benchmark targeting agent resilience to mid-conversation goal shifts, with 315 tasks across banking, retail, and airline and five personas (Sections 3.1–3.4). The authors formalize evaluation via TSR (three-channel weighted success), TUE (tool correctness and parameter validity), TCRR (redundant calls), and GSRT (recovery turns and recovery rate) (Section 4.3). Results across GPT-4o, Claude-3.7-Sonnet, and Gemini-2.5-Flash show substantial differences in recovery and redundancy not captured by pass@k (Tables 4–5, 9–10).
+
+Soundness
+- The experimental setup builds on τ²-bench with controlled constraints (Section 3.5), and the task schema enforces explicit goal sequences and persona conditioning (Section 3.4), supporting systematic measurement of adaptation.
+- Metric definitions are precise and operationally grounded (Eq. 1–2; Section 4.3), and failure modes are well-documented with examples (Section 4.3).
+- Concerns: (i) GSRT conflates turn-based latency with a recovery rate in figures/tables (Figure 1; Table 5; Table 10), (ii) Recovery is defined by acknowledgment/no transfer, potentially detached from outcome achievement (Section 4.3); (iii) Communication channel relies on LLM-as-judge (GPT-4o-mini), introducing potential vendor bias when evaluating GPT-4o (Section 4.2), and no cross-judge analysis is provided; (iv) Statistical uncertainty is not reported, despite three-run evaluations (Appendix B.2).
+
+Presentation
+- The paper is organized and readable, with helpful tables (Tables 4–10) and persona/task examples (Appendix A.2–A.3).
+- Visualizations aid interpretation (Figure 1; Appendix D.5), and system architecture is clearly depicted (Appendix G, Figure 3).
+- Minor clarity issues: GSRT labeling inconsistency (Figure 1 vs. Section 4.3), Abstract’s 2,835 sequences vs. 315 tasks (Sections 3.1–3.3; Table 6), and conclusion recovery claim conflicts with reported numbers (Section 6 vs. Table 10).
+
+Contribution
+- The benchmark fills an important gap by measuring adaptation and efficiency under dynamic goals, adding practical dimensions beyond pass@k (Section 4.2; Table 3).
+- Cross-model, multi-domain, persona-based evaluation provides rich evidence for comparative agent robustness (Tables 4–5, 7, 9–10).
+- The open-source model pilot (Qwen2.5-14B; Appendix E; Table 11) demonstrates generalization potential and highlights orchestration challenges.
+
+Strengths
+- Well-defined, actionable metrics capturing efficiency, redundancy, and adaptation (Sections 4.2–4.3; Table 3).
+- Thorough empirical coverage with diagnostic breakdowns (Tables 4–5, 9–10; persona analysis in Table 7).
+- Clear limitations and roadmap (Section 5; Appendix F/G), acknowledging persona hardness, domain/tool scope, and implicit goal drift.
+
+Weaknesses
+- Recovery success criterion may inflate robustness by relying on acknowledgment instead of outcome/tool-use (Section 4.3).
+- Mixed GSRT constructs (time vs. rate) reduce measurement clarity (Figure 1; Table 5; Table 10).
+- Lack of statistical confidence reporting and sensitivity analyses for metric weights (Appendix B.2; Eq. 1–2).
+- Incomplete GSRT for Airline-new Gemini due to credits (Table 10), limiting fairness of comparisons.
+
+Questions
+1. Would you consider redefining recovery success to require both acknowledgment and a relevant tool call (and/or outcome achievement) to better couple adaptation with task progress (Section 4.3)?
+2. Can you provide confidence intervals or nonparametric tests across models/domains/personas (Appendix B.2; Tables 4–5, 9–10)?
+3. Please clarify the “2,835 task sequences” count from the Abstract relative to 315 tasks (Sections 3.1–3.3; Table 6).
+4. Can you add cross-judge validation (e.g., using a non-OpenAI judge) to mitigate vendor bias in the communication channel (Section 4.2)?
+5. Will you publish code and fixtures for GSRT detection prompts and evaluator implementations to facilitate reproduction (Section 3.5; Appendix G)?
+6. Could you report median and distributional statistics for GSRT turns (ack/tool/outcome) rather than only recovery rate (Section 4.3; Table 10)?
+
+Rating
+- Overall (10): 8 — A timely and impactful benchmark with robust design and compelling results, despite GSRT construct inconsistency and limited statistical reporting (Section 4.3; Figure 1; Tables 5, 9–10).
+- Novelty (10): 8 — Clear advancement in evaluating dynamic goal shifts with multidimensional metrics beyond pass@k (Table 3; Sections 4.1–4.3).
+- Technical Quality (10): 7 — Strong harness and metric definitions, but recovery criterion and absence of uncertainty estimates reduce rigor (Section 3.5; Section 4.3; Appendix B.2).
+- Clarity (10): 8 — Well-structured with informative figures/tables; small inconsistencies (GSRT labeling, Abstract counts) should be corrected (Figure 1; Sections 3.1–3.3; Section 6).
+- Confidence (5): 4 — High confidence based on thorough cross-referencing of main and appendix materials (Tables 4–10; Appendix A–G).
+
+
+Summary
+The manuscript proposes AgentChangeBench, a benchmark explicitly designed to evaluate how tool-augmented LLM agents handle mid-dialogue goal changes. It defines four metrics (TSR, TUE, TCRR, GSRT), constructs 315 tasks with five personas and explicit goal sequences (Sections 3.1–3.4), and evaluates three model families with domain/persona breakdowns (Tables 4–5, 7, 9–10). Key findings include large differences in recovery rates and redundancy (e.g., airline-new GPT-4o recovery 92.2% vs. Gemini 48.6%; retail-new TCRR up to 89.14%).
+
+Soundness
+- Strong experimental control via τ²-bench harness (Section 3.5) and explicit task schema (Section 3.4).
+- Metric definitions are concrete and operationally motivated (Eq. 1–2; Section 4.3), and the paper surfaces meaningful failure modes (late shift detection, redundant calls, over-confirmations; Section 4.3).
+- Weak points: (i) GSRT conflates a latency metric (turns) with a recovery rate in reporting (Figure 1; Table 5; Table 10), (ii) recovery success requires acknowledgment and lack of transfer, not outcome achievement (Section 4.3), potentially misaligning “recovery” with actual task progress, (iii) judge-model dependency for communication channel (GPT-4o-mini) could bias scoring (Section 4.2) without cross-judge validation, and (iv) absent confidence intervals or statistical tests despite multi-run design (Appendix B.2).
+
+Presentation
+- The paper is generally clear, with well-organized sections and concise tables. Persona definitions and example tasks enhance transparency (Appendix A.2–A.3).
+- Notable clarity issues: GSRT naming/units inconsistency (Figure 1 vs. Section 4.3), Abstract’s 2,835 sequences vs. 315 tasks elsewhere (Sections 3.1–3.3; Table 6), duplicated/mixed persona headers (Appendix A.3), and a conclusion claim (“Claude recovers fastest,” Section 6) that is contradicted by reported recoveries in several settings (Table 10).
+
+Contribution
+- The work makes a meaningful contribution by centering evaluation on goal-shift adaptability, adding redundancy and efficiency measures to standard success metrics (Table 3; Section 4.2).
+- It offers a reproducible testbed with practical relevance for enterprise agents and provides comparative evidence across models/domains/personas (Tables 4–5, 7, 9–10; Appendix D/E).
+- The limitations and roadmap are thoughtfully discussed (Section 5; Appendix F/G).
+
+Strengths
+- Addresses an under-evaluated axis (goal shifts) with well-defined metrics (Sections 4.2–4.3; Table 3).
+- Rich empirical analysis with granular breakdowns and insightful failure-mode discussion (Tables 4–5, 9–10; Section 4.4.3).
+- Practical orientation: one-tool-per-turn constraints, policy adherence, and tool schema validation (Section 3.5; Appendix C).
+
+Weaknesses
+- GSRT reporting inconsistencies and permissive recovery criterion (Section 4.3; Figure 1; Table 10).
+- Limited statistical rigor (lack of CIs/tests) and incomplete GSRT reporting for Gemini Airline-new (Table 10).
+- Weighting choices (TSR/TUE) lack sensitivity analysis (Eq. 1–2; Appendix B.2/B.3).
+- Editorial inconsistencies (Abstract counts; Introduction “threefold” but four items; persona duplication; Conclusion recovery claim).
+
+Questions
+1. Can you separate GSRT (turns) from a distinct “Recovery Rate” metric, and report distributions for ack/tool/outcome latencies (Section 4.3; Figure 1; Table 10)?
+2. Will you tighten recovery success to include outcome achievement or a relevant tool call (Section 4.3)?
+3. Please clarify the Abstract’s “2,835 task sequences” vs. 315 tasks (Sections 3.1–3.3; Table 6).
+4. Can you add confidence intervals or tests to support comparisons (Appendix B.2; Tables 4–5, 9–10)?
+5. Will you re-run the missing GSRT for Airline-new Gemini to complete comparisons (Table 10)?
+6. Have you considered alternative judges or cross-judge calibration for the communication channel to mitigate vendor bias (Section 4.2)?
+
+Rating
+- Overall (10): 7 — Valuable benchmark with strong practical impact, but measurement/reporting inconsistencies and limited statistics temper confidence (Section 4.3; Figure 1; Tables 5, 9–10).
+- Novelty (10): 8 — Clear advance in evaluating dynamic goal-shift robustness with multidimensional metrics (Table 3; Sections 4.1–4.3).
+- Technical Quality (10): 7 — Solid design and harness integration; recovery definition and statistical omissions are notable gaps (Section 3.5; Section 4.3; Appendix B.2).
+- Clarity (10): 7 — Generally clear with helpful tables/figures; several inconsistencies need correction (Figure 1; Section 1; Sections 3.1–3.3; Appendix A.3; Section 6).
+- Confidence (5): 4 — High confidence from detailed cross-checking; remaining questions relate to metric definitions and statistical rigor (Tables 4–10; Appendix B–E).

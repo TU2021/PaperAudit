@@ -1,0 +1,210 @@
+### Reviewer 1
+
+**Summary**
+
+This paper introduces SpecExtend, a training-free, drop-in enhancement for speculative decoding that aims to solve the performance degradation observed when processing long input sequences. The authors identify that this degradation occurs even in a "moderate-length regime" before the KV cache becomes the primary memory bottleneck. SpecExtend combines two main ideas: (1) integrating efficient attention mechanisms (FlashAttention, Hybrid Tree Attention) to accelerate the prefill and verification steps, and (2) a novel KV cache eviction strategy for the draft model called Cross-model Retrieval (CMR). CMR uses the target model's attention scores from the verification step to dynamically select the most relevant context chunks for the smaller draft model, thereby improving draft accuracy and speed. The paper presents extensive experimental results showing significant speedups (up to 3.86x) on long summarization and reasoning tasks without compromising performance on short inputs.
+
+**Soundness**
+
+The methodology is sound and well-conceived. The paper correctly identifies a practical and underexplored problem: the performance drop of speculative decoding on moderately long sequences (Introduction, Figure 2). The proposed solution is a logical combination of existing systems optimizations (efficient attention) and a novel algorithmic contribution (Cross-model Retrieval). The CMR mechanism is intuitive; using the more powerful target model to guide the context selection for the weaker draft model is a clever way to improve draft-target alignment without retraining. The experimental evaluation is thorough, covering multiple tasks (summarization, reasoning), models (Vicuna, Llama-3.1, DeepSeek), and draft model types (off-the-shelf, EAGLE). The ablation studies (Section 4.3) effectively isolate the contribution of each component of SpecExtend, validating the design choices. The Needle Retrieval experiment (Section 3.2.3, Table 1) provides strong evidence for CMR's ability to help the draft model utilize relevant global context.
+
+**Presentation**
+
+The paper is exceptionally well-written and easy to follow. The motivation is clearly established in the introduction with the help of Figure 2, which visualizes the problem of early performance degradation. The overview of the proposed method in Figure 1 is clear and provides an excellent high-level summary of the components. The structure is logical, moving from the problem definition to the proposed solution, theoretical analysis, and extensive experiments. Tables and figures are well-designed and informative; for example, Table 2 presents a comprehensive breakdown of performance across various settings, and Figure 4 clearly illustrates the improvements in both accepted length and latency. The inclusion of an algorithm block for CMR (Algorithm 1) aids reproducibility.
+
+**Contribution**
+
+The paper makes a significant and practical contribution to the field of LLM inference acceleration. While prior work has focused on the extreme-long-context regime where the KV cache is the main bottleneck, this paper is the first to systematically address and solve the performance degradation in the moderate-length regime with a training-free solution (Contribution 1). The core novelty lies in the Cross-model Retrieval (CMR) mechanism, which is an elegant and effective strategy for improving draft model performance on long contexts (Contribution 2). By packaging these ideas into a drop-in enhancement, SpecExtend, the authors provide a solution that is immediately applicable to existing state-of-the-art speculative decoding frameworks, which is a major practical contribution (Contribution 3). The demonstrated speedups are substantial and highly relevant for real-world applications.
+
+**Strengths**
+
+1.  **Practicality and Impact:** The "drop-in" and "training-free" nature of SpecExtend makes it highly practical. The impressive speedups shown on popular models and challenging long-context tasks (e.g., 2.84× on 16K summarization, 3.86× on long reasoning) demonstrate its immediate value.
+2.  **Novel and Effective Method:** Cross-model Retrieval is a clever and well-motivated technique. Using the target model's attention to guide the draft model's KV cache is a novel approach to bridging the capability gap between the two models in long-context scenarios. The Needle Retrieval experiment (Table 1) provides compelling evidence of its effectiveness.
+3.  **Thorough Evaluation:** The experiments are comprehensive, covering multiple models, datasets, and input lengths (up to 128K). The comparison against relevant baselines (Table 3) and the detailed ablation studies (Table 4, Table 5) strongly support the paper's claims.
+4.  **Clarity of Presentation:** The paper is very well-written, with clear explanations and effective visualizations that make a complex systems topic accessible.
+
+**Weaknesses**
+
+1.  **Parameter Sensitivity:** The performance of Cross-model Retrieval depends on several hyperparameters (working cache size, chunk size, top-k, retrieval frequency). While the ablation study in Section 4.3.2 explores these, it would be beneficial to discuss how one might set these parameters for new models or tasks without extensive tuning. A sensitivity analysis or a heuristic for setting these parameters would strengthen the paper.
+2.  **Limited Discussion on Overhead:** The paper states that the overhead of CMR is minimal (Section 3.2.1), supported by Table 8. However, this overhead is measured for a single configuration. It would be useful to understand how this overhead scales, for instance, with the number of attention heads or layers from which scores are aggregated, even if only the final layer is used in the current implementation.
+
+**Questions**
+
+1.  In Section 3.2.1, you mention that you compute standard attention for the final layer to get attention scores, which adds minimal overhead. Have you considered or experimented with using attention scores from intermediate layers? Would a combination of scores from different layers provide a better signal for context retrieval?
+2.  The Cross-model Retrieval strategy seems broadly applicable. Could this idea of using a larger model's attention scores to guide a smaller model's context be used in other scenarios beyond speculative decoding, for example, in knowledge distillation or efficient fine-tuning?
+3.  You mention that retrieval cache updates can be applied "adaptively" (Section 3.2.1). Could you elaborate on what such an adaptive strategy might look like? For example, could the retrieval frequency be tied to the draft acceptance rate, triggering more frequent updates when accuracy drops?
+
+**Rating**
+
+-   Overall (10): 9 — The paper presents a novel, practical, and highly effective solution to a well-defined problem, supported by extensive and convincing experiments (Table 2, Figure 6).
+-   Novelty (10): 9 — The Cross-model Retrieval mechanism is a novel and insightful contribution for improving draft model performance in speculative decoding (Section 3.2).
+-   Technical Quality (10): 9 — The methodology is sound, and the experimental evaluation is rigorous, with strong ablation studies and analysis (Section 3.2.3, Section 4.3).
+-   Clarity (10): 10 — The paper is exceptionally clear, well-organized, and supported by excellent figures and tables that effectively communicate the core ideas and results (Figure 1, Figure 4).
+-   Confidence (5): 5 — I am an expert in this area and am highly confident in my evaluation of the paper's strengths and contributions.
+
+---
+
+### Reviewer 2
+
+**Summary**
+
+The paper proposes SpecExtend, a method to improve the performance of speculative decoding for large language models on long sequences. The authors argue that speculative decoding performance degrades significantly even for moderately long inputs, a problem they claim is underexplored. SpecExtend consists of two parts: integrating existing efficient attention mechanisms (FlashAttention, Hybrid Tree Attention) and a new KV cache management strategy for the draft model called Cross-model Retrieval (CMR). CMR uses attention scores from the target model's verification step to select a subset of the context (KV cache) for the draft model to use, aiming to improve both draft speed and accuracy without requiring retraining. The authors evaluate SpecExtend on long summarization and reasoning tasks, reporting significant speedups.
+
+**Soundness**
+
+The paper's premise is sound, but some aspects of the methodology and evaluation warrant closer scrutiny. The core idea of CMR is plausible: use the powerful target model to guide the less powerful draft model. However, the implementation details and associated overheads are not fully fleshed out. For instance, the paper states that computing attention scores for the final layer adds "minimal latency overhead" (Section 3.2.1), but Table 8 shows this is 0.35ms, which is not insignificant compared to a single draft model forward pass (0.84ms). This overhead is incurred at every verification step where retrieval is active, and its impact on the overall speedup calculation needs to be clearer.
+
+The comparison with other methods in Table 3 is also potentially problematic. The authors state they implement MagicDec with "StreamingLLM-based drafting with self-speculation." This seems to be a specific interpretation of MagicDec, which is a broader framework. Similarly, TriForce's poor performance is attributed to using the large base model for drafting, which is true by design, but the comparison feels slightly unfair as SpecExtend's main advantage is using a small draft model. The core comparison should be SpecExtend's CMR vs. other cache policies for the *small draft model*, which is done against StreamingLLM, but the framing against TriForce and MagicDec could be misleading.
+
+The Needle Retrieval evaluation (Table 1) is a strong piece of evidence. However, it's a synthetic task. While it demonstrates CMR's potential, its direct correlation with performance on general tasks like summarization is assumed rather than proven. The analysis in Figure 3 (or Figure 14) is interesting but the figures themselves are low-resolution and hard to read exact values from. The labels "Hard" and "Easy" are based on entropy, but the threshold (top 10%) is arbitrary.
+
+**Presentation**
+
+The paper is generally well-written, but several figures and tables are confusing or poorly presented. Figure 4 and Figure 20 are identical, as are Figure 6, Figure 29 and Figure 30. This seems to be a copy-paste error. The data in Figure 4(a) and Figure 20(a) are different, suggesting one is mislabeled. Specifically, Figure 4(a) is titled "Average accepted length of Vicuna-7B/68M" but the legend shows "Standard", "StreamingLLM", and "SpecExtend", which doesn't match the caption's description of different cache settings. The actual plot seems to be Figure 20(a). This confusion detracts from the paper's professionalism.
+
+Table 2 is extremely dense and difficult to parse. The speedup numbers are presented relative to "naive autoregressive generation," but the baseline tokens/s for this naive AR is not provided for each setting, making it hard to verify the speedup claims directly from the table. Figure 5 attempts to visualize this but only for one dataset. The text in Figure 3 and Figure 14 is too small to be legible, and the values are approximated in the caption, which is not ideal.
+
+**Contribution**
+
+The main contribution is the Cross-model Retrieval (CMR) technique. While combining existing efficient attention methods is good engineering, it is not a novel research contribution. The novelty of CMR is in using the target model's attention scores to manage the draft model's KV cache. This is a clever, training-free approach. The paper's claim to be the "first to tackle the largely underexplored problem" of moderate-length degradation (Section 1) might be slightly overstated, as performance degradation with context length is a generally known issue, though perhaps not framed in this specific way for speculative decoding. The contribution is solid but perhaps not as groundbreaking as presented. It's an incremental but important improvement over existing cache eviction strategies like StreamingLLM.
+
+**Strengths**
+
+1.  **Clear Problem Formulation:** The paper does a good job of identifying and illustrating a specific, practical problem in speculative decoding (Figure 2).
+2.  **Training-Free Solution:** The proposed method does not require any model retraining, making it easy to adopt and apply to a wide range of existing models and frameworks.
+3.  **Strong Empirical Results:** Despite some presentation issues, the reported speedups are significant and demonstrated across multiple settings (Table 2, Table 6), suggesting the method is robust.
+4.  **Good Ablation Study:** The ablation study in Table 4 clearly breaks down the performance gains from each component of SpecExtend, showing that CMR is the most impactful part.
+
+**Weaknesses**
+
+1.  **Presentation Issues:** Several figures are duplicated, mislabeled, or have illegible text (Figure 4 vs 20, Figure 3/14), which undermines the paper's quality.
+2.  **Overhead Analysis is Superficial:** The latency overhead of CMR is not analyzed in sufficient depth. Its cost relative to the draft step is non-trivial, and how it scales is not discussed.
+3.  **Hyperparameter Dependency:** The method introduces several new hyperparameters (chunk size, top-k, etc.). The paper provides an ablation (Table 5) but no guidance on how to choose these parameters, which could be a practical barrier to adoption.
+4.  **Potentially Misleading Comparisons:** The comparison to methods like TriForce and MagicDec in Table 3 may not be entirely fair, as they are designed with different trade-offs in mind (e.g., using the base model for drafting).
+
+**Questions**
+
+1.  Can you clarify the discrepancy between Figure 4 and Figure 20? Which one represents the correct data for the Vicuna-7B/68M experiment described in Section 4.1.1?
+2.  Regarding the CMR overhead (Table 8), how does this 0.34ms retrieval update time scale with the total input length (e.g., at 32K, 64K, 128K)? Does it depend on the number of chunks, and if so, is there a trade-off between retrieval granularity (smaller chunks) and overhead?
+3.  In your comparison with TriForce (Table 1, Table 3), you highlight that it is slow due to using the 7B model for drafting. Could CMR be combined with TriForce's hierarchical speculation, i.e., use CMR to create a small cache for a small draft model, which then drafts for the large model that uses a larger retrieved cache?
+4.  The choice to use only the final layer's attention scores seems pragmatic. Did you find that this was sufficient across different model architectures and tasks, or were there cases where earlier layers might have been more informative?
+
+**Rating**
+
+-   Overall (10): 6 — The core idea is promising and results are strong, but the paper is marred by significant presentation issues and a lack of depth in its analysis of overheads and hyperparameters.
+-   Novelty (10): 7 — Cross-model Retrieval is a novel cache management technique, but the overall framework largely combines existing ideas.
+-   Technical Quality (10): 6 — The experimental setup has some questionable comparisons, and the analysis of the method's costs is incomplete.
+-   Clarity (10): 5 — The paper suffers from duplicated/mislabeled figures (Figure 4, Figure 20) and hard-to-read visuals (Figure 3/14), which significantly hinders clarity.
+-   Confidence (5): 4 — I am familiar with the literature on LLM inference optimization and feel confident in my assessment, though some implementation details are not fully clear.
+
+---
+
+### Reviewer 3
+
+**Summary**
+
+This paper presents SpecExtend, a system for accelerating speculative decoding on long sequences. The authors observe that the performance of speculative decoding degrades well before the KV cache size becomes the dominant memory bottleneck. To counter this, SpecExtend incorporates two main optimizations. First, it leverages I/O-aware attention mechanisms like FlashAttention for the prefill stage and Hybrid Tree Attention for the verification stage to reduce latency. Second, it introduces a novel dynamic KV cache eviction policy for the draft model, named Cross-model Retrieval (CMR). CMR uses attention scores from the target model to identify and retain the most relevant context chunks in the draft model's KV cache, aiming to boost draft accuracy and reduce the draft model's per-token latency. The authors show through experiments on summarization and reasoning tasks that SpecExtend provides significant end-to-end speedups (up to 3.86x) over standard speculative decoding.
+
+**Soundness**
+
+The technical approach is sound from a systems perspective. The diagnosis of the problem in Section 1 is accurate: the quadratic complexity of attention in the prefill stage and the growing KV cache for the draft model are key latency contributors in the moderate-length regime. Integrating FlashAttention and Hybrid Tree Attention (Section 3.1) is a standard but necessary engineering step to build an efficient long-context system.
+
+The core technical contribution, Cross-model Retrieval (CMR), is well-reasoned. The key insight is to offload the "intelligence" of identifying important context to the more capable target model, whose attention scores are a "free" byproduct of the verification step. The implementation detail of computing standard attention for just the final layer to get these scores (Section 3.2.1) is a pragmatic solution to the problem that FlashDecoding does not materialize the attention matrix. The latency analysis in Table 8 suggests this is a viable trade-off, where the retrieval update (0.34ms) is faster than a draft step (0.84ms).
+
+The experimental methodology is robust. The use of different base models, draft models (including SOTA EAGLE models), and tasks demonstrates the general applicability of the system. The latency breakdown in Figure 4(b) / Figure 21(b) is particularly useful, as it clearly shows latency reductions in all phases of speculative decoding (prefill, verification, and drafting), confirming that the system's components are working as intended. The ablation study in Table 4 quantifies the impact of each component, confirming that CMR provides the largest speedup on long inputs, followed by FlashAttention.
+
+**Presentation**
+
+The paper is well-structured and clearly written. The system architecture is explained well with the aid of Figure 1. The flow from problem identification, to component-wise solution, to integrated system evaluation is logical.
+
+However, there are some areas for improvement. The figures could be more polished. Figure 2 uses two y-axes, which is good, but the performance curve drops so sharply that it's hard to read values in the 8K-64K range. Figure 4(b) / 21(b) provides a great latency breakdown, but only for a single 16K input length. Showing how these relative contributions change across different input lengths (e.g., 4K, 8K, 16K, 32K) would provide a much richer view of the system's performance characteristics. The main results table (Table 2) is very dense; breaking it down or using a graphical representation might improve readability. There appear to be duplicated figures (e.g., Figure 6 and Figure 29/30), which should be corrected.
+
+**Contribution**
+
+The primary contribution is a well-designed and effective system that addresses a real-world performance bottleneck in speculative decoding. While the use of efficient attention libraries is not novel, their integration into a speculative decoding framework specifically to combat moderate-length degradation is a valuable engineering contribution. The main novelty is Cross-model Retrieval (CMR), a dynamic, training-free cache management policy that is both simple and effective. By demonstrating that a small draft model can effectively leverage context selected by a large target model (Table 1), the paper opens up a new direction for improving draft-target alignment in long-context scenarios. The work makes a strong case for focusing on draft model efficiency and accuracy as a key lever for improving long-context speculative decoding, rather than just focusing on the target model's KV cache size at extreme lengths.
+
+**Strengths**
+
+1.  **Holistic System Optimization:** The paper addresses latency across all stages of speculative decoding—prefill (FlashAttention), verification (Hybrid Tree Attention), and drafting (CMR)—leading to a comprehensive and effective solution.
+2.  **Efficient and Novel Core Mechanism:** CMR is an elegant solution that cleverly repurposes information already available from the verification step, minimizing overhead while maximizing impact on draft quality.
+3.  **Strong Quantitative Results:** The paper is backed by extensive performance numbers, including end-to-end speedups (Table 2), latency breakdowns (Figure 4b), and component-wise ablations (Table 4).
+4.  **Compatibility:** The method is shown to be compatible with and improve upon state-of-the-art draft models like EAGLE and EAGLE-3 (Table 6), demonstrating its relevance and utility.
+
+**Weaknesses**
+
+1.  **Lack of Deeper Latency Analysis:** The latency breakdown is only shown for one input length (16K). A more detailed analysis showing how the latency contributions of prefill, verification, and drafting evolve as input length increases would be more insightful.
+2.  **Hardware Specificity:** All experiments are run on a single A100 80GB GPU. Performance characteristics, especially the trade-offs between computation (attention) and memory bandwidth (KV cache access), can be hardware-dependent. A brief discussion of how the results might change on different hardware (e.g., with lower memory bandwidth) would be valuable.
+3.  **CMR Overhead Under-explored:** The overhead of computing attention scores and updating the cache is presented as a fixed number (Table 8). It's unclear how this scales with model size (e.g., for a 70B target model) or sequence length. This is a critical factor for the system's overall efficiency.
+
+**Questions**
+
+1.  In the latency breakdown (Figure 4b), the "Drafting" time is also reduced by SpecExtend. This is attributed to the smaller KV cache used by the draft model. Can you quantify the relationship between the draft model's KV cache size and its per-token latency?
+2.  Your method relies on computing attention scores from the target model's final layer. For very large models (e.g., >70B), would the cost of this computation (even for one layer) become a bottleneck, especially if not using a fused kernel like FlashDecoding?
+3.  You enable Hybrid Tree Attention (HTA) only for inputs beyond 4K tokens due to overhead at shorter lengths (Section 4.3.1). Does this suggest a general principle that different components of SpecExtend should be adaptively enabled/disabled based on the sequence length? How is this threshold (4K) determined?
+4.  How does the chunk size in CMR interact with the model's attention patterns? For example, would a model with more localized attention benefit from smaller chunks, while a model with more global attention patterns might need larger chunks or a larger top-k value?
+
+**Rating**
+
+-   Overall (10): 8 — A strong systems paper with a novel core mechanism (CMR) and impressive results, slightly held back by a lack of deeper performance analysis and some presentation flaws.
+-   Novelty (10): 8 — The CMR concept is novel and provides a new, effective way to manage the draft model's context in speculative decoding.
+-   Technical Quality (10): 8 — The system is well-designed and the evaluation is mostly thorough, but the analysis of overheads and performance scaling could be more detailed.
+-   Clarity (10): 7 — The paper is generally clear, but the dense tables and duplicated/unclear figures detract from the overall presentation quality.
+-   Confidence (5): 5 — I have a strong background in systems for machine learning and am confident in my assessment of the paper's technical merits and weaknesses.
+
+---
+
+### Reviewer 4
+
+**Summary**
+
+This paper introduces SpecExtend, a training-free method to counteract the performance decline of speculative decoding as input sequence length increases. The authors identify that this performance drop is significant even for moderate-length sequences, before the KV cache becomes the primary memory bottleneck. SpecExtend combines efficient attention implementations (FlashAttention, Hybrid Tree Attention) with a novel draft model KV cache strategy called Cross-model Retrieval (CMR). CMR leverages the target model's attention scores, obtained during the verification step, to dynamically select a small but relevant subset of the input context for the draft model. This dual approach aims to accelerate all phases of inference while simultaneously improving the draft model's accuracy on long contexts. The authors provide extensive empirical evidence on long-text summarization and reasoning tasks, showing that SpecExtend significantly speeds up speculative decoding frameworks like EAGLE.
+
+**Soundness**
+
+The paper's methodology is logically sound and well-motivated. The problem statement—that speculative decoding performance degrades early and for reasons beyond just the target model's KV cache size—is a sharp observation that correctly frames the work (Section 1, Figure 2). The proposed solution is a pragmatic combination of best practices (efficient attention) and a novel technique (CMR).
+
+The design of CMR is the paper's core strength. It cleverly uses the target model as an "oracle" to guide the draft model, addressing the inherent capability gap between them, especially in long-context scenarios where the smaller draft model (often trained on short texts) would otherwise struggle. The analysis in Section 3.2.3 provides good support for this. The Needle Retrieval experiment (Table 1) is a well-chosen synthetic benchmark to demonstrate that the draft model can indeed leverage the context provided by CMR, achieving accuracy close to an oracular upper bound (TriForce) while being much faster. The divergence analysis (Figure 3/14) further suggests that CMR brings the draft model's distribution closer to the target's, which is the fundamental goal for achieving a high acceptance rate.
+
+The experimental setup is comprehensive and convincing. The authors test their method on different tasks, models, and input lengths, and importantly, show that it enhances state-of-the-art frameworks (EAGLE, EAGLE-3) rather than just a vanilla baseline. This demonstrates the method's practical relevance.
+
+**Presentation**
+
+The paper is well-written and organized. The abstract and introduction clearly state the problem, the proposed solution, and the key results. The method is described in sufficient detail, and Figure 1 provides a helpful visual guide. The results are presented with a wealth of data in tables and figures.
+
+However, the presentation is not without flaws. Table 2 is overloaded with data, making it difficult to extract key trends at a glance. A summary plot like Figure 5 is much more effective and should perhaps be the primary mode of presenting the main results. There are several instances of what appear to be duplicated figures with different captions or data (e.g., Figure 4 vs. Figure 20, Figure 6 vs. Figure 29/30), which is a notable oversight that should be corrected in a final version. The text in some figures (Figure 3/14) is too small, forcing the reader to rely on the caption's summary.
+
+**Contribution**
+
+The paper's contribution is significant within the context of LLM inference optimization. It carves out a specific niche: improving speculative decoding in the moderate-to-long context regime in a training-free manner.
+
+Its novelty should be assessed relative to related work. Methods like TriForce (Sun et al., 2024) and MagicDec (Sadhukhan et al., 2024) also tackle long-context speculative decoding but primarily focus on the extreme-length regime where the target model's KV cache is the bottleneck, often resorting to using the target model itself for drafting on a sparse cache. SpecExtend's key differentiator is its focus on maintaining the small-draft-model paradigm, which is more efficient in the moderate-length regime. Compared to LongSpec (Yang et al., 2025), which requires training a specialized long-context draft model, SpecExtend's training-free nature is a major advantage in terms of flexibility and cost.
+
+The most novel element is Cross-model Retrieval. While using attention scores for context management is not entirely new (e.g., in summarization or memory-augmented networks), its application to guide a draft model's KV cache in speculative decoding is, to my knowledge, original. It provides a new, effective mechanism for inter-model collaboration during inference.
+
+**Strengths**
+
+1.  **Clear Positioning:** The paper clearly articulates its place in the literature, differentiating itself from methods focused on extreme-long contexts (TriForce) and those requiring training (LongSpec).
+2.  **Novel Core Idea:** Cross-model Retrieval is an innovative and intuitive technique that effectively addresses the draft model's limitations in long-context scenarios.
+3.  **Strong Empirical Validation:** The method is shown to provide substantial speedups on top of already optimized baselines like EAGLE-3 (Table 6), demonstrating its real-world value.
+4.  **Generalizability:** The approach is demonstrated on multiple model families (Llama, Vicuna) and tasks (summarization, reasoning), suggesting it is a general technique.
+
+**Weaknesses**
+
+1.  **Limited Generality of CMR Analysis:** The effectiveness of CMR is shown to depend on hyperparameters like chunk size and top-k (Table 5). The paper does not discuss how these might generalize across different model architectures or domains. For instance, do code generation models have different locality patterns that would require different CMR settings?
+2.  **Presentation Flaws:** The duplicated and hard-to-read figures are a significant distraction and reduce the paper's overall quality.
+3.  **Discussion of Limitations:** The paper does not include a dedicated limitations section. It would be beneficial to discuss scenarios where SpecExtend might not be effective. For example, tasks with no context locality, or cases where the overhead of CMR might outweigh its benefits (e.g., very short generation).
+
+**Questions**
+
+1.  The paper focuses on using the target model's attention scores to guide the draft model. Have you considered the reverse? Could the draft model's generation (or its internal states) be used to guide or prune the verification process in the target model, beyond the standard speculative verification?
+2.  Cross-model Retrieval relies on chunking the input. How does this interact with tokenization? Does splitting a multi-token word or entity across chunks negatively impact performance? Would a semantically-aware chunking strategy offer any benefits over the fixed-size approach?
+3.  Table 6 shows that SpecExtend significantly boosts the performance of EAGLE-3, which otherwise degrades sharply on long contexts. This suggests CMR is compensating for a weakness in the EAGLE-3 draft model. Does this imply that CMR is most beneficial for draft models that have not been explicitly trained for long-context generalization?
+4.  How does SpecExtend's performance compare to simply using a larger, more capable draft model (if one were available)? Is the gain from CMR greater than what could be achieved by, for example, doubling the size of the draft model while still keeping its KV cache full?
+
+**Rating**
+
+-   Overall (10): 8 — A very strong paper with a novel and impactful contribution, whose high quality is slightly diminished by correctable presentation flaws.
+-   Novelty (10): 8 — The paper introduces Cross-model Retrieval, a novel and well-motivated technique that advances the state of the art in speculative decoding.
+-   Technical Quality (10): 9 — The technical approach is sound, and the experiments are extensive and well-designed, providing strong support for the claims.
+-   Clarity (10): 7 — The core ideas are explained well, but the paper's clarity is hampered by several issues with figures and tables.
+-   Confidence (5): 5 — I am very familiar with this research area and am confident in my assessment.

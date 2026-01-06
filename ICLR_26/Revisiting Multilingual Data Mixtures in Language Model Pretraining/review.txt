@@ -1,0 +1,35 @@
+### Summary 
+
+This paper investigates the impact of multilingual data mixtures on the pretraining of large language models (LLMs). The study challenges existing assumptions about multilingual training, including the **"curse of multilinguality"**, which suggests that adding more languages harms model performance. The authors conduct experiments with 1B- and 3B-parameter models trained on diverse multilingual corpora, varying the number of languages from 25 to 400. Their findings suggest:
+
+1. **English Data and Multilingual Performance**: Increasing the amount of English data does not necessarily degrade performance in other languages, provided there is sufficient data for each language.
+
+2. **Pivot Languages**: Using English as a pivot language yields benefits across language groups. However, selecting a pivot language from within a specific family (e.g., Slavic languages) does not always improve performance within that family.
+
+3. **Curriculum Learning**: Introducing languages in a structured order (curriculum learning) does not significantly reduce interference between languages during pretraining.
+
+4. **Curse of Multilinguality**: The addition of more languages does not inherently harm performance if the data is balanced and each language has sufficient training tokens.
+
+### Strengths
+
+* **Innovative Analysis**: The study tackles important questions in multilingual LLM pretraining and challenges long-held assumptions about multilingual data mixtures. The approach includes experiments with a wide range of languages and rigorous ablation studies.
+* **Relevance**: The findings provide valuable insights for current research on multilingual pretraining and offer practical guidance for balancing languages in training datasets.
+* **Clear Presentation**: The paper is well-structured and clearly communicates assumptions, experiments, and takeaways from the results.
+
+### Weaknesses
+
+* **Lack of Grounding in Prior Work**: While the paper introduces novel insights, it could do more to contextualize its findings in the existing literature. Some key assumptions, like the relationship between **English data and multilingual performance**, are not sufficiently connected to prior studies that discuss multilingual data interference.
+
+* **Tokenizer Bias**: The paper uses the **Mistral-Nemo-Base-2407 tokenizer**, which may introduce biases, particularly in languages with less efficient tokenization. The study does not sufficiently control for how tokenizer choices could skew results, especially for non-Latin scripts.
+
+* **Limited Language Families**: The pivot language experiments are limited to Slavic and Cyrillic languages. Expanding this to more language families would strengthen the generalizability of the findings.
+
+* **Lack of Comparison to 100% English Baseline**: In Assumption #1, the paper demonstrates that increasing English data does not degrade multilingual performance, but it does not compare this to a model trained solely on English data, which would have been helpful to fully understand the impact of multilingual data on English performance.
+
+### Key Questions and Suggestions from Reviewers
+
+* **Effect of Tokenizer**: The impact of tokenizer choices on results, especially for non-Latin scripts, is significant but not fully explored. The authors are encouraged to either control for tokenizer biases or use alternative tokenizers to confirm the robustness of their findings.
+
+* **Scaling to Larger Models**: The reviewers suggest that testing larger models (20–40B) could provide valuable insights into whether the observed trends hold for models more commonly used in practice today.
+
+* **Curriculum Learning**: The paper concludes that curriculum learning does not benefit multilingual pretraining. However, more work could be done to understand when curriculum learning is beneficial, particularly in settings beyond pretraining, such as fine-tuning or specific language tasks.

@@ -1,0 +1,104 @@
+{
+  "paper": "Emergent Bayesian Behaviour and Optimal Cue Combination in LLMs",
+  "runs": [
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "deepreviewer",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "deep_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180
+      },
+      "config_key": "24b66d75b94c155df325f4e5f2603b40312e4469",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/deepreviewer/gpt-5-2025-08-07/paper_origin/deep_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "motivation_strength_alignment": 0.9,
+        "weakness_error_alignment": 0.55,
+        "overall_alignment": 0.75,
+        "explanation": {
+          "strength": "Both reviews identify the same core strengths: the novel psychophysics-inspired framework, the innovative BCS metric, and the key finding that accuracy can be dissociated from robust uncertainty handling.",
+          "weakness": "Both reviews question the validity of the 'emergent Bayesian behavior' claim and note the lack of cue-conflict trials, but Review B identifies several additional major weaknesses, such as specific flaws in the BCS metric design, reproducibility issues, and errors in the appendix.",
+          "overall": "The reviews show high alignment on the paper's primary contributions and its most important conceptual weakness, leading to a similar overall judgment; however, the AI review is substantially more thorough in identifying specific methodological and presentation flaws that the human review misses."
+        }
+      },
+      "generated_at": "2025-12-27T20:04:20"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "baseline_review.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180
+      },
+      "config_key": "a14d937ebf873b90a820c8cb44da768956431bd4",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/baseline_review.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "motivation_strength_alignment": 0.75,
+        "weakness_error_alignment": 0.45,
+        "overall_alignment": 0.55,
+        "explanation": {
+          "strength": "Both reviews identify the novel psychophysics-inspired framework, the innovative BCS metric, and the key finding about the accuracy-robustness dissociation as primary strengths, showing high alignment on the paper's core contributions.",
+          "weakness": "There is moderate alignment on weaknesses; both question the validity of the Bayesian claims and note limited generalizability, but Review B identifies numerous specific technical errors (e.g., probabilities > 100%) and experimental confounds that are absent from Review A's more conceptual critique.",
+          "overall": "The reviews agree on the paper's main strengths but diverge significantly on its weaknesses, with Review A focusing on high-level conceptual gaps while Review B details concrete technical and experimental flaws, resulting in only a moderate substantive alignment."
+        }
+      },
+      "generated_at": "2025-12-27T20:08:23"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "final_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180
+      },
+      "config_key": "565dcfbed8e348ba365acb8ebe44bf867f3cd0c2",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/final_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "motivation_strength_alignment": 0.75,
+        "weakness_error_alignment": 0.5,
+        "overall_alignment": 0.65,
+        "explanation": {
+          "strength": "Both reviews identify the core strengths as the novel psychophysics-inspired framework, the innovative BCS metric, and the key finding that accuracy can dissociate from robust decision-making. Review B provides more granular detail and mentions additional points like the human baseline, but the main contributions highlighted are highly aligned with Review A.",
+          "weakness": "There is moderate overlap, with both reviews questioning the validity of the paper's Bayesian claims and noting the limited generalizability of the synthetic tasks. However, Review B identifies several major, distinct technical weaknesses completely absent from Review A, such as critical data reporting errors, experimental confounds, and an underspecified human baseline.",
+          "overall": "The reviews reach a similar overall judgment that the paper presents a valuable idea with flawed execution, and they align well on the paper's main strengths. However, their focus diverges significantly on the weaknesses, with Review B providing a much more detailed and damning technical critique, resulting in only partial substantive alignment on the paper's flaws."
+        }
+      },
+      "generated_at": "2025-12-27T20:12:03"
+    }
+  ]
+}

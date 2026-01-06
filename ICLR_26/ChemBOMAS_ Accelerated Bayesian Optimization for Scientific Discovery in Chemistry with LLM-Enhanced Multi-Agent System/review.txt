@@ -1,0 +1,26 @@
+### Summary
+
+This submission proposes **ChemBOMAS**, an **LLM-enhanced multi-agent Bayesian Optimization (BO)** framework for chemical reaction / formulation optimization under **extreme data scarcity** and **large combinatorial search spaces**. The method combines:
+
+1. A **data-driven module**: an **8B-scale LLM regressor** fine-tuned on only **~1% labeled samples** to generate **pseudo-data** for warm-starting and shaping the surrogate prior; and
+2. A **knowledge-driven module**: a **hybrid RAG** pipeline (literature → databases → constrained web fallback) to guide an LLM to **partition the search space** into chemically meaningful subspaces, mitigating hallucinations.
+
+ChemBOMAS then applies **UCB-style subspace selection** on the partition tree and runs **standard GP-based BO** within high-potential regions. Results are reported on multiple reaction-optimization benchmarks (Suzuki, Arylation, Buchwald variants) plus a **materials-style LNP3** task, and a **real wet-lab campaign** in an approximately **10⁵-combination** design space, with claims of up to **~5×** (and elsewhere “up to **10×**”) acceleration in optimization efficiency.
+
+### Strengths
+
+* **Addresses two core BO pain points in chemistry:** cold-start under tiny labeled sets and inefficiency in vast mixed-variable spaces; the pseudo-data warm-start + knowledge partitioning is well-motivated for real lab settings.
+* **Clear “closed-loop” scaffold:** partition → prioritize subspaces (UCB) → BO in selected regions; reviewers note the pipeline is easy to follow once details are provided.
+* **Practical validation beyond simulation:** includes a **wet-lab** optimization campaign showing strong early-round gains, which improves credibility and operational relevance.
+* **Rebuttal substantially strengthens empirical rigor and fairness:** authors add missing **LLM regression baselines** (DT/RF/XGBoost/MLP, BERT, Chem-T5, MolFormer), add an **LBO-style baseline (GOLLuM)**, and rerun key experiments with **10 seeds** reporting **mean/std/CI and paired t-tests**.
+* **Robustness checks for the knowledge module:** added **RAG sensitivity** (multiple partition runs) and show optimization metrics are relatively stable; also clarify the RAG is run **once** (not every BO iteration) with low claimed cost.
+
+### Weaknesses
+
+* **Presentation/notation and metric clarity were initially weak:** multiple reviewers flagged confusing notation and under-explained metrics (“Initial/Best Found/95% Iter/Best Iter”), which can undermine interpretability even if later fixed in rebuttal.
+* **Ambiguity around “iteration 0” and flat curves:** early plots raised legitimate concerns that gains could be dominated by **initialization** rather than **search dynamics**; rebuttal adds evidence, but the visual impression and protocol nuance remain easy to misread and should be crystal-clear in the final paper.
+* **Attribution between modules is still not perfectly clean:** ablations show cases where **single-module variants behave oddly** (e.g., some metrics not monotonically improved), suggesting interactions and dataset-specific effects that deserve a clearer mechanistic explanation.
+* **Safety / feasibility constraints are not integrated into the algorithm loop:** reviewers note the absence of explicit hazard/feasibility filters; relying on “search space is pre-vetted by experts/datasets” is reasonable for the study but limits autonomy claims.
+* **RAG auditability and bias risks remain:** even with a tiered RAG description, it’s still hard to assess how retrieval corpus choices and filtering encode prior bias into partitions, and how often retrieval noise causes suboptimal splits.
+* **Claims and reporting consistency issues:** the submission text contains potentially conflicting acceleration claims (**5× vs 10×**), and some reported statistics/tables appear typo-prone (e.g., suspicious CI entries), which could reduce reviewer trust unless carefully cleaned.
+* **Wet-lab evidence is compelling but not statistically replicated:** presented as a single campaign (understandable for cost reasons), yet this limits the strength of conclusions about reliability and generalization.

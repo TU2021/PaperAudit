@@ -1,0 +1,174 @@
+Here are four distinct reviews of the research paper.
+
+***
+
+### **Review 1**
+
+**Summary**
+This paper introduces Q-FSRU, a novel model for medical Visual Question Answering (VQA). The primary goal is to improve reasoning over medical images and clinical questions by integrating two key ideas: 1) Frequency Spectrum Representation and Fusion (FSRU), which transforms both image and text features into the frequency domain using Fast Fourier Transform (FFT) to capture global patterns, and 2) Quantum-inspired Retrieval-Augmented Generation (Quantum RAG), which uses a quantum fidelity measure to retrieve relevant external medical knowledge. The authors evaluate their model on the VQA-RAD and PathVQA datasets, demonstrating state-of-the-art performance compared to several baselines.
+
+**Soundness**
+The methodological approach is ambitious and logically structured. The pipeline of feature extraction, frequency transformation, knowledge retrieval, and final fusion seems sound. The use of contrastive learning objectives to align representations is a well-established and appropriate technique. The ablation study in Table 3 provides strong evidence for the efficacy of each proposed component, particularly the frequency processing and quantum retrieval modules. The experimental setup, including 5-fold cross-validation and patient-level data splitting, appears rigorous and designed to produce reliable results.
+
+**Presentation**
+The paper is well-written and generally easy to follow. The introduction clearly motivates the problem and situates the work within the existing literature. The model architecture is described systematically, and Figure 1 provides a helpful high-level overview of the entire pipeline. The results are presented clearly in tables, with statistical significance tests adding to their credibility. The inclusion of a qualitative analysis section is a good step towards explaining the model's behavior.
+
+**Contribution**
+The main contribution is the novel combination of frequency-domain analysis and quantum-inspired retrieval for the Med-VQA task. While frequency-domain methods have been explored in other areas, their application to multimodal Med-VQA appears to be new. Similarly, integrating a quantum-inspired similarity metric into a RAG framework for this specific task is a novel idea. The impressive performance gains shown in Table 1 suggest that this combined approach is a significant contribution to the field.
+
+**Strengths**
+1.  **Novel Framework:** The integration of frequency-domain processing and quantum-inspired retrieval is a creative and powerful idea for Med-VQA.
+2.  **Strong Empirical Results:** The model achieves substantial improvements over strong baselines on the VQA-RAD dataset (Table 1), with a 2.9% absolute accuracy gain over the next best method.
+3.  **Thorough Ablation Study:** The ablation experiments in Table 3 are comprehensive and clearly demonstrate the individual impact of each architectural component (frequency processing, quantum retrieval, contrastive learning).
+4.  **Generalization Analysis:** The cross-dataset evaluation (Table 2) provides evidence that the learned representations are robust and can generalize to different medical domains (radiology to pathology and vice-versa).
+
+**Weaknesses**
+1.  **Details of Quantum Retrieval:** The paper could benefit from a more intuitive explanation of the quantum fidelity measure. While the mathematical formulation is provided, it is not immediately clear to a non-expert reader why this is superior to classical measures like cosine similarity beyond the empirical results. A more detailed discussion of the properties of Uhlmann fidelity in this context would be helpful.
+2.  **Nature of Knowledge Base:** The paper does not specify the contents or construction of the external knowledge corpora used for the RAG component. Understanding what kind of information is being retrieved (e.g., definitions, similar cases, textbook facts) is crucial for evaluating the retrieval system's contribution.
+3.  **Classifier Input:** There appears to be a minor inconsistency. Section 4.5.1 states the concatenated feature for the classifier includes the retrieved knowledge `k_agg`, while Section 4.5.2 states the input is only `[t_freq || v_freq]`. This should be clarified.
+
+**Questions**
+1.  Could the authors elaborate on the intuition behind applying a 1D FFT to a feature vector? What kind of "global contextual patterns" are being captured in the feature dimension, as opposed to the spatial or temporal dimensions?
+2.  The ablation study (Table 3) shows that using quantum fidelity provides a 1.9% accuracy improvement over cosine similarity. Could you provide some qualitative examples of queries where the quantum fidelity metric retrieves more relevant information than cosine similarity would have?
+3.  What is the source and structure of the external knowledge base used for retrieval? How was it curated?
+4.  There are several citations to works with future publication dates (e.g., 2025). Are these pre-prints, and if so, could the citations be updated to reflect their current status (e.g., arXiv links)?
+
+**Rating**
+- Overall (10): 8 — The paper presents a novel and high-performing model, though it needs clarification on key technical details and has some minor presentation inconsistencies.
+- Novelty (10): 9 — The combination of frequency-domain processing and quantum-inspired retrieval for Med-VQA is highly original.
+- Technical Quality (10): 7 — The core ideas are strong, but the methodology has inconsistencies (Sec 4.5.1 vs 4.5.2) and lacks crucial details about the knowledge base.
+- Clarity (10): 7 — The paper is mostly clear, but key concepts like the FFT on features and the quantum fidelity metric could be explained more intuitively.
+- Confidence (5): 4 — I am confident in my assessment, but my expertise in quantum information retrieval is not extensive.
+
+***
+
+### **Review 2**
+
+**Summary**
+The paper proposes Q-FSRU, a model for medical visual question answering. The method is based on two pillars: applying a Fast Fourier Transform (FFT) to image and text feature vectors, and using a "quantum-inspired" retrieval-augmented generation (RAG) system to incorporate external knowledge. The authors claim their model achieves state-of-the-art results on the VQA-RAD benchmark.
+
+**Soundness**
+The technical soundness of this paper is highly questionable on several fronts.
+
+First, the "quantum-inspired" retrieval component appears to be misleading. The Uhlmann fidelity between two pure states, as defined in Section 4.4.2, simplifies to the squared cosine similarity between the state vectors. Specifically, for pure states `rho_q = |psi_q><psi_q|` and `rho_k = |psi_k><psi_k|`, the fidelity `Fid(rho_q, rho_k)` is exactly `|<psi_q|psi_k>|^2`, which is `(cosine_similarity(q, k))^2`. The ablation study in Table 3 claims a 1.9% accuracy improvement of "Quantum Fidelity" over "Cosine Similarity". This result is inexplicable if the implementation is correct. Either the authors are comparing against a flawed cosine similarity baseline, or the "quantum" method involves more than what is described, or the results are not reproducible. Calling squared cosine similarity "quantum-inspired" is a significant overstatement.
+
+Second, the paper contains numerous citations to non-existent or future-dated publications (e.g., Kankeu et al., 2025; Xing, 2025). For instance, the arXiv ID `2501.04591` for Kankeu et al. is invalid. This practice is a serious breach of academic integrity and casts doubt on the entire paper's credibility and the supposed literature it builds upon.
+
+Third, there is a critical contradiction in the methodology. Section 4.5.1 claims the final feature vector for classification is `[t_freq || v_freq || k_agg]`, but Section 4.5.2 explicitly states the input to the MLP is `z_concat = [t_freq || v_freq]`, excluding the retrieved knowledge. This is a fundamental flaw in the description of the model architecture, making it impossible to understand how the retrieved knowledge is actually used for the final prediction.
+
+**Presentation**
+The presentation suffers from a severe lack of clarity and multiple inconsistencies. The contradiction regarding the use of `k_agg` is a major issue. Furthermore, the visualization in the appendix (Figure 2, Block 44) of a "Text Data Linguistic Spectrum" is baffling. The text describes applying a 1D FFT to a feature vector, but the figure shows a 2D plot with axes "Sequence Length" and "Feature Dimensions," which is not explained and does not seem to correspond to the described method. The overall impression is that of a hastily assembled manuscript with insufficient attention to detail.
+
+**Contribution**
+The claimed contribution rests on two pillars: frequency-domain processing and quantum-inspired retrieval. The novelty of the frequency-domain part is moderate, as it adapts an idea from other fields. The novelty of the "quantum-inspired" part is negligible and misleading, as it appears to be a simple, well-known classical operation (squared cosine similarity) dressed in quantum terminology. Given the severe soundness issues, the claimed performance improvements are not credible, and thus the paper's contribution to the field is questionable at best.
+
+**Strengths**
+1.  The paper addresses an important and challenging problem in healthcare AI.
+2.  The idea of exploring frequency-domain representations for Med-VQA is interesting, even if the justification is weak.
+3.  The ablation study is structurally comprehensive, attempting to isolate the impact of each component.
+
+**Weaknesses**
+1.  **Misleading "Quantum" Claims:** The quantum-inspired retrieval is, by the paper's own formulation, equivalent to squared cosine similarity for the described pure states. The associated performance gains are therefore suspect.
+2.  **Serious Citation Issues:** The use of invalid and future-dated references is unacceptable and undermines the paper's scholarly foundation.
+3.  **Critical Methodological Contradiction:** The model description is contradictory regarding whether the retrieved knowledge is used in the final classification step (Sec 4.5.1 vs. 4.5.2).
+4.  **Poor Justification and Explanation:** The rationale for applying FFT on feature dimensions is not well-explained. The figures in the appendix are confusing and do not align with the text's description.
+5.  **Missing Experimental Details:** The paper fails to describe the knowledge base used for retrieval, making a core part of the methodology irreproducible.
+
+**Questions**
+1.  Please provide the mathematical derivation showing how the Uhlmann fidelity, as implemented, is different from squared cosine similarity. If it is not different, how do you explain the 1.9% performance gain over standard cosine similarity reported in Table 3?
+2.  Can the authors provide valid, accessible references for the cited works from 2025 (Kankeu et al., Xing, etc.)? Why were invalid arXiv identifiers used?
+3.  Please resolve the contradiction between Section 4.5.1 and 4.5.2. Is the aggregated knowledge vector `k_agg` used by the final MLP classifier or not?
+4.  How is the 2D "Text Data Linguistic Spectrum" in the appendix generated from a 1D FFT on a feature vector? Please clarify the meaning of the axes.
+
+**Rating**
+- Overall (10): 2 — The paper has fundamental soundness issues, including misleading claims and invalid citations, which make the results untrustworthy.
+- Novelty (10): 3 — The core ideas are either borrowed (FFT) or misleadingly framed (quantum RAG), resulting in low effective novelty.
+- Technical Quality (10): 1 — The methodology is contradictory, key components are poorly justified, and the use of invalid references represents a critical failure of scholarship.
+- Clarity (10): 2 — The paper is marred by major inconsistencies and poorly explained concepts, making it very difficult to understand and reproduce.
+- Confidence (5): 5 — I am highly confident in my assessment of the paper's severe flaws.
+
+***
+
+### **Review 3**
+
+**Summary**
+This paper proposes Q-FSRU, a new architecture for medical visual question answering. The model processes image and text features by first transforming them into the frequency domain using FFT. It then uses a "quantum-inspired" retrieval mechanism to fetch relevant knowledge from an external source. These different sources of information are then fused to predict an answer. The authors report that their model outperforms existing methods on the VQA-RAD dataset.
+
+**Soundness**
+The overall approach seems plausible, but the manuscript contains several inconsistencies and lacks detail, which compromises its technical soundness. A major point of confusion is how the retrieved knowledge is integrated. Section 4.5.1 ("Feature Integration Pipeline") and Figure 1 both indicate that the aggregated knowledge embedding `k_agg` is concatenated with the frequency features before being fed to the MLP. However, Section 4.5.2 ("Multi-Layer Perceptron Classifier") explicitly states the input to the MLP is `z_concat = [t_freq || v_freq]`, which excludes `k_agg`. This contradiction makes it unclear how a core component of the proposed RAG system functions. Furthermore, the description of the FFT application is ambiguous. The text states a 1D FFT is applied along the feature dimension, but the appendix contains 2D spectrum visualizations (Figure 2, Blocks 44, 46) without a clear explanation of how they are generated or what they represent, especially the "Linguistic Spectrum."
+
+**Presentation**
+The paper's presentation requires significant improvement to meet publication standards. The organization is logical, but the content within sections is often unclear or contradictory.
+
+1.  **Clarity of Method:** As noted above, the description of the final classification head is contradictory (Sec 4.5.1 vs. 4.5.2). This is a critical flaw that must be rectified.
+2.  **Figure Quality and Explanation:** Figure 1 is a reasonable overview, but the internal diagrams are too small and lack detail. The figures in the appendix (referred to as Figure 2 in the text) are very poorly explained. The "Text Data Linguistic Spectrum" (Block 44) is particularly opaque; its axes ("Sequence Length", "Feature Dimensions") and wave-like pattern are not explained at all. The connection between the 1D FFT described in the method and the 2D plots shown is missing.
+3.  **Citation Formatting:** Several references point to years in the future (2025), which is highly unconventional. These should be checked and formatted correctly, for instance by citing the arXiv preprint with its submission date.
+4.  **Terminology:** The paper could do a better job of explaining its core concepts to a broader audience. For example, a more intuitive, less formula-heavy explanation of why frequency-domain processing is beneficial for feature vectors would strengthen the paper. Similarly, the term "quantum-inspired" is used without sufficient justification of what makes the approach fundamentally different from a classical one in an intuitive sense.
+
+**Contribution**
+The paper's potential contribution lies in its novel architecture combining frequency analysis and a RAG system for Med-VQA. If the method is sound and the results are reproducible, it would represent a valuable addition to the field. However, the current state of the manuscript, with its contradictions and lack of clarity, obscures this contribution and makes it difficult to assess its true significance. The primary contribution at this stage is the idea itself, rather than a well-described and validated method.
+
+**Strengths**
+1.  The introduction provides good motivation for the problem.
+2.  The paper structure is logical, with dedicated sections for methods, experiments, and results.
+3.  The use of tables to present main results (Table 1) and ablations (Table 3) is effective and standard.
+4.  The model is evaluated on more than one dataset, showing an attempt to assess generalization.
+
+**Weaknesses**
+1.  **Contradictory Model Description:** The description of how retrieved knowledge is used in the classifier is inconsistent between sections.
+2.  **Poorly Explained Methods:** The application of FFT to feature vectors and the subsequent visualizations are not clearly explained.
+3.  **Unclear Figures:** The figures in the appendix are confusing and lack proper descriptions, hindering understanding.
+4.  **Inconsistent Citations:** The use of future-dated references is unprofessional and needs correction.
+
+**Questions**
+1.  Please clarify the final architecture: is the retrieved knowledge vector `k_agg` included in the input to the final MLP classifier, as suggested by Figure 1 and Section 4.5.1, or is it excluded, as stated in Section 4.5.2?
+2.  Could you provide a detailed explanation of how the 2D "Text Data Linguistic Spectrum" in the appendix is generated? What do the axes represent, and how does this visualization relate to the 1D FFT applied to the text feature vector?
+3.  Could you rewrite the beginning of Section 4.3 to provide more intuition on why analyzing the "frequency" of a feature embedding is a meaningful operation?
+4.  Regarding the citations for 2025, could you please verify these and update them to the correct, currently available versions (e.g., on arXiv)?
+
+**Rating**
+- Overall (10): 4 — The paper proposes interesting ideas but is undermined by significant clarity issues and contradictions that prevent a full assessment of its quality.
+- Novelty (10): 7 — The conceptual framework is novel, but its execution and description are flawed.
+- Technical Quality (10): 3 — The presence of a major contradiction in the model description and the lack of clarity on key methods indicate low technical quality in the manuscript's current form.
+- Clarity (10): 3 — The paper is difficult to follow due to contradictory statements, poorly explained concepts, and confusing figures.
+- Confidence (5): 5 — I am confident that the paper has significant presentation and clarity issues that need to be addressed.
+
+***
+
+### **Review 4**
+
+**Summary**
+This paper presents Q-FSRU, a deep learning model for medical visual question answering (VQA). The model combines two main techniques: it analyzes medical image and text features in the frequency domain using FFT, and it incorporates a retrieval-augmented generation (RAG) component that uses a quantum-inspired similarity metric to pull in external knowledge. The authors test this model on the VQA-RAD and PathVQA datasets and report superior performance over existing methods.
+
+**Soundness**
+From a clinical application perspective, the soundness of the approach has some unaddressed gaps. The core claim is that the model is more "explainable" (Abstract) and suitable for "clinical applications" (Contribution 4). However, the paper provides little evidence to support this. The "quantum-inspired" retrieval mechanism is a black box in terms of its clinical utility. The paper does not describe the knowledge base it retrieves from. Is it retrieving from a curated medical textbook, a database of clinical trial results, or simply a collection of other image/question/answer pairs? Without this information, it's impossible to judge whether the retrieved "knowledge" is clinically valid or if the model is simply learning to match patterns. The claim that frequency processing improves interpretability is also not substantiated. How would a clinician interpret a "frequency spectrum" of a feature vector (as in Figure 2) to trust a diagnosis? The link between the technical components and real-world clinical trust is missing.
+
+**Presentation**
+The paper is written from a machine learning perspective and does a decent job of explaining the technical architecture. However, it falls short in connecting its methods to the target domain of clinical decision support. The qualitative analysis (Section 7.2.1) is mentioned in one sentence but no examples are provided in the main text. Showing a concrete example of an image, a question, the retrieved knowledge, and the final answer would be far more compelling and would help bridge the gap between the technical method and its application. The appendix figures (Blocks 41-46) are presumably meant to serve this purpose, but they are disconnected from the main text and poorly annotated, making them difficult to interpret.
+
+**Contribution**
+The paper's primary contribution is technical: a new model architecture that achieves a higher score on an academic benchmark. The reported accuracy improvement of 2.9% on VQA-RAD (Table 1) is statistically significant and noteworthy in a research context. However, the clinical contribution is less clear. The VQA-RAD task is formulated as a classification problem over a fixed set of answers, which is a simplification of real clinical inquiry (which is often generative and exploratory). While improvements on this benchmark are valuable, the paper overstates its immediate clinical relevance without providing evidence of improved interpretability or trustworthiness for a medical professional. The RAG component is interesting, but its contribution is hard to evaluate without knowing what knowledge it is retrieving.
+
+**Strengths**
+1.  **Strong Benchmark Performance:** The model demonstrates a clear and statistically significant improvement on the VQA-RAD dataset, which is a strength from a machine learning perspective.
+2.  **Focus on an Important Problem:** Med-VQA is a critical area of research with the potential for significant real-world impact.
+3.  **Inclusion of Generalization Study:** Testing the model's ability to generalize across different medical imaging domains (radiology vs. pathology) is a good practice and strengthens the experimental evaluation.
+
+**Weaknesses**
+1.  **Unsupported Claims of Clinical Relevance/Interpretability:** The paper claims improved interpretability and suitability for clinical applications but provides no evidence. The mechanisms (FFT, quantum RAG) are not inherently interpretable from a clinician's viewpoint.
+2.  **Opaque Knowledge Retrieval:** The RAG component is a black box. The source, content, and curation of the external knowledge base are not described, making it impossible to assess the clinical validity of the retrieved information.
+3.  **Lack of Meaningful Qualitative Analysis:** The paper mentions qualitative analysis but does not provide concrete examples in the main body to illustrate *how* the model works better. For a clinical application paper, this is a major omission.
+4.  **Simplified Problem Formulation:** The classification-based VQA setup may not be representative of the complexities of real-world clinical question answering. The authors should acknowledge this limitation.
+
+**Questions**
+1.  What is the external knowledge source used by the Quantum RAG component? Can you provide examples of the "medical facts" it retrieves for a given image-question pair?
+2.  How does analyzing features in the frequency domain lead to better interpretability for a clinician? Can you provide an example of how a frequency spectrogram would help a doctor trust the model's prediction?
+3.  The ablation study shows that removing frequency processing causes a 4.9% drop in accuracy. Can you provide a qualitative example of a question that the full model answers correctly but the "w/o Frequency Processing" variant gets wrong, and explain why the frequency information was critical?
+4.  Have you considered evaluating the model on a generative VQA task, which might better reflect real-world clinical interactions than a multiple-choice classification task?
+
+**Rating**
+- Overall (10): 6 — A technically interesting paper with strong benchmark results, but it fails to substantiate its claims of clinical relevance and interpretability.
+- Novelty (10): 7 — The architectural combination is novel from a technical standpoint.
+- Technical Quality (10): 6 — The experiments are well-structured, but the lack of detail on the RAG knowledge base is a significant gap in reproducibility and evaluation.
+- Clarity (10): 5 — The paper is clear about the "what" of the model architecture but not the "why" from a clinical application perspective. Qualitative examples are sorely needed.
+- Confidence (5): 5 — I am highly confident in my assessment from a medical AI application perspective.

@@ -1,0 +1,76 @@
+# Global Summary
+This paper investigates the "transferability" between Membership Inference Attacks (MIAs) and Machine-Generated Text Detection, arguing they are fundamentally similar tasks that have been studied in isolation. The core theoretical contribution is a proof that the likelihood ratio test between the target model and the true population distribution is asymptotically the optimal metric for both tasks. The paper unifies many existing methods from both fields as approximations of this optimal metric. Empirically, the authors conduct a large-scale study involving 7 MIA methods and 5 detection methods across 13 domains and 10 generator models. The key finding is a strong Spearman's rank correlation (ρ = 0.66) between the performance of methods on both tasks. Notably, Binoculars, a method designed for machine text detection, achieves state-of-the-art performance on MIA benchmarks (54.45 AUROC), outperforming dedicated MIA methods. The authors introduce MINT, a unified evaluation suite with 15 methods, to facilitate cross-task research.
+
+# Abstract
+The paper explores the relationship between Membership Inference Attacks (MIAs) and machine-generated text detection, noting their shared methodological reliance on language model probability distributions despite being studied independently. It presents a theoretical proof that the same metric is asymptotically optimal for both tasks. The paper unifies existing methods within this theoretical framework, hypothesizing that a method's transferability correlates with how well it approximates this optimal metric. Large-scale experiments involving 7 MIA methods and 5 detectors across 13 domains and 10 generators show a strong cross-task performance rank correlation (ρ > 0.6). A key finding is that Binoculars, a machine text detector, achieves state-of-the-art performance on MIA benchmarks. To promote cross-task research, the authors release MINT, a unified evaluation suite for both tasks.
+
+# Introduction
+- The paper addresses two negative consequences of LLMs: privacy/copyright risks from training data memorization, and authorship authenticity challenges from synthetic text generation.
+- Two research fields aim to mitigate these issues: Membership Inference Attacks (MIAs) identify training data members, while machine-generated text detection distinguishes human from machine text.
+- Although the goals differ, the methods often use similar signals, like text likelihood under a target model. For example, the Neighborhood attack (MIA) and DetectGPT (detection) are noted as being essentially identical.
+- The paper argues that the independent study of these tasks leads to biased evaluations that overlook stronger methods and insights from the other field.
+- The work aims to theoretically and empirically study the "transferability" between MIAs and machine text detection.
+- The core hypothesis is that the optimal metric for both tasks is the same (a likelihood ratio test), and a method's transferability is correlated with how well it approximates this metric.
+
+# Method
+- The paper proves a "Unified Optimality" theorem (Theorem 2.3). It states that the likelihood ratio test statistic, `Λ(x) = L(x; M) / L(x; Q)`, where `L(x; M)` is the log-likelihood under the target model and `L(x; Q)` is the log-likelihood under the true population distribution, achieves optimal accuracy for both MIA and machine text detection under asymptotic conditions.
+- The maximum advantage (improvement over random guessing) for this test is bounded by `adv ≤ sqrt(D_KL(P_Q || P_M) / 8)`.
+- Since the true population distribution `P_Q` is inaccessible, existing methods are framed as approximations of this likelihood ratio test using two main strategies:
+    - **Approximation via External Reference:** Using an external distribution `P_M_ref` as a surrogate for `P_Q`. Methods in this category include Reference, Zlib, DC-PDD, and Binoculars.
+    - **Approximation via Text Sampling:** Approximating the likelihood under `P_Q` by the expected likelihood of perturbed versions of the target text. Methods include Neighborhood attack, DetectGPT, and Fast-DetectGPT.
+- Table 1 provides unified formulations for 12 methods from both fields, categorizing them based on these approximation strategies.
+- Some methods, like DC-PDD and Min-k%, do not fit the ratio formulation and are assessed empirically.
+
+# Preliminaries
+- The paper defines the task settings formally. Let `X` be the set of token sequences, `P_Q` be the true distribution of human text, and `P_M` be the distribution of a language model `M` trained on `D_train`.
+- The hypotheses for the two tasks are:
+    - **Machine-Generated Text Detection:** `H0: x ~ P_Q` (human-written) vs. `H1: x ~ P_M` (machine-generated).
+    - **Membership Inference:** `H0: x ∈ X` (non-member) vs. `H1: x ∈ D_train` (member).
+- Both tasks seek a function `f(x; M)` to distinguish between their respective hypotheses with maximum statistical power.
+
+# Motivation
+- The theoretical discussion is motivated by the existence of "identical pairs" of methods developed independently for each task.
+- The primary example is the Neighborhood Attack (MIA method) and DetectGPT (detection method).
+- Both methods are defined by the difference between the log-likelihood of a text `x` and the expected log-likelihood of its perturbations: `L(x; M) - E[L(x̃; M)]`.
+- The paper notes that the Neighborhood Attack is a finite sample approximation of DetectGPT. This striking similarity motivates a deeper investigation into the shared theoretical foundations of the two tasks.
+
+# Experiments
+- **Experimental Setup:**
+    - **MIA:** Evaluated on the MIMIR dataset (5 textual domains from The Pile) against 5 PYTHIA models (160M to 12B parameters).
+    - **Machine Text Detection:** Evaluated on the RAID dataset (8 domains) with text from 5 models, including closed-source ones like ChatGPT and GPT-4.
+    - **Methods:** 7 MIA methods (Reference, Zlib, Neighborhood, Min-K%, Min-K%++, ReCaLL, DC-PDD) and 5 detection methods (DetectGPT, Fast-DetectGPT, Binoculars, DetectLLM, Lastde++) were tested, along with 4 baselines (Loss, Rank, LogRank, Entropy).
+    - **Evaluation:** Performance is measured by AUROC. Transferability is measured by the Spearman's rank correlation coefficient (ρ) between method rankings on the two tasks.
+    - **Scenarios:** A white-box setting (model probabilities accessible) is used for both tasks. A black-box setting (using surrogate models) is additionally evaluated for machine text detection.
+
+- **Main Results:**
+    - A statistically significant Spearman's rank correlation of ρ = 0.66 (p < 0.01) was found across all 15 methods. The correlation was even stronger for the top-10 MIA methods (ρ = 0.78, p < 0.01).
+    - **Binoculars**, a machine text detector, achieved the best average performance on **both** MIA and machine text detection.
+    - **Top AUROC Scores (averaged):**
+        - **Membership Inference:** Binoculars (54.45), Fast-DetectGPT (54.44), Min-K%++ (54.29).
+        - **Generated Text Detection (White-Box):** Binoculars (99.87), DetectLLM (99.40), Fast-DetectGPT (99.36).
+        - **Generated Text Detection (Black-Box):** Binoculars (88.60), Loss (85.20), LogRank (84.20).
+
+- **Analysis:**
+    - **Real-World Transferability:** In the black-box detection setting, MIA methods like Min-K% and DC-PDD perform on par with or better than strong detectors, showing promising transferability.
+    - **Similar Distributions:** The prediction score distributions of top-performing methods (Min-K%++ and Binoculars) are very similar. The Jensen-Shannon distance between them was low for both MIA (0.14) and detection (0.11).
+    - **Zlib as an Outlier:** Zlib performs moderately on MIA (rank 10) but poorly on detection (rank 14). This is attributed to a key task difference: in MIA, members and non-members have similar zlib entropy (mean 680.4 vs 676.9), while in detection, human text is less compressible than machine text (mean 804.4 vs 561.8), reducing Zlib's discriminative power.
+
+# Related Work
+- Previous work has noted similarities between specific methods, such as Neighborhood attack and DetectGPT, but this paper is the first comprehensive study on transferability.
+- Naseh & Mireshghallah (2025) suggested MIAs might function as detectors based on misclassifications, but this work provides a general formulation and large-scale validation.
+- The paper connects its theoretical framework to foundational work by Carlini et al. (2022), who first used the optimality of likelihood ratio tests to derive MIA methods (LiRA).
+- The study focuses on zero-shot detectors that use statistical features from the target model, as these are analogous to MIA methods, in contrast to supervised classifiers which are not part of the investigation.
+
+# Conclusion
+- The paper provides comprehensive theoretical and empirical evidence for the transferability between MIAs and machine text detection.
+- **Finding 1:** Many methods from both tasks can be unified under a general formulation that approximates the likelihood ratio against the true data distribution.
+- **Finding 2:** There is a substantial rank correlation in performance across the two tasks, indicating that effective methods for one are often effective for the other.
+- **Finding 3:** A machine text detection method (Binoculars) surpasses SOTA MIA methods on their own benchmark, demonstrating the practical impact of transferability and the need for greater cross-task awareness and collaboration.
+
+# Appendix
+- **Section A:** Provides detailed descriptions, intuitions, and mathematical formulations for all 4 baseline methods, 7 MIA methods, and 5 machine text detection methods evaluated in the paper. It reformulates each method to fit the paper's unified framework where applicable.
+- **Section B:** Contains implementation details for all methods, including hyperparameters (e.g., k=20 for Min-K%), reference/surrogate models used (e.g., T5-Large for Neighborhood attack), and links to official code repositories.
+- **Section C:** Presents the full, disaggregated performance tables (AUROC scores) for all methods across all domains and models for the three experimental settings: membership inference (Table 2), white-box detection (Table 3), and black-box detection (Table 4).
+
+# References
+This section lists the full citations for all works referenced in the manuscript.

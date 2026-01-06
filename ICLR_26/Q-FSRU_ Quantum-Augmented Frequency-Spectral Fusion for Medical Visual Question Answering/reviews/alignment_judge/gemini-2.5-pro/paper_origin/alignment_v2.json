@@ -1,0 +1,129 @@
+{
+  "paper": "Q-FSRU_ Quantum-Augmented Frequency-Spectral Fusion for Medical Visual Question Answering",
+  "runs": [
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "final_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "0a71ca7d783136ba33fb6b5ec9aad08ece2f0c09",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/final_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 1.0,
+        "weakness_coverage_recall": 0.5,
+        "ai_extra_major_points_rate": 0.67,
+        "symmetric_coverage_similarity": 0.37,
+        "note": "The AI review perfectly covers the human's strength points but only moderately covers the weaknesses, missing concerns about small datasets and the justification for FFT on text. The AI also raises numerous distinct, major weaknesses regarding methodology, statistical rigor, and evaluation validity, resulting in low overall similarity."
+      },
+      "generated_at": "2025-12-27T20:41:45"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "baseline_review.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "b3137abdd5dd456ecfb029f7bed4151251d086e2",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/baseline_review.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 1.0,
+        "weakness_coverage_recall": 0.17,
+        "ai_extra_major_points_rate": 0.88,
+        "symmetric_coverage_similarity": 0.24,
+        "note": "The AI review perfectly covers all strengths but misses almost all weaknesses raised by the human, such as the use of small datasets and the need to better justify the quantum benefit. Instead, the AI raises numerous distinct, valid concerns about methodology, including questionable image FFT, missing statistical test details, and problematic data augmentations."
+      },
+      "generated_at": "2025-12-27T20:46:11"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "deepreviewer",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "deep_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "55f39c3e353412551a5ae68e81fc4acc489b4edd",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/deepreviewer/gpt-5-2025-08-07/paper_origin/deep_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 1.0,
+        "weakness_coverage_recall": 0.67,
+        "ai_extra_major_points_rate": 0.44,
+        "symmetric_coverage_similarity": 0.47,
+        "note": "The AI review perfectly covers all strengths but misses two human-identified weaknesses: the use of small datasets and the lack of evaluation breakdown by question type. Conversely, the AI identifies numerous additional major weaknesses, focusing on specific technical contradictions and missing methodological details that the human reviewer did not mention."
+      },
+      "generated_at": "2025-12-27T20:52:39"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "deepreviewer",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "deep_review_merge.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "752f27bc09e656c7d041a880d0c174422eea6ca4",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/deepreviewer/gpt-5-2025-08-07/paper_origin/deep_review_merge.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 1.0,
+        "weakness_coverage_recall": 0.67,
+        "ai_extra_major_points_rate": 0.47,
+        "symmetric_coverage_similarity": 0.42,
+        "note": "The AI review (Review B) fully covers the strengths from the human review (Review A) but misses two weaknesses: the poorly defined 'generation' aspect of the model and the use of small-scale datasets. Conversely, the AI review raises numerous additional, specific weaknesses regarding architectural inconsistencies, statistical reporting, and baseline comparability, resulting in only moderate overall similarity."
+      },
+      "generated_at": "2025-12-27T21:22:09"
+    }
+  ]
+}

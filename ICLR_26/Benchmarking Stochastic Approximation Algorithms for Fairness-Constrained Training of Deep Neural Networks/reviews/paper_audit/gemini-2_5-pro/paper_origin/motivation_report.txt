@@ -1,0 +1,44 @@
+# Innovation & Motivation Report
+
+## 1. The Authors' Claimed Contribution
+-   **Core Problem**: The manuscript addresses the challenge of training Deep Neural Networks (DNNs) under fairness constraints. This is formulated as a large-scale, non-convex, and non-smooth constrained Empirical Risk Minimization (ERM) problem, for which robust and standardized optimization methods are lacking.
+-   **Claimed Gap**: The authors claim there is a significant gap in the existing literature and tooling. Specifically, they state in the Introduction that "despite numerous proposed algorithms, there is no standard toolkit or benchmark for comparing them" for this problem class. They further distinguish their work from existing toolkits like AIF360 and FairLearn, which they note "often focus only on differentiable minimization," whereas their target problem is non-smooth.
+-   **Proposed Solution**: The authors propose a three-part contribution to fill this gap: (1) a literature review of stochastic approximation algorithms suitable for this problem, (2) a Python toolbox that implements several algorithms and provides a benchmark using real-world US Census data (Folktables), and (3) a set of numerical experiments comparing three recent but previously unimplemented algorithms (StGh, SSL-ALM, SSw) to establish their practical performance.
+
+## 2. Comparative Scrutiny (The "Trial")
+*Here, we analyze how the paper stands against the identified similar works.*
+
+### vs. Improving Generalization of Deep Neural Networks by Leveraging Margin Distribution (Lyu et al.)
+-   **Identified Overlap**: Both papers modify the standard ERM framework to control a statistical property of the model (fairness vs. generalization). Lyu et al. use a regularization-based "soft constraint" (a margin distribution loss), while the manuscript focuses on "hard constraints."
+-   **Manuscript's Defense**: The manuscript successfully anticipates and addresses this comparison. In the "Related Work" section, the authors explicitly classify their constrained ERM approach as an "in-processing" method and contrast it with adding "differentiable regularizers." They provide a clear justification for their focus, arguing that "hard constraints can be more interpretable for practitioners than weighted penalty terms." Furthermore, their experiments include a regularization-based baseline (SGD-Fairret), allowing for a direct empirical comparison.
+-   **Reviewer's Assessment**: The distinction is significant and well-defended. The manuscript is not claiming to invent methods for controlling model behavior, but rather to benchmark a specific, interpretable, and challenging class of methods (hard constraints) that it argues is under-served by existing tools. The defense is valid and strengthens the paper's motivation.
+
+### vs. On the approximation of rough functions with deep neural networks (De Ryck et al.)
+-   **Identified Overlap**: The manuscript's core challenge is optimizing non-smooth DNNs (due to ReLU activations). De Ryck et al. provide a theoretical analysis of *why* deep ReLU networks are effective at approximating such "rough" (non-smooth) functions.
+-   **Manuscript's Defense**: The manuscript does not cite this specific theoretical work but implicitly builds upon its premise. In the "Method" section, the authors explicitly identify "non-convexity/non-smoothness" as a key challenge and select algorithms like Stochastic Switching Subgradient (SSw) specifically because they are "designed for weakly convex and non-smooth problems."
+-   **Reviewer's Assessment**: This is a complementary, not a competitive, relationship. The work by De Ryck et al. provides a theoretical justification for the problem's setup, reinforcing *why* a benchmark for non-smooth optimization is necessary. The manuscript under review addresses the subsequent practical question: given these powerful but non-smooth models, *how* do we effectively train them under fairness constraints? The existence of this theoretical work strengthens, rather than weakens, the manuscript's motivation.
+
+### vs. Iterative Surrogate Model Optimization (ISMO) (Lye et al.)
+-   **Identified Overlap**: Both papers tackle constrained optimization problems involving DNNs where the objective/constraints are computationally expensive, necessitating sample-based approaches.
+-   **Manuscript's Defense**: The manuscript's context is entirely within the stochastic optimization literature for machine learning fairness. The similar work's context is PDE-constrained optimization using active learning and surrogate models. The manuscript does not cite or engage with this domain. Its defense is implicit in its tight focus on a different class of problems and algorithms.
+-   **Reviewer's Assessment**: The similarity is at a very high level of abstraction ("sampling-based constrained optimization"). The specific domains (ML fairness vs. physics simulation), constraint types (statistical vs. physical law), and algorithmic families (stochastic subgradient methods vs. active learning with surrogates) are substantially different. This comparison does not challenge the novelty of the manuscript's specific contribution, which is the creation of a benchmark for a particular ML problem.
+
+### vs. On Fairness of Systemic Risk Measures (Biagini et al.)
+-   **Identified Overlap**: Both papers formalize the concept of "fairness" as a mathematical optimization problem, one in machine learning and the other in finance.
+-   **Manuscript's Defense**: The manuscript's scope is confined to fairness in machine learning. It does not engage with formalizations of fairness in other fields.
+-   **Reviewer's Assessment**: The connection is purely conceptual and does not represent a technical overlap. The mathematical frameworks, goals, and communities are distinct. This comparison is not relevant to assessing the manuscript's contribution to the field of machine learning optimization.
+
+## 3. Novelty Verdict
+-   **Innovation Type**: **Application-Oriented**
+-   **Assessment**:
+    The manuscript successfully survives the comparative scrutiny. Its central claim—that there is a need for a standardized benchmark for fairness-constrained, non-smooth, stochastic optimization of DNNs—holds firm. The provided analysis of similar works reveals that most overlaps are either at a high level of conceptual abstraction, in completely different scientific domains, or are complementary theoretical works that actually bolster the paper's motivation.
+
+    The most critical comparison is with regularization-based methods for fairness, which the authors address directly and effectively by justifying their focus on hard constraints and including a regularized baseline in their experiments. The paper does not propose a new algorithm, but its contribution is the careful curation of a relevant problem, the implementation of existing but unevaluated algorithms, and the creation of a public benchmark and toolbox. This is a significant and valuable contribution to the field.
+    -   **Strength**: The paper identifies a clear, practical, and important gap in the ML fairness ecosystem. The proposed solution (a benchmark and comparative study) is a direct and well-executed response to this gap.
+    -   **Weakness**: The novelty is not in the creation of a new algorithm or theory. The value lies in the engineering effort, empirical rigor, and synthesis of results, which may be perceived as less foundational than a purely theoretical contribution.
+
+## 4. Key Evidence Anchors
+-   **Introduction, Paragraph 3**: "Despite numerous proposed algorithms, there is no standard toolkit or benchmark for comparing them..." This sentence anchors the claimed gap.
+-   **Related Work, Paragraph 2**: "The constrained ERM approach is classified as an 'in-processing' fairness method... hard constraints can be more interpretable for practitioners than weighted penalty terms." This provides the direct defense against regularization-based methods.
+-   **Method, Table 2 & surrounding text**: The review concluding that "no algorithm currently exists with convergence guarantees for this general setting" justifies the need for an empirical benchmark.
+-   **Experiments, Table 3**: This table contains the core empirical contribution, presenting the comparative results that form the basis of the benchmark's findings.

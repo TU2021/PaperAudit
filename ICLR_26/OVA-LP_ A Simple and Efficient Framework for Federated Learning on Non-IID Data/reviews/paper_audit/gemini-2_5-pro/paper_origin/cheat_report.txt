@@ -1,0 +1,62 @@
+Based on a critical review of the manuscript, several clear internal inconsistencies and numerical mismatches have been identified that materially affect the paper's correctness and trustworthiness.
+
+### Summary of Key Issues
+
+The manuscript contains significant numerical discrepancies between the main text and the appendix concerning the primary evaluation metric (relative performance, R(50)). Specifically, the reported relative performance for the PFPT baseline and the LP-Softmax ablation variant in the main figures and tables cannot be reproduced from the absolute accuracy values provided in the appendix. Additionally, a clear contradiction exists in the abstract regarding the performance of the baseline methods.
+
+---
+
+### Detailed Analysis of Inconsistencies
+
+**1. Inconsistency in Relative Performance (R(50)) for the PFPT Baseline**
+
+The paper's main claim of superiority rests on the relative performance metric R(50), defined as `Acc_NonIID(50) / Acc_IID(50)`. There is a significant mismatch between the value reported for the PFPT baseline in the main text and the value derived from the appendix data.
+
+*   **Claim in Main Text:** The manuscript repeatedly states that PFPT achieves a relative performance of **34.5%**.
+    *   **Evidence:** Abstract [Block #2] (note: swapped with FFT-MoE), Introduction [Block #4], Figure 4 [Block #32], Table 1 [Block #30], and Section 4.3 [Block #31].
+
+*   **Contradictory Data in Appendix:** The absolute accuracy values for PFPT reported in Appendix Table 5 do not support this claim.
+    *   **Evidence:** Table 5 [Block #54] reports:
+        *   PFPT (Non-IID) Final Accuracy: 33.17 ± 15.30 %
+        *   PFPT (IID) Final Accuracy: 80.27 ± 0.41 %
+    *   **Calculation:** Based on these values, the relative performance is `(33.17 / 80.27) * 100 ≈ 41.3%`.
+
+This discrepancy of **41.3% (calculated) vs. 34.5% (claimed)** is substantial and directly impacts the paper's comparative analysis. The claimed underperformance of the baseline is exaggerated.
+
+**2. Inconsistency in Relative Performance (R(50)) for the LP-Softmax Ablation**
+
+A similar numerical mismatch exists for the LP-Softmax ablation variant.
+
+*   **Claim in Main Text:** The manuscript states that LP-Softmax achieves a relative performance of **56.3%**.
+    *   **Evidence:** Figure 3 [Block #29], Table 1 [Block #30], and Section 4.2 [Block #28].
+
+*   **Contradictory Data in Appendix:** The absolute accuracy values in Appendix Table 3 contradict this.
+    *   **Evidence:** Table 3 [Block #53] reports:
+        *   LP-Softmax (Non-IID) Final Accuracy: 53.70 ± 6.79 %
+        *   LP-Softmax (IID) Final Accuracy: 90.13 ± 0.04 %
+    *   **Calculation:** Based on these values, the relative performance is `(53.70 / 90.13) * 100 ≈ 59.6%`.
+
+The difference between **59.6% (calculated) and 56.3% (claimed)** is another clear numerical inconsistency. Notably, the relative performance for the proposed method (OvA-LP) and the other baseline (FFT-MoE) *are* consistent between the main text and the appendix, which makes the specific errors for PFPT and LP-Softmax more concerning.
+
+**3. Contradiction in the Abstract Regarding Baseline Performance**
+
+The abstract contains a factual error that swaps the performance of the two main baselines, which undermines the clarity and accuracy of the paper's summary.
+
+*   **Claim in Abstract [Block #2]:** "...state-of-the-art FFT baselines retain only 10.1% (PFPT) and 34.5% (FFT-MoE)..."
+*   **Contradiction in Main Text/Figures:** The rest of the manuscript consistently reports the opposite.
+    *   **Evidence:** Introduction [Block #4], Figure 4 [Block #32], and Section 4.3 [Block #31] all state that FFT-MoE achieves **10.1%** and PFPT achieves **34.5%**.
+
+This is a straightforward but significant error in a critical section of the paper.
+
+**4. Minor Numerical Mismatch in Convergence Time**
+
+A minor inconsistency exists regarding the convergence time of the proposed method.
+
+*   **Claim in Appendix Text [Block #55]:** "OvA-LP converges in 2 rounds (IID)..."
+*   **Contradiction in Appendix Table [Block #54]:** Table 5 reports that for OvA-LP (IID), the number of rounds to reach 95% of final accuracy (`Acc@95 (Rounds)`) is **3 ± 0**.
+
+While less impactful than the primary issues, this adds to a pattern of numerical carelessness.
+
+### Conclusion
+
+The manuscript suffers from multiple, clear internal inconsistencies. The discrepancies between the claimed relative performance in the main text and the values calculated from the appendix data for both a key baseline (PFPT) and an ablation variant (LP-Softmax) are particularly serious. These errors materially affect the paper's central claims about the degree of improvement over prior work. Coupled with the factual error in the abstract, these issues raise significant concerns about the reliability of the reported results and the care with which the manuscript was prepared. Clarification and correction of these numerical discrepancies are essential for a valid scientific contribution.

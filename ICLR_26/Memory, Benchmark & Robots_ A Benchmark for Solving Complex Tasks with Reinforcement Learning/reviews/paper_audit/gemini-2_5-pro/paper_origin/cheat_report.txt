@@ -1,0 +1,47 @@
+Based on a critical review of the manuscript, several clear internal inconsistencies and integrity risks have been identified. These issues materially affect the paper's scientific validity and trustworthiness.
+
+### **1. Contradiction Between Textual Claims and Plotted Experimental Results**
+
+A significant contradiction exists between the performance claims made in the text and the results presented in the figures for the baseline experiments.
+
+*   **Claim:** The authors state that a PPO-MLP agent trained in "state mode" (i.e., with full observability) achieves perfect performance. Appendix F (Block #46) claims: "...demonstrate perfect performance across all tasks, consistently achieving 100% success rate...". The caption for Figure 7 (Block #48) reiterates this: "...the obtained results show that it is possible to solve these problems and obtain a 100% success rate."
+*   **Evidence:** The plots presented in Figure 7 contradict this claim. Several tasks do not reach a 100% (1.0) success rate. For example:
+    *   **InterceptSlow** (Block #49) plateaus around a 0.9 success rate.
+    *   **ShellGamePush** (Block #54) peaks around 0.95 before dipping.
+    *   **RotateStrictPos** (Block #61) appears to level off below a 1.0 success rate.
+    *   **InterceptFast** (Block #69) struggles to consistently stay above a 0.9 success rate.
+
+This discrepancy between the central claim of task solvability and the visual evidence provided undermines the validation of the benchmark itself.
+
+### **2. Inconsistent and Potentially Fabricated Citations**
+
+The reference list contains multiple citations with future publication dates or inconsistent information, which is a serious integrity concern.
+
+*   **Evidence:**
+    *   **Reference [21] (Block #33):** Fang et al. is cited with an arXiv ID of `2501.18564` and a year of **2025**. This is a future date and an invalid preprint identifier at the time of writing.
+    *   **Reference [48] (Block #34):** Kim et al. is cited with an arXiv ID of `2502.19645` and a year of **2025**. This is also a future-dated, invalid identifier.
+    *   **Reference [15] (Block #32):** Embodiment Collaboration is cited with a year of **2025**, but the provided arXiv ID is `2310.08864`, which corresponds to a 2023 publication. The year in the reference is incorrect.
+    *   **References [9], [81], [97] (Blocks #31, #36, #38):** These references point to arXiv preprints with future dates (e.g., December 2024, November 2024).
+
+Using placeholder or future-dated citations misrepresents the current state of the literature and is a violation of academic standards. This practice prevents verification of the cited claims and raises questions about the manuscript's scholarly rigor.
+
+### **3. Inconsistent Reporting of Contributions**
+
+The number of contributions claimed by the authors is inconsistent between the abstract and the main body of the paper.
+
+*   **Evidence:**
+    *   The **Abstract** (Block #2) lists **three** key contributions: (1) a classification framework, (2) the MIKASA-Base benchmark, and (3) the MIKASA-Robo benchmark.
+    *   The **Introduction** (Block #5) and **Conclusion** (Block #30) list **four** contributions, adding "(4) Robotic Manipulation Datasets" to the list.
+
+This inconsistency suggests a lack of careful editing and creates ambiguity regarding the paper's primary claims.
+
+### **4. Inconsistent Figure Referencing in the Appendix**
+
+The appendix contains numerous errors where the text references a figure number that does not match the corresponding image or its caption.
+
+*   **Evidence:**
+    *   In Appendix H.1, the text "ShellGame-v0 task (Figure 11)" (Block #82) appears, but Figure 11 is merely a text caption block (Block #81). The actual image for this task appears later (Block #87).
+    *   In Appendix H.5, the text "Intercept-v0 task (Figure 16)" (Block #106) is used. However, the preceding block (Block #105) defines "Figure 15" as InterceptMedium-v0, and the image for InterceptGrab is associated with Figure 16 (Block #108). This creates a direct contradiction in figure numbering within the text.
+    *   This pattern of mismatched references and captions continues throughout Appendix H, indicating a significant lack of attention to detail in the manuscript's preparation.
+
+In summary, the manuscript contains substantive inconsistencies, most notably a direct contradiction between its experimental claims and the data presented in its figures, as well as highly problematic citation practices. These issues must be addressed to ensure the paper's scientific validity and integrity.

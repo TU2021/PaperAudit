@@ -1,0 +1,61 @@
+Academic Integrity and Consistency Risk Report
+
+Scope: This report flags substantive internal inconsistencies, numerical mismatches, and unsupported claims observed in the manuscript. Each item is anchored to specific sections/tables/figures. Minor wording or stylistic issues are ignored.
+
+1) Major numerical inconsistencies between main and appendix results
+- Evidence:
+  - Table 1 (Section 5.1) vs. Appendix Table 3 (Section C) report conflicting accuracies for the same models/methods/datasets.
+    • Qwen3‑4B‑Think, HumanEval, Avg@64: Table 1 = 96.0; Appendix Table 3 = 97.0.
+    • Qwen3‑4B‑Think, LCBv5, Avg@64: Table 1 = 61.9; Appendix Table 3 = 58.7.
+    • Qwen3‑4B‑Think, MBPP, Avg@64: Table 1 = 84.6; Appendix Table 3 = 85.6.
+    • Qwen3‑4B‑Think, NAD‑kNN, HumanEval: Table 1 = 98.2; Appendix Table 3 = 97.6.
+    • R1‑Qwen3‑8B, LCBv5, Avg@64: Table 1 = 58.5; Appendix Table 3 = 61.1.
+    • R1‑Qwen3‑8B, NAD‑kNN, HumanEval: Table 1 = 89.6; Appendix Table 3 = 94.5.
+    • Qwen3‑4B‑Instruct, HumanEval, Avg@64: Table 1 = 90.8; Appendix Table 3 = 89.6.
+    • Qwen3‑4B‑Instruct, LCBv5, Avg@64: Table 1 = 34.1; Appendix Table 3 = 31.1.
+    • Qwen3‑4B‑Instruct, NAD‑DBSCAN, MBPP: Table 1 = 75.8; Appendix Table 3 = 76.2.
+- Why it matters: These discrepancies directly affect the validity of the claimed comparative performance (“consistently surpass sampling average”) and undermine reproducibility.
+
+2) Overstated efficiency claim (“99% reduction”) vs. reported numbers
+- Evidence:
+  - Abstract (Section: Abstract): “reduces token usage by 99%.”
+  - Table 2 (Section 5.2): Reductions are −97.6% to −98.8% (e.g., Qwen3‑4B‑Think AIME24+25 NAD‑kNN: 1.3 vs 55.2 → −97.6%; Qwen3‑4B‑Instruct AIME24+25 NAD‑MinAct: 0.4 vs 32.0 → −98.8%).
+  - Appendix Table 3 (Section C): Reductions mostly −93.3% to −98.4%.
+- Why it matters: The headline “99%” is not supported by the presented tables; the highest shown reduction is 98.8%. This is a quantifiable overclaim.
+
+3) Generalized claim about neuron sparsity contradicts later domain‑specific findings
+- Evidence:
+  - Abstract (Section: Abstract): “correct responses activate substantially fewer unique neurons than incorrect ones throughout generation” (stated without domain restriction).
+  - Section 5.3 (Relationship between neuron activation and performance): “on code generation tasks … the maximal‑activation strategy even outperforms the minimal‑activation ones” (Figure 6; see images in Blocks 27–28).
+- Why it matters: A global claim (“throughout generation” across tasks) is contradicted by code results where the relationship weakens or reverses. The scope of the claim should be restricted to math/science datasets where it holds (supported by histograms in Conclusion images, Blocks 34–36).
+
+4) Unsupported statistical significance claim
+- Evidence:
+  - Section 3.2 and Figure 2 (Blocks 11–13): “demonstrate significant correlations (with p‑value less than 0.05).” Pearson/Spearman r are reported, but no p-values, sample size, or test details are shown.
+- Assessment: No direct evidence found in the manuscript to substantiate the reported p-values (e.g., N, α, test procedure). Reporting “p < 0.05” without the underlying statistics/material details limits verifiability.
+
+5) Uncited claim about GPT‑4 calibration
+- Evidence:
+  - Introduction (Section 1, Block 4): “According to GPT‑4 reports, LLMs lose calibration capabilities after post‑training…”
+- Assessment: No direct evidence found in the manuscript’s references supporting this GPT‑4 claim. If this is essential to motivate the work, it should be properly cited to the paper’s reference list.
+
+6) Internal contradiction in Related Work regarding “comparable answers”
+- Evidence:
+  - Related Work (Section 2): DeepConf “monitors token prediction entropy during generation to prune low‑confidence reasoning paths on the fly” (Block 7), which does not require comparable final answers to operate.
+  - Same paragraph claims: “However, these approaches still rely on the availability of comparable answers, which limits their applicability.”
+- Why it matters: The description of DeepConf contradicts the statement that such confidence approaches require comparable answers; pruning on‑the‑fly does not need comparable outputs.
+
+7) Potential confusion in Section 5.3 numeric example
+- Evidence:
+  - Section 5.3 (Block 30): “on the AIME24+25 dataset, the kNN method achieves higher accuracy when stopping at the 4096th token compared to using the full response (86.7 vs. 85.0).”
+  - Table 1 (Section 5.1): Cons@64 on AIME24+25 for Qwen3‑4B‑Think is 86.7; NAD‑kNN is 85.0. The 86.7 value used in Section 5.3 matches majority voting (not kNN in Table 1).
+- Why it matters: The example appears to reuse the majority voting number as if it were kNN at 4096 tokens, which introduces confusion. Figure 8 (Section 5.3) is qualitative and does not display exact numeric markers to verify 86.7. Clarifying which method each number belongs to is necessary to avoid misinterpretation.
+
+8) Missing experimental detail for “non‑length effect” claim
+- Evidence:
+  - Section 3.3 (Block 14): “Aligned by generation step (Fig. 4(c)), correct chains activate fewer neurons at matched tokens, indicating a non‑length effect…”
+- Assessment: No direct evidence found in the manuscript that controls for generation length statistically (beyond a qualitative trajectory plot). If this claim is central, a controlled analysis (e.g., conditioning on identical lengths or partials) should be provided.
+
+Summary
+- The manuscript contains several high‑impact integrity issues: (i) multiple numerical mismatches between main and appendix tables for identical settings, (ii) overstated efficiency headline (“99%”) not supported by reported numbers, (iii) an over‑generalized core claim contradicted on code tasks, (iv) unsupported statistical significance assertion, (v) an uncited GPT‑4 calibration claim, and (vi) a contradiction in the Related Work about needing comparable answers.
+- These problems materially affect the paper’s correctness and trustworthiness. Resolving them will require reconciling and auditing tables/figures, tightening claims to domains where they hold, adding proper citations, and providing the missing statistical and methodological details.

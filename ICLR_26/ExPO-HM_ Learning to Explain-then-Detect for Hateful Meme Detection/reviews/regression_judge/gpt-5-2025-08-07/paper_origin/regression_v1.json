@@ -1,0 +1,139 @@
+{
+  "paper": "ExPO-HM_ Learning to Explain-then-Detect for Hateful Meme Detection",
+  "runs": [
+    {
+      "config": {
+        "judge_model": "gpt-5-2025-08-07",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "baseline_file": "baseline_review.txt",
+        "final_file": "final_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 600,
+        "metric": "regression_v2_minimal",
+        "prompt_hash": "2142c04332"
+      },
+      "config_key": "1a46f14f5902ebb0fc2c14773cec6644d2fa5338",
+      "inputs": {
+        "baseline_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/baseline_review.txt",
+        "final_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/final_review_all.txt"
+      },
+      "regression": {
+        "score_delta": {
+          "baseline_score": 8.0,
+          "final_score": 8.0,
+          "delta": 0.0,
+          "scale_hint": "1-10"
+        },
+        "differences": [
+          {
+            "diff_type": "new_critique",
+            "summary": "Possible double weighting of CDE reward w",
+            "paperaudit_types": [
+              "METHOD_LOGIC_CONSISTENCY",
+              "EXPERIMENTAL_DESIGN_PROTOCOL"
+            ],
+            "why_impacts_score": "Undermines method correctness and reproducibility",
+            "evidence": {
+              "baseline_quote": "CDE design may incentivize hedging and has approximation limits.",
+              "final_quote": "CDE reward weight appears twice, risking unintended double weighting affecting optimization and reproducibility."
+            }
+          },
+          {
+            "diff_type": "new_critique",
+            "summary": "Entropy/log base units inconsistent for CDE",
+            "paperaudit_types": [
+              "METHOD_LOGIC_CONSISTENCY",
+              "RHETORICAL_PRESENTATION_MANIPULATION"
+            ],
+            "why_impacts_score": "Weakens theoretical rigor and correctness of bounds",
+            "evidence": {
+              "baseline_quote": "Theoretical calibration analysis relies on an ideal policy; empirical linkage from thresholds to calibration not quantified.",
+              "final_quote": "Entropy units not specified; Eq.7 uses log without base, Appendix H.2 uses bits—undermines quantitative correctness."
+            }
+          },
+          {
+            "diff_type": "new_critique",
+            "summary": "Curriculum rationale length claim lacks evidence",
+            "paperaudit_types": [
+              "EVIDENCE_DATA_INTEGRITY",
+              "RHETORICAL_PRESENTATION_MANIPULATION"
+            ],
+            "why_impacts_score": "Reduces confidence in claimed curriculum benefit",
+            "evidence": {
+              "baseline_quote": "GRPO-CL produces longer, more detailed rationales (52 vs. 28 tokens; Sec. 4.4), indicating curriculum benefits.",
+              "final_quote": "Claim of longer rationales is stated but not accompanied by a reporting table or figure."
+            }
+          },
+          {
+            "diff_type": "new_critique",
+            "summary": "Evaluation split annotations missing in main table",
+            "paperaudit_types": [
+              "EXPERIMENTAL_DESIGN_PROTOCOL",
+              "RHETORICAL_PRESENTATION_MANIPULATION"
+            ],
+            "why_impacts_score": "Complicates replication and clarity of results",
+            "evidence": {
+              "baseline_quote": "Training details include curriculum split, facilitating replication.",
+              "final_quote": "Evaluation split usage not explicit in Table 1, complicating exact replication."
+            }
+          },
+          {
+            "diff_type": "new_critique",
+            "summary": "Misstated Brier improvement vs GRPO baseline",
+            "paperaudit_types": [
+              "CLAIM_RESULT_DISTORTION",
+              "RHETORICAL_PRESENTATION_MANIPULATION"
+            ],
+            "why_impacts_score": "Inflates perceived calibration gains",
+            "evidence": {
+              "baseline_quote": "CDE reward improves calibration: ECE and Brier scores decrease across model sizes.",
+              "final_quote": "Sec. 4.6 highlights 0.590→0.283; correct comparison vs. GRPO is 0.441→0.283."
+            }
+          },
+          {
+            "diff_type": "new_critique",
+            "summary": "SFT-B narrative conflicts with Table 3",
+            "paperaudit_types": [
+              "CLAIM_RESULT_DISTORTION",
+              "RHETORICAL_PRESENTATION_MANIPULATION"
+            ],
+            "why_impacts_score": "Undermines clarity of baseline comparisons",
+            "evidence": {
+              "baseline_quote": "Clarity and minor inconsistencies.",
+              "final_quote": "Sec. 4.5 says SFT-B is below no-warmup, yet Table 3 shows BF1 slightly higher; statement should be qualified."
+            }
+          },
+          {
+            "diff_type": "score_rationale_shift",
+            "summary": "Technical Quality score decreased due to CDE specification issues",
+            "paperaudit_types": [
+              "METHOD_LOGIC_CONSISTENCY",
+              "EXPERIMENTAL_DESIGN_PROTOCOL"
+            ],
+            "why_impacts_score": "Signals lower technical rigor",
+            "evidence": {
+              "baseline_quote": "Technical Quality (10): 7 — Sound formulation; gaps in fairness, variance, reward formulae.",
+              "final_quote": "Technical Quality (10): 6 — gaps in CDE reward scaling/units clarity, fairness analyses, estimator variance."
+            }
+          },
+          {
+            "diff_type": "score_rationale_shift",
+            "summary": "Clarity score decreased due to added inconsistencies",
+            "paperaudit_types": [
+              "RHETORICAL_PRESENTATION_MANIPULATION",
+              "CONTEXT_MISALIGNMENT_INCOHERENCE"
+            ],
+            "why_impacts_score": "Reflects worsened clarity and reproducibility",
+            "evidence": {
+              "baseline_quote": "Clarity (10): 7 — Generally clear with helpful figures; minor inconsistencies reduce clarity.",
+              "final_quote": "Clarity (10): 6 — moderate inconsistencies and missing split annotation reduce clarity."
+            }
+          }
+        ]
+      },
+      "generated_at": "2026-01-05T20:41:27"
+    }
+  ]
+}

@@ -1,0 +1,66 @@
+Academic integrity and internal consistency assessment
+
+Summary of high-impact issues identified
+
+1) Contribution count mismatch between Abstract and Introduction
+- Evidence: Abstract lists three contributions (classification, MIKASA-Base, MIKASA-Robo; Block #2). Introduction lists four contributions, adding “Robotic Manipulation Datasets” as contribution #4 (Block #5).
+- Why it matters: Inconsistent accounting of contributions creates confusion about the scope of the work and can mislead readers regarding what is novel or delivered.
+
+2) Conflicting figure numbering and cross-references for “Figure 2”
+- Evidence:
+  - Block #8 shows a matrix figure summarizing which algorithms were evaluated on which environments (the visual matches Table 2 content).
+  - Block #9 caption simultaneously labels “Figure 2” as illustrative videos/images of MIKASA-Robo tasks (ShellGameTouch, RememberColor9, RotateLenientPos).
+- Why it matters: Reusing the same figure number for different content breaks traceability of claims to figures and hampers reproducibility/verification.
+
+3) “100% success rate” claims contradict plotted results
+- Evidence:
+  - Main text claims: “These results suggest that the proposed tasks are inherently solvable with a success rate of 100%” (Figure 4; Block #21).
+  - Appendix F states “perfect performance across all tasks, consistently achieving 100% success rate” for PPO-MLP in state mode with dense rewards (Block #46).
+  - Contradictory plots in Appendix show final success rates <1.0 for several tasks under “state” mode:
+    - InterceptSlow-v0: success rate appears ~0.9 at end (Block #49).
+    - ShellGamePush-v0: success rate ~0.85 near end (Block #54).
+    - InterceptFast-v0: success rate ~0.95 near end (Block #69).
+- Why it matters: Overstating results (claiming 100% SR “across all tasks”) when multiple plots do not reach 1.0 undermines the credibility of the benchmark validation and may mislead readers about task solvability.
+
+4) Sparse-reward 100% dataset collection claim lacks supporting evidence and conflicts with dense-reward 100% claim
+- Evidence:
+  - Appendix B asserts datasets were collected using a PPO-MLP agent trained to SR = 100% in “state” mode with sparse rewards (Block #41).
+  - Appendix F provides 100% SR evidence explicitly for dense rewards (Block #46), not sparse. No plots/tables demonstrate 100% SR in “state” mode with sparse rewards across all tasks.
+- Why it matters: The offline datasets’ quality hinges on reliably achieving 100% success in the stated reward regime. Absence of direct evidence for sparse-reward 100% success introduces a material reproducibility and data integrity concern.
+- Note: No direct evidence found in the manuscript for 100% success under sparse rewards in “state” mode across all tasks.
+
+5) Systematic reference-number mismatches and missing references in Table 2
+- Evidence: Table 2 column headers assign reference numbers to methods that do not match the bibliography:
+  - “GTrXL [26]” while [26] is AMAGO (Block #33).
+  - “AMAGO [72]” while [72] is “Stabilizing Transformers for RL” (GTrXL) (Blocks #33–#36).
+  - “RATE [77]” while RATE is [10] in the references (Block #31 and Block #33).
+  - “Neural Map [62]” while Neural Map is [71] (Block #36).
+  - “R2D2 [71]” while R2D2 corresponds to Kapturowski et al., which is [45] in this list (Block #34 and Block #36).
+  - “AdaMemento [100]” while AdaMemento is [95] (Block #35).
+  - “ERLAM [95]” appears in Table 2, but there is no ERLAM entry in the references; [95] is AdaMemento (Blocks #35–#36).
+  - “EMDQN [22]” while EMDQN is [61] (Block #35).
+- Why it matters: Incorrect/missing citations materially affect traceability, verification, and scholarly integrity. Table 2’s mis-citations impede readers from locating the correct sources and assessing prior work accurately.
+
+6) Episode horizon inconsistency for RememberColor
+- Evidence:
+  - Table 1 lists T = 60 for RememberColor tasks (Block #5).
+  - Appendix D, Table 5 lists T = 60 for RememberColor3/5/9-v0 used with VLA (Block #44).
+  - Code 1 uses episode_timeout = 90 for RememberColor9-v0 (Appendix A; Block #40).
+- Why it matters: While environments may allow customization, presenting a different timeout than the benchmark’s defined T without clarifying default vs. modified settings risks reproducibility issues, especially if results depend on episode length. The manuscript does not explicitly reconcile these settings.
+
+Additional observations (lower impact but relevant to integrity)
+
+- Figure referencing and numbering beyond Figure 2 also appears inconsistent (e.g., numerous figures presented without clear numbering continuity; Blocks #23–#25, #48–#75). This complicates mapping narrative statements to exact visuals.
+- Reward formulations are described qualitatively for many tasks (Appendix H; Blocks #86, #93, #103, #106, #109, #112, #115, #118, #125, #128, #131), but key coefficients/weights are omitted. This can materially affect reproducibility of the reported results. No direct evidence found in the manuscript of precise reward parameterization for each task.
+
+Conclusion
+
+The manuscript contains multiple high-impact internal inconsistencies:
+- Mismatch in contribution count (Abstract vs. Introduction).
+- Conflicting figure numbering for “Figure 2”.
+- Claims of universal 100% success contradict several presented state-mode plots.
+- Lack of evidence for sparse-reward 100% success used for dataset collection.
+- Systematic mis-citation/missing references in Table 2.
+- Episode-length inconsistency for RememberColor (60 vs. 90 steps) without reconciliation.
+
+These issues materially affect the paper’s correctness, traceability, and reproducibility. Addressing them is essential to restore confidence in the benchmark’s validation and the scholarly integrity of the work.

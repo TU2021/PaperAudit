@@ -1,0 +1,21 @@
+{
+  "paper_title": "Thanos: A Block-wise Pruning Algorithm for Efficient Large Language Model Compression",
+  "file_name": "2504.05346v1",
+  "reviewers": [
+    {
+      "reviewer_id": "fuCo",
+      "score": 4,
+      "confidence": 4
+    },
+    {
+      "reviewer_id": "qK9D",
+      "score": 4,
+      "confidence": 3
+    },
+    {
+      "reviewer_id": "kKnK",
+      "score": 2,
+      "confidence": 3
+    }
+  ]
+}

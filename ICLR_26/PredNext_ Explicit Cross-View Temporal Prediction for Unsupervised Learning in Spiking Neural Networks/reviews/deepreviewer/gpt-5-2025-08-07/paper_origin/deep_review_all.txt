@@ -1,0 +1,191 @@
+Summary
+The paper introduces PredNext, a plug-and-play auxiliary module for unsupervised learning in deep spiking neural networks (SNNs) on video data. PredNext adds explicit temporal modeling via two cross-view predictive objectives: Step Prediction (predict next-timestep features) and Clip Prediction (predict representations of a subsequent clip from the same video). The authors adapt common self-supervised methods (SimCLR, MoCo, BYOL, SimSiam, Barlow Twins) to SNNs, establish benchmarks on UCF101, HMDB51, and MiniKinetics, and show PredNext consistently improves fine-tuning and retrieval performance while increasing temporal feature consistency. They further argue forced consistency constraints are inferior to predictive modeling.
+
+Soundness
+- Methodology is logically coherent: combining standard SSL with predictive coding-like losses on future features across views (Section 2.2, Algorithm 1). Cross-view prediction rightly aims to suppress view-specific noise (Section 2.2) and is validated via ablations (Table 7).
+- Loss design is simple (cosine-based), symmetric, and complements existing SSL losses (Equations in Section 2.2). Time-averaged feature aggregation matches SNN practice (Section 2.1).
+- Experimental protocol is reasonable: SEW-ResNet18 backbone; consistent optimization and augmentations; multiple datasets; fine-tuning and retrieval evaluations (Sections 3.1–3.4; Table 3; Table 5; Figure 4).
+- However, there are internal inconsistencies that affect methodological precision: Algorithm 1 uses a 0.25 coefficient in L_pred (Block 14, line 11) whereas Section 2.2 defines 1/2 symmetries (Blocks 16–17); “Base settings” report prediction head hidden dim 128 (Block 17) while Appendix E.2 uses 512 (Block 58); and Table 2’s caption mislabels content (Block 18). These should be reconciled to ensure reproducibility and clarity of the optimization setup.
+- The claim of “performance comparable to supervised ImageNet-pretrained weights through unsupervised training solely on UCF101” appears to rely on ImageNet-initialized models (Table 3, “SimSiam (ImageNet)” and “PredNext-SimSiam (ImageNet)”), which conflates the contribution of supervised initialization with unsupervised training; a clearer framing is needed.
+
+Presentation
+- The paper is generally well organized (Introduction → Methods → Experiments → Ablations → Conclusion) and uses helpful schematic figures (Figures 2–3, 4, 5, 6).
+- Tables are comprehensive (Tables 1, 3, 4, 6, 7), but at least one caption error exists (Table 2, Block 18) and some notation is inconsistent (L_pred weighting; prediction head size).
+- Important implementation details are in the Appendix (E.1–E.2), which aids reproducibility; still, conflicting hyperparameter values (128 vs 512 hidden dim) and coefficient discrepancies hamper clarity.
+- Writing is clear and concise overall, and the motivation for temporal consistency is well articulated with visualizations (Figure 1/4).
+
+Contribution
+- Establishes a first systematic set of SSL baselines for deep SNNs on standard video datasets (UCF101, HMDB51, MiniKinetics), which is valuable (Sections 2.1, 3.1–3.2).
+- Proposes cross-view future prediction heads for SNNs and demonstrates consistent gains across multiple SSL methods (Table 3, Table 5). The core idea is conceptually close to predictive coding/CPC/DPC but adapted to SNNs with cross-view prediction and a lightweight head design.
+- Empirical insights on temporal consistency (Figures 1, 4; Table 4) add understanding that naive forced consistency can harm performance, whereas predictive consistency helps.
+- Novelty is moderate in the broader SSL literature but meaningful in the SNN domain, where deep unsupervised benchmarks are sparse.
+
+Strengths
+- Clear motivation for explicit temporal modeling in SNNs and careful empirical analysis of consistency (Figure 4; Table 4).
+- Consistent, method-agnostic improvements across SimCLR/MoCo/BYOL/SimSiam/Barlow Twins (Table 3, Table 5; KNN curves in Appendix, Figure 8).
+- Simple, plug-and-play design that minimally alters base SSL pipelines (Figure 2; Algorithm 1).
+- Useful ablations: head components (Table 6), step length (Figure 6a), head size (Figure 6b), cross-view vs same-view (Table 7), time lengths/stride (Figure 6c).
+
+Weaknesses
+- Internal inconsistencies in loss weighting and head dimensionality (Algorithm 1 vs Section 2.2; Block 17 vs Appendix E.2) reduce clarity and may affect reproducibility.
+- The “comparable to supervised ImageNet-pretrained weights” claim relies on ImageNet-initialized unsupervised training (Table 3), which muddles the message about training “solely on UCF101”; stronger emphasis on the non-ImageNet-initialized case would be cleaner.
+- Limited architectural diversity (SEW-ResNet18 only) and no energy/latency analysis relevant to SNNs; comparisons to ANN baselines on the same datasets are not reported, making it hard to position PredNext in the larger video SSL landscape.
+- No event-based datasets evaluation, which would be natural for SNNs; although the stated focus is video RGB, this limits the scope.
+
+Questions
+- Please reconcile the discrepancy between Algorithm 1’s L_pred scaling (0.25 factor; Block 14, line 11) and Section 2.2’s 1/2 weights (Blocks 16–17). Which was actually used?
+- Base settings state prediction head hidden dim 128 (Block 17) while Appendix E.2 uses 512 (Block 58) and Figure 6b suggests a sweep—what was the final default across all reported tables?
+- For “unsupervised training solely on UCF101,” do you include ImageNet-initialized weights in that statement? If so, could you restate the conclusion to distinguish the contribution of supervised initialization vs PredNext?
+- How sensitive are results to the balance coefficient α in L = (1 − α)·L_ssl + α·L_pred (Section 2.2)? Please include an α sweep.
+- Do cross-view predictions ever target overlapping frames between clips (depending on T, stride τ, and m), potentially enabling trivial alignment? Please clarify sampling rules for the “next sampled clip.”
+- Could you report results on at least one additional SNN backbone (e.g., VGG-like SNN or different ResNet variants) to confirm generality?
+
+Rating
+- Overall (10): 8 — Solid and useful SNN SSL contribution with consistent gains, but clarity/reproducibility issues (Algorithm 1 vs Section 2.2; Block 17 vs Appendix E.2) and framing of ImageNet initialization (Table 3).
+- Novelty (10): 7 — Cross-view predictive coding adapted to deep SNNs and benchmarks are valuable, though conceptually related to CPC/DPC (Section 2.2; Related Work, Block 18).
+- Technical Quality (10): 7 — Method is sound with strong empirical support (Table 3, Table 5, Table 6–7; Figure 4) but internal inconsistencies and limited backbone breadth reduce rigor.
+- Clarity (10): 7 — Generally clear, but conflicting hyperparameters and loss weights plus caption error (Table 2, Block 18; Algorithm 1 vs Section 2.2) require fixes.
+- Confidence (5): 4 — High-level reasoning and multiple anchors, but without code verification at review time and given noted inconsistencies, moderate-to-high confidence.
+
+
+
+Summary
+This paper proposes PredNext, a plug-and-play module that adds explicit cross-view temporal predictions (future step and future clip) to self-supervised SNN training. It adapts several popular SSL frameworks to SNNs, establishes video benchmarks on UCF101/HMDB51/MiniKinetics, and demonstrates that PredNext improves downstream action recognition and video retrieval while increasing temporal feature consistency; it also shows forced temporal consistency degrades performance.
+
+Soundness
+- The design is a principled extension of predictive coding/CPC-style objectives to SNNs, with a particular emphasis on cross-view targets to suppress augmentation-specific noise (Section 2.2; Table 7 ablation).
+- Using time-averaged features for clip prediction aligns with SNN temporal aggregation practice (Section 2.1). The emphasis on next-step prediction with m=1 is empirically validated (Figure 6a).
+- Strong empirical coverage across datasets and methods supports the claims (Table 3; Table 5; Figure 4; Table 6), including retrieval and KNN curves (Appendix Figure 8).
+- Weaknesses in soundness: (i) parameter and loss inconsistencies (Algorithm 1’s 0.25 vs Section 2.2’s 1/2; 128 vs 512 hidden dimensions); (ii) no sensitivity analysis for α; (iii) the “solely UCF101” claim appears to depend on ImageNet initialization (Table 3), which should be reframed.
+
+Presentation
+- The narrative is coherent and supported by clear diagrams (Figures 2, 3). The consistency curves and UMAP visualizations are informative (Figure 4).
+- Tables are comprehensive but caption/notation inconsistencies exist (Table 2 caption mismatch; Algorithm 1 vs Section 2.2; Block 17 vs Appendix E.2).
+- The appendix adds useful details; however, discrepancies force the reader to guess final settings.
+
+Contribution
+- Establishes baselines for deep SNN SSL on standard video datasets and shows PredNext is effective across multiple SSL methods. This is impactful in the SNN community where unsupervised video learning is underexplored.
+- Conceptual novelty is moderate in the SSL literature but is meaningfully applied within SNNs. The controlled study demonstrating the pitfalls of forced consistency is a useful insight (Table 4).
+
+Strengths
+- Method-agnostic performance improvements on multiple datasets (Table 3; Table 5).
+- Clear ablations isolating key design choices (Table 6; Table 7; Figure 6a–c).
+- Temporal consistency analysis is thorough and substantiates the motivation (Figure 4; Table 4).
+- Reproducibility intent is strong (Appendix E; code release stated).
+
+Weaknesses
+- Conflicting hyperparameters and loss weighting make it hard to pin down exact training conditions (Algorithm 1 vs Section 2.2; 128 vs 512 hidden dim).
+- Heavy reliance on a single backbone (SEW-ResNet18); generalization across SNN architectures is not tested.
+- No ANN baselines or energy/latency metrics to contextualize SNN advantages.
+- The “solely UCF101” claim is potentially misleading when using ImageNet initialization.
+
+Questions
+- Please clarify the final L_pred weighting used and reconcile Algorithm 1 (0.25) with Section 2.2 (1/2). Which configuration underlies Table 3/5?
+- What α values were used, and how sensitive are results to α? Can you provide an α sweep?
+- Which prediction head size was used in the main results (128 vs 512), and where did the choice originate (Block 17 vs Appendix E.2)?
+- How is the “next sampled clip” constructed temporally—does it guarantee non-overlap with the current clip? Could overlap produce trivial solutions?
+- Can you add results on another SNN backbone to show model-agnostic generality?
+- Would including event-based datasets (e.g., DVS Gesture) alter conclusions on temporal consistency?
+
+Rating
+- Overall (10): 7 — Valuable SNN SSL contribution with consistent gains, tempered by parameter/loss inconsistencies and limited architectural breadth (Table 3; Algorithm 1 vs Section 2.2).
+- Novelty (10): 7 — Cross-view predictive coding in SNNs and benchmark setup are meaningful, albeit conceptually related to CPC/DPC (Section 2.2; Related Work).
+- Technical Quality (10): 7 — Solid experiments and ablations (Table 6–7; Figure 6) but missing α sensitivity, mixed hyperparameter reporting, and single backbone.
+- Clarity (10): 6 — Good structure and figures, but multiple inconsistencies (Table 2 caption; loss/head size) reduce clarity.
+- Confidence (5): 4 — Strong empirical anchors, moderate uncertainty due to noted inconsistencies and absent code verification at review time.
+
+
+
+Summary
+The authors propose PredNext, an auxiliary module for self-supervised SNNs that explicitly models temporal relations via cross-view future prediction at both timestep and clip levels. They adapt several SSL methods to SNNs (SimCLR, MoCo, BYOL, SimSiam, Barlow Twins), show PredNext improves fine-tuning accuracy and retrieval, and analyze temporal feature consistency, arguing prediction-based consistency is superior to direct constraints.
+
+Soundness
+- The central hypothesis—semantically dense features should predict future features better, and cross-view prediction encourages invariance to augmentation noise—is reasonable and tested (Section 2.2; Table 7).
+- The training objective combines standard SSL losses with cosine-based prediction losses; ablations demonstrate efficacy of both step and clip predictors (Table 6).
+- Consistency analyses, retrieval, and fine-tuning provide triangulated evidence (Figure 4; Table 3; Table 5).
+- Concerns: inconsistency in L_pred scaling (Algorithm 1 vs Section 2.2), prediction head size (128 vs 512), and missing sensitivity analyses (α, m) beyond a narrow sweep (Figure 6a). The effect sizes are modest in some configurations (e.g., +2–3% top-1; Table 3) and would benefit from statistical significance reporting.
+
+Presentation
+- The paper is generally clear and well illustrated; figures effectively convey architecture and consistency trends (Figures 2–4).
+- Tables are informative but contain errors (Table 2 caption), and some parameter definitions are inconsistent across sections (loss weights; head size).
+- The appendix supplies useful training details, though consolidation and correction of contradictory settings are needed for full reproducibility.
+
+Contribution
+- Provides an SNN-specific, plug-and-play predictive module and establishes video SSL baselines in deep SNNs—an area with limited prior work.
+- While related to predictive coding/temporal contrastive methods, the cross-view extension and consistent SNN gains constitute a meaningful contribution for this community.
+- The forced consistency counterexample is instructive, strengthening the case for prediction-based consistency (Table 4).
+
+Strengths
+- Method generalizes across several SSL algorithms (Table 3) and datasets, with consistent improvements.
+- Strong visualization/analysis of temporal consistency and representation manifolds (Figure 4).
+- Thorough ablations of design choices (Table 6–7; Figure 6).
+- Clear, simple integration path for future SNN SSL research.
+
+Weaknesses
+- Notational/parameter inconsistencies (Algorithm 1 vs Section 2.2; Block 17 vs Appendix E.2), undermining reproducibility.
+- The broader positioning vs ANN baselines and resource/efficiency metrics is missing; no event-based datasets.
+- Claims around “solely UCF101” are confounded by ImageNet initialization (Table 3); need cleaner framing.
+- Lack of statistical tests and reporting of variance across runs.
+
+Questions
+- Which exact L_pred weighting was used in the reported results—0.25 (Algorithm 1) or 1/2 per term (Section 2.2)? Please standardize the expression and provide the final form.
+- What was the default hidden dimension for P_T/P_C across results—128 or 512? Please unify and report.
+- Could you include a sensitivity analysis for α and m that spans broader ranges (and perhaps per-dataset)?
+- How is the “next sampled clip” selected (temporal offset and overlap)? Is there any risk of predicting overlapping content that reduces difficulty?
+- Can you report mean and standard deviation across at least three runs, especially for Table 3 and Table 5?
+- Any plans or preliminary results on event-based datasets and/or energy/latency measurements to motivate SNNs in practice?
+
+Rating
+- Overall (10): 7 — Good SNN SSL contribution with consistent gains; clarity/reproducibility issues and limited scope prevent a higher score (Table 3; Figure 4; Algorithm 1 vs Section 2.2).
+- Novelty (10): 7 — Cross-view predictive temporal modeling in deep SNNs and benchmarking are worthwhile, though conceptually adjacent to CPC/DPC (Section 2.2; Block 18).
+- Technical Quality (10): 7 — Solid ablations and multi-dataset results; missing sensitivity, statistics, and consistency of reported settings.
+- Clarity (10): 6 — Helpful figures and structure but notable caption/notation inconsistencies (Table 2; loss/head hyperparameters).
+- Confidence (5): 4 — Reasonably high based on reported evidence, but inconsistency and absent code verification reduce certainty.
+
+
+
+Summary
+PredNext augments self-supervised SNN training with explicit temporal prediction of future features across views at the step and clip levels. The module is integrated into SNN variants of SimCLR, MoCo, BYOL, SimSiam, and Barlow Twins, and evaluated on UCF101, HMDB51, and MiniKinetics. The authors show PredNext improves downstream performance and increases temporal consistency; they further argue forced consistency harms semantic learning relative to predictive modeling.
+
+Soundness
+- The approach is well motivated by SNN temporal dynamics and predictive coding (Section 1; Section 2.2). Cross-view prediction is justified to prevent learning view-specific artifacts (Section 2.2; Table 7).
+- The mathematical formulation is straightforward and compatible with SSL losses (Section 2.1–2.2), and the training loop is clear (Algorithm 1).
+- Experiments are broad (Table 3; Table 5; Figure 4; Tables 6–7), use consistent backbones and hyperparameters (Appendix E), and include several relevant controls (forced consistency, step length, head size).
+- However, internal inconsistencies—loss weighting (0.25 vs 1/2) and hidden dimension (128 vs 512)—and lack of α sensitivity testing complicate reproducibility and the precise understanding of the optimization dynamics.
+
+Presentation
+- Structure and visuals are strong (Figures 2–4, 6). The consistency curves and UMAP plots effectively demonstrate the qualitative benefits.
+- Some editorial issues persist: incorrect caption for Table 2, and inconsistent hyperparameters across sections (Blocks 14, 16–17, 58).
+- The claims about “comparable to supervised ImageNet-pretrained weights through unsupervised training solely on UCF101” need clearer articulation regarding initialization (Table 3).
+
+Contribution
+- Meaningful for the SNN community: establishes deep SSL baselines on mainstream video datasets and provides a simple module that improves temporal consistency and downstream performance.
+- Novelty is incremental relative to CPC/DPC but adapted to SNNs with cross-view prediction and minimal architectural overhead; the empirical demonstration is comprehensive.
+- The negative result on forced consistency (Table 4) is informative for future SNN SSL design.
+
+Strengths
+- Consistent improvements across multiple SSL methods and datasets (Table 3; Table 5).
+- Clear ablations and design analyses (Table 6–7; Figure 6).
+- Insightful consistency analysis (Figure 4; Table 4).
+- Reproducibility intent and detailed appendices (Appendix E).
+
+Weaknesses
+- Reproducibility risks due to conflicting settings (L_pred scaling; head size). Readers cannot be sure which configuration produced the tables.
+- Narrow architecture coverage (SEW-ResNet18 only); no ANN comparisons or neuromorphic efficiency metrics.
+- Claims about “solely UCF101” vs ImageNet initialization could mislead; need clearer framing (Table 3).
+- No statistical significance reporting; modest gains in some settings.
+
+Questions
+- Please correct and standardize the L_pred coefficients (Algorithm 1 vs Section 2.2) and state the final values used in Table 3/5/6/7.
+- Unify and report the final prediction head hidden dimension used; explain discrepancies between Block 17 (128) and Appendix E.2 (512).
+- Provide sensitivity analyses for α across methods/datasets.
+- Clarify temporal construction of the “next sampled clip” to avoid overlap and trivial predictions; specify offsets relative to T and τ.
+- Could you add results with a second SNN backbone or report ANN baselines for context?
+- Any insights on why same-view-only prediction collapses (Table 7)—is it due to shortcut learning with shared augmentations?
+
+Rating
+- Overall (10): 8 — Strong, practical SNN SSL contribution with thorough experiments; clarity inconsistencies and limited scope modestly reduce score (Table 3; Algorithm 1 vs Section 2.2).
+- Novelty (10): 7 — Cross-view predictive coding adapted to SNNs plus benchmark setup is useful, though adjacent to prior temporal prediction literature (Section 2.2; Related Work).
+- Technical Quality (10): 7 — Good breadth and ablations; needs parameter consistency and sensitivity/statistical reporting improvements.
+- Clarity (10): 7 — Clear figures and structure, but caption/hyperparameter inconsistencies should be fixed (Table 2; Block 17 vs Appendix E.2).
+- Confidence (5): 4 — Fairly confident based on multiple anchors, tempered by reported inconsistencies and absent code verification during review.

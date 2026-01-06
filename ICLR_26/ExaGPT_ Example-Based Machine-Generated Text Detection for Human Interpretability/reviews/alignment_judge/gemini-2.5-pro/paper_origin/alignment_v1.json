@@ -1,0 +1,104 @@
+{
+  "paper": "ExaGPT_ Example-Based Machine-Generated Text Detection for Human Interpretability",
+  "runs": [
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "deepreviewer",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "deep_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180
+      },
+      "config_key": "24b66d75b94c155df325f4e5f2603b40312e4469",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/deepreviewer/gpt-5-2025-08-07/paper_origin/deep_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "motivation_strength_alignment": 0.9,
+        "weakness_error_alignment": 0.5,
+        "overall_alignment": 0.6,
+        "explanation": {
+          "strength": "Both reviews strongly align on the core strengths, identifying the human-centered, example-based interpretability and the strong empirical performance at low false positive rates as the main contributions. The primary points of emphasis are nearly identical, with only minor differences in secondary strengths mentioned.",
+          "weakness": "The reviews show moderate alignment on weaknesses, both identifying the lack of cross-domain/generator evaluation and the small scale of the human study as key issues. However, they diverge significantly otherwise: Review A focuses on high-level concerns like paraphrasing attacks and computational cost, while Review B identifies specific technical flaws like an inconsistency in a key parameter analysis and missing ablation studies.",
+          "overall": "Overall alignment is moderate-to-high, driven by a strong consensus on the paper's strengths and core contribution. While the final judgments are broadly similar (a good paper with notable limitations), the reviews diverge in their critical focus, with the human review providing a broader critique and the AI review offering a more detailed technical audit."
+        }
+      },
+      "generated_at": "2025-12-27T20:05:06"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "baseline_review.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180
+      },
+      "config_key": "a14d937ebf873b90a820c8cb44da768956431bd4",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/baseline_review.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "motivation_strength_alignment": 0.9,
+        "weakness_error_alignment": 0.7,
+        "overall_alignment": 0.8,
+        "explanation": {
+          "strength": "Both reviews identify the novel, interpretable approach and strong empirical performance as the core strengths, with both highlighting the human evaluation results and high accuracy at low false positive rates.",
+          "weakness": "Both reviews agree on major weaknesses concerning datastore dependency (generalization), the limited human study, and computational inefficiency. However, Review B uniquely identifies specific reporting inconsistencies (e.g., the alpha parameter, baseline metrics), while Review A focuses more on the scope of evaluation (e.g., paraphrasing attacks).",
+          "overall": "The reviews show high alignment in their overall judgment, praising the paper's core idea and results while cautioning about its practical readiness due to generalization and evaluation limits. The primary divergence is in the specific evidence for weaknesses, with Review B being more granular and focused on technical errors, whereas Review A is focused on higher-level conceptual limitations."
+        }
+      },
+      "generated_at": "2025-12-27T20:09:13"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "final_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180
+      },
+      "config_key": "565dcfbed8e348ba365acb8ebe44bf867f3cd0c2",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/final_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "motivation_strength_alignment": 0.85,
+        "weakness_error_alignment": 0.55,
+        "overall_alignment": 0.65,
+        "explanation": {
+          "strength": "Both reviews identify the same core strengths: the novel, interpretable example-based approach and the strong empirical performance, including the positive human evaluation results. Review B is more detailed, praising the paper's methodological rigor, but the key contributions highlighted are nearly identical to Review A.",
+          "weakness": "Both reviews agree that the primary weakness is the method's dependence on an in-domain datastore and its untested generalization, and both critique the limited human study. However, they diverge significantly on other major points; Review A notes the lack of comparison to non-interpretable detectors, while Review B finds specific technical inconsistencies regarding hyperparameters and metrics.",
+          "overall": "The reviews align well on the paper's main strengths and its single most critical weakness (generalization), resulting in a similar overall positive-but-flawed judgment. However, the alignment is lowered by the notable divergence in secondary weaknesses, as each review identifies unique and important critiques related to experimental design and technical rigor that the other misses."
+        }
+      },
+      "generated_at": "2025-12-27T20:12:59"
+    }
+  ]
+}

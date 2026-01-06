@@ -1,0 +1,97 @@
+{
+  "paper": "Multi-objective Hyperparameter Optimization in the Age of Deep Learning",
+  "judge_model": "gpt-5.1",
+  "review_agent": "deepreviewer",
+  "ai_model": "gpt-5-2025-08-07",
+  "ai_review_file": "deep_review_all.txt",
+  "inputs": {
+    "human_review": "review.txt",
+    "ai_review": "reviews/deepreviewer/gpt-5-2025-08-07/paper_origin/deep_review_all.txt"
+  },
+  "multi_review": {
+    "detected": false,
+    "num_reviews": 1,
+    "summarize_used": false,
+    "summary_note": null
+  },
+  "ai_review_consolidated": null,
+  "alignment": {
+    "motivation_strength_alignment": 0.9,
+    "weakness_error_alignment": 0.8,
+    "overall_alignment": 0.85,
+    "explanation": {
+      "strength": "Both reviews clearly agree on the core motivation and contributions: PriMO is a multi-objective HPO method that integrates expert priors and cheap approximations via a multi-fidelity/MOASHA initial design plus a Bayesian optimization phase. They both highlight (i) the novelty of bringing expert priors into multi-objective HPO, (ii) the combination of prior-informed acquisition with ε-greedy/decaying prior influence, (iii) strong empirical performance across 8 deep learning benchmarks (including single-objective special cases), (iv) robustness to misleading/bad priors, and (v) thorough empirical analysis with ablations and runtime/cost considerations. The human review additionally stresses practical case studies (e.g., GPT2-style LM), while the AI reviews add more detail on statistical testing and reproducibility, but these are complementary rather than contradictory.",
+      "weakness": "There is substantial but not perfect overlap in criticisms. Both sides agree on the lack of theoretical analysis: the acquisition and decay schedule are heuristic and without formal guarantees or convergence analysis. Both call for more clarity/analysis on the role and handling of priors, especially robustness to bad priors and how prior strength/quality is measured. Both also note that the contribution is primarily algorithmic/empirical rather than theoretical. However, the AI reviews emphasize several additional weaknesses that the human review does not mention: (i) use of surrogate benchmarks only and lack of real-training experiments; (ii) idealized/near-oracle prior construction that may not reflect real expert priors; (iii) missing strong MOBO baselines such as qEHVI/dEHVI and information-theoretic methods; (iv) lack of sensitivity analysis to ε and γ; and (v) some minor presentation inconsistencies (e.g., use of priors in MOASHA and y = w^T y in algorithms). The human reviewer instead focuses more on asymptotic runtime analysis, guidance on how practitioners should specify multi-objective priors, handling highly correlated priors, perceived title overstatement, and desire for more diverse real-world case studies in domains like robotics/healthcare. Because the overlap is strongest on the general point about heuristic/prior-related theory and weaker on specific experimental and baseline criticisms, alignment on weaknesses is moderate to high but not maximal.",
+      "overall": "Taken together, both reviews portray a very similar overall picture: PriMO is a well-motivated, practically useful, and empirically strong multi-objective HPO method that extends prior-based HPO to the multi-objective setting, with clear algorithms and extensive experiments, but whose design is largely heuristic and under-theorized, and whose empirical claims would benefit from additional analyses/experiments. The AI reviews delve more into surrogate realism, baseline coverage, and hyperparameter sensitivity, whereas the human review spends more space on theoretical properties, scalability analysis, and practitioner guidance. These differences add granularity rather than contradicting each other, so the substantive assessment and focus are largely aligned, with some divergence in emphasis and breadth of identified weaknesses."
+    }
+  },
+  "generated_at": "2025-12-27T19:28:28",
+  "runs": [
+    {
+      "config": {
+        "judge_model": "gpt-5.1",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "baseline_review.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180
+      },
+      "config_key": "3b28d70d5731760031a4514ebc98b0afd78edf6d",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/baseline_review.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "motivation_strength_alignment": 0.86,
+        "weakness_error_alignment": 0.78,
+        "overall_alignment": 0.82,
+        "explanation": {
+          "strength": "Both reviews agree that the core contribution is PriMO, a multi-objective HPO method that integrates expert priors and leverages a cheap-approximation-based initial design (MOASHA), and both emphasize its strong empirical, often state-of-the-art performance on eight DL benchmarks, robustness to prior quality, and comprehensive ablations validating components like the acquisition function and ε-BO. They also align on practical relevance, runtime/compute efficiency being negligible relative to training, clear algorithm design/pseudocode, and broad benchmarking, with Review B adding more granular details (statistical analysis, reproducibility) rather than shifting the main emphasis.",
+          "weakness": "Both reviews flag the lack of theoretical analysis/grounding for the acquisition function and schedules (γ, ε) and some ambiguity in aspects of the algorithmic design, as well as limitations in how priors are modeled and discussed (factorized, Gaussian, realism of prior construction, and how to handle bad/uncertain priors). Review A additionally stresses missing guidance for practitioners on specifying priors and asymptotic complexity, while Review B focuses more on experimental/baseline fairness, surrogate-only evaluation, missing strong MO-BO baselines, speedup quantification, and sensitivity analyses; these are broadly compatible but extend beyond A’s concerns.",
+          "overall": "Substantively, the two reviews are well aligned: they describe the same main motivations and contributions, highlight similar key strengths (novel MO priors, effective acquisition and initial design, strong and broad empirical performance), and converge on a broadly positive overall judgment. The weaknesses discussed overlap on the core theoretical and prior-handling limitations, with Review B adding many extra, more detailed critiques about evaluation design and baseline coverage; these deepen but do not contradict Review A’s assessment, yielding high but not perfect overall alignment."
+        }
+      },
+      "generated_at": "2025-12-27T19:50:33"
+    },
+    {
+      "config": {
+        "judge_model": "gpt-5.1",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "final_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180
+      },
+      "config_key": "4569a6a97a67c8e2b360606eb74d6eb53b892d06",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/final_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "motivation_strength_alignment": 0.82,
+        "weakness_error_alignment": 0.55,
+        "overall_alignment": 0.68,
+        "explanation": {
+          "strength": "Both reviews agree that the core contribution is a multi-objective HPO method that integrates expert priors with BO, uses cheap approximations via an MOASHA-based initial design, and achieves strong performance across 8 deep learning benchmarks (including single-objective cases), with ablations validating components. The AI review adds extra strengths around reproducibility, statistical analysis, and detailed acquisition design, which the human review does not emphasize but does not contradict.",
+          "weakness": "Both highlight insufficient theoretical grounding/analysis of the acquisition and prior-weighting scheme, and concerns about how priors are defined, measured (good vs bad), and how realistic/practical they are, along with a desire for clearer guidance and more convincing real-world validation. The AI review raises many additional issues absent from the human review—baseline coverage and fairness, surrogate-only evaluation nuances, speedup quantification, and hyperparameter sensitivity—while the human review uniquely mentions title overclaim, asymptotic runtime complexity, and more diverse application domains.",
+          "overall": "Substantively, both see PriMO as a novel and practically valuable approach with strong empirical performance but tempered by gaps in theory, prior construction/interpretation, and aspects of practical guidance/validation. The AI review is broader and more technical in its critique (methods clarity, baselines, evaluation protocol), so the overall focus aligns on the main positives and some key limitations, but with notable extra concerns introduced only by the AI review."
+        }
+      },
+      "generated_at": "2025-12-27T19:53:14"
+    }
+  ]
+}

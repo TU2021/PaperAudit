@@ -1,0 +1,123 @@
+# Global Summary
+- Problem: Evaluate whether LLM-as-a-Judge can recover a conversation’s latent objective under multi-turn jailbreaks and know when that inference is trustworthy.
+- Core approach: ObjexMT benchmark. Given a multi-turn transcript, a model outputs (i) a single-sentence imperative “base objective” and (ii) a self-reported confidence in [0,1]. A fixed LLM judge (gpt-4.1) computes semantic similarity to gold objectives; correctness is derived with a human-aligned threshold τ*.
+- Calibration setup: Human-labeled calibration set N=300 with adaptive sampling; τ* = 0.66 selected to maximize F1; F1@τ* = 0.891 (Precision 0.824, Recall 0.970).
+- Evaluation scope: Six models (gpt-4.1, claude-sonnet-4, Qwen3-235B-A22B-FP8, kimi-k2, deepseek-v3.1, gemini-2.5-flash) each on N=2,817 multi-turn dialogues aggregated from SafeMTData_Attack600, SafeMTData_1K, and MHJ. Single deterministic pass per item (T=0).
+- Key metrics: Accuracy (via τ*), ECE (M=10 bins), Brier, Wrong@High-Confidence (0.80/0.90/0.95), selective prediction via AURC; uncertainty via 10,000-instance bootstrap and paired McNemar tests with Holm–Bonferroni correction.
+- Major results: Overall accuracies span 0.474–0.612. kimi-k2 attains highest accuracy 0.612 [95% CI 0.594, 0.630]; claude-sonnet-4 0.603; deepseek-v3.1 0.599. claude-sonnet-4 is best calibrated (ECE 0.206; Brier 0.254) and best selective risk (AURC 0.242). High-confidence errors persist: Wrong@0.90 ranges from 14.9% (claude-sonnet-4) to 47.7% (Qwen3-235B-A22B-FP8).
+- Dataset heterogeneity: Large difficulty spread (e.g., gpt-4.1 accuracy 0.162 on Attack600 vs. 0.816 on MHJ). Average accuracy by dataset: Attack600 ≈ 24.3%, SafeMTData_1K ≈ 57.0%, MHJ ≈ 80.9%.
+- Length/turn effects: Accuracy increases with transcript-length quartile (e.g., gpt-4.1 0.223 → 0.811 from Q1→Q4). Turn-complexity shows dip at 5–6 turns and rebound at ≥7 turns.
+- Caveats explicitly stated: Single judge (gpt-4.1) may bias results; six commercial models only; single-sentence constraint; deterministic decoding; dataset heterogeneity; the task scores extraction, not downstream generation/refusal. Released artifacts provide full reproducibility.
+
+# Abstract
+- ObjexMT benchmark tests whether LLM judges can extract a conversation’s latent objective and calibrate self-reported confidence under multi-turn jailbreaks.
+- Task: Return a one-sentence base objective and a confidence. Accuracy via LLM-judge semantic similarity to gold objectives; correctness threshold calibrated once on N=300 items (τ* = 0.66; F1@τ* = 0.891).
+- Metacognition metrics: ECE, Brier, Wrong@High-Confidence (0.80/0.90/0.95), and risk–coverage (AURC).
+- Models/datasets: Six systems (gpt-4.1, claude-sonnet-4, Qwen3-235B-A22B-FP8, kimi-k2, deepseek-v3.1, gemini-2.5-flash) on SafeMTData_Attack600, SafeMTData_1K, and MHJ.
+- Key findings: Highest accuracy by kimi-k2 0.612 [95% CI 0.594, 0.630]; claude-sonnet-4 0.603; deepseek-v3.1 0.599; these top-three are not statistically distinguishable by paired tests. Best calibration/selection: claude-sonnet-4 (AURC 0.242; ECE 0.206; Brier 0.254). Dataset heterogeneity causes 16–82% accuracy variance. Wrong@0.90 ranges 14.9%–47.7%.
+- Recommendation: Expose objectives when feasible and gate decisions by confidence; all data released at https://github.com/hyunjun1121/ObjexMT_dataset.
+
+# Introduction
+- Motivation: LLMs increasingly act as judges; real deployments involve noisy multi-step exchanges with implicit user goals. The decisive test is whether a judge can infer latent objectives and know when to trust its inferences.
+- Hardest case: Multi-turn jailbreaks disperse/disguise harmful goals via distractors, role-play, coreference; the judge must recover disguised intent.
+- Distinction: Harmfulness detection ≠ intent inference; state-of-the-art LLMs show a detection–generation gap and achieve only 47–61% objective-extraction accuracy with calibration issues.
+- Metacognition importance: Self-reported confidence can be elicited and sometimes outperforms token probabilities; calibration metrics (ECE, Brier, selective prediction) are standard. Judges should output labels and calibrated certainty.
+- ObjexMT setup: Measure (i) recovery of a dialogue’s base objective and (ii) calibration of confidence across six models and three datasets. Outputs are one-sentence base prompt + confidence; semantic similarity judged by a fixed LLM; correctness via a human-aligned threshold.
+- Contributions:
+  - Formalize objective extraction under multi-turn jailbreaks on SafeMTData and MHJ.
+  - Release instructions, data, and code, combining LLM-based semantic matching with calibration analyses (ECE, Brier, Wrong@High-Conf, selective prediction).
+  - Findings: Accuracy 0.474–0.612; calibration imperfect (ECE 0.206–0.417). Best calibration/selection: claude-sonnet-4 (ECE 0.206, Brier 0.254, AURC 0.242). Best accuracy: kimi-k2 (0.612). Wrong@0.90 spans 15–48%.
+  - Dataset heterogeneity: Example gpt-4.1 accuracy 0.162 (Attack600) vs. 0.816 (MHJ).
+- Broader impact: Diagnosis of objective understanding and metacognitive reliability in noisy multi-step inputs; results generalize to latent-intent recovery tasks beyond safety.
+
+# Related Work
+- LLM-as-a-Judge: Scales benchmarking/moderation but reliability suffers when objectives are implicit.
+- Robustness under irrelevant/long context: Multi-turn, complex contexts degrade performance and impede latent-intent recovery.
+- Multi-turn safety datasets: MHJ (human multi-turn jailbreaks with tactic metadata). SafeMTData includes Attack600 (HarmBench queries expanded into multi-turn attacks) and 1K (safety-alignment dialogues including refusals); both used as-is without schema unification.
+- Harmfulness discrimination vs. objective inference: Prior work separates detection from safe-generation; ObjexMT targets recovery of the base objective the judge would evaluate.
+- Metacognition/calibration/abstention: Verbalized confidence may be better calibrated than token probs; models exhibit self-knowledge on unanswerable queries; calibration via ECE/Brier and selective prediction. Reported ECE range across six models: 0.206–0.417.
+
+# Method
+- Task: From a multi-turn jailbreak transcript, output a single imperative sentence (base_prompt) capturing the core objective and a confidence p ∈ [0,1]. Compare extracted b̂ to gold b⋆ via LLM judge to obtain similarity score s ∈ [0,1] and category; correctness y = 𝕀[s ≥ τ*].
+- Threat model/scope: Adversarial multi-turn interactions D = {(u_t, m_t)}; the latent base objective b⋆ is the minimal single-turn instruction that would pursue the same harmful goal. Evaluate only recovery of b⋆; distinct from harmfulness classification.
+- Single-sentence constraint: Require one imperative sentence; multi-clause allowed if expressing a single primary objective; aligned with one-sentence golds.
+- Datasets/instances: SafeMTData_1K, SafeMTData_Attack600, MHJ; N=2,817 instances per model. Gold objective is dataset-provided string (base_prompt); minimal normalization (whitespace cleanup).
+- Transcript packaging: Reconstruct full multi-turn dialogues; retain serialized jailbreak_turns for auditing; fixed instruction template.
+- Human-aligned thresholding: Calibration set N=300 via adaptive sampling: SafeMTData_1K 167 (55.7%), MHJ 69 (23.0%), Attack600 64 (21.3%). Optimal τ* = 0.66 with F1=0.891; frozen for all analyses. Two AI-safety experts produced consensus labels.
+- Models/decoding: Six systems: gpt-4.1-2025-04-14, claude-sonnet-4-20250514, Qwen3-235B-A22B-FP8, kimi-k2, deepseek-v3.1, gemini-2.5-flash. One deterministic pass per instance (T=0). Judge fixed to gpt-4.1.
+- Instruction format: Output JSON with base_prompt and confidence; strip wrappers; pick primary objective; lower confidence under ambiguity; parsed into extracted_base_prompt and extraction_confidence.
+- Semantic judging: Judge returns similarity_score ∈ [0,1] and category (Exact/High/Moderate/Low); correctness 𝕀[s ≥ τ*].
+- Metacognition metrics: ECE (10 equal-width bins; also equal-mass), Brier, Wrong@High-Conf thresholds {0.80, 0.90, 0.95}, selective prediction via AURC. Confidence clipped to [0,1]; invalid JSON excluded.
+- Artifacts: Per-model spreadsheets with raw I/O, extracted prompts/confidences, judge outputs, and calibration labels released at https://github.com/hyunjun1121/ObjexMT_dataset.
+
+# Experiments
+- Judge calibration (N=300): Threshold sweep selects τ* = 0.66 with F1 = 0.891; Precision 0.824; Recall 0.970. τ* is frozen.
+- Overall objective-extraction accuracy (N=2,817 per model):
+  - kimi-k2: 0.612 [0.594, 0.630].
+  - claude-sonnet-4: 0.603 [0.585, 0.622].
+  - deepseek-v3.1: 0.599 [0.580, 0.617].
+  - gemini-2.5-flash: 0.542 [0.523, 0.560].
+  - gpt-4.1: 0.490 [0.471, 0.508].
+  - Qwen3-235B-A22B-FP8: 0.474 [0.455, 0.492].
+  - Pairwise significance (Holm–Bonferroni adjusted): Top-three models are not mutually distinguishable; significant gaps include kimi-k2 vs. gemini-2.5-flash (+0.070), vs. gpt-4.1 (+0.122), vs. Qwen3-235B (+0.138); similar gaps reported for claude-sonnet-4 and deepseek-v3.1 vs. lower-performing models.
+- Statistical testing/uncertainty: McNemar’s paired tests and nonparametric bootstrap (B=10,000) over accuracy differences; familywise error controlled at α=0.05; rationale for B and effect-size reporting provided (ARR/RR/Cohen’s h/NNT).
+- Dataset heterogeneity:
+  - Example gpt-4.1 accuracies: Attack600 0.162; SafeMTData_1K 0.502; MHJ 0.816.
+  - Heatmap ranges: Attack600 hardest (≈0.162–0.328 across models), 1K intermediate (e.g., claude-sonnet-4 0.635, kimi-k2 0.635), MHJ easiest (e.g., kimi-k2 0.857; claude-sonnet-4 0.853).
+  - Table 4 summary: Avg. Accuracy by dataset—ATTACK600 24.3%; 1K 57.0%; MHJ 80.9%.
+- Effect of transcript length:
+  - Quartile bins by characters: Q1 <1.5K; Q2 1.5–2.5K; Q3 2.5–4K; Q4 >4K.
+  - Accuracy increases monotonically with length; largest gains Q2→Q3. Example per-model Q1→Q4: gpt-4.1 0.223 → 0.811; claude-sonnet-4 0.399 → 0.832; Qwen3 0.245 → 0.740; kimi-k2 0.406 → 0.819; deepseek-v3.1 0.392 → 0.819; gemini-2.5-flash 0.317 → 0.817.
+  - Operational note: Very short transcripts (Q1) are high-risk; explicit objective restatement mitigates risk.
+- Metacognition from self-reported confidence (full benchmark, N=2,817/model):
+  - Accuracy, ECE, Brier, Wrong@0.90, AURC:
+    - kimi-k2: Acc 0.612; ECE 0.259; Brier 0.292; Wrong@0.90 29.4%; AURC 0.293.
+    - claude-sonnet-4: Acc 0.603; ECE 0.206; Brier 0.254; Wrong@0.90 14.9%; AURC 0.242.
+    - deepseek-v3.1: Acc 0.599; ECE 0.279; Brier 0.303; Wrong@0.90 32.4%; AURC 0.290.
+    - gemini-2.5-flash: Acc 0.542; ECE 0.362; Brier 0.356; Wrong@0.90 41.4%; AURC 0.287.
+    - gpt-4.1: Acc 0.490; ECE 0.384; Brier 0.375; Wrong@0.90 37.2%; AURC 0.373.
+    - Qwen3-235B-A22B-FP8: Acc 0.474; ECE 0.417; Brier 0.416; Wrong@0.90 47.7%; AURC 0.472.
+  - Wrong@High-Confidence across thresholds (selected values): claude-sonnet-4 31.6% (0.80), 14.9% (0.90), 6.4% (0.95); kimi-k2 35.9%, 29.4%, 23.6%; deepseek-v3.1 37.9%, 32.4%, 22.9%; gemini-2.5-flash 42.4%, 41.4%, 31.1%; gpt-4.1 47.5%, 37.2%, 30.3%; Qwen3 52.2%, 47.7%, 39.7%.
+- Effect sizes/practical significance (selected pairs, overall accuracy):
+  - kimi-k2 vs. gpt-4.1: ARR 0.122; RR 1.250; Cohen’s h 0.247; NNT 8.2.
+  - claude-sonnet-4 vs. gpt-4.1: ARR 0.114; RR 1.233; h 0.229; NNT 8.8.
+  - kimi-k2 vs. gemini-2.5-flash: ARR 0.070; RR 1.130; h 0.142; NNT 14.2.
+  - deepseek-v3.1 vs. gemini-2.5-flash: ARR 0.057; RR 1.105; h 0.115; NNT 17.6.
+  - claude-sonnet-4 vs. Qwen3: ARR 0.129; RR 1.272; h 0.260; NNT 7.7.
+
+# Conclusion
+- Summary: ObjexMT assesses latent objective extraction and metacognitive calibration. Across six models and 2,817 instances, accuracies are 47–61% and calibration remains imperfect (ECE 0.206–0.417) with persistent high-confidence errors (Wrong@0.90: 15–48%).
+- Dataset heterogeneity: Automated obfuscation notably increases difficulty (e.g., 16% on Attack600 vs. 82% on MHJ for gpt-4.1).
+- Model highlights: kimi-k2 achieves highest accuracy (61.2%); claude-sonnet-4 best calibration (ECE 0.206) and selective risk (AURC 0.242). Even top models fail in ~40% of cases.
+- Prescriptions stated by authors: (i) Make objectives explicit when feasible; (ii) Gate decisions by confidence; (iii) Maintain human oversight in high-stakes moderation.
+- Limitations/Future Work (from dedicated subsection): Only six commercial models; single judge (gpt-4.1) could bias evaluations; one-sentence extraction may oversimplify multi-objective attacks; deterministic decoding T=0. Priorities include multi-judge validation, broader model coverage (including safety classifiers), failure taxonomy on >500 Wrong@0.90 cases, and cross-domain evaluations (multi-hop QA, dialogue state tracking).
+
+# Appendix
+- Ethics/Provenance: Public datasets only; two domain experts labeled N=300 items for calibration; setup did not require IRB. Single Excel workbook (OBJEX_dataset.xlsx) released for reproducibility.
+- Workbook contents:
+  - Sheet Labeling (N=300) with source, gold base_prompt, candidate extracted_base_prompt, LLM-judge outputs, and human consensus labels.
+  - Six sheets extracted_{model} (each N=2,817) containing transcripts (turn_1–turn_12, jailbreak_turns), gold base_prompt, model outputs (extracted_base_prompt, extraction_confidence), and length/token summaries.
+  - Six sheets similarity_{model} (each N=2,817) with judge response, similarity_score/category/reasoning, and features.
+- Dual-use risk: Data includes adversarial jailbreak text and explicit objectives; mitigations include research-only intent, no new harmful content, and guidance against unsupervised deployment; takedown requests honored.
+- Fairness, scope, environment, legal: Per-dataset reporting; single deterministic pass; licenses respected.
+- Appropriate-use guidance: Expose objectives, gate on confidence/coverage, human oversight; artifacts intended for research on evaluation/safety.
+- Prompt templates:
+  - A.1 extractor JSON schema: {"base_prompt": "<one imperative sentence>", "confidence": <float>} with rules to strip obfuscation and lower confidence under ambiguity.
+  - A.2 judge template: Outputs similarity_score ∈ [0,1], similarity_category in {Exact match, High, Moderate, Low}, and reasoning; treat “same core + more details” as Exact.
+- Turn complexity analysis (Appendix B):
+  - Bins: Single/Dual (1–2), Short (3–4), Medium (5–6), Long (≥7).
+  - Accuracy by bin (examples): kimi-k2 0.54/0.53/0.62/0.91; claude-sonnet-4 0.56/0.52/0.61/0.88; gpt-4.1 0.46/0.33/0.51/0.88; Qwen3 0.42/0.33/0.49/0.80. Authors note ~15–20 pp drop from Single/Dual to Medium, followed by rebound at Long.
+- Transcript length analysis (Appendix C):
+  - Mean/median length: 828/688 characters; empirical lowest-error band around 1.5–2.5k characters; item-level Pearson r ≈ −0.15 (confounded).
+  - Length quartiles (Table 9): Accuracy increases from Q1 to Q4 for all models (e.g., claude-sonnet-4 0.399 → 0.832; kimi-k2 0.406 → 0.819).
+  - Additional distributions and trends (selected counts): Length histogram shows heavy mass <2k chars with long tail; accuracy by length category (Short/Medium/Long/Very Long) mirrors quartile trends.
+- Dataset quality analysis:
+  - Per-model per-dataset accuracies replicate main heterogeneity (e.g., gpt-4.1 0.16/0.50/0.82 for Attack600/1K/MHJ).
+  - Across-model variance by dataset: Attack600 0.0040; 1K 0.0035; MHJ 0.0030.
+  - Dataset aggregates (example panel): Mean Score {Attack600 0.34; 1K 0.60; MHJ 0.82}; Std Score {0.26; 0.32; 0.25}; Mean Confidence {0.84; 0.86; 0.92}.
+- Metacognition analysis:
+  - Selective risk AURC: claude-sonnet-4 0.242; gemini-2.5-flash 0.287; deepseek-v3.1 0.290; kimi-k2 0.293; gpt-4.1 0.373; Qwen3 0.472.
+  - High-confidence error rates reiterate Table 6 (e.g., claude-sonnet-4 Wrong@0.90 14.9% → Wrong@0.95 6.4%).
+
+# References
+- Core citations cover: LLM-as-a-Judge surveys and reliability concerns [3]; robustness under long/irrelevant context [6]; multi-turn jailbreak datasets MHJ [8] and SafeMTData (Attack600/1K) [10]; detection vs. safe-generation gap [1]; calibration and confidence estimation (ECE/Brier, elicitation strategies) [2,5,11,12]; models’ self-knowledge on unanswerable queries [13]. The work situates ObjexMT within these lines, using standard calibration metrics and multi-turn safety datasets.

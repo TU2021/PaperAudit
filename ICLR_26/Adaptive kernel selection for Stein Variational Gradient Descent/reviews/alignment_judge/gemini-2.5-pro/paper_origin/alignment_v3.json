@@ -1,0 +1,129 @@
+{
+  "paper": "Adaptive kernel selection for Stein Variational Gradient Descent",
+  "runs": [
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "deepreviewer",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "deep_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "55f39c3e353412551a5ae68e81fc4acc489b4edd",
+      "inputs": {
+        "human_review": "review_origin.txt",
+        "ai_review": "reviews/deepreviewer/gpt-5-2025-08-07/paper_origin/deep_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 0.8,
+        "weakness_coverage_recall": 0.63,
+        "ai_extra_major_points_rate": 0.31,
+        "symmetric_coverage_similarity": 0.53,
+        "note": "The AI review covers most human-raised points but misses some weaknesses (e.g., lack of cost analysis) that were addressed in the revised manuscript it reviewed. The AI's most significant extra points are highly technical critiques of the theoretical assumptions, specifically the mismatch between the non-smooth kernels used in practice and the smoothness required by the theory, a detail the human reviewers missed."
+      },
+      "generated_at": "2025-12-27T23:49:15"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "baseline_review.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "b3137abdd5dd456ecfb029f7bed4151251d086e2",
+      "inputs": {
+        "human_review": "review_origin.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/baseline_review.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 1.0,
+        "weakness_coverage_recall": 0.83,
+        "ai_extra_major_points_rate": 0.33,
+        "symmetric_coverage_similarity": 0.71,
+        "note": "Review B captures nearly all human points, including specific critiques on baselines, assumptions, and computational cost. However, it lists the empirical results as a clear strength, whereas human reviewers remained concerned that the experiments were largely limited to toy or small-scale problems (synthetic/BLR) compared to real-world tasks like BNNs. Review B also raises unique theoretical points about finite-particle analysis and specific calibration metrics."
+      },
+      "generated_at": "2025-12-27T23:56:18"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "final_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "0a71ca7d783136ba33fb6b5ec9aad08ece2f0c09",
+      "inputs": {
+        "human_review": "review_origin.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/final_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 1.0,
+        "weakness_coverage_recall": 0.71,
+        "ai_extra_major_points_rate": 0.38,
+        "symmetric_coverage_similarity": 0.58,
+        "note": "The AI review covers all human-identified strengths and most key weaknesses (missing baselines, unverified assumption 4, runtime, mean-field limits), though it frames scalability and theoretical motivation as strengths rather than open questions. However, the AI raises several deep technical validity concerns (step-size inconsistency, differentiability of p=1 kernels, assumption 3 verification) that were not detected by the human reviewers."
+      },
+      "generated_at": "2025-12-28T00:08:08"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "deepreviewer",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "deep_review_merge.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "752f27bc09e656c7d041a880d0c174422eea6ca4",
+      "inputs": {
+        "human_review": "review_origin.txt",
+        "ai_review": "reviews/deepreviewer/gpt-5-2025-08-07/paper_origin/deep_review_merge.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 1.0,
+        "weakness_coverage_recall": 0.71,
+        "ai_extra_major_points_rate": 0.44,
+        "symmetric_coverage_similarity": 0.56,
+        "note": "Review B (AI) provides excellent coverage of strengths and high coverage of weaknesses from Review A (human). The main divergence is that Review B raises several specific, major theoretical weaknesses not mentioned by the human reviewers, such as the mismatch between the theory's smoothness assumptions and the non-smooth kernels used in practice."
+      },
+      "generated_at": "2025-12-28T00:19:57"
+    }
+  ]
+}

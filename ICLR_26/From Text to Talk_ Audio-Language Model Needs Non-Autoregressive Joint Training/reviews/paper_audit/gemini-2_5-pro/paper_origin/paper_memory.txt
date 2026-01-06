@@ -1,0 +1,88 @@
+# Global Summary
+This paper introduces Text-to-Talk (TtT), a unified audio-text multimodal large language model (MLLM) that addresses a fundamental mismatch in how existing models handle text and audio generation. The core problem identified is that purely autoregressive (AR) models treat text and audio identically, despite text having strong target-target dependencies (requiring causal ordering) and audio having primarily source-target dependencies (amenable to parallel generation). TtT integrates AR text generation with non-autoregressive (NAR) audio generation via absorbing discrete diffusion within a single Transformer. The model's joint training objective is theoretically justified as an upper bound on the negative log-likelihood of the desired joint distribution. To bridge the train-test gap inherent in this hybrid AR-NAR approach, the authors propose three training strategies: Batchwise AR & NAR Objective Mixing (BANOM), Prefix Preservation Masking (PPM), and Stochastic Span Truncation (SST).
+
+Experiments are conducted on Audio Question Answering (Audio-QA) and Automatic Speech Recognition (ASR) tasks using Qwen2.5-Base models (1.5B and 3B parameters). TtT significantly outperforms purely AR and purely NAR baselines. For instance, the TtT-3B model achieves a score of 34.68 on the LLaMAQuestions Audio-QA benchmark, a +24.68 point improvement over the AR baseline, and a 12.53 Word Error Rate (WER) on the AISHELL-2 ASR benchmark, a 42.41 point improvement. Ablation studies confirm the positive impact of each proposed training strategy.
+
+# Abstract
+The paper addresses the challenge of building speech-to-speech conversational systems. It argues that existing multimodal models, which use autoregressive (AR) methods for both text and audio, fail to account for their different dependency structures: text relies on target-target relations, while audio depends on source-target relations. The proposed model, Text-to-Talk (TtT), is a unified audio-text framework combining AR text generation with non-autoregressive (NAR) audio diffusion in a single Transformer. It uses the any-order autoregressive property of absorbing discrete diffusion to create a unified training objective. Key technical contributions include a modality-aware attention mechanism (causal for text, bidirectional within audio spans) and three training strategies to reduce train-test discrepancies. During inference, TtT uses block-wise diffusion for parallel audio synthesis. Experiments on Audio-QA and ASR tasks demonstrate the model's effectiveness, and ablation studies validate its components. The authors plan to release the models, data, and code.
+
+# Introduction
+- Conventional speech-in/speech-out systems use a cascaded pipeline (ASR -> LLM -> TTS), which suffers from latency accumulation and error propagation.
+- Recent end-to-end models like Moshi, GLM4-Voice, and VITA-Audio unify speech understanding and generation but use a single autoregressive (AR) objective for both text and audio tokens.
+- The paper identifies a "fundamental mismatch" in this approach: text generation is inherently sequential with strong target-target dependencies, while audio token generation is driven by source-target dependencies (conditioning on source text rather than preceding audio tokens).
+- Applying a purely AR objective to audio introduces unnecessary sequential constraints and magnifies error propagation. Non-autoregressive (NAR) generation, particularly discrete diffusion, is better suited for audio.
+- The proposed model, Text-to-Talk (TtT), is a hybrid AR-NAR MLLM in a single Transformer. Text is trained with a standard AR objective, and audio with an NAR discrete diffusion process.
+- Contributions:
+    1. Formalizing the dependency asymmetry between text and audio and providing a unified theoretical framework where the joint training objective is an upper bound on the negative log-likelihood.
+    2. Proposing TtT, a hybrid AR-NAR MLLM that integrates both generation paradigms.
+    3. Introducing three training strategies to address train-test discrepancies in the hybrid model.
+    4. Demonstrating superior performance over strong AR and NAR baselines on ASR and Audio-QA benchmarks.
+
+# Preliminaries
+- Interleaved audio-text sequences are represented using a unified vocabulary `𝒱 = 𝒱_text ∪ 𝒱_audio ∪ 𝒮`, where `𝒮` contains special tokens like `⟨SOA⟩`, `⟨EOA⟩`, `⟨EOS⟩`, and the mask token `[M]`.
+- **Autoregressive (AR) Modeling**: Factorizes the joint probability of a sequence `x` as `p(x) = ∏ p(x^i | x^{<i})`, imposing a causal structure. Training minimizes the negative log-likelihood (NLL).
+- **Absorbing Discrete Diffusion**: An NAR alternative for sequence generation.
+    - **Forward Process**: A Markov chain that corrupts a clean sequence `x_0` by transitioning tokens to a special absorbing mask state `[M]` over time `t ∈ [0, T]`.
+    - **Reverse Process**: A learned denoising process that reconstructs the clean sequence `x_0` from a corrupted `x_t`.
+    - **Denoising Objective**: The learning task simplifies to approximating the clean conditional distribution `p_0(v | UM)`, where `UM` is the set of unmasked tokens. This objective is time-independent.
+    - **Equivalence to Any-Order Autoregressive Modeling (AO-ARM)**: The denoising objective of absorbing diffusion is equivalent to the training objective of an AO-ARM, which averages prediction loss over all possible permutations of the sequence. This allows for parallel generation at inference.
+
+# Method
+- **AR Modeling for Text**: Text spans are modeled with a standard left-to-right autoregressive objective, minimizing causal cross-entropy loss.
+- **Absorbing Discrete Diffusion for Audio**: Audio spans are modeled using an NAR discrete diffusion process. During training, only audio tokens are corrupted (masked), while text tokens remain intact. The model is trained to predict original audio tokens from masked positions using the λ-denoising cross-entropy loss, which is equivalent to an any-order autoregressive objective within each audio span.
+- **Unified Objective and Theoretical Framework**:
+    - The model uses a partial-order factorization: text tokens are causally ordered, while tokens within each audio span form an antichain (no mandatory internal order).
+    - The joint distribution combines single-order AR for text with an order-marginalized (averaged over all permutations) any-order AR for audio.
+    - The practical training objective, `L_Unified(x) = L_AR(x) + L_AO(x)`, is proven to be a tight upper bound on the negative log-likelihood of the desired joint distribution `~p_θ(x)`.
+- **Training Strategies to Mitigate Train-Test Discrepancy**:
+    - **Batchwise AR & NAR Objective Mixing (BANOM)**: With probability `p_mix`, some samples in a batch skip the diffusion process and are trained with only the AR loss on text tokens. This exposes the model to clean audio spans, mimicking inference conditions.
+    - **Prefix Preservation Masking (PPM)**: For a fraction `p_prefix` of samples, preceding audio spans `A_{<m}` are kept clean (unmasked) while diffusion is applied only to subsequent spans `A_{≥m}`.
+    - **Stochastic Span Truncation (SST)**: With probability `p_trunc`, the final audio span is randomly truncated to prevent the model from learning a positional bias for predicting the `⟨EOA⟩` token.
+- **Modality-Aware Attention Mechanism**: A custom attention mask is used. Text tokens have causal attention. Audio tokens have bidirectional attention within their own span but causal attention to all preceding tokens (including other spans).
+- **Inference Process**: The model alternates between AR text generation and NAR audio generation. When `⟨SOA⟩` is generated, the model switches to NAR mode, generating an audio span using block-wise diffusion (Algorithm 1). The generated audio tokens can be sent to an audio decoder for streaming output. The process terminates when `⟨EOS⟩` is generated. CosyVoice is used as the audio encoder and decoder.
+
+# Experiments
+- **Datasets**:
+    - Training: A diverse mix of ASR, TTS, audio chat, text chat, and interleaved text-audio data, totaling over 6.3M samples. Key sources include AISHELL, CommonVoice, GigaSpeech, LibriSpeech, WenetSpeech, and synthetic data from text corpora like OpenHermes-2.5.
+    - Evaluation: Audio-QA (AlpacaEval, LLaMAQuestions, TriviaQA, WebQuestions) and ASR (Fleurs-zh/en, AISHELL-1/2, WenetSpeech-test).
+- **Evaluation Protocol**:
+    - Audio-QA: Generated audio is transcribed by ASR models (Paraformer-zh, Whisper-Large-v3), and an LLM-as-a-Judge (Qwen3-235B-A30B) evaluates semantic correctness against ground truth.
+    - ASR: Standard Word Error Rate (WER) is used.
+- **Model Configuration**:
+    - Backbone: Qwen2.5-Base at 1.5B and 3B parameter scales.
+    - Audio Encoder/Decoder: CosyVoice, following GLM-4-Voice.
+- **Training Details**:
+    - AdamW optimizer, global batch size 2048, learning rate 2e-5 with cosine decay.
+    - Strategy probabilities: BANOM `p_mix=0.3`, PPM `p_prefix=0.3`, SST `p_trunc=0.5`.
+    - Inference: 200 diffusion steps, block length 32, total span 640 tokens.
+    - Hardware: 4 nodes with 8 NVIDIA A100 GPUs each.
+- **Main Results (Table 1)**:
+    - TtT consistently outperforms pure AR and pure NAR baselines at both 1.5B and 3B scales.
+    - On Audio-QA, TtT-3B scores 34.68 on LLaMAQuestions and 11.61 on WebQuestions, surpassing the AR baseline (10.00 and 0.70 respectively).
+    - On ASR, TtT-3B achieves WERs of 12.53 on AISHELL-2 and 13.65 on AISHELL-1, significantly better than the AR baseline (54.94 and 72.01 respectively).
+    - The pure NAR baseline performs poorly on all tasks.
+- **Ablation Study (Table 1)**:
+    - Removing any of the three training strategies degrades performance.
+    - Removing SST causes the largest drop in Audio-QA (LLaMAQuestions score falls from 34.68 to 10.20).
+    - Removing BANOM causes the largest degradation in ASR (AISHELL-2 WER increases from 12.53 to 18.58).
+- **Effect of Multimodal Pretraining (Table 1)**:
+    - A 3B model was pretrained on 200B tokens of multimodal data.
+    - When fine-tuned on this pretrained model, TtT (`Pretrain+TtT`) consistently outperforms the AR-only fine-tuning (`Pretrain+AR`).
+    - For example, on LLaMAQuestions, `Pretrain+TtT` achieves 40.07 vs. 15.93 for `Pretrain+AR`. On AISHELL-2 ASR, `Pretrain+TtT` achieves 6.80 WER vs. 9.79 for `Pretrain+AR`.
+
+# Conclusion
+The paper presents TtT, a unified MLLM that integrates AR text generation and NAR audio diffusion to respect the distinct dependency structures of each modality. A theoretical framework justifies the hybrid training objective as an upper bound on the NLL of the target joint distribution. Three training strategies (BANOM, PPM, SST) are introduced to mitigate train-test discrepancies. Experiments on ASR and Audio-QA tasks show that TtT significantly outperforms purely AR and NAR baselines, validating the importance of modeling each modality according to its generative nature.
+
+# References
+This section lists the academic papers and preprints cited throughout the manuscript, including foundational work on discrete diffusion models, autoregressive models, and recent multimodal audio-language models.
+
+# Appendix
+- **A.1 Mathematical Derivation**: Provides a detailed proof that the unified training objective `L_Unified(x)` is an upper bound on the negative log-likelihood `-log ~p_θ(x)`.
+- **A.2 Related Work**: Discusses prior work in audio-language model pretraining (e.g., Moshi, GLM4-Voice, VITA-Audio) and the evolution of discrete diffusion models, including theoretical insights and practical applications.
+- **A.3 Block-wise Masked Diffusion Generation**: Details Algorithm 1 for NAR audio generation, which processes audio in fixed-length blocks, progressively denoising them. It supports early termination if an `⟨EOA⟩` token is generated.
+- **A.4 & A.5 Training and Evaluation Details**:
+    - Table 2 lists all training datasets, sample counts, and task types. Total samples are 6,321,321.
+    - Table 4 lists the evaluation datasets for Audio-QA and ASR.
+    - The Audio-QA evaluation pipeline using an external ASR model and an LLM-as-a-Judge is further explained.
+    - Table 3 provides the WER of the ASR models used for evaluation: Whisper-Large-v3 (0.5054 zh, 0.2167 en) and Paraformer-zh (0.1028 zh, 0.3946 en).
+- **A.6 Data Format**: Provides examples of the unified data format used for training across different tasks (ASR, TTS, Audio Chat, Text Chat, AAC/SEC/ASC, Interleaved Data). The format consistently uses a "messages" structure with system, user, and assistant roles, and interleaves text and audio spans marked by `⟨SOA⟩` and `⟨EOA⟩`.

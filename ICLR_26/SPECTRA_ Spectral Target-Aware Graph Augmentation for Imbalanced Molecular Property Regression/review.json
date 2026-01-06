@@ -1,0 +1,26 @@
+{
+  "paper_title": "SPECTRA: Spectral Target-Aware Graph Augmentation for Imbalanced Molecular Property Regression",
+  "file_name": "2511.04838v1",
+  "reviewers": [
+    {
+      "reviewer_id": "RUhG",
+      "score": 4,
+      "confidence": 4
+    },
+    {
+      "reviewer_id": "Uh3y",
+      "score": 6,
+      "confidence": 4
+    },
+    {
+      "reviewer_id": "nen4",
+      "score": 4,
+      "confidence": 3
+    },
+    {
+      "reviewer_id": "pT5c",
+      "score": 4,
+      "confidence": 3
+    }
+  ]
+}

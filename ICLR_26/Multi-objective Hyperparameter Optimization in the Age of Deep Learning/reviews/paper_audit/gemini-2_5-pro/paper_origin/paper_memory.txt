@@ -1,0 +1,97 @@
+# Global Summary
+This paper introduces PriMO, a Hyperparameter Optimization (HPO) algorithm designed for Deep Learning (DL) that is the first to incorporate user-specified prior knowledge for multiple objectives. The core problem is that while DL practitioners often have beliefs about good hyperparameter regions, existing HPO methods cannot leverage this information in a multi-objective context (e.g., optimizing performance and cost simultaneously). PriMO is a Bayesian Optimization (BO) algorithm that addresses this by using a multi-fidelity method (MOASHA) for an initial design phase to leverage cheap approximations, and then using a novel acquisition function that is augmented with user priors. The influence of the priors decays over time, and an ε-greedy mechanism provides robustness against misleading information. The authors evaluate PriMO on 8 DL benchmarks against a suite of multi-objective and single-objective baselines. They claim PriMO achieves state-of-the-art anytime and final performance, with speedups of up to 10x in some cases. The method is also shown to be effective in the single-objective setting. Stated limitations include the use of simple Gaussian priors on individual optima rather than the Pareto front, and the use of linear scalarization.
+
+# Abstract
+The paper argues that while Deep Learning (DL) experts possess prior knowledge about good hyperparameter settings, no existing Hyperparameter Optimization (HPO) algorithms can leverage this knowledge for multiple objectives, a common scenario in DL. To address this, the authors introduce PriMO (Prior informed Multi-objective Optimizer), the first HPO algorithm designed to integrate multi-objective user beliefs. They claim that PriMO achieves state-of-the-art performance across 8 DL benchmarks in both multi-objective and single-objective settings, positioning it as a new go-to algorithm for DL practitioners.
+
+# Introduction
+- Manual hyperparameter tuning is still common because it allows practitioners to incorporate domain expertise.
+- The paper identifies four desiderata for modern HPO algorithms for DL:
+    1. Utilize cheap approximations (multi-fidelity).
+    2. Integrate multi-objective expert priors.
+    3. Strong anytime performance.
+    4. Strong final performance.
+- A comparison table (Table 1) shows that existing algorithm categories like Evolutionary Algorithms (EA), Multi-Objective Multi-Fidelity (MOMF), and Multi-Objective Bayesian Optimization (MO-BO) fail to meet all criteria, particularly the integration of multi-objective priors. PriMO is claimed to satisfy all four.
+- The paper claims PriMO yields up to 10x speedups over existing algorithms (Figure 1, right panel, on the Language Model benchmark).
+- Across 8 DL benchmarks, PriMO achieves the best mean relative rank (around 1.5-2.0) compared to baselines like BO+RW, MOASHA, and ParEGO whose ranks are worse (around 2.2-3.2) (Figure 1, left panel).
+- Main contributions are:
+    - First to consider expert priors for multiple objectives and show naive adaptations are not robust.
+    - Introduce PriMO, a BO algorithm integrating multi-objective priors in its acquisition function and using cheap proxies in its initial design.
+    - Empirically demonstrate SOTA performance in multi- and single-objective settings and robustness to prior strength.
+
+# Method
+- The paper formulates the problem as minimizing a vector-valued objective function `f(λ)` guided by a set of priors `Π_f(λ)`, while also using cheap, low-fidelity approximations `\hat{f}_i(λ, z)`.
+- Multi-objective expert priors are defined as a factorized set of individual priors, `Π_f(λ) = {π_{f_i}(λ)}_{i=1}^n`, where each `π_{f_i}(λ)` is a probability distribution over the location of the optimum for objective `f_i`.
+- PriMO is a Bayesian Optimization (BO) algorithm with two main components:
+    1. **Initial Design using Cheap Approximations**: PriMO uses a multi-fidelity algorithm (specifically MOASHA) to generate a set of strong initial seed points at the maximum fidelity (`z_max`). This phase runs until a budget threshold of `n_init` equivalent full function evaluations is met.
+    2. **Prior-Informed BO**: After the initial design, PriMO runs BO.
+        - It converts the multi-objective problem to a single-objective one using linear scalarization with random weights `w_i`.
+        - In each BO iteration, it selects one of the `n` objective priors `π_{f_j}` uniformly at random.
+        - The acquisition function `α(λ, D)` is augmented with the selected prior using an ε-greedy strategy. With probability `1-ε`, the acquisition becomes `α(λ, D) * π_{f_j}(λ)^γ`.
+        - The prior's influence decays via an exponent `γ = exp(−n^2_{BO}/n_d)`, where `n_BO` is the number of BO samples and `n_d` is the search space dimensionality. This decay is faster than in prior work (πBO).
+- For the single-objective setting, PriMO is adapted by using ASHA for the initial design and using the single available prior in the BO phase.
+
+# Motivation
+- This section argues against a naive solution for incorporating priors into multi-objective optimization.
+- The authors adapt MOASHA to sample configurations from one of the priors, chosen randomly at each iteration.
+- Experiments show this naive approach is not robust (Figure 2):
+    - When all priors are good, always sampling from the prior outperforms standard MOASHA.
+    - When all priors are bad, this strategy performs drastically poorly.
+    - Sampling from the prior 50% of the time is better than MOASHA overall but fails to effectively leverage good priors.
+- This lack of robustness motivates the design of PriMO, which aims to benefit from good priors while being able to recover from bad ones.
+
+# Experiments
+- **RQ1-6**: The experiments aim to show PriMO outperforms baselines, works in single-objective settings, leverages good priors, recovers from bad priors, benefits from its initial design, and that all its components are necessary.
+
+- **5.1 Experimental Setup**:
+    - Evaluation is based on mean dominated hypervolume across 25 seeds, run for 20 equivalent full function evaluations.
+    - Benchmarks: 8 total. 4 from LCBench (via Yahpo-Gym) and 4 from PD1. Objectives are validation error and training cost.
+    - Priors: "Good" priors are generated from the best-performing configuration perturbed by Gaussian noise (σ=0.01). "Bad" priors are from the worst-performing configuration. The prior distribution itself is a Gaussian with σ=0.25. Four conditions are tested: all good, all bad, mixed, and overall average.
+
+- **5.2 Baselines**:
+    - Multi-objective: BO+RW, ParEGO, HB+RW, MOASHA, NSGA-II.
+    - Constructed multi-objective with priors: RS+Prior, MOASHA+Prior, πBO+RW, MO-Priorband.
+    - Single-objective: BO, HyperBand, Priorband-BO, πBO.
+
+- **5.3 PriMO Achieves State-of-the-Art Performance**:
+    - **Multi-objective (RQ1, RQ3)**: Overall, PriMO shows the strongest anytime and final performance in relative ranks (Figure 3). The performance gap is more pronounced with good priors. Hypervolume plots on individual benchmarks show PriMO starts strong and is the best performer early on (Figure 4). Compared to other prior-based baselines, PriMO is also superior (Figure 5).
+    - **Single-objective (RQ2)**: PriMO is the best choice overall, with the strongest anytime and final performance (Figure 6). Other prior-based methods like Priorband and πBO start stronger but are quickly overtaken by PriMO.
+
+- **5.4 PriMO is robust to prior conditions**:
+    - **(RQ4)**: Under "all bad priors" (Figure 3), PriMO has a poor start but recovers remarkably well, nearly matching the performance of the best non-prior baseline (BO+RW) by the end. It significantly outperforms other prior-based baselines like πBO+RW under bad priors.
+
+- **5.5 All components of PriMO are helpful**:
+    - **(RQ5, RQ6)**: An ablation study (Figure 7) shows:
+        - The initial design strategy provides a substantial early performance boost.
+        - Removing either the priors ("PriMO w/o Priors") or the ε-BO mechanism ("PriMO w/o ε-BO") results in two of the worst-performing ablations, confirming their importance.
+        - The full PriMO design is superior to all its ablations.
+
+# Related Work
+- The paper positions its work as novel for multi-objective HPO.
+- **User priors for single-objective optimization**: Methods like Priorband and πBO exist. The paper notes that Priorband uses cheap approximations throughout, unlike PriMO's initial design strategy. Adapting πBO to the multi-objective setting was shown to perform poorly with misleading priors.
+- **Exploiting cheap approximations for multi-objective optimization**: Existing methods do not incorporate expert priors. The paper's ablation study shows that using cheap approximations as an initial design (as PriMO does) performs better overall than using them throughout the optimization process.
+
+# Discussion
+- **Limitations**:
+    - Priors are restricted to Gaussian distributions, though the framework supports others.
+    - Priors are defined over the optima of individual objectives, not directly over the Pareto front, which is a non-trivial challenge. The authors argue it's also unclear how users would define such priors.
+    - The BO phase uses linear scalarization. Other methods like Hypervolume scalarization might be beneficial as they have guarantees for non-convex Pareto fronts.
+
+# Conclusion
+- PriMO is presented as the first algorithm to integrate multi-objective expert priors into HPO.
+- It is claimed to achieve state-of-the-art performance and to be the only HPO algorithm that fulfills all identified desiderata for modern HPO in DL (utilizing cheap approximations, integrating multi-objective priors, strong anytime/final performance).
+- This makes it suitable for efficient optimization under the constrained budgets typical of practical DL applications.
+
+# Appendix
+- **B Background**: Provides standard definitions for multi-fidelity optimization, Pareto optimality, and the Hypervolume indicator.
+- **C Algorithm Details**: PriMO is implemented in the NePS package. The initial design size is 5 equivalent full evaluations. The reduction factor `η` for MOASHA/ASHA is 3. The exploration parameter `ε` is 0.25. The base acquisition function is qLogNoisyEI from BoTorch.
+- **D Construction of Priors**: Priors are generated by sampling 100,000 configurations. "Good" priors are based on the best configuration found, perturbed with Gaussian noise (σ=0.01). "Bad" priors are based on the worst configuration found (unperturbed). The final prior is a Gaussian distribution `N(λ, σ^2)` centered on these configurations with `σ=0.25`.
+- **E Baselines**: The πBO implementation in NePS uses a prior decay schedule of `γ = e^{-n_{BO}/n_d}`, which is different from the original paper's `γ = β/n`.
+- **F Benchmarks**: Details the 8 benchmarks used: 4 from PD1 (cifar100, imagenet, lm1b, translate_wmt) and 4 from LCBench (task IDs 126026, 146212, 168330, 168868). Provides search space tables and reference points for hypervolume calculation.
+- **G Evaluation Protocol**: Confirms runs are for 20 equivalent full function evaluations over 25 seeds.
+- **H Additional Experiments**: Pareto front plots show PriMO and BO+RW are competitive in finding non-dominated points. Under bad priors, PriMO's recovery is strong, and it clearly outperforms other prior-based methods like πBO+RW and MO-Priorband. The initial design phase for PriMO (size 5) requires on average ~3.5 equivalent function evaluations to produce 3 max-fidelity configurations for the BO phase.
+- **I Significance Analysis**: Uses Linear Mixed Effect Models (LMEMs) and Critical Difference (CD) diagrams. The analysis confirms that PriMO's performance is statistically significantly better than other optimizers overall, both at 10 evaluations (early) and 20 evaluations (final).
+- **K Resources Used**: Total compute for experiments in Section 5 was ~172 CPU hours (~5160 core hours).
+
+# References
+This section contains a list of citations for the work mentioned in the manuscript.

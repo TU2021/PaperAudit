@@ -1,0 +1,95 @@
+{
+  "paper": "Quadratic Direct Forecast for Training Multi-Step Time-Series Forecast Models",
+  "judge_model": "gpt-5.1",
+  "review_agent": "deepreviewer",
+  "ai_model": "gpt-5-2025-08-07",
+  "ai_review_file": "deep_review_all.txt",
+  "inputs": {
+    "human_review": "review.txt",
+    "ai_review": "reviews/deepreviewer/gpt-5-2025-08-07/paper_origin/deep_review_all.txt"
+  },
+  "multi_review": {
+    "detected": false,
+    "num_reviews": 1,
+    "summarize_used": false,
+    "summary_note": null
+  },
+  "ai_review_consolidated": null,
+  "alignment": {
+    "motivation_strength_alignment": 0.9,
+    "weakness_error_alignment": 0.4,
+    "overall_alignment": 0.6,
+    "explanation": {
+      "strength": "Both reviews clearly converge on the same core story: QDF is a quadratic-form training objective for multi-step forecasting that learns a weighting/covariance-like matrix Σ to (i) capture label autocorrelation across future steps (off-diagonal terms) and (ii) encode heterogeneous task weights across horizons (diagonal terms). Both note that this addresses limitations of standard MSE/MAE objectives in direct forecasting and that the approach is architecture-agnostic. They also align in emphasizing strong empirical evidence: broad experiments across multiple datasets and models, ablations isolating the impact of diagonal vs off-diagonal components, and generally improved accuracy. Both mention good presentation/clarity and that code is provided, facilitating reproducibility. On the high level of motivation, contributions, and empirical strengths, the overlap is very strong.",
+      "weakness": "The overlap on weaknesses is much lower. The human review focuses on (1) a high-level lack of deeper theoretical analysis comparing QDF to existing objectives (e.g., FreDF, Time-o1), (2) potential data leakage and unclear data splitting/meta-update strategy, (3) concerns about computational efficiency and scalability of the bilevel optimization, and (4) practical reproducibility of the released code (setup, hyperparameters, instructions). In contrast, the AI review goes into different, more technical concerns: (a) omission of the log|Σ| term when optimizing Σ versus the likelihood framing, (b) PSD vs PD/invertibility issues for Σ and numerical stability, (c) ambiguity and possible mismatch in the bilevel implementation and hypergradients (whether dθ/dΣ is used), (d) risk of overfitting and lack of structural regularization for Σ, and (e) limited variance reporting, significance, and missing runtime/hardware details. There is some weak thematic overlap—both worry about clarity/ambiguity around the bilevel/meta-learning procedure and about computational/runtime characterization—but the concrete criticisms and their depth differ substantially. The human review does not mention likelihood, Σ conditioning, overfitting of Σ, variance reporting, or hypergradient details; the AI review does not mention code usability, environment instructions, or explicit data-leakage analysis. Hence only moderate alignment on a very coarse level (methodological clarity and practicality), but low alignment on specific weaknesses.",
+      "overall": "Taken together, the reviews strongly agree on what the paper is about and why it is interesting: learning a quadratic weighting matrix for multi-step forecasting, capturing autocorrelation and heterogeneous horizon difficulty, and demonstrating consistent empirical gains with broad experiments and ablations. On the positive side, their judgments and emphases are closely aligned. However, they diverge on the main critical points: the human review raises higher-level theoretical depth, data split/leakage clarity, computational scalability, and code reproducibility, while the AI review concentrates on detailed likelihood consistency, Σ PD/PSD and invertibility, true vs claimed bilevel optimization, overfitting/regularization of Σ, and statistical reporting and runtime details. Because the strengths are well-aligned but the weaknesses are only loosely aligned at a high level, the overall substantive alignment is moderate."
+    }
+  },
+  "generated_at": "2025-12-27T19:27:30",
+  "runs": [
+    {
+      "config": {
+        "judge_model": "gpt-5.1",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "baseline_review.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180
+      },
+      "config_key": "3b28d70d5731760031a4514ebc98b0afd78edf6d",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/baseline_review.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "motivation_strength_alignment": 0.86,
+        "weakness_error_alignment": 0.7,
+        "overall_alignment": 0.8,
+        "explanation": {
+          "strength": "Both reviews identify the same core motivation: improving multi-step direct time-series forecasting objectives by capturing label autocorrelation and heterogeneous task weights via a quadratic-form loss, and both emphasize the probabilistic/theoretical grounding and strong, comprehensive experiments with released code. The AI review adds more detail (Gaussian NLL, bilevel learning, PSD/Cholesky, meta-learning, efficiency), but these elaborate the same central contributions rather than shifting focus.",
+          "weakness": "Both reviews raise concerns about the depth of theoretical treatment and guarantees of the proposed method, and both touch on issues around efficiency/scalability and clarity of implementation/reproducibility (though A focuses on bilevel cost and code instructions, B on missing hypergradient and Σ−1 details and resource metrics). The AI review introduces several additional, more specific critiques (multivariate limitations, fairness of SOTA claims, case-study design, numerical stability) that are not mentioned in the human review, so overlap on weaknesses is solid but not complete.",
+          "overall": "The two reviews are strongly aligned on what the paper is about, what its main contributions are, and that it offers a novel, well-motivated quadratic objective with solid empirical results and code. They both see theoretical underdevelopment and some practical/clarity issues as the main downsides, though the AI review goes much deeper and broader in its criticisms. Substantively, their judgments and focus largely coincide, with the AI review extending rather than contradicting the human review."
+        }
+      },
+      "generated_at": "2025-12-27T19:52:10"
+    },
+    {
+      "config": {
+        "judge_model": "gpt-5.1",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "final_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180
+      },
+      "config_key": "4569a6a97a67c8e2b360606eb74d6eb53b892d06",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/final_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "motivation_strength_alignment": 0.88,
+        "weakness_error_alignment": 0.52,
+        "overall_alignment": 0.68,
+        "strength": "Both reviews recognize the novel quadratic-form objective addressing label autocorrelation and heterogeneous tasks, and they note strong experiments. Review B contributes additional technical details on Gaussian NLL and bilevel training.",
+        "weakness": "They both flag the lack of deeper theoretical exploration and concerns about efficiency and scalability, but B raises many specific issues not addressed in A, treating data leakage positively as opposed to A's concerns.",
+        "overall": "They share a similar perspective that the method is promising and empirically effective but has theoretical and implementation caveats. Review B is more exhaustive, raising points not found in A, leading to a partial but consistent alignment without major contradictions."
+      },
+      "generated_at": "2025-12-27T19:54:25"
+    }
+  ]
+}

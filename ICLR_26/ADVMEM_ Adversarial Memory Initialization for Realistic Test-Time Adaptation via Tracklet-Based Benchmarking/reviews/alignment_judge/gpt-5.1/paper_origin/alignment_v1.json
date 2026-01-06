@@ -1,0 +1,97 @@
+{
+  "paper": "ADVMEM_ Adversarial Memory Initialization for Realistic Test-Time Adaptation via Tracklet-Based Benchmarking",
+  "judge_model": "gpt-5.1",
+  "review_agent": "deepreviewer",
+  "ai_model": "gpt-5-2025-08-07",
+  "ai_review_file": "deep_review_all.txt",
+  "inputs": {
+    "human_review": "review.txt",
+    "ai_review": "reviews/deepreviewer/gpt-5-2025-08-07/paper_origin/deep_review_all.txt"
+  },
+  "multi_review": {
+    "detected": false,
+    "num_reviews": 1,
+    "summarize_used": false,
+    "summary_note": null
+  },
+  "ai_review_consolidated": null,
+  "alignment": {
+    "motivation_strength_alignment": 0.85,
+    "weakness_error_alignment": 0.8,
+    "overall_alignment": 0.82,
+    "explanation": {
+      "strength": "Both reviews clearly recognize the same core contributions and motivations: (1) ITD as a tracklet-based, temporally dependent benchmark for TTA, explicitly designed to move beyond i.i.d. corruption benchmarks; (2) the use of object-centric crops from a tracking dataset (TrackingNet) to create realistic temporal correlations; (3) inclusion of multiple shift types and corruption regimes, including dynamic severity, class skew, and clean-to-corrupt transitions; and (4) ADVMEM as a simple, plug-and-play adversarial memory initialization that improves stability and performance of memory-based TTA in temporally correlated settings. Both see ITD as a well-motivated benchmark that fills an important gap in current TTA evaluation, and both acknowledge that the method is simple and that experiments suggest some empirical gains. The main point of divergence is that Review A relays other reviewers’ skepticism about the *novelty* of the benchmark (suggesting it may be a repackaging of existing ideas), whereas Review B more straightforwardly treats the benchmark and ADVMEM as fresh/novel directions. Despite that difference in novelty framing, the core positive aspects and high-level contributions are very closely aligned.",
+      "weakness": "There is strong overlap in the critical points, though with some different emphases. Both reviews flag problems around the method and experiments: (1) ADVMEM is under-analyzed, lacking theoretical grounding or a careful explanation of why adversarial memory should work; (2) key implementation/hyperparameter details are missing, which harms reproducibility; (3) reported empirical results are not entirely trustworthy—Review A mentions insufficient baselines and weak evaluation design, while Review B focuses heavily on internal numerical inconsistencies, table misnumbering, and contradictions between claims and tables; (4) there are concerns that strong baselines perform implausibly poorly in some regimes, indicating potential implementation or protocol issues. Review A also raises additional issues that Review B does not emphasize: questionable novelty of the benchmark relative to prior non‑i.i.d./video/continual benchmarks; concerns about realism and coverage (cropping removing scale variation, mild temporal dynamics, few classes, synthetic vs real-world shifts, missing multimodal coverage); and the quality/diversity of base models and lack of recent TTA baselines. Review B instead concentrates more on internal consistency, technical flaws in ADVMEM’s formulation (off‑manifold adversarial samples, ill-defined stopping condition, missing norm constraints), and lack of statistical robustness. Thus, while both focus on weaknesses in rigor, clarity, and empirical support, Review B introduces substantial additional detail on experimental inconsistencies, and Review A introduces substantial additional detail on benchmark realism, novelty versus prior work, and breadth of baselines. This yields good but not perfect alignment.",
+      "overall": "In aggregate, the two reviews are substantially aligned in substance and overall judgment. Both see the benchmark idea as meaningful and timely, and both regard the method as relatively simple and under-justified. Both ultimately view the current paper as not yet convincing due to issues in rigor, experimental support, and presentation. The main differences are in emphasis: Review A heavily channels community concerns about novelty relative to prior video/continual benchmarks, ecological validity, breadth of baselines, and writing quality, whereas Review B delves deeper into internal numeric inconsistencies, missing algorithmic details for ADVMEM, and precise table-level contradictions. These are complementary rather than contradictory perspectives. There is no major clash in their assessment of the paper’s direction or quality; they converge on: strong motivation and potentially valuable benchmark, interesting but lightweight method, and insufficiently rigorous or trustworthy empirical evaluation. Hence the overall alignment is high but not complete."
+    }
+  },
+  "generated_at": "2025-12-27T19:27:32",
+  "runs": [
+    {
+      "config": {
+        "judge_model": "gpt-5.1",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "baseline_review.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180
+      },
+      "config_key": "3b28d70d5731760031a4514ebc98b0afd78edf6d",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/baseline_review.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "motivation_strength_alignment": 0.6,
+        "weakness_error_alignment": 0.45,
+        "overall_alignment": 0.55,
+        "explanation": {
+          "strength": "Both reviews agree on the core motivation: current TTA benchmarks lack temporal dependence, and ITD’s tracklet-based construction fills this gap. They also both view ADVMEM as a simple, practical extension. The AI review provides far more detail, but the fundamental strengths it identifies overlap with those in the human review.",
+          "weakness": "Both point out missing methodological details, reproducibility issues, and incomplete baseline coverage. However, the human review emphasizes concerns about benchmark and method novelty, realism, and writing quality, while the AI review does not stress novelty concerns and instead lists many fine‑grained technical omissions. Thus alignment is only partial.",
+          "overall": "The reviews share a similar high‑level judgment—promising benchmark idea but weakened by methodological gaps and insufficient rigor. However, they diverge in emphasis, with the human review focusing more on novelty/presentation issues and the AI review on detailed technical and reproducibility shortcomings. This yields moderate overall alignment."
+        }
+      },
+      "generated_at": "2025-12-27T19:51:24"
+    },
+    {
+      "config": {
+        "judge_model": "gpt-5.1",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "final_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180
+      },
+      "config_key": "4569a6a97a67c8e2b360606eb74d6eb53b892d06",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/final_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "motivation_strength_alignment": 0.78,
+        "weakness_error_alignment": 0.52,
+        "overall_alignment": 0.56,
+        "explanation": {
+          "strength": "Both reviews identify the same core contributions: ITD as a tracklet-based benchmark designed to capture temporal dependencies missing in standard i.i.d. TTA evaluations, and ADVMEM as a simple, plug-in adversarial memory initialization that improves memory-based TTA methods. They also align in highlighting the usefulness of multiple evaluation regimes and corruption patterns, though the AI review adds more detail on dataset scale, architecture ablations, and code availability, while the human review emphasizes the modular shift design at a higher level.",
+          "weakness": "Both reviews criticize the work for under-specified or under-analyzed aspects of ADVMEM, incomplete or insufficient baselines for sequential/non-i.i.d. TTA, and gaps in experimental protocol and clarity (e.g., table references, documentation), though they focus on different concrete examples. The human review uniquely stresses concerns about benchmark and method novelty, ecological realism of the setup, base-model and model-family coverage, and broader reproducibility/ethics narrative, while the AI review introduces additional technical-detail and practicality issues (missing optimization hyperparameters, corruption-count inconsistencies, runtime/memory and variance reporting) that the human summary does not mention.",
+          "overall": "Taken together, the reviews substantially agree on the basic picture that the paper offers a useful temporally dependent benchmark and a simple memory-initialization trick with promising empirical gains, but suffers from shortcomings in rigor and evaluation support. They diverge on the perceived novelty/impact (the human summary is skeptical where the AI review is more positive) and on the severity and type of missing details, leading the human summary to a more negative, rejection-leaning judgment versus the AI review’s more supportive but still critical stance, yielding only moderate overall substantive alignment."
+        }
+      },
+      "generated_at": "2025-12-27T19:53:59"
+    }
+  ]
+}

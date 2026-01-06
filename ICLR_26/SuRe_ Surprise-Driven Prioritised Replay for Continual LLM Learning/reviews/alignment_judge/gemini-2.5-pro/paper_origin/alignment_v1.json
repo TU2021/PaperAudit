@@ -1,0 +1,104 @@
+{
+  "paper": "SuRe_ Surprise-Driven Prioritised Replay for Continual LLM Learning",
+  "runs": [
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "deepreviewer",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "deep_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180
+      },
+      "config_key": "24b66d75b94c155df325f4e5f2603b40312e4469",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/deepreviewer/gpt-5-2025-08-07/paper_origin/deep_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "motivation_strength_alignment": 0.9,
+        "weakness_error_alignment": 0.25,
+        "overall_alignment": 0.5,
+        "explanation": {
+          "strength": "Both reviews identify the same core strengths: the surprise-based replay mechanism, the theoretical decomposition of forgetting into selection and integration errors, strong empirical results, and practical sample efficiency with small buffers.",
+          "weakness": "The reviews show very low alignment on weaknesses, with their only overlap being a general concern about the theoretical justification for the dual-learner, where Review B identifies a specific contradiction missed by Review A. Review B focuses on concrete issues like an overstated claim and incomplete algorithm, while Review A critiques broader aspects like novelty and generalization to different tasks.",
+          "overall": "The reviews align very strongly on the paper's contributions and strengths but diverge significantly on its weaknesses, leading to a moderate overall match. Review A provides high-level critiques on novelty and scope, whereas Review B acts more as a fact-checker, identifying specific inconsistencies and missing details within the paper."
+        }
+      },
+      "generated_at": "2025-12-27T20:04:55"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "baseline_review.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180
+      },
+      "config_key": "a14d937ebf873b90a820c8cb44da768956431bd4",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/baseline_review.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "motivation_strength_alignment": 0.9,
+        "weakness_error_alignment": 0.3,
+        "overall_alignment": 0.55,
+        "explanation": {
+          "strength": "Both reviews identify the same core strengths: the novel surprise-based replay mechanism, the theoretical framework decomposing forgetting into selection and integration errors, and the strong empirical results demonstrating sample efficiency.",
+          "weakness": "The reviews have low alignment on weaknesses; Review A focuses on conceptual issues like the novelty of the dual-learner component and missing baselines, while Review B focuses on execution and reporting issues like overclaiming, dataset inconsistencies, and lack of statistical rigor.",
+          "overall": "While both reviews recognize the paper's main contributions, their critiques are largely orthogonal, with Review A assessing the research ideas and Review B assessing the paper's experimental rigor and reproducibility, leading to only moderate overall alignment in judgment."
+        }
+      },
+      "generated_at": "2025-12-27T20:08:56"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "final_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180
+      },
+      "config_key": "565dcfbed8e348ba365acb8ebe44bf867f3cd0c2",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/final_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "motivation_strength_alignment": 0.9,
+        "weakness_error_alignment": 0.25,
+        "overall_alignment": 0.5,
+        "explanation": {
+          "strength": "Both reviews identify the same core strengths: the novel surprise-based replay, the theoretical framework decomposing forgetting into selection and integration errors, and strong empirical results showing sample efficiency. The alignment is very high, with both emphasizing the same key contributions.",
+          "weakness": "The reviews have very low alignment on weaknesses, identifying almost entirely different issues. Review A focuses on conceptual limitations like component novelty and missing baselines, while Review B finds critical flaws in rigor and reporting, such as data inconsistencies, overclaiming, and a mathematical contradiction in the theory.",
+          "overall": "The reviews align very well on the paper's strengths but diverge significantly on its weaknesses, leading to a moderate overall match. While both appreciate the core idea, Review A sees a solid contribution with standard limitations, whereas Review B uncovers numerous serious execution and reporting flaws that imply a different judgment on the paper's scientific quality."
+        }
+      },
+      "generated_at": "2025-12-27T20:12:37"
+    }
+  ]
+}

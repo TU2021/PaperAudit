@@ -1,0 +1,129 @@
+{
+  "paper": "ObjexMT_ Objective Extraction and Metacognitive Calibration for LLM-as-a-Judge under Multi-Turn Jailbreaks",
+  "runs": [
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "deepreviewer",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "deep_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "55f39c3e353412551a5ae68e81fc4acc489b4edd",
+      "inputs": {
+        "human_review": "review_origin.txt",
+        "ai_review": "reviews/deepreviewer/gpt-5-2025-08-07/paper_origin/deep_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 1.0,
+        "weakness_coverage_recall": 0.42,
+        "ai_extra_major_points_rate": 0.13,
+        "symmetric_coverage_similarity": 0.63,
+        "note": "The AI review achieved perfect coverage of the paper's strengths but only moderate coverage of its weaknesses. It missed several major human concerns, including the lack of direct validation for the paper's core premise, the overstatement of \"metacognition\", and the limited novelty due to dataset repurposing."
+      },
+      "generated_at": "2025-12-27T23:48:07"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "baseline_review.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "b3137abdd5dd456ecfb029f7bed4151251d086e2",
+      "inputs": {
+        "human_review": "review_origin.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/baseline_review.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 0.8,
+        "weakness_coverage_recall": 0.46,
+        "ai_extra_major_points_rate": 0.44,
+        "symmetric_coverage_similarity": 0.52,
+        "note": "The AI review showed high coverage of the paper's strengths but only moderate coverage of its weaknesses, missing key human-raised points about overclaiming terminology and the lack of empirical validation for a core premise. Conversely, the AI introduced several unique, substantive concerns, such as how the evaluation penalizes safety-tuned models and specific reporting inconsistencies in figures."
+      },
+      "generated_at": "2025-12-27T23:53:57"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "final_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "0a71ca7d783136ba33fb6b5ec9aad08ece2f0c09",
+      "inputs": {
+        "human_review": "review_origin.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/final_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 1.0,
+        "weakness_coverage_recall": 0.64,
+        "ai_extra_major_points_rate": 0.19,
+        "symmetric_coverage_similarity": 0.67,
+        "note": "The AI review captures all strength points but misses several specific weakness critiques, such as the statistical risk of overfitting the threshold on the validation set, the lack of a taxonomy for model failure cases, and the conceptual dispute over the term 'metacognition'. Conversely, the AI introduces valid methodological concerns (e.g., T=0 decoding limits, refusal scoring fairness) not raised by humans."
+      },
+      "generated_at": "2025-12-28T00:06:01"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "deepreviewer",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "deep_review_merge.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "752f27bc09e656c7d041a880d0c174422eea6ca4",
+      "inputs": {
+        "human_review": "review_origin.txt",
+        "ai_review": "reviews/deepreviewer/gpt-5-2025-08-07/paper_origin/deep_review_merge.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 1.0,
+        "weakness_coverage_recall": 0.27,
+        "ai_extra_major_points_rate": 0.27,
+        "symmetric_coverage_similarity": 0.48,
+        "note": "Review B provides excellent coverage of the paper's strengths but misses most of the fundamental methodological and conceptual weaknesses raised in Review A, such as the lack of benchmark validation, poor justification for the confidence metric, and overclaiming of contributions. Instead, Review B raises several valid but more specific implementation-level weaknesses not mentioned by the human reviewers."
+      },
+      "generated_at": "2025-12-28T00:19:34"
+    }
+  ]
+}

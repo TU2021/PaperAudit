@@ -1,0 +1,129 @@
+{
+  "paper": "Bernoulli-LoRA_ A Theoretical Framework for Randomized Low-Rank Adaptation",
+  "runs": [
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "final_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "0a71ca7d783136ba33fb6b5ec9aad08ece2f0c09",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/final_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 1.0,
+        "weakness_coverage_recall": 0.5,
+        "ai_extra_major_points_rate": 0.7,
+        "symmetric_coverage_similarity": 0.35,
+        "note": "The AI review fully covered the strengths but missed several high-level conceptual weaknesses from the human review, such as the simplified modeling of LoRA and the role of pre-training. Conversely, the AI identified a large number of specific technical flaws (e.g., inconsistent theorems, algorithmic errors) not mentioned by the human, resulting in low overall symmetric coverage."
+      },
+      "generated_at": "2025-12-27T20:39:20"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "baseline_review.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "b3137abdd5dd456ecfb029f7bed4151251d086e2",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/baseline_review.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 0.75,
+        "weakness_coverage_recall": 0.67,
+        "ai_extra_major_points_rate": 0.42,
+        "symmetric_coverage_similarity": 0.41,
+        "note": "The AI review covers most core points but adds several specific technical weaknesses not in the human review, such as the lack of federated experiments and unstated independence assumptions. Conversely, the AI misses some of the human's higher-level conceptual critiques, like the simplified modeling of LoRA across multiple layers and the role of pretraining."
+      },
+      "generated_at": "2025-12-27T20:43:59"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "deepreviewer",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "deep_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "55f39c3e353412551a5ae68e81fc4acc489b4edd",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/deepreviewer/gpt-5-2025-08-07/paper_origin/deep_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 0.8,
+        "weakness_coverage_recall": 0.5,
+        "ai_extra_major_points_rate": 0.2,
+        "symmetric_coverage_similarity": 0.5,
+        "note": "The AI review covered most strengths well but missed several major weaknesses identified by the human reviewers, such as the limited novelty compared to prior work (RAC-LoRA) and the failure to discuss the role of pretraining. Conversely, the AI review identified more specific technical flaws, like an implicit independence assumption in the proofs, which the human summary did not mention."
+      },
+      "generated_at": "2025-12-27T20:50:15"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "deepreviewer",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "deep_review_merge.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "752f27bc09e656c7d041a880d0c174422eea6ca4",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/deepreviewer/gpt-5-2025-08-07/paper_origin/deep_review_merge.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 0.75,
+        "weakness_coverage_recall": 0.5,
+        "ai_extra_major_points_rate": 0.4,
+        "symmetric_coverage_similarity": 0.38,
+        "note": "The AI review misses several major conceptual weaknesses, including the core novelty concern relative to RAC-LoRA and the simplified modeling of practical LoRA. Conversely, the AI adds more specific technical critiques about the assumptions and experimental setup not mentioned by the human review."
+      },
+      "generated_at": "2025-12-27T21:19:39"
+    }
+  ]
+}

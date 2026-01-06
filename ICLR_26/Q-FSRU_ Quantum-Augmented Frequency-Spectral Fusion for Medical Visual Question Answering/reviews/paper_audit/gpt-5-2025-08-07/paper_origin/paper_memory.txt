@@ -1,0 +1,136 @@
+# Global Summary
+The paper proposes Q-FSRU, a medical visual question answering (Med-VQA) framework that fuses frequency-domain representations of image and text features via FFT with a quantum-inspired retrieval-augmented mechanism using Uhlmann fidelity. The approach targets global contextual cues in medical images and improved knowledge-grounded reasoning. Evaluations are conducted on VQA-RAD (3,515 radiology QA pairs) and cross-dataset generalization to PathVQA (32,799 QA pairs; 4,998 pathology images). Q-FSRU achieves "90.0 ± 0.5%" accuracy on VQA-RAD, improving over the strongest baseline by "+2.9%" and reaching "0.954 ± 0.01" AUC; gains are statistically significant ("p < 0.01"). Cross-dataset transfer shows accuracy of "81.7 ± 0.9" (VQA-RAD → PathVQA) and "80.3 ± 1.0" (PathVQA → VQA-RAD), with "+3.3–3.4%" improvements over baselines. Ablations indicate the largest contribution from frequency processing (−4.9% accuracy when removed), followed by quantum retrieval (−3.2%) and contrastive learning (−2.7%). Caveats and inconsistencies explicitly stated or implied include: the external medical knowledge source for retrieval is not specified; the classification focus is on categorical answers (exact mapping of open-ended/binary handling is not fully detailed); and a methodological inconsistency where the feature integration pipeline includes knowledge embeddings, but the classifier description later excludes them.
+
+# Introduction
+- Problem: Med-VQA requires joint reasoning over medical images (CT, MRI, X-ray, etc.) and clinical language, facing data scarcity, specialized terminology, complex modalities, and high-stakes decision-making.
+- Gap: Existing methods predominantly operate in the spatial domain; frequency-based patterns relevant for pathology may be overlooked. Standard retrieval (e.g., cosine similarity) may miss nuanced clinical semantics.
+- Proposed framework: Q-FSRU combining frequency spectrum representation and fusion (FSRU) via FFT with a quantum-inspired retrieval augmentation (Quantum RAG) using amplitude/fidelity-like similarity.
+- Key insights: Frequency-domain transformation captures global contextual patterns; quantum-inspired similarity enhances retrieval grounding for clinical reasoning.
+- Contributions:
+  1) Frequency-domain fusion for both image and text via FFT.
+  2) Quantum-inspired retrieval using amplitude/fidelity-based similarity.
+  3) Competitive performance on VQA-RAD, especially on complex reasoning questions.
+  4) Analysis indicating improved performance and interpretability via combined spectral processing and retrieval.
+
+# Abstract
+- Approach: Q-FSRU shifts image and text features to the frequency domain via FFT to emphasize important signals and reduce noise, and integrates external medical knowledge through a quantum-inspired retrieval system.
+- Evaluation: VQA-RAD dataset.
+- Claims: Outperforms earlier models, particularly on complex image-text reasoning; improved performance and explainability by combining frequency and quantum information.
+- No specific quantitative metrics reported in the abstract.
+
+# Related Work
+- Medical VQA: Challenges in clinical language and imaging; recent LLM-based systems (e.g., STLLaVA-Med) improve domain adaptation but remain spatial-domain centric and limited in knowledge integration.
+- Frequency-domain representations: FDTrans (Cai et al., 2023) and FreqU-FNet (Xing, 2025) show complementary spectral benefits; Lao et al. (2024) demonstrates frequency fusion gains for multimodal rumor detection.
+- Quantum-inspired IR: Surveyed by Uprety et al. (2021); practical methods (Kankeu et al., 2025) improve representation learning; Quantum-Brain (Nguyen et al., 2025) applies quantum principles to vision-related tasks.
+- Knowledge retrieval in VQA: RAG (Lewis et al., 2021) foundational; continued advances in multimodal integration and datasets (e.g., MMVP).
+- Research contributions: Q-FSRU uniquely integrates frequency-domain analysis and quantum-inspired retrieval for Med-VQA in a unified framework to enhance performance and interpretability.
+
+# Preliminaries
+- Task: Multimodal classification on VQA-RAD with categorical answers (filtering to discrete classes). Inputs: image I ∈ R^{H×W×3}, question Q, answer y ∈ {0,…,C−1}.
+- Mapping: f(I, Q) → ŷ. Components:
+  - Frequency-spectral fusion: z_i^{freq} = f_FSRU(I_i, Q_i).
+  - Knowledge retrieval: k_i ∈ R^d from external corpora (source Not specified).
+  - Feature integration: ŷ = MLP([z_i^{freq} ∥ k_i]).
+- Training objective: L = L_CE(ŷ, y) + α L_intra + β L_cross (α, β as balancing hyperparameters; specific values not given here but later set to 0.3/0.7 in Method).
+- Losses: intra-modal and cross-modal contrastive losses with temperatures later specified.
+
+# Method
+- Architecture: Four components—(1) multimodal feature extraction, (2) frequency-domain processing (FFT), (3) quantum-inspired knowledge retrieval, (4) multimodal fusion + contrastive learning.
+- Text encoding:
+  - Tokenization with domain-specific embeddings; each word mapped to 300-d vectors.
+  - Mean pooling + linear projection to d_model = 256: W_t ∈ R^{256×300}, b_t ∈ R^{256}.
+- Image encoding:
+  - ViT-B/16, ImageNet-pretrained; images 3×224×224 split into 16×16 patches; 12 transformer layers.
+  - Output v ∈ R^{768}, projected to 256-d: W_v ∈ R^{256×768}, b_v ∈ R^{256}.
+- Frequency spectrum representation:
+  - 1D FFT along feature dimension: F(t), F(v_proj) ∈ C^{256}.
+  - Use real magnitude spectra: t_freq = |F(t)|, v_freq = |F(v_proj)| ∈ R^{256}.
+- Unimodal spectrum compression (USC):
+  - Learnable filter banks (K=4) compress frequency features: W_filter ∈ R^{4×256}; outputs f_m^{(k)} for text/image.
+- Cross-modal co-selection (CSC):
+  - Gated attention with sigmoid on AvgPool of the counterpart modality; element-wise gating enhances t_compressed and v_compressed using g_text and g_image.
+- Quantum-inspired retrieval:
+  - Quantum state: |ψ(x)⟩ = x/||x||₂; density matrix ρ(x) = |ψ⟩⟨ψ|.
+  - Similarity via Uhlmann fidelity: Fid(ρ_q, ρ_k) = (Tr sqrt(√ρ_q ρ_k √ρ_q))²; properties: Fid(ρ,ρ)=1 and 0<Fid<1.
+  - Pipeline:
+    1) q_multi = 0.5 (t_enhanced + v_enhanced).
+    2) Sim_i = Fid(ρ(q_multi), ρ(k_i)).
+    3) Top-3 retrieval.
+    4) Aggregation: k_agg = Σ_j softmax(Sim_j/τ) k_j with τ = 0.1.
+- Fusion and classification:
+  - Feature integration steps described as: concatenate [t_freq ∥ v_freq ∥ k_agg] → MLP_classifier; however, classifier section specifies concatenation of only [t_freq ∥ v_freq] (excludes k_agg). This is an internal inconsistency regarding whether knowledge embeddings are fed to the classifier.
+  - MLP classifier:
+    - Input: z_concat ∈ R^{512} (2×256).
+    - Layers: 512 → 1024 → 256 → C with LayerNorm and GELU after W₁ (R^{1024×512}) and W₂ (R^{256×1024}); Dropout p=0.1; final linear W₃ ∈ R^{C×256}.
+- Dual contrastive learning:
+  - Intra-modal: L_contrastive(t, t_aug; τ=0.07) and L_contrastive(v, v_aug; τ=0.07), averaged.
+  - Cross-modal: L_contrastive(t, v; τ=0.05).
+  - Contrastive form: −log [exp(sim(x,y)/τ) / Σ_j exp(sim(x,y_j)/τ)] with cosine similarity; batch size B.
+- Optimization objective:
+  - L_total = L_CE + (0.3 × (L_intra-text + L_intra-image)/2 + 0.7 × L_cross). Temperatures: intra τ=0.07, cross τ=0.05.
+
+# Experiments
+- Datasets:
+  - VQA-RAD: 3,515 clinically curated QA pairs from radiology (X-ray, CT, MRI); includes binary and open-ended questions. Focus on categorical subset for classification (exact filtering details Not specified in this section).
+  - PathVQA: 32,799 QA pairs from 4,998 pathology images; used for zero-shot cross-dataset generalization (trained on VQA-RAD, evaluated on PathVQA without fine-tuning).
+- Preprocessing:
+  - Images resized to 224×224 and normalized with ImageNet statistics.
+  - Questions tokenized with medical vocabulary; max length 50 tokens (truncate/pad).
+  - Augmentations: random horizontal flip and color jittering.
+- Implementation:
+  - PyTorch; Adam optimizer, learning rate 5×10⁻⁵, L2 regularization 10⁻⁵.
+  - Training: 5-fold cross-validation; batch size 32; up to 50 epochs; learning rate decay factor 0.98 every 5 epochs; early stopping patience 10 epochs.
+  - Frequency processor: K=4 filter banks.
+  - Quantum retrieval: Top-3 passages per query via direct fidelity computation; τ=0.1.
+  - Data splitting: All questions for a given image kept in the same fold; patient-level separation across splits.
+  - Hardware and training time Not specified.
+- Baselines:
+  - MCAN, LXMERT, LLaVA-Med, STLLaVA-Med, LaPA, FSRU, and ablations of Q-FSRU.
+  - On VQA-RAD, Q-FSRU reported best performance across accuracy, F1, precision, recall, AUC, improving metrics by "2.9–3.0" points over the strongest baseline; statistically significant ("p < 0.01").
+- Main results on VQA-RAD (Table 1):
+  - MCAN: Accuracy 78.3 ± 1.2; F1 72.1 ± 1.5; Precision 75.8 ± 1.3; Recall 69.4 ± 1.8; AUC 0.842 ± 0.02; Params 45.2M.
+  - LXMERT: 81.5 ± 1.1; 75.3 ± 1.4; 78.9 ± 1.2; 72.8 ± 1.6; 0.867 ± 0.01; 183.4M.
+  - LLaVA-Med: 84.2 ± 0.9; 78.6 ± 1.1; 82.1 ± 0.8; 76.3 ± 1.3; 0.891 ± 0.01; 7000M.
+  - STLLaVA-Med: 85.7 ± 0.8; 80.2 ± 1.0; 83.9 ± 0.7; 78.1 ± 1.2; 0.903 ± 0.01; 7000M.
+  - LaPA: 86.3 ± 0.7; 81.5 ± 0.9; 84.7 ± 0.6; 79.2 ± 1.1; 0.912 ± 0.01; 245.3M.
+  - FSRU: 87.1 ± 0.6; 82.3 ± 0.8; 85.4 ± 0.5; 80.1 ± 1.0; 0.921 ± 0.01; 89.7M.
+  - Q-FSRU (Ours): 90.0 ± 0.5; 85.2 ± 0.6; 88.3 ± 0.4; 83.1 ± 0.8; 0.954 ± 0.01; 92.4M.
+  - Improvement over strongest baseline: +2.9 accuracy; +2.9 F1; +2.9 precision; +3.0 recall; +0.033 AUC; p-value < 0.01 across metrics.
+- Cross-dataset generalization (Table 2, zero-shot):
+  - LLaVA-Med: 72.3 ± 1.5 (VQA-RAD → PathVQA), 70.8 ± 1.6 (PathVQA → VQA-RAD).
+  - STLLaVA-Med: 75.1 ± 1.3, 73.9 ± 1.4.
+  - LaPA: 76.8 ± 1.2, 75.2 ± 1.3.
+  - FSRU: 78.4 ± 1.1, 76.9 ± 1.2.
+  - Q-FSRU: 81.7 ± 0.9, 80.3 ± 1.0.
+  - Improvement: +3.3 and +3.4, respectively.
+- Ablation studies (Table 3):
+  - Full Q-FSRU: Accuracy 90.0 ± 0.5; F1 85.2 ± 0.6.
+  - w/o Frequency Processing: 85.1 ± 0.7; 79.3 ± 0.8; ΔAcc −4.9; p < 0.001.
+  - w/o Quantum Retrieval: 86.8 ± 0.6; 81.7 ± 0.7; ΔAcc −3.2; p < 0.01.
+  - w/o Contrastive Learning: 87.3 ± 0.6; 82.1 ± 0.7; ΔAcc −2.7; p < 0.01.
+  - Spatial-only Fusion: 84.2 ± 0.8; 78.5 ± 0.9; ΔAcc −5.8; p < 0.001.
+  - Cosine Similarity (vs quantum fidelity): 88.1 ± 0.5; 83.2 ± 0.6; ΔAcc −1.9; p < 0.05.
+  - w/o Cross-Modal Co-selection: 88.5 ± 0.5; 83.8 ± 0.6; ΔAcc −1.5; p < 0.05.
+- Qualitative analysis: Frequency processing aids subtle global pattern detection (e.g., early-stage pathology); quantum retrieval provides clinically relevant evidence for ambiguous cases.
+- External knowledge corpus and retrieval index construction Not specified.
+
+# Conclusion
+- Summary: Q-FSRU integrates frequency-domain feature processing and quantum-inspired retrieval for Med-VQA, capturing global patterns and grounding answers with external medical knowledge.
+- Results: Outperforms SOTA on VQA-RAD (accuracy, F1, AUC) and generalizes across datasets; ablations confirm importance of frequency processing, quantum retrieval, and contrastive learning.
+- Future work: Scaling to larger datasets, expanding imaging modalities, and refining retrieval for improved grounding.
+- Caveats noted: External knowledge source unspecified; categorical subset focus and exact label handling Not specified; internal inconsistency regarding inclusion of knowledge embeddings in the classifier.
+
+# References
+- Key works cited include: VQA (Antol et al., 2015), Transformers (Vaswani et al., 2017), Medical VQA survey (Lin et al., 2023), VQA-RAD dataset (Lau et al., 2018), LLaVA-Med (Li et al., 2023), ST-LLaVA-Med (Sun et al., 2024a/b), MMCAP (Yan et al., 2024), FDTrans (Cai et al., 2023), frequency spectrum fusion in multimodal rumor detection (Lao et al., 2024), FreqU-FNet (Xing, 2025), RAG (Lewis et al., 2021), quantum-inspired IR survey (Uprety et al., 2021), quantum-inspired embeddings/similarity (Kankeu et al., 2025), Quantum-Brain (Nguyen et al., 2025), LaPA (Gu et al., 2024), MCAN (Yu et al., 2019), LXMERT (Tan & Bansal, 2019), MMVP dataset (Zhang et al., 2024).
+
+# Appendix
+- Dataset links:
+  - VQA-RAD: https://www.kaggle.com/datasets/shashankshekhar1205/vqa-rad-visual-question-answering-radiology
+  - PathVQA: https://www.kaggle.com/datasets/samsrithajalukuri/pathvqa-dataset?select=train
+- Example materials:
+  - Medical image (axial brain MRI) and corresponding frequency spectrum visualization (heatmap: Y-axis 0–700, X-axis 0–800, color scale 0–300).
+  - Text Q/A example: “Is there evidence of pneumonia in the lung?” → “No evidence of pneumonia is seen.”
+  - Text linguistic spectrum heatmap (Semantic Dimensions axes 0–120; color scale −1.0 to 1.0).
+- Figures:
+  - Figure 1: Architecture overview integrating FFT-based frequency processing, quantum-inspired retrieval, and fusion/contrastive learning.
+  - Figure 2: Spectrograms of medical image and text features highlighting main frequency components processed via learnable filter banks.

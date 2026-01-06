@@ -1,0 +1,97 @@
+{
+  "paper": "ExPO-HM_ Learning to Explain-then-Detect for Hateful Meme Detection",
+  "judge_model": "gpt-5.1",
+  "review_agent": "deepreviewer",
+  "ai_model": "gpt-5-2025-08-07",
+  "ai_review_file": "deep_review_all.txt",
+  "inputs": {
+    "human_review": "review.txt",
+    "ai_review": "reviews/deepreviewer/gpt-5-2025-08-07/paper_origin/deep_review_all.txt"
+  },
+  "multi_review": {
+    "detected": false,
+    "num_reviews": 1,
+    "summarize_used": false,
+    "summary_note": null
+  },
+  "ai_review_consolidated": null,
+  "alignment": {
+    "motivation_strength_alignment": 0.95,
+    "weakness_error_alignment": 0.7,
+    "overall_alignment": 0.85,
+    "explanation": {
+      "strength": "Both reviews are very closely aligned on the core motivation and strengths. They describe the same high-level goal (explain-then-detect hateful memes, aligned with human moderation workflows), the same key components (SFT warmup on policy manuals, GRPO with curriculum learning, and the Conditional Decision Entropy reward), and the same main empirical claims (state-of-the-art performance on HatefulMemes, MAMI, PrideMM; strong gains in both binary and fine-grained detection; improved reasoning quality and calibration; meaningful ablations). Review B goes into more technical detail (formulas, specific tables, exact F1 gains), but the conceptual emphases and the positive takeaways are essentially the same as in Review A.",
+      "weakness": "Alignment on weaknesses is moderate but not as tight as on strengths. There is clear overlap on a few points: (1) both highlight concerns around LLM-as-judge / explanation evaluation and reproducibility; (2) both mention explanation quality/faithfulness and note the use of human evaluations; (3) both recognize some dependency on policy manuals and the associated manual effort/generalization questions; and (4) both touch on calibration/CDE aspects, though Review A frames it as a partially addressed concern and Review B focuses more on theoretical/estimation gaps. However, Review A presents many of these as issues that the authors have already largely mitigated (e.g., prompt robustness tests, added failure-case analyses), whereas Review B introduces additional, more technical concerns not present in A (missing formal definition of r_acc, top-k approximation bias in CDE, binary-only theory, limited benign rationale evaluation, lack of statistical significance tests, compute/accessibility). Thus, the overlap exists but is partial: the human review is higher-level and more forgiving; the AI review adds several orthogonal technical criticisms.",
+      "overall": "In aggregate, the two reviews are substantively aligned on what the paper is about, why it matters, what the key innovations are, and the empirical takeaway that ExPO-HM is a strong, state-of-the-art explanation-first framework. They diverge more in the granularity and tone of criticism: Review A emphasizes that many initial concerns have been addressed and reads as broadly positive with relatively minor remaining caveats, while Review B offers a more exhaustive list of technical and reproducibility limitations. Because the overlapping core narrative and major strengths match very well, but the set of weaknesses only partially overlaps, the overall alignment is high but not perfect."
+    }
+  },
+  "generated_at": "2025-12-27T19:28:54",
+  "runs": [
+    {
+      "config": {
+        "judge_model": "gpt-5.1",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "baseline_review.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180
+      },
+      "config_key": "3b28d70d5731760031a4514ebc98b0afd78edf6d",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/baseline_review.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "motivation_strength_alignment": 0.75,
+        "weakness_error_alignment": 0.45,
+        "overall_alignment": 0.55,
+        "explanation": {
+          "strength": "Both reviews agree on the central motivations: explanation‑driven hateful meme detection, the ExPO‑HM pipeline (SFT warmup, GRPO‑based curriculum, CDE), and strong empirical performance across benchmarks. Review B adds far more detail, but its core strength points substantially overlap with Review A.",
+          "weakness": "Both identify LLM‑as‑judge reliability and reproducibility concerns, as well as issues related to CDE calibration. However, Review B introduces many additional critiques—fairness, estimator variance, dataset coverage, and artifact availability—that Review A does not mention, leading to only partial alignment.",
+          "overall": "The high consistency in strengths contrasts with only partial overlap in weaknesses. Overall, the reviews share the same general judgment of the work but differ in breadth and emphasis of critique, producing a moderate level of substantive alignment."
+        }
+      },
+      "generated_at": "2025-12-27T19:51:22"
+    },
+    {
+      "config": {
+        "judge_model": "gpt-5.1",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "final_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180
+      },
+      "config_key": "4569a6a97a67c8e2b360606eb74d6eb53b892d06",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/final_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "motivation_strength_alignment": 0.74,
+        "weakness_error_alignment": 0.48,
+        "overall_alignment": 0.64,
+        "explanation": {
+          "strength": "Both reviews agree on the central motivation (hateful meme detection with explanations for moderation) and on the main contributions: an explain-then-detect framework combining SFT warmup, GRPO-style curriculum learning, and CDE, evaluated across three datasets with strong, state-of-the-art results. They also converge on strengths around comprehensive multi-dimensional evaluation, use of policy manuals reflecting human annotation practice, and generally clear presentation, with the AI review adding more technical detail (e.g., formalization and theoretical calibration benefits of CDE).",
+          "weakness": "Both reviews raise concerns about reliance on LLM-as-a-judge and reproducibility (including prompt sensitivity) and, to a lesser extent, the dependence on policy manuals and the need to better characterize calibration and explanation quality. However, the human review treats many of these as largely addressed and does not mention several substantial issues emphasized by the AI review, such as CDE’s potential to encourage hedging, estimator/weighting/units ambiguities, fairness and subgroup-risk gaps, broader dataset and reasoning coverage limitations, artifact availability, and multiple clarity/inconsistency problems.",
+          "overall": "Overall, the two reviews share a similar high-level judgment that the work tackles an important problem with a novel, well-designed method and strong empirical performance, and they align on a few core methodological concerns. The AI review, however, offers a much more expansive and critical set of technical, fairness, and reproducibility weaknesses that are largely absent from the human review, so the substantive overlap is strong on strengths but only moderate on weaknesses, leading to a moderately high but not near-perfect overall alignment."
+        }
+      },
+      "generated_at": "2025-12-27T19:54:06"
+    }
+  ]
+}

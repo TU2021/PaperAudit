@@ -1,0 +1,34 @@
+Based on a critical review of the manuscript, several significant internal inconsistencies and potential integrity risks have been identified. These issues materially affect the trustworthiness of the reported results and the validity of the paper's conclusions.
+
+### Integrity Risk Report
+
+**1. Duplication of Results for Different Methods in Table 1**
+
+There is an exact duplication of numerical results for two methods that are presented as distinct.
+
+*   **Evidence:** In Table 1 (Block #25), the row for the proposed `Star-loop` sampler is identical across all nine reported metrics to the row for the baseline `ReMDM-loopη=0.1`.
+    *   `Star-loop`: MAUVE=18.1, PPL=34.9, DIV=44.7 (at 128 steps); MAUVE=44.7, PPL=26.7, DIV=42.1 (at 256 steps); MAUVE=67.7, PPL=20.7, DIV=39.3 (at 512 steps).
+    *   `ReMDM-loopη=0.1`: The exact same values are reported for all corresponding metrics.
+*   **Impact:** This duplication is highly improbable to occur by chance. It raises serious concerns about the validity of the experimental results. The manuscript claims a key advantage of the `Star-loop` sampler is that it "performs competitively without requiring any tuning of η" (Section 4.4, Block #23). However, if it is identical to a specifically tuned ReMDM variant, this claim is misleading. The paper fails to explain this equivalence, which undermines the credibility of the comparison.
+
+**2. Contradiction Between Textual Claims and Tabulated Results on Error Predictor Performance**
+
+The analysis of the error predictor's efficiency in Section 4.5 contains claims that are directly contradicted by the data presented in Table 1.
+
+*   **Evidence:** Section 4.5 (Block #26) claims that the lightweight error predictor (`1B, F`) is "slightly less performant" than the full 12-block models in the 128-step regime and that this "performance gap vanishes at higher step counts."
+    *   However, Table 1 (Block #25) shows that at 128 steps, the MAUVE score for the 1B model is 44.8, which is substantially lower than the 57.3 achieved by the 12B models—a significant performance gap, not a slight one.
+    *   More critically, at 256 steps, the 1B model achieves a MAUVE score of **65.0**, which is *higher* than the scores of both 12B models (63.8 and 60.9). This directly contradicts the claim that the performance gap "vanishes"; instead, the lightweight model outperforms the larger ones.
+*   **Impact:** This inconsistency misrepresents the performance trade-offs of the proposed model architectures. The textual summary does not accurately reflect the experimental data, which could mislead the reader about the model's behavior and efficiency.
+
+**3. Contradiction Between Plotted and Tabulated Perplexity Results**
+
+There is a direct contradiction between the trends shown in a figure and the numerical values reported in a table for the same experimental comparison.
+
+*   **Evidence:**
+    *   Figure 3 (right panel, Block #20) explicitly shows that the guided sampler (`G-Star+`, blue line) achieves a lower (better) perplexity than the unguided sampler (`Star+`, green line) across all tested sampling step counts, including 32, 64, and 128 steps.
+    *   In contrast, Table 1 (Block #25) reports the opposite result for the 128-step regime. It lists a perplexity of **11.7** for `Star+t_on=0.2` and **19.5** for `G-Star+t_on=0.2, 12B`. According to the table, the unguided sampler is significantly better than the guided one at 128 steps.
+*   **Impact:** Both Figure 3 and Table 1 are described as evaluating performance on 512-token generation from OpenWebText, making this a direct and unexplained contradiction. This inconsistency fundamentally undermines the paper's central claim that the guided approach consistently improves performance, particularly in few-step regimes.
+
+**Conclusion:**
+
+The manuscript contains multiple high-impact internal inconsistencies, including duplicated results for different methods, textual claims that are contradicted by tabulated data, and conflicting results presented across a figure and a table for the same experiment. These issues are not minor discrepancies and call into question the reliability of the entire experimental evaluation. I cannot recommend this paper for publication in its current form. A thorough revision and re-verification of all reported results is required to address these serious concerns.

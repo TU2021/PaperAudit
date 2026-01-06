@@ -1,0 +1,74 @@
+# Global Summary
+This paper addresses the performance degradation of speculative decoding for large language models (LLMs) on long input sequences, a problem that arises even at moderate lengths. The authors propose SpecExtend, a training-free, drop-in enhancement to existing speculative decoding frameworks. SpecExtend has two main components: 1) integration of efficient attention mechanisms (FlashAttention, Hybrid Tree Attention) to accelerate the prefill and verification steps, and 2) a novel KV cache eviction strategy called Cross-model Retrieval (CMR). CMR uses the target model's attention scores from the verification step to dynamically select the most relevant context chunks for the smaller draft model's KV cache. This aims to improve both the speed and accuracy of the draft model on long sequences without retraining. The method is evaluated on long summarization (up to 16K tokens) and long reasoning tasks. Key findings claim that SpecExtend accelerates speculative decoding by up to 2.84× on long summarization and up to 3.86× on long reasoning, while maintaining performance on short inputs.
+
+# Abstract
+Speculative decoding performance degrades as input length increases, an issue the paper claims is underexplored. The paper introduces SpecExtend, a drop-in, training-free enhancement for speculative decoding on long sequences. SpecExtend uses efficient attention mechanisms like FlashAttention and Hybrid Tree Attention for prefill and verification. It also proposes Cross-model Retrieval, a KV cache eviction strategy where the target model's attention scores guide context selection for the smaller draft model, aiming to improve draft accuracy and speed. Evaluations show SpecExtend accelerates speculative decoding by up to 2.84× on 16K-token summarization tasks and up to 3.86× on long reasoning tasks, while preserving short-input performance.
+
+# Method
+SpecExtend consists of two main components to enhance speculative decoding for long sequences.
+
+- **Efficient Attention**: To address the quadratic complexity of standard attention, SpecExtend incorporates:
+    - FlashAttention for the prefill stages of both the target and draft models to reduce latency and memory usage.
+    - Hybrid Tree Attention for the target model's verification step, which makes the efficient FlashDecoding compatible with tree-based speculative decoding.
+
+- **Cross-model Retrieval (CMR)**: This is a novel, training-free KV cache update strategy for the draft model.
+    - **Mechanism**: The input prefix is divided into fixed-size chunks. After a verification step, the target model's attention scores from its final layer (for the last accepted token) are used to rank these chunks. The top-k most relevant chunks are selected to form a reduced KV cache for the draft model's next generation phase. This is designed to improve both draft speed (smaller cache) and accuracy (more relevant context).
+    - **Overhead**: The target model's attention scores are obtained from the verification step with minimal overhead. Computing standard attention for the final layer adds a small latency. The cache update step is reported to be faster than a single draft model forward pass (Table 8).
+    - **Theoretical Speedup**: The paper argues that in the moderate-length regime, SpecExtend improves speedup by reducing the draft model's per-token latency ($$T_d$$) via a smaller model and cache, while maintaining a high average accepted length ($$\tau$$) through CMR. Efficient attention mechanisms reduce prefill time and verification cost ($$T_v$$).
+    - **Effectiveness Analysis**:
+        - **Needle Retrieval Task**: Compared to a full KV cache and StreamingLLM, CMR significantly improves the draft model's ability to use retrieved context. With a 160M draft model, CMR achieves an accuracy of 0.823 and perplexity of 2.237, approaching the performance of a 7B draft model (TriForce) which gets 0.976 accuracy and 2.191 perplexity. StreamingLLM only achieves 0.166 accuracy.
+        - **Accuracy and Divergence**: CMR improves the acceptance rate for both "hard" tokens (from ~60% to ~62%) and "easy" tokens (from ~71% to ~77%) compared to StreamingLLM. It also consistently reduces the natural divergence between draft and target model distributions at all accepted token positions and for resampled tokens.
+
+# Experiments
+- **Setup**:
+    - **Tasks**: Long summarization (long input, short output) and long reasoning (short input, long output).
+    - **Datasets**: GovReport, PG-19, BookSum for summarization; AIME-24 for reasoning.
+    - **Models**:
+        - Target: Vicuna-7B-16K, LongChat-7B-16K, DeepSeek-R1-Distill-Llama-8B, Llama-3.1-8B-Instruct.
+        - Draft: Vicuna-68M, LLaMA-68M, EAGLE, EAGLE-3.
+    - **Hardware**: Single A100 80GB GPU.
+    - **Configuration**: Tree-based drafting with dynamic tree expansion.
+
+- **Main Results**:
+    - **Long Summarization**: On 16K-token inputs, SpecExtend provides up to a 2.22× speedup with Vicuna-7B and 2.84× with Llama-3.1-8B-Instruct. On PG-19 with 16K inputs and a Vicuna-7B/EAGLE setup, SpecExtend achieves a 3.09x speedup over naive autoregressive generation, compared to 1.48x for the standard EAGLE framework.
+    - **Long Reasoning (AIME-24)**: With DeepSeek-R1/EAGLE-3, SpecExtend improves the average accepted length from 1.89 to 5.95. This results in a 3.86× speedup over the standard EAGLE-3 setup and a 3.73× speedup over naive autoregressive generation (117.21 Tok/s vs 30.34 Tok/s and 31.42 Tok/s respectively).
+
+- **Comparison with Other Methods**:
+    - Baselines: FlashDecoding, TriForce, MagicDec, and standard tree-based speculative decoding.
+    - On long summarization tasks with Vicuna-7B/68M, SpecExtend consistently outperforms baselines. On BookSum with 16K tokens, SpecExtend achieves a 2.81x speedup, while TriForce and MagicDec yield marginal speedups (1.11x and 1.23x respectively).
+
+- **Ablation Studies**:
+    - **Components**: On 16K GovReport inputs, the contributions to speedup relative to standard speculative decoding were: Cross-model Retrieval (CMR) alone: 1.46×; FlashAttention (FA) alone: 1.25×; Hybrid Tree Attention (HTA) alone: 1.19×. StreamingLLM provided a 1.27x speedup. HTA is only enabled for inputs >4K tokens due to overhead at shorter lengths.
+    - **Retrieval Parameters**: On 8K GovReport inputs, optimal parameters were found. For Vicuna-68M draft: 1K working cache, chunk size 32, top-k 32, frequency 4 steps. For EAGLE draft: 2K working cache, chunk size 32, top-k 64, frequency 8 steps.
+
+- **Additional Results**:
+    - **Newer Models**: With Llama-3.1-8B-Instruct and EAGLE-3 draft model, SpecExtend improves draft accuracy by up to 2.55× on inputs up to 16K tokens. This yields a 2.84× speedup over standard EAGLE-3 and a 2.36× overall speedup.
+    - **Extremely Long Inputs (up to 128K)**: On PG-19 with Llama-3.1-8B/EAGLE, standard speculative decoding becomes slower than autoregressive generation. SpecExtend improves draft accuracy by 1.58× and achieves a 2.67× speedup over the standard setting.
+
+# Introduction
+- The paper identifies that speculative decoding performance drops significantly as input length increases, even in a "moderate-length regime" before the KV cache becomes the primary memory bottleneck.
+- Two main causes are identified: (1) increased latency from the quadratic complexity of standard attention in both target and draft models, and (2) reduced draft accuracy because smaller draft models are often trained only on short sequences.
+- The paper proposes SpecExtend as a drop-in, training-free solution.
+- **Contributions**:
+    - First to tackle speculative decoding degradation in the moderate-length regime with a training-free solution.
+    - Proposes Cross-model Retrieval (CMR), a KV cache eviction strategy that improves draft accuracy by up to 2.55× and also improves speed.
+    - Introduces SpecExtend, which combines CMR with efficient attention to achieve up to 2.84× speedup on 16K summarization and 3.86× on long reasoning.
+
+# Related Work
+- **Speculative Decoding**: The paper situates its work within existing speculative decoding research, including tree-based methods (SpecInfer, OPT-Tree) and specialized draft models (EAGLE series).
+- **Long Sequence Generation**: It acknowledges foundational work in efficient attention like FlashAttention and FlashDecoding.
+- **Speculative Decoding for Long Sequences**: It contrasts SpecExtend with prior work. Methods by Sadhukhan et al. (2024) and Sun et al. (2024) focus on the "extremely long" input regime where the KV cache is the main bottleneck and use the base model for drafting, which is slow in the moderate-length regime. LongSpec (Yang et al., 2025) requires retraining draft models for long contexts, whereas SpecExtend is training-free.
+
+# Discussion
+The paper concludes by summarizing SpecExtend as a drop-in enhancement for speculative decoding on long inputs. It combines efficient attention with Cross-model Retrieval (CMR), a novel KV cache eviction strategy. This approach is claimed to accelerate all stages of speculative decoding and improve draft accuracy without retraining. The key results are reiterated: up to 2.84× speedup in long summarization and 3.86× in long reasoning, while maintaining performance on short inputs. SpecExtend is presented as a practical, training-free, and compatible solution.
+
+# References
+This section contains the bibliography of works cited in the manuscript.
+
+# Appendix
+- **Latency Overhead of Cross-model Retrieval**: A single retrieval cache update step on 16K token inputs has a latency of 0.34 ms. For comparison, a standard target model forward pass takes 53.76 ms, a target forward pass with retrieval logic takes 54.11 ms, and a draft model forward pass takes 0.84 ms.
+- **Experiment Details**:
+    - EAGLE models were trained on the ShareGPT dataset.
+    - For each input length, 20 inputs were sampled and run twice each.
+    - OPT-Tree's dynamic tree expansion was used with 50 total nodes, max depth 10, and threshold 0.7.
+    - The EAGLE models used are publicly available under the Apache 2.0 license.

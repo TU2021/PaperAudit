@@ -1,0 +1,126 @@
+# Global Summary
+- Problem: In Retrieval-Augmented Generation (RAG), large language models (LLMs) often favor internal parametric knowledge over provided context, causing context-unfaithful hallucinations. The paper observes an inverse correlation between “copying degree” from context and hallucination density, motivating a copy-paste paradigm to enhance contextual faithfulness.
+- Approach: CopyPasteLLM is trained via a two-stage pipeline. Stage 1 constructs high-copying responses using three prompting methods (CP-Order, CP-Link, CP-Refine). Stage 2 converts these into preference pairs through multi-criteria filtering, an Elo-style LLM-as-Judge tournament, “stamping” of gold/wrong answers, and Direct Preference Optimization (DPO) fine-tuning. An interpretability tool, Context-Parameter Copying Capturing, probes token-level reliance on contextual vs parametric knowledge along Chain-of-Thought (CoT).
+- Evaluation scope: RAGTruth (analysis), FaithEval (counterfactual QA, science), PubMedQA (biomedical QA), and ConFiQA (counterfactual and original contexts, Wikidata). Base models include Mistral-7B-Instruct-v0.2, LLaMA-3-8B-Instruct, and Llama-3.1-8B-Instruct; prompting-stage analyses also involve Qwen2.5-72B-Instruct and DeepSeek-V3-0324.
+- Key findings:
+  - CopyPaste-Prompting yields high-copying responses and improves contextual faithfulness (+10.9% to 19.1% over baselines in Stage 1; CP-Refine best in 3/4 models, 14/24 top scores).
+  - CopyPasteLLM trained on only 365 samples achieves large counterfactual accuracy gains on FaithEval: +12.6 (Llama-3-8B), +12.2 (Mistral-7B-v0.2), +24.5 (Llama-3.1-8B), with peak accuracy “92.8%” (Llama-3-8B) and outperforming GPT-4o’s “47.5%” (Appendix Table 5).
+  - Non-counterfactual: average gains of 1.01% on easier subsets (PubMedQA, ConFiQA-QA) and large improvements on ConFiQA-MR/MC (from “84.49%” to “94.37%”; “20.67%” improvement on Mistral-7B-v0.2 MR).
+  - Mechanistic analysis suggests the model recalibrates internal confidence in parametric knowledge while maintaining contextual knowledge representations, leading to earlier and stronger contextual engagement during generation.
+- Data/training efficiency: Only “365” training samples, roughly “1/50th” of Context-DPO’s “18,000”; also smaller than Canoe (“10,000”) and ParamMute (“32,580”). DPO with LoRA uses r=64, α=128, β=0.3, LR=5e-5, 2 epochs (Mistral-7B, LLaMA-3-8B) and 1 epoch (Llama-3.1-8B).
+- Caveats stated by authors: Potential over-reliance on copied (possibly biased/incorrect) context; effectiveness depends on context quality. Limitations include incomplete-context scenarios and need for deeper mechanistic analysis; potential multimodal extensions are proposed.
+
+# Abstract
+- Problem: RAG enables context-grounded generation, but LLMs may not trust the context, causing hallucinations. Observation: inverse correlation between response copying degree and context-unfaithful hallucinations on RAGTruth.
+- Method: CopyPasteLLM via two-stage high-copying response preference training. Three prompting methods designed to increase copying degree; automated pipeline converts generated responses into high-copying preference data for training.
+- Results: On FaithEval, ConFiQA, PubMedQA, CopyPasteLLM achieves best performance in counterfactual and original contexts. Improvements: “12.2% to 24.5% accuracy” on FaithEval over best baseline with only “365” training samples (“1/50th” of baseline data).
+- Analysis: Context-Parameter Copying Capturing algorithm shows CopyPasteLLM recalibrates reliance on internal parametric knowledge rather than external knowledge. Code: https://github.com/longyongchao/CopyPasteLLM.
+
+# Introduction
+- Contextual faithfulness problem: LLMs may prefer internal parametric knowledge over external contextual knowledge, causing hallucinations, especially risky in medical domains.
+- Two main prior directions: (i) generation with citations (risk of content–source inconsistency), (ii) prompting/decoding/fine-tuning to improve faithfulness (often lacks explicit attribution).
+- Proposed solution: direct quote/copy-paste generation—embed context fragments verbatim to reduce paraphrasing risks and provide inherent attribution. Motivated by observed inverse correlation between copying degree and hallucination density on RAGTruth (Figure 1).
+- CopyPaste pipeline: two stages to internalize copying behavior into contextual trust. Stage 1 creates high-copying responses via hard and soft constraints (CP-Order, CP-Link, CP-Refine). Stage 2 trains CopyPasteLLM via DPO on preferences derived from Stage 1.
+- Claims: CopyPasteLLM trained on “365” high-copying samples surpasses strongest baselines by “12.2%–24.5%” on FaithEval. Context-Parameter Copying Capturing analyzes per-token contextual vs parametric reliance across CoT. Mechanistically, CopyPasteLLM retains contextual representations while recalibrating parametric confidence.
+
+# Preliminaries
+- Task: Given query Q and context C, generate answer A that maximizes reuse of lexical units from C to ensure contextual faithfulness and reduce hallucination (“CopyPaste” task).
+- Metrics for copying degree (adapted from Grusky et al., 2018):
+  - Copy Coverage (κ): fraction of answer tokens covered by any copy fragment.
+  - Copy Density (δ): length-sensitive measure emphasizing longer copied spans.
+- Balancing objectives: maximize copying while ensuring query relevance (embedding-based similarity) and fluency (perplexity). CopyPaste is query-aware and aims for fluent, context-faithful answers (distinct from extractive summarization).
+- Motivating observation (RAGTruth QA subset): 839 context-dependent questions, each with 6 model responses annotated at word-level for contextual faithfulness hallucinations. Two-dimensional kernel density analysis over κ and δ shows higher copying (upper-right) correlates with lower hallucination density (Figure 1).
+
+# Method
+- Two-stage methodology (Figure 2):
+  - Stage 1: CopyPaste-Prompting constructs high-copying responses.
+    - CP-Order (hard constraint): extract relevant context sentences and reorder them into a coherent answer; suppresses paraphrasing and parametric conflict resolution; fluency may suffer.
+    - CP-Link (semi-hard): same extractive core but allows short transition sentences to connect copied spans; improves readability while preserving high-copying behavior.
+    - CP-Refine (soft constraint): iterative writer–reviewer loop optimizing a composite copy score (threshold-based), with reviewer focusing on copying degree, contextual faithfulness, relevance, and fluency; aims for balanced outputs.
+  - Stage 2: CopyPasteLLM learns preferences via DPO.
+    - Candidates per query–context: Base, Attributed, Citations, CP-Order, CP-Link, CP-Refine.
+    - Multi-criteria filtering: faithfulness (AlignScore, MiniCheck), copying strength (κ, δ), query relevance (embedding similarity), fluency (perplexity).
+    - Elo-style LLM-as-Judge tournament diagnosing Twist and Causal hallucinations; ranks candidates by error severity.
+    - Stamping: append gold answer to top CopyPaste candidate; append wrong answers to other CopyPaste candidates; creates informative negative pairs disentangling reasoning traces from final decisions.
+    - Preference dataset: roughly “5” preference pairs per sample; data-efficient DPO trains model to prefer high-copying, context-grounded responses even against parametric priors.
+- Interpretability: Context-Parameter Copying Capturing
+  - Procedure: two runs (with and without context); at each decoding step in CoT, collect top-K tokens/probabilities and hidden states. Tokens in context indicate contextual knowledge; tokens preferred without context proxy parametric knowledge. Extends Knowledge Token Capturing to full CoT trajectories (token-level, position-aware).
+
+# Experiments
+- Research Questions:
+  - RQ1: Do CopyPaste-Prompting methods generate high-copying responses that enhance contextual faithfulness and mitigate hallucinations?
+  - RQ2: Does DPO training on high-copying preferences enable genuine contextual trust, including counterfactual settings?
+  - RQ3: What mechanisms underlie CopyPasteLLM’s contextual belief? (logits/hidden-state analyses)
+- Stage 1 (RQ1):
+  - CopyPaste-Prompting consistently outperforms baselines across metrics (Table 2; specific numbers not shown here).
+  - CP-Refine: best hallucination reduction in “3/4” models and “14/24” top scores; contextual faithfulness gains “+10.9% to 19.1%” over baselines; best perplexity in Q-72B/D-V3, second-best in M-7B/L-8B.
+  - CP-Order: leads in contextual faithfulness (“14/24” top scores) with second-best hallucination performance but worse fluency.
+  - CP-Link: modest improvements; good contextual faithfulness, worse fluency than CP-Order.
+  - Correlation: in “18/24” scenarios (“75%”), best hallucination performance coincides with best contextual faithfulness.
+  - Copying degree: CopyPaste-Prompting achieves significantly higher κ and δ than baselines (Appendix Figure 5). Query relevance: CP-Refine > CP-Order/CP-Link (Appendix Figure 6).
+- Stage 2 (RQ2):
+  - Data efficiency: “365” query–context pairs used to construct preferences; “50×” smaller than Context-DPO (“18,000”), and smaller than Canoe (“10,000”) and ParamMute (“32,580”).
+  - FaithEval (counterfactual subset): CopyPasteLLM surpasses strongest baselines by “12.6”, “12.2”, and “24.5” percentage points on Llama-3-8B, Mistral-7B-v0.2, and Llama-3.1-8B, respectively; peak accuracy “92.8%” (Llama-3-8B). GPT-4o reported “47.5%” (Appendix Table 5). Highest Hit Rate across models (exact numbers not specified).
+  - ConFiQA counterfactual subsets: superior performance in unseen settings versus recent fine-tuning baselines and CoCoLex, notably on Mistral-7B-v0.2 (details not specified).
+  - Non-counterfactual (Table 3; accuracy):
+    - Mistral-7B-v0.2: PubMedQA “88.60 → 91.40”; ConFiQA QA “96.22 → 97.43”; MR “71.20 → 91.87”; MC “72.27 → 91.20”.
+    - Llama-3-8B: PubMedQA “97.3 → 97.5”; ConFiQA QA “98.02 → 99.30”; MR “93.00 → 97.17”; MC “91.02 → 96.27”.
+    - Llama-3.1-8B: PubMedQA “98.15 → 97.67”; ConFiQA QA “97.93 → 99.02”; MR “89.48 → 94.95”; MC “89.97 → 94.92”.
+    - Average: “90.26 → 95.73”. Gains: average “1.01%” on PubMedQA and ConFiQA-QA; MR/MC average from “84.49%” to “94.37%”, with “20.67%” improvement on Mistral-7B-v0.2 MR.
+- RQ3 (interpretable analysis):
+  - Logits power vs response length (Figures 3, 7): earlier and stronger contextual knowledge utilization by CopyPasteLLM than base; examples of filtered-sample counts include “608/839 (72.5%)” and “461/839 (54.9%)” (RAGTruth), “406/1000 (40.6%)” and “532/1000 (53.2%)” (FaithEval), “570/1000 (57.0%)” and “554/1000 (55.4%)” (PubMedQA). Appendix shows full datasets analyzed “100.0%” in Figure 7.
+  - Hidden states (Figures 4, 8, 9): Base models show minimal distinction between contextual and parametric knowledge representations; CopyPasteLLM shows clearer separation. Contextual representations co-distributed with base; parametric distributions differ substantially, indicating recalibration of parametric confidence without compromising contextual processing.
+
+# Related Work
+- Surveys and analyses: RAG overviews (Fan et al., 2024; Zhao et al., 2024), knowledge conflicts for LLMs (Xu et al., 2024), deception/misinformation (Chen & Shu, 2024), hallucination in healthcare (Vishwanath et al., 2024; Kim et al., 2025).
+- Evaluation/mechanistic studies: synthetic conflicts and context reliance (Xu et al., 2024; Li et al., 2025b; Joren et al., 2025; Goyal et al., 2025); attention heads/FFNs/logit analyses (Wu et al., 2024; Huang et al., 2025a; Sun et al., 2024; Bi et al., 2024).
+- Solutions: citations (Gao et al., 2023; Press et al., 2024; Song et al., 2025; Wu et al., 2025), prompt engineering (Zhou et al., 2023; Zhang et al., 2025a), decoding (Shi et al., 2024; T.Y.S.S. et al., 2025; Liu et al., 2025), fine-tuning (Bi et al., 2025; Si et al., 2025; Li et al., 2025a; Huang et al., 2025b).
+- Positioning: The copy-paste strategy addresses both faithfulness and attribution by directly reusing source text (lexical) and internalizing this behavior through preference optimization.
+
+# Conclusion
+- Contribution: CopyPasteLLM, a two-stage framework leveraging high-copying behavior to mitigate contextual faithfulness hallucinations in RAG.
+- Evidence: Data-efficient training with “365” samples yields “12.2%–24.5%” accuracy improvements on FaithEval; strong performance on ConFiQA and PubMedQA; average non-counterfactual accuracy “95.73%” vs “90.26%”.
+- Mechanism: Context-Parameter Copying Capturing indicates recalibration (suppression) of parametric knowledge confidence, rather than enhancement of contextual representations.
+- Implication: Copy-paste provides an inherent attribution signal (copied content), reducing need for additional verification mechanisms.
+
+# Appendix
+- Ethics: Risks include verbatim reproduction of biased/incorrect context; effectiveness depends on context quality; recommend human oversight.
+- Reproducibility:
+  - Datasets and protocols: FaithEval, ConFiQA, PubMedQA, RAGTruth; details and prompts provided (Appendix A, D, J).
+  - Algorithms: CopyPaste-Prompting (Algorithm 1), CopyPasteLLM preference construction/DPO (Algorithm 2), Context-Parameter Copying Capturing (Algorithm 3), copy fragment detection (Algorithm 4).
+  - Code availability upon publication; main repo link in Abstract.
+- Experimental setup (Appendix A):
+  - Datasets:
+    - RAGTruth QA (Train), daily-life, size “839”, Gold Answer ✗; roles: RQ1 Eval, RQ2 Train, RQ3 Eval.
+    - FaithEval counterfactual, science, size “1,000”, Gold Answer ✓; roles: RQ1 Eval, RQ2 Train+Eval, RQ3 Eval.
+    - PubMedQA expert-annotated, biomedicine, size “1,000”, Gold Answer ✓; roles: RQ1 Eval, RQ2 Train+Eval, RQ3 Eval.
+    - ConFiQA CF+Original, Wikidata, size “36,000”, Gold Answer ✓; roles: RQ2 Eval.
+  - Metrics:
+    - RQ1: AlignScore (overall faithfulness), MiniCheck (sentence-level), LLM-as-Judge (Qwen3-32B reasoning) for Twist/Causal hallucinations (pairwise comparisons), fluency via GPT-2 perplexity, copying via κ/δ, query relevance via Qwen3-Embedding-8B.
+    - RQ2: Hit Rate (CoT prompting) and Accuracy (direct answer; FaithEval multiple-choice; ConFiQA uses Counterfactual or Original answers; added “unknown” option).
+  - Models/baselines:
+    - Base LLMs: Mistral-7B-Instruct-v0.2 (M-7B), Llama-3.1-8B-Instruct (L-8B), Qwen2.5-72B-Instruct (Q-72B), DeepSeek-V3-0324 (D-V3).
+    - Stage 1 baselines: Attributed, Citations.
+    - Stage 2 baselines: Attributed (prompting), Context-DPO (18,000 samples), Canoe (10,000), ParamMute (32,580), CoCoLex (decoding).
+- Implementation details (Appendix D, 46):
+  - DPO with LoRA adapters on Mistral-7B-Instruct-v0.2, LLaMA-3-8B-Instruct, Llama-3.1-8B-Instruct; responses generated by DeepSeek-V3-0324.
+  - Adapted projections: q_proj, k_proj, v_proj, o_proj, gate_proj, up_proj, down_proj; LoRA r=“64”, α=“128”, dropout (not specified), context length “8192”, max generation “1024”.
+  - Batch: per-device “2”, gradient accumulation “8”. Optimizer AdamW LR “5e-5”, weight decay “0.01”, max grad norm “1.0”, cosine schedule, “5%” warmup, DPO temperature β=“0.3”. Epochs: “2” (Mistral-7B, LLaMA-3-8B) and “1” (Llama-3.1-8B).
+- Additional results:
+  - Copying degree and query relevance: CP approaches have higher κ/δ (Figure 5) and CP-Refine higher relevance (Figure 6).
+  - FaithEval model accuracies (Appendix Table 5):
+    - Examples: Mistral-7B-Instruct-v0.3 “73.8”, Llama-3.1-8B-Instruct “68.5”, Llama-3-8B-Instruct “66.5”, gpt-4o “47.5”, Phi-3-mini-128k “75.7”, Claude 3.5 Sonnet “73.9”.
+    - CopyPasteLLM: Based on Llama-3-8B-Instruct “92.8”, Mistral-7B-Instruct-v0.2 “89.3”, Llama-3.1-8B-Instruct “92.6”.
+- Limitations (Appendix G):
+  - Incomplete context scenarios: copy-paste may struggle; future work on adaptive mechanisms and uncertainty quantification.
+  - Deeper mechanistic understanding: analyze attention heads/FFNs.
+  - Multimodal extension: apply to medical imaging and other vision-language tasks.
+- Use of LLMs: Proofreading only.
+- Extended analyses (Appendix I): full logits power distributions (Figure 7; “100.0%” samples per dataset/model), hidden state UMAPs (Figures 8, 9). Logits power formula: logits_power = (Σ ℓ_i^2) × √n.
+
+# References
+- Core datasets and benchmarks: RAGTruth (Niu et al., 2024), FaithEval (Ming et al., 2025), PubMedQA (Jin et al., 2019), ConFiQA (Bi et al., 2025).
+- Evaluation metrics/tools: AlignScore (Zha et al., 2023), MiniCheck (Tang et al., 2024), LLM-as-Judge (Zheng et al., 2023; Qwen-Team, 2025), CoT prompting (Wei et al., 2022).
+- Methods/baselines: Context-DPO (Bi et al., 2025), ParamMute (Huang et al., 2025b), Canoe (Si et al., 2025), CoCoLex (T.Y.S.S. et al., 2025), citation generation (Gao et al., 2023; Press et al., 2024; Song et al., 2025; Wu et al., 2025).
+- Mechanistic studies: retrieval heads and factuality (Wu et al., 2024), hallucination detection via interpretability (Sun et al., 2024), knowledge token/logit analyses (Bi et al., 2024).
+- Supporting surveys and context-reliance studies (Annepaka & Pakray, 2025; Qin et al., 2024; Xu et al., 2024; Goyal et al., 2025).

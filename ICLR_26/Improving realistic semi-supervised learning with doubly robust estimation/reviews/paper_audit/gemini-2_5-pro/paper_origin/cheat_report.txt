@@ -1,0 +1,45 @@
+Based on a critical review of the manuscript, several clear internal inconsistencies and discrepancies have been identified that materially affect the paper's scientific validity and trustworthiness.
+
+### Integrity and Consistency Risk Report
+
+**1. Major Contradiction Between the Paper's Conclusion and Its Core Premise**
+
+The manuscript's central thesis is that accurately estimating the unlabeled class distribution is critical for improving performance in realistic semi-supervised learning. This motivation is stated repeatedly:
+- **Abstract (Block #2):** The standard pseudo-label approach "is biased towards the labeled class distribution and thus performs poorly."
+- **Introduction (Block #3):** The paper proposes to "explicitly estimate the unlabeled class distribution" because existing methods produce "biased estimates."
+- **Method (Block #20):** "The quality of our first-stage estimation... has a direct impact on the pseudo label accuracy... Therefore, we should aim for the highest estimation quality we can get."
+
+However, the **Conclusion (Block #30)** makes a contradictory claim: "...and that even inaccurate class-label distributions do not lead to degraded accuracy in CIFAR-10."
+
+This concluding statement directly undermines the entire rationale of the paper. If inaccurate estimates do not degrade accuracy, there is no clear motivation for developing a sophisticated doubly robust estimator to improve estimation quality. The evidence for this claim appears to be a misinterpretation of the CIFAR-100 results (discussed in the caption of Table 4) and is incorrectly attributed to the CIFAR-10 dataset in the conclusion. This represents a fundamental logical contradiction in the paper's argument.
+
+**2. Factual Mismatch Between Textual Claim and Figure Data**
+
+The **Introduction (Block #3)** makes a strong claim to motivate the need for a better estimator: "In particular, SimPro (Du et al., 2024) tends to significantly overestimate the head classes, as shown in Figure 1, in 4 out of 5 unlabeled class distributions studied."
+
+This claim is not supported by the cited evidence in **Figure 1 (Blocks #7, #8)**:
+- The claim holds for the "consistent" and "head-tail" distributions (2 out of 5).
+- In the "reverse" distribution, SimPro clearly overestimates a *tail* class (class 8), not a head class.
+- In the "uniform" and "middle" distributions, there is no clear evidence of SimPro overestimating head classes.
+
+The textual claim exaggerates the evidence presented in the figure, stating the phenomenon occurs in twice as many cases (4 vs. 2) as are actually shown. This is a significant factual discrepancy between the text and the visual data it relies on.
+
+**3. Inconsistency in the Main Causal Argument (Better Estimate → Better Accuracy)**
+
+The paper's narrative is that a more accurate distribution estimate leads to improved final classification accuracy. However, the paper's own results present a direct challenge to this narrative, which is not adequately addressed.
+- In the "middle" setting for CIFAR-10 (with γ=150), the proposed `SimPro | DR` estimator is shown to be **less accurate** than the baseline `SimPro | OR` estimator (Total Variation Distance of 0.091 vs. 0.074, respectively, from **Table 1, Block #25**).
+- Despite this poorer distribution estimate, the final `SimPro+` model achieves **higher** classification accuracy than the baseline `SimPro` (79.2% vs. 78.7%, from **Table 3, Block #27**).
+
+While this outcome is briefly mentioned in the **Introduction (Block #5)**, its implications are not discussed. This result contradicts the paper's primary causal claim. The lack of analysis or explanation for why a worse estimate leads to a better outcome in this case weakens the overall argument for the proposed method's mechanism of action.
+
+**4. Unexplained Discrepancy in Method Performance Across Datasets**
+
+The paper presents a stark contrast in the performance and framing of results between CIFAR-10 and CIFAR-100, without offering any explanation.
+- For CIFAR-10, the proposed method leads to better distribution estimates (**Table 1**) and consistent accuracy improvements (**Table 3**).
+- For CIFAR-100, the results are framed defensively in the caption of **Table 4 (Block #27)**: "Despite poor estimation in stage 1, our approach does not degrade the accuracy for most of the settings."
+
+The manuscript provides no discussion as to why the proposed estimation method is "poor" on CIFAR-100. This is a critical omission, as understanding the failure modes or limitations of the proposed method is essential for scientific evaluation. This unexplained discrepancy also appears to be the source of the contradictory statement found in the paper's conclusion.
+
+**Summary:**
+
+The manuscript contains several high-impact internal inconsistencies. The conclusion directly contradicts the paper's core motivation, a key claim in the introduction is factually inconsistent with the figure it cites, and the experimental results include unaddressed counter-evidence to the main scientific argument. These issues significantly compromise the paper's logical coherence and trustworthiness.

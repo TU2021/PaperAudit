@@ -1,0 +1,39 @@
+Based on a critical review of the manuscript, several significant internal inconsistencies and potential integrity risks have been identified. These issues materially affect the trustworthiness and scientific validity of the reported findings.
+
+### Summary of Key Issues
+
+The manuscript contains critical inconsistencies between figures, captions, and the main text. The most severe issue is the duplication of a results plot in Figure 5, which is presented as showing two different experimental outcomes. A second major issue involves a complete mismatch between the caption and the visual content for Figure 2. These problems raise serious concerns about the care with which the results were prepared and reported.
+
+### Detailed Analysis of Inconsistencies
+
+**1. Contradictory and Duplicated Plots in Figure 5**
+
+The most significant issue is found in Section 4.4, "Context Scaling," which refers to Figure 5. The text claims to analyze how the model's performance scales with two different variables: the tool-call budget (left subplot) and the maximum context length (right subplot).
+
+-   **Evidence:** The manuscript presents two plots under the single "Figure 5" heading.
+    -   The first plot ([Block #33]) has an x-axis labeled "Number of Tool Calls" ranging from 0 to 100.
+    -   The second plot ([Block #32]) has an x-axis labeled "Context Length (k)" ranging from 0 to 40.
+-   **Inconsistency:** Despite having different x-axis labels and scales, the two plots are visually identical. The data curve, the specific locations of the data points, and the horizontal reference lines for "WebExplorer (15.6)" and "DeepSeek-V3.1 (30.0)" are exact copies.
+-   **Impact:** It is scientifically implausible for the model's performance to follow the exact same functional form when plotted against two distinct and independent variables (number of tool calls vs. context length in kilobytes). This duplication strongly suggests a critical error in figure generation, data reporting, or potentially data integrity. This invalidates the analysis and conclusions presented in the "Context Scaling" subsection.
+
+**2. Mismatch Between Figure 2 Caption and Content**
+
+There is a clear contradiction between the description of Figure 2 in its caption and the actual figures presented.
+
+-   **Evidence:**
+    -   The caption for Figure 2, located in the text of [Block #12], explicitly describes two tables: "Left: Length distribution of incorrect trajectories. Right: Context length changes across rounds with/without sliding window." The block then presents two tables that match this description.
+    -   However, the manuscript also contains two plots that are implicitly associated with this analysis: a histogram showing the distribution of incorrect trajectories ([Block #14]) and a line chart showing context length changes ([Block #13]). The main text in Section 3.1 appears to refer to the content of these plots, not the tables. For instance, the text states, "the majority of model failures occur when the maximum context length is reached," which is clearly depicted in the histogram ([Block #14]) but not in the table described as the "Left" part of Figure 2.
+-   **Inconsistency:** The caption describes tables, but the visual evidence supporting the main text's argument is presented in plots. The manuscript is inconsistent in what constitutes "Figure 2"—the tables in the text block or the separate image plots.
+-   **Impact:** This inconsistency makes the empirical analysis in Section 3.1 difficult to follow and verify. It reflects a significant lack of care in manuscript preparation and undermines confidence in the reported preliminary experiments.
+
+**3. Opaque Case Study with Omitted Steps**
+
+The case study provided in Appendix E.1, intended to demonstrate the model's long-horizon reasoning, contains a large, unexplained gap.
+
+-   **Evidence:** The trajectory jumps from "Step 15" directly to "Step 50," with a note stating: "Step 16 to Step 49 (The medium steps have been omitted.)" ([Block #96]).
+-   **Inconsistency:** A 34-step omission in a 61-step trajectory obscures the majority of the agent's reasoning process. While likely done for brevity, this makes it impossible to independently assess the coherence, efficiency, or potential failure modes of the agent's path to the solution.
+-   **Impact:** The omission significantly reduces the transparency and verifiability of the qualitative evidence presented to support the paper's claims about long-horizon reasoning.
+
+### Conclusion
+
+The manuscript suffers from severe internal inconsistencies, most notably the duplicated plot in Figure 5, which represents a critical flaw in the reporting of experimental results. The additional mismatch in Figure 2 and the lack of transparency in the case study further weaken the paper's credibility. These issues are not minor and must be fully addressed and clarified before the paper can be considered for publication.

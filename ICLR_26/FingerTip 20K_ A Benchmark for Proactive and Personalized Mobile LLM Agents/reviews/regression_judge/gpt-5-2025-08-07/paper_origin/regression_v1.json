@@ -1,0 +1,113 @@
+{
+  "paper": "FingerTip 20K_ A Benchmark for Proactive and Personalized Mobile LLM Agents",
+  "runs": [
+    {
+      "config": {
+        "judge_model": "gpt-5-2025-08-07",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "baseline_file": "baseline_review.txt",
+        "final_file": "final_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 600,
+        "metric": "regression_v2_minimal",
+        "prompt_hash": "2142c04332"
+      },
+      "config_key": "1a46f14f5902ebb0fc2c14773cec6644d2fa5338",
+      "inputs": {
+        "baseline_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/baseline_review.txt",
+        "final_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/final_review_all.txt"
+      },
+      "regression": {
+        "score_delta": {
+          "baseline_score": 7.0,
+          "final_score": 7.0,
+          "delta": 0.0,
+          "scale_hint": "1-10"
+        },
+        "differences": [
+          {
+            "diff_type": "score_rationale_shift",
+            "summary": "Clarity score lowered due to added documentation mismatches",
+            "paperaudit_types": [
+              "RHETORICAL_PRESENTATION_MANIPULATION",
+              "CONTEXT_MISALIGNMENT_INCOHERENCE"
+            ],
+            "why_impacts_score": "More internal inconsistencies reduce clarity and reproducibility",
+            "evidence": {
+              "baseline_quote": "action-space naming inconsistencies and some missing protocol details hinder exact reproducibility.",
+              "final_quote": "additional documentation mismatches (Section 4.3 references, Table 3 category count, CogAgent variant naming) hinder exact reproducibility."
+            }
+          },
+          {
+            "diff_type": "new_critique",
+            "summary": "Participant count/duration mismatch between Figure 3 and text",
+            "paperaudit_types": [
+              "EVIDENCE_DATA_INTEGRITY",
+              "RHETORICAL_PRESENTATION_MANIPULATION"
+            ],
+            "why_impacts_score": "Undermines trust in dataset scale and reporting accuracy",
+            "evidence": {
+              "baseline_quote": "Data collected from 91 users on their own Android phones, over 1–2 months.",
+              "final_quote": "Figure 3 indicates “Users: 83” and “Time: 1month,” while text states 91 users."
+            }
+          },
+          {
+            "diff_type": "new_critique",
+            "summary": "CogAgent variant naming inconsistent across sections/tables/figures",
+            "paperaudit_types": [
+              "RHETORICAL_PRESENTATION_MANIPULATION",
+              "CONTEXT_MISALIGNMENT_INCOHERENCE"
+            ],
+            "why_impacts_score": "Confuses model comparability and hinders reproducibility of results",
+            "evidence": {
+              "baseline_quote": "GUI-control models (Aguvis-7B, CogAgent-9B, UI-TARS-1.5-7B) are compared.",
+              "final_quote": "CogAgent variant naming is inconsistent—CogAgent-9B listed; Table 5 reports CogAgent-7B; Figure 6(b) labels CogAgent-9B."
+            }
+          },
+          {
+            "diff_type": "new_critique",
+            "summary": "Fine-tuning description vs Table 6 row mismatch (track-specific models vs single FT row)",
+            "paperaudit_types": [
+              "METHOD_LOGIC_CONSISTENCY",
+              "EXPERIMENTAL_DESIGN_PROTOCOL"
+            ],
+            "why_impacts_score": "Reduces traceability of fine-tuned variants and confidence in reported gains",
+            "evidence": {
+              "baseline_quote": "LoRA fine-tuning of Qwen-2.5-VL-7B yields SR1 +6.6 and SR2 +11.0 (Table 6).",
+              "final_quote": "Fine-tuning states two track-specific models, but Table 6 reports a single “Qwen-2.5-VL-7B-FT” row."
+            }
+          },
+          {
+            "diff_type": "new_critique",
+            "summary": "Validation split category count implausible (Val categories = 0 in Table 3)",
+            "paperaudit_types": [
+              "EVIDENCE_DATA_INTEGRITY",
+              "CONTEXT_MISALIGNMENT_INCOHERENCE"
+            ],
+            "why_impacts_score": "Raises doubts about dataset split coverage and documentation correctness",
+            "evidence": {
+              "baseline_quote": "The execution test set has 200 episodes (Table 3), risking sampling variance.",
+              "final_quote": "Table 3 lists Val categories as 0, which is implausible and raises questions about split coverage."
+            }
+          },
+          {
+            "diff_type": "new_critique",
+            "summary": "SR1 values inconsistent between Table 4 and Figure 6(a) at O=0",
+            "paperaudit_types": [
+              "CLAIM_RESULT_DISTORTION",
+              "CONTEXT_MISALIGNMENT_INCOHERENCE"
+            ],
+            "why_impacts_score": "Inconsistent metrics presentation weakens confidence in performance claims",
+            "evidence": {
+              "baseline_quote": "Overall results are reported with O=0 (Table 4; Section 5.2).",
+              "final_quote": "SR1 values at O=0 differ between Table 4 and Figure 6(a), without explanation."
+            }
+          }
+        ]
+      },
+      "generated_at": "2026-01-05T20:42:14"
+    }
+  ]
+}

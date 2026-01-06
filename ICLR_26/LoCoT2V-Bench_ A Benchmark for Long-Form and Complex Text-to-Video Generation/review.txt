@@ -1,0 +1,47 @@
+### Summary
+
+The paper introduces **LoCoT2V-Bench**, a novel benchmark designed to evaluate **long-form, complex text-to-video (T2V) generation**. Unlike traditional benchmarks that focus on short clips and simple prompts, this framework aims to assess models generating **longer videos (30-60 seconds)** with complex, multi-scene narratives. The benchmark comprises **240 text prompts** from real-world videos, with an **evaluation suite** that spans various dimensions, including event-level alignment, narrative coherence, and emotional flow, quantified using novel metrics such as **Human Expectation Realization Degree (HERD)**. Experiments on nine **open-source models** reveal that while models perform well on basic visual and temporal quality, they struggle with **fine-grained temporal consistency**, **event alignment**, and **thematic expression**.
+
+---
+
+### Strengths
+
+1. **Addressing a Key Gap in Video Generation**:
+
+   * The paper tackles the **critical challenge** of evaluating long-form, complex video generation, an area largely neglected by current benchmarks focused on shorter, simpler clips.
+
+2. **Comprehensive Evaluation Framework**:
+
+   * LoCoT2V-Bench introduces a **multi-dimensional evaluation** framework that includes traditional metrics like **text-video alignment** and **temporal consistency**, alongside innovative metrics such as **event-level alignment** and **narrative coherence** (HERD). These dimensions provide a richer, more **holistic evaluation** of generated content.
+
+3. **Insightful Experiments and Results**:
+
+   * The paper presents a **rigorous evaluation** of current video generation models across these metrics. The **insightful analysis** reveals the models¡¯ difficulties in achieving high-level narrative and thematic coherence, thus highlighting areas for improvement in long-form video generation.
+
+4. **Well-Motivated and Timely Contribution**:
+
+   * As the field of **text-to-video generation** evolves, LoCoT2V-Bench is well-timed, addressing both the **complexity of prompts** and the **quality of long-form video generation**, making it a valuable tool for evaluating and advancing the field.
+
+---
+
+### Weaknesses
+
+1. **Limited Scale of Benchmark**:
+
+   * With only **240 samples** across **18 themes**, the dataset may be considered too small to draw robust conclusions about model performance. A larger, more diverse dataset could increase the **statistical reliability** of the findings.
+
+2. **Reliability of HERD**:
+
+   * The **HERD metric** is heavily dependent on **third-party LLM/MLLMs**, raising concerns about **error propagation** in the multi-stage pipeline. There is no analysis of how **sensitive the final HERD score** is to small failures in earlier stages of the pipeline, which may undermine the reliability of the results.
+
+3. **Lack of Human Verification**:
+
+   * The paper does not compare **automated metrics** with **human judgments**, which is a significant oversight, especially for subjective metrics like **narrative flow** and **emotional response**. Human validation would strengthen the validity and reliability of the new metrics.
+
+4. **Handling Complex Scenarios**:
+
+   * The **event-level temporal consistency** metric assumes **accurate event localization** in videos, which could be problematic in more complex settings. The **subject disambiguation** and handling of **occluded subjects** are not thoroughly addressed, which may lead to **inaccuracies** in the evaluation for multi-subject scenes or those with intermittent presence.
+
+5. **Limited Model Scope**:
+
+   * The evaluation is restricted to **nine open-source models**, excluding closed-source systems that may perform better. Including at least some **proprietary baselines** would increase the **breadth** of the evaluation and provide more insight into the **gap** between open and closed models.

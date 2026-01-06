@@ -1,0 +1,36 @@
+Based on a critical review of the manuscript, the following substantive inconsistencies and integrity risks have been identified. These issues materially affect the paper's correctness and trustworthiness.
+
+### **1. Inconsistency in the Size of the Human-Annotated Dataset**
+
+There is a significant discrepancy between the claimed size of the newly contributed dataset and the size of the dataset used in the user study experiments.
+
+*   **Claim:** The Introduction (Block #4) and Contributions list (Block #4) state the paper provides a "larger-scale (1050 examples, 5 annotations each) data set of human-annotated machine explanations". This claim is reiterated in the user study setup description (Block #27), which states, "We collected annotations for 1050 explanations from five annotators each".
+*   **Evidence of Inconsistency:** The appendix section on annotations preprocessing (Appendix D.4, Block #69) reveals that after filtering for annotation quality and inter-annotator agreement, "718 explanations remained for our experiments".
+*   **Impact:** This represents a ~32% reduction in the dataset size used for the evaluation. The primary claim of contributing a dataset of 1050 examples is not consistent with the actual number of examples used to produce the results in Section 4.2. The manuscript does not clarify in the main text that the user study results are based on this smaller, filtered subset, nor does it specify whether the full, unfiltered dataset of 1050 examples will be released. This is a material inconsistency between a key claimed contribution and the experimental methodology.
+
+### **2. Systematic and Misleading Reporting of Performance Improvements**
+
+The manuscript repeatedly uses ambiguous and technically incorrect phrasing to report performance comparisons, describing absolute differences in AUROC scores as relative percentage improvements. This occurs consistently across the results sections.
+
+*   **Claim vs. Evidence (Table 1):** In Section 4.1 (Block #24), the text claims ULER "obtains an average improvement of 20% and 24% from the two runner-ups, respectively PASTARej and FaithRej."
+    *   **Analysis:** Based on the data in Table 1 (Block #23), the average AUROC for ULER is 0.865, for PASTARej is 0.656, and for FaithRej is 0.619. The actual relative improvements are approximately 32% over PASTARej and 40% over FaithRej. The reported "20%" and "24%" correspond to the **absolute difference in AUROC points** (0.865 - 0.656 = 0.209; 0.865 - 0.619 = 0.246). Phrasing an absolute difference of 0.209 as a "20% improvement" is incorrect and misleading.
+
+*   **Claim vs. Evidence (Table 2):** In Section 4.1 (Block #25), the text claims "on average, ULER outperforms ULERZ,X and ULERZ,X,Y by approximately 16%."
+    *   **Analysis:** Based on Table 2 (Block #26), the average AUROC for ULER is 0.865, while for ULERZ,X it is 0.709. The absolute difference is 0.156, which the authors report as "16%". The actual relative improvement is ~22%.
+
+*   **Claim vs. Evidence (Appendix C.5):** In Appendix C.5 (Block #61), the text claims the ablated variant ULER-NOAUG "achieves an average AUROC that is 12% higher than its nearest competitors."
+    *   **Analysis:** Based on the "best" baseline row in Table 6 (Block #60), the average AUROC of the best competitor is 0.729. The average AUROC for ULER-NOAUG is 0.849. The absolute difference is 0.12, which is what the authors report as "12% higher". The actual relative improvement is ~16.5%.
+
+*   **Impact:** This systematic misreporting of performance metrics obscures the results. While the underlying data shows that ULER does outperform the competitors, the magnitude of the improvement is presented in a confusing and technically inaccurate way. This affects the clarity and trustworthiness of the paper's quantitative claims.
+
+### **3. Mismatch Between Textual Description and Figure Data**
+
+The textual summary of Figure 2 does not accurately reflect the data presented in the figure.
+
+*   **Claim:** In Section 4.1 (Block #24), the text claims, "On average, ULER reduces the number of low-quality explanations in the accepted set by approximately 20% vs PASTARej, 21% vs FaithRej...".
+*   **Evidence of Inconsistency:** Visual inspection of Figure 2 (Block #22) shows that the performance gap is larger than stated if interpreted as a relative reduction. For example, at a 25% rejection rate, ULER has ~35% low-quality explanations in the accepted set, while PASTARej has ~55%. This is a relative reduction of `(55-35)/55 ≈ 36%`, not 20%. The reported "20%" appears to be the absolute percentage point difference at that specific rejection rate (`55% - 35% = 20%`), but this is not specified and is an unconventional way to report such a reduction.
+*   **Impact:** This adds to the pattern of unclear and potentially misleading reporting of quantitative results.
+
+### **Conclusion**
+
+The manuscript presents a novel problem and approach. However, it is undermined by several clear internal inconsistencies. The discrepancy in the reported vs. used size of the human-annotated dataset is a significant issue that affects a key contribution. Furthermore, the systematic misrepresentation of absolute metric differences as percentage improvements is a serious reporting flaw that pervades the results section and appendix. These issues must be addressed to ensure the scientific validity and trustworthiness of the work.

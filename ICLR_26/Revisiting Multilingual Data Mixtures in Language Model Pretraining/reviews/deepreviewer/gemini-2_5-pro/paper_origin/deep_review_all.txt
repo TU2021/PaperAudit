@@ -1,0 +1,163 @@
+Here are four separate reviews of the paper.
+
+***
+
+### **Review 1**
+
+**Summary**
+This paper presents a large-scale empirical study on the effects of multilingual data mixtures in language model pretraining. The authors train 1.1B and 3B parameter models on up to 400 languages to investigate four common assumptions. The key findings are that: (1) increasing English data does not harm multilingual performance if the absolute amount of multilingual data is maintained; (2) English serves as a strong pivot language across language families; (3) curriculum learning does not mitigate negative interference; and (4) the "curse of multilinguality" is more a function of model capacity and data quality than simply the number of languages.
+
+**Soundness**
+The methodology is exceptionally sound. The authors make a concerted effort to disentangle confounding variables, which has been a limitation of prior work. The distinction between the "Fixed Total Budget" and "Fixed Multilingual Budget" settings (Section 3) is a clever and effective way to isolate the effect of adding English data versus replacing multilingual data. Similarly, the "Controlled Growth Setting" in the "curse of multilinguality" experiment (Section 6, Figure 5) provides a clean analysis of the impact of adding new languages. The scale of the experiments, involving 1.1B and 3B models and up to 400 languages, is far beyond what is typical for academic studies in this area and lends significant credibility to the results.
+
+**Presentation**
+The paper is very well-written, clearly structured, and easy to follow. Each of the four main assumptions is addressed in its own dedicated section, with a clear problem statement, experimental setup, results, and takeaway message. The figures are generally clear and effectively support the main arguments. For instance, Figure 1 provides a compelling visual contrast between the two budget settings, making the first key finding immediately understandable. The appendices are thorough and provide all necessary details for reproducibility.
+
+**Contribution**
+The contribution of this work is significant and timely. It challenges several widely held beliefs in the community regarding multilingual pretraining and provides concrete, evidence-based guidance for practitioners. By demonstrating that trade-offs like the "curse of multilinguality" are more nuanced than previously thought, this paper opens up new avenues for developing more capable and inclusive multilingual models. The findings have the potential to directly influence the design of data mixtures for the next generation of open-source multilingual LLMs.
+
+**Strengths**
+- **Scale and Ambition:** The study's scale (1.1B/3B models, 100B+ tokens, 400 languages) is a major strength, allowing for more robust conclusions than prior, smaller-scale work.
+- **Novel and Counter-intuitive Findings:** The paper directly challenges and refines several key assumptions in the field (e.g., regarding English data, pivot languages, and the curse of multilinguality), making the work highly impactful.
+- **Rigorous Experimental Design:** The careful design of experiments to isolate variables (e.g., Fixed vs. Multilingual budget) is a standout feature and ensures the soundness of the conclusions.
+- **Practical Implications:** The takeaways provide clear, actionable advice for practitioners building multilingual LLMs, such as prioritizing absolute token counts for languages over complex balancing schemes.
+
+**Weaknesses**
+- **Scale Relative to Frontier Models:** As the authors acknowledge in the Limitations section, the 1.1B and 3B models are still significantly smaller than state-of-the-art frontier models. While a necessary trade-off for the experimental breadth, it leaves open the question of how these findings will extrapolate to models in the 70B+ parameter range.
+- **Tokenizer Choice:** The use of a pre-existing tokenizer is a practical necessity but may have some unaccounted-for effects on low-resource languages, as noted by the authors.
+
+**Questions**
+1. The finding that a combination of English and a family-specific pivot (Russian) works best is very interesting (Section 4). Do you hypothesize this is a general principle? For example, for a set of Dravidian languages, would a combination of English and a high-resource Dravidian language like Tamil be optimal?
+2. Your results suggest that curriculum learning does not improve final performance (Section 5). However, did you observe any effects on training stability or efficiency (e.g., time to convergence)?
+3. Given your findings, what would be your top recommendation for a team with a fixed compute budget wanting to train the most effective multilingual model possible? Should they focus on adding more high-quality data for a smaller set of languages, or cover more languages even if the data is noisier?
+
+**Rating**
+- Overall (10): 9 — This is a high-impact paper with large-scale experiments that challenge common assumptions and provide practical guidance for multilingual pretraining.
+- Novelty (10): 9 — The work revisits known problems but does so at a scale and with a methodological rigor that produces novel and nuanced insights (e.g., Findings #1 and #4).
+- Technical Quality (10): 10 — The experimental design is excellent, carefully disentangling confounding factors and providing strong evidence for the claims.
+- Clarity (10): 9 — The paper is exceptionally well-written and structured, with clear figures and takeaways for each experiment.
+- Confidence (5): 5 — I am very confident in my assessment, as I am an expert in this area and the paper's methodology is robust.
+
+***
+
+### **Review 2**
+
+**Summary**
+This paper investigates the impact of multilingual data mixing strategies on pretraining 1.1B and 3B parameter language models. The authors test four common assumptions related to the role of English data, pivot languages, curriculum learning, and the "curse of multilinguality." They conclude that many common beliefs are incorrect or overly simplistic, suggesting for instance that adding English data is not harmful if multilingual data quantity is preserved, and that the curse of multilinguality is a matter of data quality and model capacity, not language count.
+
+**Soundness**
+While the experimental design is ambitious, the soundness of the conclusions is questionable on several fronts. First, the model scale (1.1B/3B) is far from the state-of-the-art, and it is well-known that scaling properties can change dramatically with model size. Generalizing these findings to the models practitioners actually use (e.g., 7B+) is a significant leap of faith.
+
+Second, the downstream evaluation results are not convincing. In Figure 2 and Figure 8, the "Multilingual" group's average benchmark score is nearly flat and hovers just above the random baseline. Claiming that performance "does not degrade" (Section 3) is technically true but misleading when the performance is so low to begin with. A flat line near random chance is weak evidence to support the strong claim that adding English data has "negligible impact." The LM loss results (Figure 1) are more compelling, but the disconnect between loss and downstream performance is concerning and under-analyzed.
+
+Finally, the interpretation of the "curse of multilinguality" (Section 6) as a "curse of data quality" for temperature sampling seems plausible, but the paper provides no direct analysis of data quality. This remains a hypothesis rather than a demonstrated fact.
+
+**Presentation**
+The paper is structured clearly, but the presentation of results sometimes overstates the evidence. The claims in the abstract and introduction are very strong, but the data, particularly for downstream tasks (Figure 2, Figure 8), provides only weak support. For example, the text claims increasing English "consistently improves downstream task accuracy in English" (Section 3), but the trend line in Figure 2b shows a very modest increase, and the data points have high variance. The heatmaps in Figure 5 are difficult to interpret without carefully cross-referencing the separate table transcription, making the section on the curse of multilinguality hard to parse.
+
+**Contribution**
+The paper addresses important questions, but the contribution is limited by the methodological weaknesses. While it provides some interesting data points, the findings cannot be considered definitive given the small model scale and the unconvincing downstream results. The work is more of an exploratory study at an intermediate scale than a conclusive "revisiting" of these core issues. The claims need to be significantly toned down to reflect the limitations of the evidence presented.
+
+**Strengths**
+- The paper tackles a set of important and practical questions in multilingual pretraining.
+- The experimental design attempts to isolate variables, such as the "Fixed Total Budget" vs. "Fixed Multilingual Budget" comparison, which is a good methodological principle.
+
+**Weaknesses**
+- **Limited Model Scale:** The 1.1B and 3B models are not representative of current LLMs, making the generalizability of the findings highly uncertain.
+- **Weak Downstream Evaluation Results:** The performance on multilingual benchmarks is very low and largely flat, undermining the claims about the impact of data mixtures on downstream capabilities (Figure 2, Figure 8).
+- **Overstated Claims:** The conclusions drawn in the text are often stronger than what the empirical results, especially the benchmark scores, can support.
+- **Lack of Direct Evidence for Some Claims:** The argument that the curse of multilinguality is tied to data quality (Section 6) is not supported by any direct analysis of the data's quality.
+
+**Questions**
+1. The multilingual benchmark scores in Figure 2 and Figure 8 are consistently low, barely exceeding the random baseline. Why do you believe these results are sufficient to make claims about downstream performance? Could it be that none of the models learned meaningful multilingual capabilities, making the comparison moot?
+2. There seems to be a disconnect between the validation loss (Figure 1), which shows clear trends, and the benchmark scores (Figure 2), which are mostly flat. How do you explain this discrepancy?
+3. In Section 6, you attribute the performance degradation under temperature sampling to lower data quality in low-resource languages. Did you perform any analysis to confirm that the FineWeb-2 data for these languages is indeed of lower quality? Without this, it's hard to distinguish the "curse of data quality" from a "curse of under-representation" where languages simply don't have enough tokens to be learned effectively.
+
+**Rating**
+- Overall (10): 4 — The paper addresses interesting questions but the weak empirical results and limited model scale prevent it from delivering convincing answers.
+- Novelty (10): 6 — The questions are not new, but the specific experimental setups (e.g., fixed multilingual budget) offer a somewhat novel angle.
+- Technical Quality (10): 4 — The technical quality is severely hampered by the low and inconclusive downstream evaluation scores, which form a core part of the evidence.
+- Clarity (10): 6 — While the structure is clear, the presentation overstates the findings and some figures are confusing (Figure 5), reducing overall clarity.
+- Confidence (5): 5 — I am an expert in this field and am confident that the empirical evidence presented has significant weaknesses.
+
+***
+
+### **Review 3**
+
+**Summary**
+This paper conducts an empirical investigation into multilingual data mixing for pretraining LLMs. By training 1.1B and 3B models, the authors systematically test four assumptions about the role of English data, pivot languages, curriculum learning, and language quantity. Their findings suggest that adding English data is not necessarily harmful, English is a good general-purpose pivot, curriculum learning is ineffective for final performance, and the "curse of multilinguality" is more about capacity and data distribution than language count.
+
+**Soundness**
+The overall experimental design is logical and well-conceived. The use of controlled settings like "Fixed Total Budget" vs. "Fixed Multilingual Budget" (Section 3) is commendable and provides a solid foundation for the analysis. The experiments are comprehensive, covering multiple model sizes, language sets, and evaluation metrics (loss and downstream tasks). The choice of datasets (mC4, FineWeb2) and models (LLaMA architecture) is standard and appropriate. While the scale is smaller than frontier models, it is sufficient for the comparative analyses being performed.
+
+**Presentation**
+The paper is generally well-structured and clearly written. However, there are several areas where the presentation could be significantly improved.
+
+1.  **Figure Clarity:** Figure 5 is very difficult to understand. It presents four heatmaps as images, but the text refers to them as (a), (b), (c), and (d) without these labels being on the images themselves. The reader must rely on the caption and a separate table transcription to decipher the results, which disrupts the flow of the paper. The heatmaps should be generated as proper figures with clear labels, axes, and color bars that are legible.
+2.  **Figure 9:** This figure, showing per-language loss for the pivot experiment, is presented as a large grid of small, low-resolution plots. It is very difficult to read the trends for individual languages or compare the pivot strategies effectively. Presenting this data in a more aggregated or summarized table, or with larger, clearer plots for representative languages, would be more effective.
+3.  **Consistency between Text and Figures:** In Section 3, the text states that in the Fixed Total Budget setting (Figure 1a), multilingual loss "remains relatively stable up to approximately 40% English data," after which it degrades. However, the plot shows a slow but steady increase starting from 20%. Similarly, for Figure 2a, the text claims increasing English "does not hurt downstream performance," but the multilingual score is flat and barely above random. The textual summary should more accurately reflect the nuances of the visual data.
+4.  **Captions:** The caption for Figure 7 seems to be a copy-paste of the caption for Figure 1, and the caption for Figure 8 is a copy-paste of Figure 2's. While the content is similar, they should be specific to the 3B models being shown.
+
+**Contribution**
+The paper makes a valuable contribution by providing large-scale empirical data on a set of fundamentally important questions for multilingual LLM pretraining. The findings, if they hold up at larger scales, could lead to more efficient and effective data mixing strategies. However, the paper's impact is currently hindered by the presentation issues, which make some of the results difficult to verify and interpret.
+
+**Strengths**
+- **Systematic Approach:** The paper is organized around four clear, testable assumptions, making the narrative easy to follow.
+- **Thorough Experimentation:** The authors explore multiple facets of each question (e.g., two budget settings for Assumption 1, multiple curriculum strategies for Assumption 3).
+- **Detailed Appendices:** The appendices provide extensive details on hyperparameters, data, and additional results, which is excellent for transparency and reproducibility.
+
+**Weaknesses**
+- **Poor Figure Visualization:** Several key figures (notably Figure 5 and Figure 9) are poorly rendered and difficult to interpret, which is a major weakness for an empirical paper.
+- **Inconsistencies in Interpretation:** There are minor but noticeable disconnects between what the plots show and how they are described in the text, suggesting a need for more careful wording.
+- **Minor Organizational Issues:** The paper structure is good, but the flow within Section 6 (Curse of Multilinguality) is confusing due to the hard-to-parse Figure 5.
+
+**Questions**
+1. Could you please regenerate Figure 5 with clear labels for each subplot (a, b, c, d), legible axes, and a clearer visual distinction between the different settings? A summary table might be a useful supplement.
+2. For Figure 9, would it be possible to present the results in a different format? For example, a table showing the final loss for each language under each pivot condition, with the best result bolded, might be much easier to read than the grid of plots.
+3. Regarding the claim in Section 3 that multilingual performance is "unaffected" in the Fixed Multilingual Budget setting (Figure 1b), the loss does appear to tick up slightly at the 60% mark. Could you comment on the statistical significance of this trend and perhaps refine the wording to be more precise?
+
+**Rating**
+- Overall (10): 7 — A strong paper with valuable findings, but its impact is currently limited by significant presentation issues in key figures.
+- Novelty (10): 8 — The work provides novel empirical evidence at a significant scale, challenging existing heuristics in the field.
+- Technical Quality (10): 8 — The experimental design is technically sound, but the reporting and visualization of the results need improvement.
+- Clarity (10): 5 — The paper is structurally clear, but the confusing and low-quality figures (Fig 5, 9) and inconsistencies between text and plots severely impact clarity.
+- Confidence (5): 5 — I am confident in my assessment, having carefully reviewed the text and the (often confusing) figures.
+
+***
+
+### **Review 4**
+
+**Summary**
+This paper presents a comprehensive empirical study on multilingual data mixtures for pretraining language models, using 1.1B and 3B parameter models. The work systematically investigates four common assumptions regarding: (1) the trade-off between English and multilingual data, (2) the effectiveness of pivot languages, (3) the utility of curriculum learning, and (4) the nature of the "curse of multilinguality." The authors find that many common heuristics are overly simplistic; for instance, adding English data is not detrimental if the absolute amount of multilingual data is sufficient, and the "curse" is more a function of model capacity and data quality than language count.
+
+**Soundness**
+The paper's methodology is robust and well-designed. A key strength is the effort to de-confound variables, exemplified by the "Fixed Total Budget" versus "Fixed Multilingual Budget" experiments in Section 3. This allows for a much clearer interpretation of the results than in prior work. The experiments are conducted at a respectable scale for an academic paper, providing a valuable bridge between small-scale studies and industrial-scale models. The use of both validation loss and a suite of downstream benchmarks provides a multi-faceted view of performance. The authors are also transparent about their setup, with detailed appendices on model configuration, training hyperparameters, and data.
+
+**Presentation**
+The paper is well-written and logically organized. Each of the four core "assumptions" is treated as a mini-study, which makes the paper highly readable. The takeaways for each section are clear and concise. Most figures are effective, particularly Figure 1, which clearly illustrates the core finding about English data proportion. However, Figure 5 (the heatmaps) is confusingly presented and requires significant effort from the reader to parse, detracting from the clarity of an otherwise well-presented paper. The authors are also commendably upfront about the limitations of their work in a dedicated section.
+
+**Contribution**
+This work makes a significant contribution to our understanding of multilingual pretraining. It provides strong, empirical evidence that challenges or refines several pieces of "common wisdom" in the field. The findings are not only academically interesting but also have direct practical relevance for anyone involved in training multilingual models. For example, the insight that one should focus on the absolute amount of multilingual data rather than just its proportion (Finding #1), and that the curse of multilinguality is not an unavoidable consequence of adding languages (Finding #4), can help guide more effective and resource-efficient pretraining strategies.
+
+**Strengths**
+- **Systematic and Rigorous:** The paper systematically tests well-defined hypotheses with carefully controlled experiments.
+- **Significant Scale:** The use of billion-parameter models and hundreds of languages provides a scale of evidence that is rare and valuable in academic research.
+- **Impactful and Nuanced Findings:** The paper moves the conversation beyond simplistic trade-offs to a more nuanced understanding of factors like data quantity, quality, and model capacity.
+- **Practical Relevance:** The takeaways offer concrete guidance for designing better multilingual data mixtures.
+
+**Weaknesses**
+- **Generalizability to Larger Models:** The primary weakness, as acknowledged by the authors, is that the 1.1B/3B scale is still orders of magnitude smaller than frontier models. While the findings provide a strong baseline, their behavior at 70B+ or 100B+ scales remains an open question.
+- **Ambiguous Downstream Signals:** The downstream benchmark results (e.g., Figure 2, Figure 8) are less clear-cut than the LM loss results. The multilingual performance is often flat and low, which slightly weakens the conclusions regarding downstream task transfer. The paper could benefit from a deeper discussion of this discrepancy.
+- **Clarity of Some Visualizations:** Figure 5 is a notable weak point in the paper's presentation, being difficult to interpret as presented.
+
+**Questions**
+1. Your first finding hinges on having a "sufficient quantity of multilingual tokens." Based on your experiments, can you offer a heuristic or a starting point for what constitutes "sufficient"? Is it a function of model size, language family, or some other variable?
+2. The curriculum learning experiments (Section 5) show a temporary "forgetting" effect when new languages are introduced (spikes in loss in Figure 4). While the final performance converges, do you think this dynamic suggests anything about the model's capacity allocation? Could this effect become permanent (i.e., non-recoverable) in smaller models or with more drastic data shifts?
+3. You reframe the "curse of multilinguality" as a curse of capacity and/or data quality. How do you see these two factors interacting? For example, could a model with much higher capacity be more robust to the "curse of data quality" you observed with temperature sampling, effectively learning to ignore the noise from low-resource languages?
+
+**Rating**
+- Overall (10): 8 — A very strong and impactful paper that provides valuable, large-scale empirical evidence on fundamental questions in multilingual pretraining.
+- Novelty (10): 8 — While the problems are known, the scale and methodological rigor lead to novel insights that refine and challenge existing beliefs.
+- Technical Quality (10): 9 — The experimental design is excellent and robust; the only minor issue is the weak signal from some downstream evaluations.
+- Clarity (10): 8 — The paper is very well-written and structured, with the exception of a few confusing figures that could be improved.
+- Confidence (5): 5 — I am highly confident in my evaluation based on my expertise in large language model training and evaluation.

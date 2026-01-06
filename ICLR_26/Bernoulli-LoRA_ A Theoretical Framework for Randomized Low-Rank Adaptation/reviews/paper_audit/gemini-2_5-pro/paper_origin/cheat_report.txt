@@ -1,0 +1,57 @@
+Based on a critical review of the manuscript, several significant internal inconsistencies and discrepancies have been identified that affect the paper's scientific validity and trustworthiness. The issues are detailed below.
+
+### 1. Systemic Inconsistencies in Stated Convergence Rates
+
+There are numerous contradictions between the convergence rates summarized in Table 1, the formal theorem statements in Section 7, and the rates derived in the appendix proofs. These discrepancies affect the majority of the paper's theoretical contributions.
+
+**a) Bernoulli-LoRA-MVR (Algorithm 5):**
+The convergence rate for this method is presented differently in three separate locations, with conflicting terms.
+-   **Table 1 (Block #16):** The rate is given as `Φ₁ / (γ λ_min^p T) + ...`, where `Φ₁ := Δ⁰ + (bγ / (2-b)) G⁰`.
+-   **Theorem 3 (Block #36):** The rate is stated as `2Δ⁰ / (γ λ_min^p T) + (G⁰/(bT) + 2bσ²/(2-b)) * (λ_max^p / λ_min^p)`.
+-   **Theorem 13 (Appendix C.3.1, Block #100):** The rate is derived as `2Φ₀ / (γλ_min^p T) + ...`, where the Lyapunov function `Φ₀` is defined in Eq. (106) as `Δ⁰ + (γλ_max^p / (2b(2-b))) G⁰`.
+These three formulations are mathematically distinct and contradictory.
+
+**b) Bernoulli-LoRA-PAGE (Algorithm 6):**
+Similar to the MVR variant, the stated convergence rate for PAGE is inconsistent across the manuscript.
+-   **Table 1 (Block #16):** The rate is given as `Φ₂ / (γ λ_min^p T)`, where `Φ₂ := Δ⁰ + (γ/q) G⁰`.
+-   **Theorem 4 (Block #37):** The rate is stated as `2Δ⁰ / (γ λ_min^p T) + (G⁰/(qT)) * (λ_max^p / λ_min^p)`.
+-   **Theorem 15 (Appendix C.4.1, Block #106):** The rate is derived as `2Φ₀ / (γλ_min^p T)`, where `Φ₀` is defined in Eq. (113) as `Δ⁰ + (γλ_max^p / (2q)) G⁰`.
+These three versions of the rate are not equivalent.
+
+**c) Fed-Bernoulli-LoRA-MARINA (Algorithm 8):**
+This method's rate is also inconsistent.
+-   **Table 1 (Block #16):** The rate is given as `Φ₂ / (γ λ_min^p T)`, reusing the same inconsistent `Φ₂` definition from the PAGE method.
+-   **Theorem 6 (Block #38) and Theorem 19 (Appendix D.2.1, Block #121):** The rate is stated as `2Δ⁰ / (γ λ_min^p T) + (G⁰/(qT)) * (λ_max^p / λ_min^p)`.
+The formulation in Table 1 does not match the one in the main body and appendix.
+
+**d) Fed-Bernoulli-LoRA-EF21 (Algorithm 9):**
+The inconsistencies persist for this federated learning variant.
+-   **Table 1 (Block #16):** The rate is given as `Φ₃ / (γ λ_min^p T)`, where `Φ₃ := Δ⁰ + (γ / (1-√(1-β))) G⁰`. Note the use of `G⁰`.
+-   **Theorem 7 (Block #38):** The rate is stated as `2Δ⁰ / (γ λ_min^p T) + (2Ĝ⁰/(βT)) * (λ_max^p / λ_min^p)`. Note the use of `Ĝ⁰` and a different dependency on `β`.
+-   **Theorem 21 (Appendix D.3.1, Block #129):** The rate is derived as `2Φ₀ / (γλ_min^p T)`, where `Φ₀` is defined in Eq. (133) as `Δ⁰ + (γλ_max^p / (2(1-√(1-β)))) Ĝ⁰`.
+All three statements are mathematically different.
+
+**e) Fed-Bernoulli-LoRA-QGD (Algorithm 7):**
+-   **Table 1 (Block #16):** The non-convex convergence rate is stated as `Δ⁰ / (γ λ_min^p T) + ...`.
+-   **Theorem 5 (Block #38) and Theorem 17 (Appendix D.1.1, Block #117):** The rate is stated as `6Δ⁰ / (γ λ_min^p T) + ...`.
+The leading term in Table 1 is missing a factor of 6 that is present in both the main theorem and the appendix proof.
+
+These widespread and material contradictions in the central theoretical results make it impossible to verify the paper's core claims.
+
+### 2. Discrepancies in Experimental Reporting
+
+There are clear mismatches between the descriptions of the experiments and the content of the figures.
+
+-   **Figure 1 (Block #41, #42):** The caption in the text (Block #41) states, "Curves with `p = 0.01, 0.2, ...` indicate Bernoulli-LoRA sampling parameters." However, the legend in the figure itself (Block #42) only shows results for `p=0.5`.
+-   **Figure 2 (Block #134, #137, #138):** A similar issue occurs. The caption in the appendix text (Block #134) states, "Curves with `p = 0.01, 0.2, ...` indicate Bernoulli-LoRA-GD sampling parameters." However, the legends in the actual plots (Blocks #137, #138) only show results for `p=0.2, 0.6, 0.8`.
+
+### 3. Mismatch Between Analyzed Method and Experimental Implementation
+
+The experiments reported in Section 8.2 appear to deviate from the algorithm analyzed in the theoretical sections, potentially undermining the experimental validation of the paper's main contribution.
+
+-   **Table 3, Footnote 1 (Block #43):** The footnote states, "Although Bernoulli-LoRA prescribes probabilistic selection from the first iteration, a deterministic assignment of fixed and trainable matrices at initialization yielded better performance." This modification is not part of the formal algorithm definitions (e.g., Algorithm 1, Block #18) or the theoretical analysis. This creates a gap between the method that is proven to converge and the method that was actually used to generate results.
+-   **Table 3, Footnote 2 (Block #43):** The best reported result for Bernoulli-LoRA was achieved with `p = 0.99`. This hyperparameter choice makes the algorithm nearly deterministic, closely mimicking the deterministic RAC-LoRA baseline (which performs slightly better at 96.49% vs. 96.46%). This result, combined with the deviation mentioned in Footnote 1, raises questions about the practical benefit of the probabilistic selection mechanism, which is the central novelty of the proposed framework.
+
+### Conclusion
+
+The manuscript contains severe and systemic internal inconsistencies, particularly in its presentation of the main theoretical results. The convergence rates, which are a primary contribution, are stated differently and incorrectly across the summary table, main text, and appendix. Furthermore, discrepancies in the experimental reporting and a mismatch between the analyzed algorithm and its implementation weaken the empirical validation. These issues materially affect the correctness and trustworthiness of the paper's claims.

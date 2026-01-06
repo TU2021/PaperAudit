@@ -1,0 +1,57 @@
+Integrity and consistency risk report
+
+Scope: This report flags high-impact internal inconsistencies and numerical/factual mismatches that materially affect the paper’s correctness and trustworthiness. All observations are anchored to the manuscript.
+
+1) BayesBench composite score definition vs reported totals
+- Issue: The BayesBench score is defined as S_BayesBench = (1/3)(A + E + C) in Section 3.6 (Eq. 5). However, Figure 9 reports “Total” scores that equal the apparent sum of the components without division by 3 (e.g., Llama-4 Maverick shows A ≈ 0.25, E ≈ 0.30, C ≈ 0.30 with Total = 0.85, which is the sum, not the average).
+- Evidence: Section 3.6 (Eq. 5) vs Figure 9 (BayesBench overall score bars and totals).
+- Impact: The primary ranking and headline conclusion (“Llama-4 Maverick attains the highest BayesBench score,” Fig. 9 and Sec. 5.4) may be numerically incorrect if the score should be averaged. All comparative claims based on this score require recalculation or clarification of the intended aggregation.
+
+2) NRMSE component (A) labeling/values inconsistent with its definition
+- Issue: Table 2 defines A = 1 − (NRMSE − NRMSE_min)/(NRMSE_max − NRMSE_min) with min,max = 0,2, so lower NRMSE should yield larger A (e.g., NRMSE = 0.25 implies A = 0.875). In Figure 9, the blue “NRMSE (A)” component for top models is ~0.25, which is far below what the formula would produce for strong performance, suggesting either mislabeling (raw NRMSE shown) or miscomputation.
+- Evidence: Table 2 (NRMSE factor definition) vs Figure 9 (“NRMSE (A)” components ≈ 0.25 across multiple models).
+- Impact: If A is miscomputed or mislabeled, the composite score and any accuracy-related interpretations are unreliable.
+
+3) “Bayes prob (%)” exceeds 100% in multiple figures despite probability definition
+- Issue: Factor evidence is defined as a probability P(f=True|data) = L̄True / (L̄True + L̄False) in Appendix A.8, which must be in [0,1] (0–100%). Yet several plots list “Bayes prob (%)” well above 100% (e.g., Figure 14: Gemma 3 4B it shows 109%; Figure 16 contains values such as 131%, 301%, 376%; Figure 95 shows >100% in multiple entries).
+- Evidence: Appendix A.8 (probability definition), Figures 14, 16, 95–97 (labels “Bayes prob (%)” with values >100%).
+- Impact: Probabilities exceeding 100% are mathematically invalid under the stated method, undermining the core “Bayesian factor evidence” metric used throughout (e.g., Figure 8 left panel, Section 5.1). The strength of evidence for “Bayesian behaviour” cannot be trusted without correction.
+
+4) BCS definition (integer sum) vs reported non-integer values
+- Issue: Section 3.5 defines BCS = ∑a s_a, where each s_a ∈ {+1, 0, −1} for five ablations across three tasks (range −15 to +15; Table 2). However, Appendix Table 4 reports per-task BCS values that are non-integers (e.g., Line Ratio = 1.1, 3.2; Marker Location = 0.8, 4.4; Maze Distance = 1.5, −0.9), which contradicts the integer nature of the sum over discrete s_a.
+- Evidence: Section 3.5 (BCS definition and s_a), Table 2 (BCS range), Appendix Table 4 (non-integer BCS per task).
+- Impact: The BCS component (C) directly enters BayesBench. Non-integer reporting suggests averaging or weighting not described, or computational errors. Without consistent definition and computation, comparisons on “Bayesian consistency” (e.g., Figure 8 right panel, Figure 9 green bars) are unreliable.
+
+5) Maze task unimodal image NRMSE contradicts narrative and duplicate/garbled entries
+- Issue A (Contradiction): Appendix A.12 states “GPT-5 Mini’s unimodal image performance is 0.2 NRMSE, despite already being the best across models.” Yet Figure 16 (Maze distance estimation) lists “Phi 4 Multimodal | NRMSE (%) = 0%” for image modality, implying perfect performance that would surpass GPT-5 Mini. This contradicts A.12’s claim.
+- Issue B (Data integrity): Figure 16 includes duplicate model names (e.g., “GPT-5 Mini” appears twice; “Mistral 24B” appears twice) and missing/ill-formatted values (e.g., “Gemma 3 4B it | 301%” without NRMSE entry). The structure of the tables appears corrupted.
+- Evidence: Appendix A.12 (GPT-5 Mini best unimodal image NRMSE), Figure 16 (Maze distance estimation modality tables and entries).
+- Impact: These inconsistencies cast doubt on the correctness of the per-modality performance summaries that underpin key claims in Section 5.2 (e.g., GPT-5 Mini’s cue combination inefficiency is argued from modality imbalance). The duplicated/garbled entries also indicate possible reporting or formatting errors in core results.
+
+6) Affine/gain variants description appears internally inconsistent across sections
+- Issue: Section 3.2 (“Additional model variants”) states “For non-linear models, we fitted variants where a final stage of gain or affine transformation is applied.” Appendix A.13.2 states “For Bayesian models, we additionally allow affine deviations… Note that for linear models this is not required.” This is inconsistent on whether affine adjustments apply to “non-linear models” vs specifically “Bayesian models.”
+- Evidence: Section 3.2 (Additional model variants), Appendix A.13.2 (Affine transform for Bayesian models).
+- Impact: Model family definitions affect AIC-based factor evidence (Appendix A.8) and the BCS fitting (Sections 3.5, A.10). Ambiguity on which variants are applied to which families can bias factor comparisons and reported evidence.
+
+7) Kalman observer notation ambiguity
+- Issue: In Section 3.2 (Eq. 3), the response is modeled as y_t ~ N(μ_t, σ^2_dec) but the Kalman recursion defines μ_{t|t−1}, μ_{t|t}. It is unclear whether μ_t refers to μ_{t|t} (posterior) or μ_{t|t−1} (prior). This is a modeling clarity issue that could affect fits.
+- Evidence: Section 3.2, Eqs. (3)-(4).
+- Impact: While smaller than the above issues, ambiguity in the generative model used for fitting can change estimated parameters and subsequent factor evidence/BCS.
+
+8) Missing methodological details that materially affect reproducibility
+- Ill-formed response filtering: The paper states “Responses that are ill-formed are discarded” (Appendix A.2.2) but provides no discard rates or criteria thresholds.
+- Impact: No direct evidence found in the manuscript for discard statistics. Given NRMSE and BCS sensitivity, selective exclusion could bias results; reporting the fraction discarded per model/task is necessary for trustworthiness.
+
+Overall assessment
+The manuscript contains multiple high-impact numerical and definitional inconsistencies in the core evaluation metrics (BayesBench score aggregation, BCS computation and reporting, “Bayes prob” exceeding 100%), and garbled/contradictory entries in key results (Figure 16). These issues materially affect the validity of the comparative conclusions about models’ Bayesian behaviour and cue-combination efficiency. Corrections, recalculations, and clear methodological clarifications are required before the claims can be trusted.
+
+Recommendations for correction
+- Recompute and relabel BayesBench totals per Eq. (5); verify that Figure 9 reflects the averaged score and that “NRMSE (A)” is computed per Table 2 rather than showing raw NRMSE.
+- Ensure “Bayes prob (%)” plots display values in [0, 100] consistent with Appendix A.8; if a different statistic is intended (e.g., odds, Bayes factor), rename the axis and describe the scale explicitly.
+- Align BCS reporting with the integer-sum definition or document any averaging/weighting; provide per-ablation s_a counts and totals to verify.
+- Fix Figure 16 (remove duplicates, fill missing values) and reconcile with Appendix A.12’s narrative on unimodal image performance best model.
+- Harmonise descriptions of affine/gain variants across Section 3.2 and Appendix A.13.2, and state precisely which variants enter each factor-evidence comparison cell (Appendix A.8).
+- Clarify the Kalman observer’s μ_t used for y_t generation (posterior vs prior).
+- Report discard rates and criteria for ill-formed responses per model/task.
+
+If these are addressed, the manuscript’s central contributions can be more reliably evaluated.

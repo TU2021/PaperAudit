@@ -1,0 +1,170 @@
+Summary
+The paper introduces the Learning to Reject Low-Quality Explanations (LtX) problem, arguing that models should abstain when they cannot provide explanations that users find acceptable. It proposes ULER, a rejector trained from modest human feedback consisting of explanation-level quality ratings and per-feature relevance judgments. ULER uses a feedback-aware augmentation (Eq. 2) to expand labeled explanations and trains a scoring classifier (e.g., SVM) to decide when to reject. Empirical results across eight tabular benchmarks with simulated human judgments and a 1,050-example human-annotated soccer xG dataset show ULER consistently rejects more low-quality explanations and obtains higher AUROC than competing LtR and explanation-aware strategies (Fig. 2, Tables 1–2, 7).
+
+Soundness
+The problem formulation (Def. 1, Sec. 3) is precise and logically consistent: the rejector operates over explanations z, not predictions f(x). The augmentation scheme (Sec. 3.1, Eq. 2) is reasonable, rescaling noise via Σ and selectively perturbing features using s constructed from expert-identified correct/wrong indices (Wz, Cz). The simulation protocol for labels (Sec. 4.1) is clearly defined—correlation to an oracle’s explanation with threshold τz=0.25 and construction of Wz via cumulative L1 differences—but introduces a modeling assumption that “agreement with an oracle explainer” proxies human quality. The evaluation metrics (Sec. 4.1–4.2) measure both ranking (AUROC) and practical acceptance/rejection rates; experiments include robustness to explainer choice (Appendix C.3) and oracle choice (Appendix C.4), plus an ablation on augmentation (Appendix C.5). Statistical testing is used in the human study (Sec. 4.2, p<0.01). Potential weaknesses are limited theory about when augmentation preserves labels, reliance on a single explainer configuration (KernelSHAP with 100 samples; Sec. 4.1, 4.2) in the main results, and modest gains on the human dataset (AUROC 0.63±0.05; Sec. 4.2). Self-verification: claims of superior AUROC hold across Tables 1, 2, 4, 5, 6, 7; augmentation gains are small but present (Table 6, ~2%); ULER consistently reduces low-quality acceptance (Fig. 2, Fig. 4–5).
+
+Presentation
+The paper is well organized, with a clear introduction of LtX vs traditional LtR (Fig. 1), formal definitions (Sec. 3), method details (Sec. 3.1), and thorough experimental setup (Sec. 4). Figures and tables are legible and directly support claims (Fig. 2, Tables 1–2). The appendices comprehensively detail metrics (App. B), datasets and hyperparameters (App. C.1–C.2), robustness checks (App. C.3–C.4), ablation (App. C.5), and the user study design and preprocessing (App. D). Some aspects (e.g., τ selection strategies in Sec. 3.1, treatment of label noise in augmentation) could benefit from more formal guidance and sensitivity analysis, but overall clarity and organization are strong.
+
+Contribution
+The paper’s novelty lies in formalizing LtX (rejecting low-quality explanations) and introducing ULER, a user-centric rejector trained from explanation-level and per-feature human feedback, filling a gap in LtR strategies that ignore explanation quality (Contributions i–iv). The approach is simple yet effective, demonstrating consistent improvements over machine-side metrics (faithfulness, stability, complexity) and a human-side metric (PASTA) adapted for tabular data (Sec. 4.1–4.2). The release of a larger-scale human-annotated dataset (Sec. 4.2; 1,050 explanations × 5 ratings) is valuable for future work. While there is no theoretical analysis of optimality, the empirical contribution is substantial.
+
+Strengths
+- Clear problem formulation distinguishing explanation quality from prediction quality (Sec. 1, Def. 1).
+- Practical, sample-efficient method leveraging modest human labels and per-feature judgments with a principled augmentation (Sec. 3.1, Eq. 2).
+- Strong empirical performance across diverse tabular tasks with robustness to explainer and oracle choices (Fig. 2; Tables 1, 4, 5).
+- Human study with vetted annotators, careful protocol design, and filtering for quality (Sec. 4.2; App. D.3–D.4).
+- Ablations and variants show explanations alone suffice for the rejector (Table 2) and augmentation adds consistent gains (Table 6).
+- Clear articulation of limitations and practical guidance on τ (Sec. 3.2, Sec. 3.1).
+
+Weaknesses
+- Simulated human judgment via oracle correlation (Sec. 4.1) may diverge from actual user perceptions; τz=0.25 and u=0.75 choices are not extensively justified via sensitivity analysis.
+- Augmentation assumes label preservation under selective perturbations; no formal bound or error-rate analysis for mislabeling augmented samples.
+- Human study gains are modest (AUROC 0.63±0.05 vs PASTARej 0.51±0.09; Sec. 4.2) and domain (soccer xG) may not reflect high-stakes settings emphasized in the motivation.
+- τ selection strategies are only heuristically discussed (Sec. 3.1); no utility-theoretic trade-off analysis integrating user capacity, cost of deferral, and downstream decision impacts.
+- Reliance on feature attribution explanations; generalization to text/image explanations and richer explanation forms (counterfactuals, rules) is not demonstrated in the main experiments (only tabular).
+
+Questions
+1. How sensitive are results to τz and u in the simulation (Sec. 4.1)—can you report AUROC/rejection curves under a grid of τz and u values?
+2. Can you quantify augmentation label-preservation empirically (e.g., expert re-check of a sample of augmented explanations) or provide conditions under which s and ε0 keep yz unchanged?
+3. What is the impact of τ tuning strategies on user outcomes—can you model a cost-sensitive objective that trades off deferrals vs low-quality acceptances?
+4. Could ULER be extended to counterfactual or rule-based explanations—does the augmentation mechanism generalize?
+5. In the human study, can you report inter-rater reliability (e.g., Krippendorff’s alpha) for explanation quality and per-feature flags, and outcomes when using different thresholds than mean<3?
+6. Do the results change materially when replacing KernelSHAP with other attribution methods (Integrated Gradients, formal attributions), beyond LIME (App. C.3)?
+
+Rating
+- Overall (10): 8 — Well-formulated LtX problem with a simple, effective method and strong empirical support (Sec. 3.1, Fig. 2, Tables 1–2), tempered by simulation assumptions and modest human-study gains (Sec. 4.2).
+- Novelty (10): 8 — Introduces a user-centric rejector for explanation quality (Sec. 3; Contributions) distinct from LtR and human-side metrics like PASTA (Sec. 5).
+- Technical Quality (10): 7 — Sound pipeline with robustness and ablations (Tables 4–6), but limited sensitivity analysis of simulated labels and augmentation assumptions (Sec. 4.1, 3.1).
+- Clarity (10): 9 — Clear writing, figures, and thorough appendices (Fig. 1–2; App. B–D), with minor gaps around τ tuning and augmentation theory (Sec. 3.1).
+- Confidence (5): 4 — Based on full reading of main text and appendices and consistency checks across figures/tables; cannot verify by reproduction from text alone.
+
+
+
+Summary
+This paper defines Learning to Reject Low-Quality Explanations (LtX) and proposes ULER, a rejector trained to mimic user-perceived explanation quality using explanation-level ratings and per-feature flags. ULER augments the limited labeled explanations via a Gaussian perturbation guided by human-identified correct/wrong features (Eq. 2) and trains a scoring classifier to abstain if r(z)<τ (Def. 1). Experiments compare ULER to LtR baselines and explanation-aware metrics (stability, faithfulness, complexity, PASTA) on eight tabular datasets with simulated human judgments and a soccer xG human study, showing ULER rejects more low-quality explanations and achieves higher AUROC (Fig. 2; Tables 1–2, 7).
+
+Soundness
+Methodologically, the rejector design is coherent, and Eq. (2) is a principled augmentation that scales perturbations with feature-wise variance (Σ) and uses s to target features consistent with human judgments (Sec. 3.1). However, the simulated “human” labels (Sec. 4.1) rely on correlation to an oracle explainer; this operationalization may conflate model agreement with human plausibility. The construction of Wz using cumulative L1 differences (u=0.75) is intuitive but heuristic. The evaluation pipeline is careful: repeated splits, AUROC, acceptance/rejection curves, robustness to explainer (LIME, App. C.3) and oracle (App. C.4), and an augmentation ablation (App. C.5). Human-study results include significance testing (Sec. 4.2). Self-verification: improvements are consistent across Tables 1, 2, 4, 5, 6, 7; augmentation delivers small but steady gains (~2%, Table 6); variants using x and/or y degrade performance (Table 2), supporting the design choice to operate solely on explanations.
+
+Presentation
+The paper is clearly written and structured. Definitions (Sec. 3) and method steps (Sec. 3.1) are easy to follow. Figures and tables substantively support claims (Fig. 2; Tables 1–2). The appendices comprehensively detail metrics (App. B) and experimental choices (App. C–D). Some details are under-specified: how τ is selected in practice (Sec. 3.1 offers two heuristics), and sensitivity of results to ε0, k augmentations, and kernel choices for the SVM rejector (App. C.2 lists grids but lacks sensitivity plots).
+
+Contribution
+The main contribution is the formulation of LtX and a simple, user-aligned rejector trained on human judgments, addressing a real gap in LtR (Sec. 1, 5). The approach ties user feedback directly to a rejection policy and shows broad empirical benefits across tasks and explainers, plus a new human-annotated dataset (Sec. 4.2). While the conceptual novelty is high, theoretical development (e.g., conditions guaranteeing abstention quality, consistency of augmentation) is limited.
+
+Strengths
+- Clear formalization of LtX and user-centric rejector concept (Sec. 3; Fig. 1).
+- Practical augmentation leveraging per-feature feedback to reduce annotation burden (Sec. 3.1; Eq. 2).
+- Strong empirical performance and robust comparisons: ULER beats all baselines across datasets, explainers, and oracle choices (Fig. 2; Tables 1, 4, 5).
+- Human study carefully designed and filtered for quality (Sec. 4.2; App. D.3–D.4).
+- Transparent limitations discussion and guidance on τ (Sec. 3.2, 3.1).
+
+Weaknesses
+- The simulated judgments are tied to an oracle’s explanation correlation (Sec. 4.1); this may not reflect human disagreement structure, risking optimistic AUROC estimates.
+- Augmentation label-preservation is assumed rather than demonstrated; potential for creating mislabeled augmented samples if ε0 or Σ are large (Sec. 3.1).
+- Modest human-study AUROC (0.63±0.05) vs high tabular AUROC (Table 1) suggests domain sensitivity; the soccer task may not generalize to high-stakes domains cited in the motivation.
+- Lack of utility modeling for τ selection (Sec. 3.1), and no joint training with f/e though mentioned as future work (Sec. 6).
+- Evaluation focuses on attribution explanations; broader explanation modalities are not explored.
+
+Questions
+1. Can you report sensitivity to ε0, k, and kernel/C choices for the SVM (beyond grid search ranges in App. C.2)?
+2. How often does augmentation flip labels in practice—can you empirically estimate mislabeling rates under different ε0 using expert checks?
+3. Are the improvements sustained when using higher-dimensional tabular data (d≫100) or correlated features; does Σ adequately handle feature correlation?
+4. Can you include a cost-sensitive analysis of τ (e.g., minimizing expected cost of low-quality acceptances vs rejections)?
+5. How does ULER perform with other attribution methods (e.g., Integrated Gradients, formal attributions), beyond LIME (App. C.3)?
+6. Would joint training of f and r (Sec. 6) change the quality/accuracy trade-off; any preliminary results?
+
+Rating
+- Overall (10): 7 — Solid formulation and consistent empirical gains (Sec. 3.1; Fig. 2; Tables 1–2) but reliance on simulated labels and modest human-study performance temper impact (Sec. 4.2).
+- Novelty (10): 8 — New LtX framing and user-centric rejector trained from per-feature feedback (Sec. 3, 3.1) extend LtR literature (Sec. 5).
+- Technical Quality (10): 6 — Method is coherent with thorough empirical checks, yet key assumptions (simulation, augmentation label stability) lack formal analysis (Sec. 4.1, 3.1).
+- Clarity (10): 9 — Clear exposition, strong figures/tables, extensive appendices (Fig. 1–2; App. B–D).
+- Confidence (5): 4 — High confidence from cross-checking results/appendices, but cannot reproduce from text alone.
+
+
+
+Summary
+The authors argue that explanation quality is a separate axis of reliability and propose LtX: abstain when explanations are likely to be user-perceived as low quality. ULER trains a rejector from explanation quality ratings and per-feature wrong/correct flags, uses a selective Gaussian augmentation (Eq. 2), and sets a threshold τ to reject. Across eight datasets with simulated human judgments and a human xG dataset, ULER reduces low-quality explanations in accepted outputs and improves AUROC vs LtR and explanation-aware baselines (Fig. 2; Tables 1, 2, 7), with robustness to explainer and oracle choices (Appendix C.3–C.4).
+
+Soundness
+The formalism (Def. 1) and the core idea—operate on z rather than x or f(x)—is coherent. The augmentation scheme is intuitive, leveraging the human-provided Wz, Cz to perturb “safe” entries while preserving yz (Sec. 3.1). The experimental design is systematic, with repeated runs, varying rejection rates, AUROC, and detailed baselines, including machine-side explanation metrics (Sec. 4.1; App. B). That said, the simulated labels hinge on a single thresholded correlation to an oracle explanation (τz=0.25; Sec. 4.1), and per-feature wrong sets are constructed via cumulative L1 differences (u=0.75). These heuristics may bias results toward attribution alignment rather than human perception, as reflected by lower gains in the real human study (Sec. 4.2). Self-verification: ULER dominates AUROC in all benchmark tables (1, 4, 5, 6), the augmentation ablation shows small but consistent gains (~2%, Table 6), and ULERZ,X/Y variants underperform (Table 2), consistent with the method’s focus on z.
+
+Presentation
+The manuscript is well-structured and readable. Figures clearly present acceptance/rejection trade-offs (Fig. 2) and the user study interface (Fig. 3; App. D images). The appendices provide complete metric definitions (App. B) and experimental details (App. C–D), strengthening reproducibility. Minor clarity gaps include the justification of thresholds (τz, u) and more explicit guidance on τ tuning in practice (Sec. 3.1).
+
+Contribution
+The conceptual contribution—LtX and ULER—is timely and fills an acknowledged gap in LtR by bringing explanation quality into abstention decisions (Sec. 1; Sec. 5). Empirically, the work offers convincing evidence across diverse datasets and explainers, and supplies a useful human-annotated dataset (Sec. 4.2). While the method is simple, its practical impact is notable for trust-sensitive deployments.
+
+Strengths
+- Clearly motivates the need for abstention based on explanation quality (Sec. 1; Fig. 1).
+- Simple, general approach that can sit atop any attribution method (Sec. 3.1; model-agnostic r).
+- Strong, consistent empirical gains and robustness (Fig. 2; Tables 1, 4, 5).
+- Thoughtful user study design and quality filtering (Sec. 4.2; App. D.3–D.4).
+- Transparent limitations and discussion of combining with LtR (Sec. 3.2; Sec. 5–6).
+
+Weaknesses
+- The simulated labeling pipeline may not capture nuanced human judgments; correlation thresholds and u are heuristic (Sec. 4.1) and lack sensitivity analysis.
+- ULER’s augmentation presumes label invariance; without theoretical guarantees or empirical audits, mislabeled augmentations could occur (Sec. 3.1).
+- Modest performance on human data (AUROC 0.63±0.05; Sec. 4.2) raises questions about generalizability to subjective, high-stakes domains.
+- No utility-theoretic framework for τ selection to balance deferral capacity with explanation quality (Sec. 3.1).
+- Focused on feature attribution; other explanation families (e.g., counterfactuals, example-based) are not examined.
+
+Questions
+1. Could you provide sensitivity plots for τz and u (Sec. 4.1) to demonstrate robustness of simulated-label conclusions?
+2. How does ULER perform when the explainer is noisy or unstable (e.g., different SHAP background sets); any variance analysis beyond App. C.3?
+3. Can you add a small expert audit of augmented samples to estimate mislabeling rates for different ε0 (Sec. 3.1)?
+4. What is the effect of τ tuning under realistic constraints—for instance, a cap on human-review bandwidth?
+5. How would ULER handle multi-modal or structured explanations (e.g., text rationales) where per-feature flags are unavailable?
+6. Are there fairness implications if some groups systematically receive more “rejections” due to explanation misalignment?
+
+Rating
+- Overall (10): 7 — Compelling problem and method with broad empirical support (Sec. 3.1; Fig. 2; Tables 1–2), offset by heuristic simulation labels and modest human-study gains (Sec. 4.2).
+- Novelty (10): 8 — New abstention criterion centered on explanation quality with user-aligned training (Sec. 3; Contributions).
+- Technical Quality (10): 6 — Solid experiments and robustness checks, but limited sensitivity/theory around simulated labels and augmentation (Sec. 4.1; Sec. 3.1).
+- Clarity (10): 9 — Clear structure, figures, and detailed appendices (Fig. 1–2; App. B–D).
+- Confidence (5): 4 — High from cross-checking all tables/figures and appendices; reproduction not performed.
+
+
+
+Summary
+The paper proposes ULER, a user-centric rejector that abstains when explanations are low quality from the user’s perspective. ULER trains on explanation-level quality labels and per-feature relevance feedback, augments data via selective Gaussian perturbations (Eq. 2), and uses a classifier to score explanation quality, rejecting when the score is below τ (Def. 1). Experiments with eight tabular datasets (simulated human judgments) and a new human-annotated soccer xG dataset show ULER outperforms LtR baselines and explanation-aware metrics in rejecting low-quality explanations and AUROC ranking (Fig. 2; Tables 1–2, 7), with robustness to explainer and oracle choices (App. C.3–C.4).
+
+Soundness
+The LtX formalization is clearly stated, and the decision pipeline is consistent (Sec. 3). The augmentation relies on human-provided Wz and Cz sets to perturb appropriate dimensions while preserving labels (Sec. 3.1, Eq. 2), which is plausible but not guaranteed; there is no theoretical bound on label preservation. The simulated human labels via oracle correlation (Sec. 4.1) are carefully constructed and diversified by using different inductive biases (RF vs linear SVC/SVR), but are still proxies for user perception. Evaluation is comprehensive, including acceptance/rejection curves, AUROC, ablations, and robustness. Self-verification: ULER achieves top AUROC across Tables 1, 4, 5, 6; ULERZ,X/Y variants underperform (Table 2); augmentation gains are small but consistent (~2%, Table 6); human-study improvement over PASTARej is statistically significant (Sec. 4.2, p<0.01).
+
+Presentation
+The manuscript is clear and well-organized; figures are informative (Fig. 1–2), and the appendices provide extensive details and metric definitions (App. B–D). The human-study interface is documented with screenshots (App. D). Minor presentation issues include limited discussion of τ selection calibration (Sec. 3.1) and absence of reliability statistics (e.g., Krippendorff’s alpha) despite filtering for attention and agreement (Sec. 4.2; App. D.4).
+
+Contribution
+This work advances trustworthy AI by elevating explanation quality to a first-class abstention criterion and demonstrating a practical method to learn it from limited human feedback. The dataset release is valuable for the community. Novelty is high relative to LtR/learning-to-defer work that ignores explanations (Sec. 5) and to human-side metrics like PASTA, which lack a rejection mechanism and underperform in this setting (Sec. 4.1–4.2).
+
+Strengths
+- Strong motivation and formalization of LtX (Sec. 1–3).
+- Practical augmentation leveraging per-feature feedback to reduce annotation requirements (Sec. 3.1; Eq. 2).
+- Consistent empirical superiority across datasets and explainers, with clear visualization of trade-offs (Fig. 2; Tables 1, 4, 5).
+- Human study designed with domain vetting and quality controls (Sec. 4.2; App. D.3–D.4).
+- Transparent limitations and future directions (Sec. 3.2; Sec. 6).
+
+Weaknesses
+- Simulated labels may not capture human judgments; τz and u choices are heuristic and lack sensitivity analyses (Sec. 4.1).
+- Augmentation label-preservation is assumed; mislabeling risk grows with ε0 or incorrectly identified Wz/Cz (Sec. 3.1).
+- Human-study AUROC remains modest (0.63±0.05; Sec. 4.2), suggesting practical challenges in subjective domains.
+- No formal utility/cost model for τ; practical deployment decisions remain ad hoc (Sec. 3.1).
+- Focus limited to tabular attribution explanations; broader modalities are deferred to future work (Sec. 3.2, 6).
+
+Questions
+1. Can you provide sensitivity analysis for τz and u in the simulated labels (Sec. 4.1), and for ε0 and k in augmentation (Sec. 3.1)?
+2. What inter-rater reliability statistics do the explanation scores and per-feature flags achieve (App. D.4); how do results vary under different aggregation thresholds?
+3. Could τ be optimized via a principled objective (e.g., minimizing expected cost of low-quality acceptances vs rejections) using the validation split (Sec. 3.1)?
+4. How does ULER perform with other attribution methods beyond LIME (App. C.3), such as Integrated Gradients or formal attributions?
+5. In high-dimensional settings (d≫100), does the sample efficiency persist; would dimensionality reduction or embedding-based variants help?
+6. Can ULER be combined with LtR uncertainty/novelty signals to jointly minimize mispredictions and low-quality explanations?
+
+Rating
+- Overall (10): 8 — A timely, well-executed study with clear gains and a useful dataset (Fig. 2; Tables 1–2; Sec. 4.2), albeit with heuristic simulations and modest human-study AUROC.
+- Novelty (10): 8 — Introduces LtX and a user-centric rejector leveraging per-feature feedback (Sec. 3.1), distinct from prior LtR and human-side metrics (Sec. 5).
+- Technical Quality (10): 7 — Solid empirical methodology with robustness and ablations (Tables 4–6), but limited sensitivity/theory around augmentation and simulated labels (Sec. 3.1, 4.1).
+- Clarity (10): 9 — Clear narrative and comprehensive appendices (Fig. 1–2; App. B–D), minor gaps in τ calibration and reliability reporting.
+- Confidence (5): 4 — High from detailed cross-checking across figures/tables and appendices; not replicated experimentally.

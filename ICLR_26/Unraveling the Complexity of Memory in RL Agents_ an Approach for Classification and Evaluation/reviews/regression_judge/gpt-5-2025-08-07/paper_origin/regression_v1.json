@@ -1,0 +1,128 @@
+{
+  "paper": "Unraveling the Complexity of Memory in RL Agents_ an Approach for Classification and Evaluation",
+  "runs": [
+    {
+      "config": {
+        "judge_model": "gpt-5-2025-08-07",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "baseline_file": "baseline_review.txt",
+        "final_file": "final_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 600,
+        "metric": "regression_v2_minimal",
+        "prompt_hash": "2142c04332"
+      },
+      "config_key": "1a46f14f5902ebb0fc2c14773cec6644d2fa5338",
+      "inputs": {
+        "baseline_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/baseline_review.txt",
+        "final_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/final_review_all.txt"
+      },
+      "regression": {
+        "score_delta": {
+          "baseline_score": 6.0,
+          "final_score": 6.0,
+          "delta": 0.0,
+          "scale_hint": "1-10"
+        },
+        "differences": [
+          {
+            "diff_type": "new_critique",
+            "summary": "Mislabeling STM/LTM using corridor length L instead of ξ",
+            "paperaudit_types": [
+              "METHOD_LOGIC_CONSISTENCY",
+              "CLAIM_RESULT_DISTORTION",
+              "CONTEXT_MISALIGNMENT_INCOHERENCE"
+            ],
+            "why_impacts_score": "Misclassification undermines methodological validity and trust in results.",
+            "evidence": {
+              "baseline_quote": "Algorithm 1 requires estimating ξ_n and setting K relative to K̄.",
+              "final_quote": "Section 6.1 labels LTM/STM using K relative to L, rather than ξ per Definition 4."
+            }
+          },
+          {
+            "diff_type": "new_critique",
+            "summary": "Missing/misnumbered figure reference in Section 5",
+            "paperaudit_types": [
+              "RHETORICAL_PRESENTATION_MANIPULATION",
+              "CONTEXT_MISALIGNMENT_INCOHERENCE"
+            ],
+            "why_impacts_score": "Reporting error reduces clarity and hampers verification.",
+            "evidence": {
+              "baseline_quote": "Clear notation enables exact reasoning and makes the framework accessible; strengthens clarity and reduces ambiguity.",
+              "final_quote": "Section 5 references 'see Figure 3', but no Figure 3 appears."
+            }
+          },
+          {
+            "diff_type": "new_critique",
+            "summary": "Misreference to Appendix C for benchmark details",
+            "paperaudit_types": [
+              "CONTEXT_MISALIGNMENT_INCOHERENCE",
+              "REFERENCE_BACKGROUND_FABRICATION"
+            ],
+            "why_impacts_score": "Misreferences hinder reproducibility and reduce trust in background sourcing.",
+            "evidence": {
+              "baseline_quote": "Related Work cites PopGym and Memory Gym (Section 3; Appendix C), but they are not used.",
+              "final_quote": "Related Work says 'see Appendix C for details', but Appendix C covers mechanisms, not benchmark details."
+            }
+          },
+          {
+            "diff_type": "intensified_critique",
+            "summary": "Weak-condition inconsistency in phrasing about STM/LTM",
+            "paperaudit_types": [
+              "METHOD_LOGIC_CONSISTENCY",
+              "RHETORICAL_PRESENTATION_MANIPULATION"
+            ],
+            "why_impacts_score": "Internal contradiction confuses guidance and weakens methodological clarity.",
+            "evidence": {
+              "baseline_quote": "Does not provide quantitative criteria or diagnostic metrics to characterize ambiguity.",
+              "final_quote": "Uses inconsistent phrasing: 'validates both' yet 'not possible to estimate long-term memory explicitly.'"
+            }
+          },
+          {
+            "diff_type": "new_critique",
+            "summary": "Declarative/procedural taxonomy–experiment mismatch (multiple episodes used)",
+            "paperaudit_types": [
+              "METHOD_LOGIC_CONSISTENCY",
+              "EXPERIMENTAL_DESIGN_PROTOCOL",
+              "CLAIM_RESULT_DISTORTION"
+            ],
+            "why_impacts_score": "Mismatch undermines the claim that experiments validate declarative memory.",
+            "evidence": {
+              "baseline_quote": "Tying memory type to training regime may conflate data organization with behavioral manifestation.",
+              "final_quote": "Experiments claimed within Memory DM, yet multiple episodes contradict n_envs × n_eps = 1."
+            }
+          },
+          {
+            "diff_type": "intensified_critique",
+            "summary": "Passive T-Maze reward configuration unspecified in Figure 5",
+            "paperaudit_types": [
+              "EXPERIMENTAL_DESIGN_PROTOCOL",
+              "RHETORICAL_PRESENTATION_MANIPULATION"
+            ],
+            "why_impacts_score": "Unclear reward setup hinders comparability and interpretation of results.",
+            "evidence": {
+              "baseline_quote": "Modifies Passive T-Maze reward but does not describe how this affects returns scaling in Figure 5.",
+              "final_quote": "Dense penalty variant introduced, but not specified which reward is used in Figure 5."
+            }
+          },
+          {
+            "diff_type": "score_rationale_shift",
+            "summary": "Clarity score reduced due to new reporting inconsistencies",
+            "paperaudit_types": [
+              "RHETORICAL_PRESENTATION_MANIPULATION",
+              "CONTEXT_MISALIGNMENT_INCOHERENCE"
+            ],
+            "why_impacts_score": "Misreferences and missing figure justify lowering the clarity score.",
+            "evidence": {
+              "baseline_quote": "Clarity (10): 8 — The paper is clearly written … though some operational details for K, μ(K), and ξ sampling are missing.",
+              "final_quote": "Clarity (10): 7 — Generally clear … but misreferences/missing figure and ξ sampling/reporting gaps reduce clarity."
+            }
+          }
+        ]
+      },
+      "generated_at": "2026-01-05T20:38:49"
+    }
+  ]
+}

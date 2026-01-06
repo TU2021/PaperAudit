@@ -1,0 +1,129 @@
+{
+  "paper": "MCCE_ A Framework for Multi-LLM Collaborative Co-Evolution",
+  "runs": [
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "final_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "0a71ca7d783136ba33fb6b5ec9aad08ece2f0c09",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/final_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 0.6,
+        "weakness_coverage_recall": 0.6,
+        "ai_extra_major_points_rate": 0.47,
+        "symmetric_coverage_similarity": 0.33,
+        "note": "The AI review covers several core points from the human review, like the hybrid framework and limited baselines. However, it misses the human's concerns about generalizability and scalability, while adding many of its own detailed criticisms (e.g., under-specified metrics, diversity trade-offs, misleading claims) and making a contradictory claim that cost/efficiency data is missing, which the human praised as a strength."
+      },
+      "generated_at": "2025-12-27T20:41:54"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "baseline_review.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "b3137abdd5dd456ecfb029f7bed4151251d086e2",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/baseline_review.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 0.6,
+        "weakness_coverage_recall": 0.6,
+        "ai_extra_major_points_rate": 0.54,
+        "symmetric_coverage_similarity": 0.35,
+        "note": "The reviews show moderate alignment on core points like the hybrid framework and limited baselines. However, the AI review misses the human's point on generalizability concerns, while raising several unique major weaknesses, including under-specified metrics, diversity/validity trade-offs, and ambiguity in the 'mutual inspiration' claim. The two reviews also directly contradict on cost/efficiency."
+      },
+      "generated_at": "2025-12-27T20:45:46"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "deepreviewer",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "deep_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "55f39c3e353412551a5ae68e81fc4acc489b4edd",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/deepreviewer/gpt-5-2025-08-07/paper_origin/deep_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 0.6,
+        "weakness_coverage_recall": 0.8,
+        "ai_extra_major_points_rate": 0.36,
+        "symmetric_coverage_similarity": 0.44,
+        "note": "The AI review covers most of the human's points, especially weaknesses. However, the AI also raises several major, specific concerns about evaluation reproducibility (e.g., ambiguous similarity definition, missing scoring model details, unspecified hypervolume computation) that the human reviewer did not mention, resulting in only moderate overall similarity."
+      },
+      "generated_at": "2025-12-27T20:51:53"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "deepreviewer",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "deep_review_merge.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "752f27bc09e656c7d041a880d0c174422eea6ca4",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/deepreviewer/gpt-5-2025-08-07/paper_origin/deep_review_merge.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 0.6,
+        "weakness_coverage_recall": 0.6,
+        "ai_extra_major_points_rate": 0.42,
+        "symmetric_coverage_similarity": 0.38,
+        "note": "The AI review aligns with the human on core points like limited baselines and lack of ablations. However, the AI misses the human's points on cost-effectiveness and scalability, while introducing several major new weaknesses regarding methodological ambiguity (similarity function), evaluation transparency (scoring surrogates), and flawed reporting (hypervolume)."
+      },
+      "generated_at": "2025-12-27T21:21:59"
+    }
+  ]
+}

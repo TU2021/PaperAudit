@@ -1,0 +1,73 @@
+Academic integrity and internal consistency risk report
+
+Summary
+The manuscript presents Adaptive SVGD (Ad-SVGD) with theory in the mean-field limit under Talagrand’s inequality and an extended result under a generalized Stein log-Sobolev inequality. The empirical section compares Ad-SVGD to the median heuristic across several tasks. While the paper is generally well-structured, there are several substantive, evidence-backed inconsistencies and missing details that materially affect theoretical correctness and algorithmic definability.
+
+High-impact issues
+
+1) Regularity mismatch between theory/derivations and the kernels used in experiments
+- Evidence:
+  - Algorithmic and theoretical derivations explicitly rely on kernel derivatives up to second order: Equation (5) defines uπ^k(x,y) using ∇x k, ∇y k and trace(∇x∇y k(x,y)); Equation (3) uses ∇_{X_n^j} k(X_n^i, X_n^j); Section 4.1 invokes Proposition 3.1 in [32], which depends on smoothness and boundedness conditions (Assumptions 1–3).
+  - Section 5.1 specifies the experimental kernel family with p = 1: k_h(x,y) = ∏_{i=1}^d exp(−|x_i − y_i|^p / h_i) with p = 1. This kernel is not twice differentiable at x_i = y_i because of the absolute value.
+- Problem:
+  - For p = 1, the needed second derivatives ∇x∇y k(x,y) in Equation (5) do not exist at coincident points (x = y), and the first derivatives are non-differentiable at zero. This directly conflicts with the use of Equation (5) to compute KSD^2 and its gradient w.r.t. θ (Section: Method, Algorithm 1). Moreover, in the SVGD particle update (Equation (3)), the sum includes j = i (i.e., x = y), where gradients are not classically defined for p = 1.
+- Impact:
+  - The algorithmic update and KSD gradient ascent, as written, are undefined for the p = 1 kernels used in the experiments unless subgradients, diagonals exclusion, or smoothing are explicitly introduced.
+- Missing detail:
+  - No direct evidence found in the manuscript explaining how non-differentiability is handled (e.g., subgradient definitions, diagonal term removal, mollification, or distributional derivatives). This is critical for correctness of Algorithm 1 and the applicability of the theoretical analysis.
+
+2) Inconsistency in the step-size condition used for the KL descent results
+- Evidence:
+  - Equation (8) and Lemma 1 (Section 4.1 and 4.2) state
+    γ ≤ (α − 1) [α B (1 + ‖∇V(0)‖ + L ∫ ‖x‖ dπ(x) + L √(2 𝓕(μ_0)/λ))]^{-1}.
+  - Theorem 3 (Section 4.2) repeats the same bound.
+  - Theorem 4 (Appendix B) states a different bound:
+    γ ≤ (α − 1) [α B (1 + ‖∇V(0)‖) + L ∫ ‖x‖ dπ(x) + L √(2 𝓕(μ_0)/λ)]^{-1}.
+- Problem:
+  - The factorization of αB differs: in (8)/Lemma 1/Theorem 3, αB multiplies the entire bracket; in Theorem 4, αB only multiplies (1 + ‖∇V(0)‖) and the L terms are added outside the αB factor. This is a clear internal inconsistency on a critical condition governing the main descent inequality and subsequent convergence claims.
+- Impact:
+  - The correct admissible range for γ directly affects whether the contraction arguments and iteration complexity bounds are valid.
+
+3) Assumption 3 (uniform boundedness of the feature map and its gradient over all kernel parameters) is not justified for the experimental kernel class
+- Evidence:
+  - Assumption 3 requires a uniform B such that ‖Φ_θ(x)‖_{ℋ0} ≤ B and ‖∇Φ_θ(x)‖_{ℋ} ≤ B for all x ∈ ℝ^d and θ ∈ Θ (Section 4).
+  - Section 5.1 allows dimension-dependent bandwidths h_i without stated constraints on Θ (e.g., lower/upper bounds on h_i).
+- Problem:
+  - For k_h(x,y) = exp(−|x_i − y_i|/h_i), while k(x,x) = 1 implies a trivial bound on ‖Φ_θ(x)‖, the derivatives of the feature map scale with 1/h_i; as h_i → 0, these derivatives can grow unbounded. Without restricting Θ to ensure h_i remain in a compact set bounded away from 0 (and possibly ∞), a uniform gradient bound B across θ does not hold.
+- Impact:
+  - The theoretical results in Sections 4 and B require Assumption 3 uniformly over θ. As stated, the experimental kernel class violates this assumption unless θ is constrained, which is not documented. This disconnect undermines the applicability of the convergence theory to the reported experiments.
+
+4) Claim of “unique closed-form solution” for the KSD maximization in multiple-kernel SVGD lacks support
+- Evidence:
+  - Section 4.2 states: “This formulation is possible when the maximization of the KSD with respect to the kernel parameter has a (unique) closed-form solution. This is actually the case in the multiple-kernel SVGD framework [1] …”
+- Problem:
+  - No derivation, reference, or explicit formula is provided for this “unique closed-form solution” claim.
+- Impact:
+  - While tangential to the main method (which uses gradient ascent), this assertion is presented as factual yet lacks evidence. No direct evidence found in the manuscript.
+
+5) Applicability of Appendix B (Stein log-Sobolev inequality) to the chosen kernel class not verified
+- Evidence:
+  - Appendix B assumes Assumption 5 (generalized Stein log-Sobolev inequality) with max over θ. Section B remarks that only one kernel in the class needs to satisfy it.
+- Problem:
+  - The manuscript does not provide conditions or examples showing that any kernel in the experimental class satisfies the required inequality.
+- Impact:
+  - The iteration complexity bounds and KL-convergence guarantees in Appendix B are presented without verification for the kernels actually used. No direct evidence found in the manuscript.
+
+Secondary issues (lower impact)
+
+- Undefined diagonal terms in KSD^2 computation for non-smooth kernels:
+  - Equation (4) integrates uπ^k over μ ⊗ μ, which includes diagonal pairs (x = y) for empirical measures. For p = 1 kernels, trace(∇x∇y k(x,x)) is undefined; the manuscript does not specify whether diagonals are excluded or regularized. See Sections: Method (Algorithm 1), Equations (4)–(5), and Section 5.1.
+
+- Minor figure/caption inconsistencies:
+  - Covariance matrix heatmaps appear again in the Conclusion (Blocks #40–41) without explicit numbering, while Figure 7 is referenced earlier for the same content (Sections 5.4, Figures 5–7). This is a presentation inconsistency but not material to validity.
+
+Recommendations to resolve
+- Replace or smooth the non-differentiable p = 1 kernels (e.g., use p = 2 or introduce differentiable approximations) and document how gradients and Hessians are computed, especially on diagonal particle pairs; alternatively, rigorously define subgradient-based SVGD/KSD steps and justify their use.
+- Align the step-size condition across Equation (8), Lemma 1, Theorem 3, and Theorem 4; verify the correct expression from [32] and correct Theorem 4 accordingly.
+- Explicitly constrain the kernel parameter space Θ (e.g., h_i ∈ [h_min, h_max] with h_min > 0) to ensure Assumption 3 holds uniformly, and state these constraints in the method and theory sections.
+- Provide a derivation or citation for the “unique closed-form solution” claim in the multiple-kernel setting, or soften the claim.
+- If invoking Appendix B’s results, verify and state conditions under which at least one kernel in the experimental class satisfies the Stein log-Sobolev inequality.
+
+If these points are addressed, the theoretical analysis and algorithmic specification would better align with the kernels and practices used in the experiments.
+
+If any items above were intentional modeling choices (e.g., subgradient calculus for p = 1), please include the precise definitions and implementation details; currently, no direct evidence was found in the manuscript for such handling.

@@ -1,0 +1,129 @@
+{
+  "paper": "Thanos_ A Block-wise Pruning Algorithm for Efficient Large Language Model Compression",
+  "runs": [
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "deepreviewer",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "deep_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "55f39c3e353412551a5ae68e81fc4acc489b4edd",
+      "inputs": {
+        "human_review": "review_origin.txt",
+        "ai_review": "reviews/deepreviewer/gpt-5-2025-08-07/paper_origin/deep_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 0.88,
+        "weakness_coverage_recall": 0.5,
+        "ai_extra_major_points_rate": 0.25,
+        "symmetric_coverage_similarity": 0.61,
+        "note": "The AI review shows very high coverage of the human's strengths but only moderate coverage of weaknesses. The AI misses human concerns about the narrow evaluation scope and incremental novelty, but adds new, more technical critiques regarding mask optimality and unfair baseline comparisons."
+      },
+      "generated_at": "2025-12-27T23:45:44"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "baseline_review.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "b3137abdd5dd456ecfb029f7bed4151251d086e2",
+      "inputs": {
+        "human_review": "review_origin.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/baseline_review.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 1.0,
+        "weakness_coverage_recall": 0.38,
+        "ai_extra_major_points_rate": 0.5,
+        "symmetric_coverage_similarity": 0.45,
+        "note": "The AI review provides excellent coverage of the paper's strengths but diverges significantly on weaknesses. It misses several high-level human criticisms like incremental novelty and poor organization, while introducing new, highly technical concerns such as notational errors in formulas not found in the human reviews."
+      },
+      "generated_at": "2025-12-27T23:51:18"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "final_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "0a71ca7d783136ba33fb6b5ec9aad08ece2f0c09",
+      "inputs": {
+        "human_review": "review_origin.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/final_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 1.0,
+        "weakness_coverage_recall": 0.43,
+        "ai_extra_major_points_rate": 0.64,
+        "symmetric_coverage_similarity": 0.43,
+        "note": "The AI review excellently covers all strengths identified by the human reviewers but diverges significantly on weaknesses. While the human reviews focus on high-level issues like incremental novelty, generalization to newer models (e.g., Qwen), and the practical feasibility of outlier rows, the AI review focuses heavily on mathematical correctness, notation errors, and specific reproducibility details not mentioned by the humans."
+      },
+      "generated_at": "2025-12-28T00:02:25"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "deepreviewer",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "deep_review_merge.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "752f27bc09e656c7d041a880d0c174422eea6ca4",
+      "inputs": {
+        "human_review": "review_origin.txt",
+        "ai_review": "reviews/deepreviewer/gpt-5-2025-08-07/paper_origin/deep_review_merge.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 1.0,
+        "weakness_coverage_recall": 0.5,
+        "ai_extra_major_points_rate": 0.36,
+        "symmetric_coverage_similarity": 0.5,
+        "note": "The AI review fully covers the strengths but only captures half of the weaknesses from the human reviews, missing points on incremental novelty and limited model generalization. However, the AI introduces several major, distinct concerns, such as the theoretical justification for mask selection and unfairness in baseline comparisons."
+      },
+      "generated_at": "2025-12-28T00:16:36"
+    }
+  ]
+}

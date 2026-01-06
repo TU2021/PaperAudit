@@ -1,0 +1,214 @@
+Summary
+The paper proposes MCCE, a hybrid multi-LLM collaborative co-evolution framework that couples a frozen, closed-source LLM (e.g., GPT-4o or Gemini) with a lightweight trainable local model (Qwen2.5-7B-Instruct). The frozen model performs global exploration while the local model undergoes experience-driven learning via Direct Preference Optimization (DPO). A trajectory memory stores “breakthrough” examples; a similarity-based data synthesis procedure constructs stable DPO triplets to mitigate distribution shift. The framework is evaluated on five-objective molecular optimization (QED, SA, DRD2, GSK3β, JNK3) using hypervolume and several fitness metrics, reporting state-of-the-art results and improved Pareto fronts over baselines (Sec. 4, Fig. 1; Secs. 5.1–5.2, Table 1, Figs. 2–3; Appendix A.1–A.4).
+
+Soundness
+- Methodological coherence: The co-evolution loop (Sec. 4.1) is conceptually sound, combining exploration (frozen LLM) with exploitation (trained local model) via Pareto selection (Stage 3, Eq. 9–10) and periodic updates (Stage 4, Eq. 11). The similarity-based DPO pipeline (Sec. 4.3, Alg. 1; Appendix A.4) is a reasonable remedy for unstable preference learning.
+- Key gaps:
+  - Similarity definition sim(c, q): The notation defines similarity between molecule c and prompt q (Sec. 4.3, “Notation”), but the prompt is text; fingerprints are not defined on text. The intended similarity likely concerns parents p1/p2 (Sec. 4.1–4.2), yet the paper does not specify whether sim(c, p1), sim(c, p2), or to a combined representation is used. This affects pair construction correctness and reproducibility.
+  - Objective scoring models: The paper lists DRD2, GSK3β, JNK3 binding objectives but does not detail the surrogate models, calibration, or training/validation (Sec. 5.1). Without these, the reported HV and fitness improvements are hard to validate.
+  - Hypervolume details: The HV reference point and whether raw or normalized objectives are used aren’t specified (Sec. 5.1–5.2, Table 1; Eq. 10 normalizes per generation), which can materially change HV values.
+  - Alternation policy: The cadence for switching operators (frozen vs local), update frequency f, and N (Sec. 4.1–4.2; Appendix A.3) are described conceptually but lack concrete settings in the main text, impeding replication and fair comparison.
+- Empirical claims: Improvements in “dpo_coevolve:api” (Table 1) are attributed to “mutual inspiration,” but as the API model parameters are fixed, gains must come from changed prompts or selection dynamics; this mechanism is not analyzed (Sec. 5.2.1).
+
+Presentation
+- Clarity: The framework overview (Fig. 1) and staged description (Sec. 4.1) are clear. The DPO loss and data synthesis steps are well organized (Sec. 4.2–4.3; Appendix A.3–A.4).
+- Missing definitions: Metrics like Top1F/Top10F/Top100F and “Top1auc/Top10auc/Top100auc” in Table 1 are not defined in the main text. The HV computation specifics are absent.
+- Figures: Multiple figures are informative but low resolution and duplicative (Figs. 2–3; Appendix Figs. 5, 54–57). Axes/labels are sometimes minimal, reducing interpretability.
+- Anchoring: References to prior benchmarks (ExLLM, MoLLEO) are made but not consistently integrated as baselines in the results.
+
+Contribution
+- Novelty: The paper’s primary novelty lies in the collaborative co-evolution between heterogeneous LLMs and the similarity-based DPO triplet synthesis to stabilize learning in multi-objective discrete optimization (Sec. 4.1–4.3). This extends prior single-LLM evolutionary frameworks by enabling continual parameter updates and coordinated exploration-exploitation.
+- Significance: If substantiated, the approach offers a practical path to leverage strong but static models with adaptable local learners in realistic multi-objective tasks (five objectives), potentially generalizable beyond drug design (Sec. 6).
+- Positioning: The work differentiates itself from distillation and standard ensembles by mutual co-evolution; however, the mechanism by which the frozen LLM benefits (beyond improved prompts) needs deeper analysis.
+
+Strengths
+- Clear conceptual framework with iterative stages and Pareto-based selection (Sec. 4.1, Fig. 1).
+- Careful diagnosis of SFT and RL instability leading to DPO adoption (Sec. 4.2), and a thoughtful similarity-based synthesis to avoid contradictory pairs (Sec. 4.3, Alg. 1; Appendix A.4).
+- Ambitious evaluation with five objectives and hypervolume, surpassing single-model baselines (Sec. 5.2.1; Table 1; Figs. 2–3).
+- Practical implementation details for DPO (Appendix A.3) and acknowledgment of training stability via fixed reference model πref = πθ0.
+- Explicit discussion of diversity/uniqueness/validity metrics (Table 1) and multi-run statistics.
+
+Weaknesses
+- Ambiguous similarity definition sim(c, q) and its relation to parent molecules (Sec. 4.3). This is central to Alg. 1 and affects reproducibility.
+- Insufficient details on biochemical scoring (DRD2, GSK3β, JNK3): models, data splits, calibration, and error bars (Sec. 5.1).
+- HV computation not specified (reference point, normalization), risking apples-to-oranges comparisons (Sec. 5.2, Table 1).
+- Missing baselines: No comparisons to ExLLM/MoLLEO and other non-LLM multi-objective optimizers (e.g., NSGA-II, MOEA/D, GFlowNets) in main results; GFlowNets are mentioned but not reported (Appendix A.3).
+- Mechanistic ambiguity in “mutual inspiration”: How the frozen LLM’s performance improves without parameter updates is not analyzed (Sec. 5.2.1).
+- Operator alternation policy and training cadence f under-specified (Sec. 4.1–4.2; Appendix A.3), limiting replicability and fairness.
+- Metric definitions (Top1F/Top10F/Top100F; AUC metrics) absent from the main text (Table 1).
+
+Questions
+1. How exactly is sim(c, q) computed when q is a text prompt? Is it the maximum/minimum/average similarity of c to parents p1 and p2 (Sec. 4.1), or is q encoded into a molecular representation (Sec. 4.3 “Notation”)?
+2. What models and validation procedures are used for DRD2/GSK3β/JNK3 binding scores (Sec. 5.1)? Please provide datasets, train/validation splits, calibration, and uncertainty estimates.
+3. How is hypervolume calculated: which objectives (raw vs normalized), what reference point, and do you use minimization or maximization conventions per metric (Sec. 5.2)?
+4. Define Top1F/Top10F/Top100F and “Top1auc/Top10auc/Top100auc” precisely (Table 1). How are these aggregated across runs?
+5. What is the operator alternation schedule between the API LLM and local model, and the training frequency f/N (Sec. 4.1–4.2; Appendix A.3)? Are these tuned per dataset?
+6. Can you include comparisons to ExLLM and MoLLEO in five-objective settings, as well as classical MOEAs (NSGA-II/MOEA-D) and GFlowNets, to contextualize gains (Sec. 5.2)?
+7. How does “mutual inspiration” improve “dpo_coevolve:api” (Table 1) if the API model is frozen? Is this due to different prompts, parent selection, or population dynamics? Provide an ablation.
+8. What is the compute and API budget (calls, tokens) per run, and how does this compare across baselines (Sec. 5.1)?
+9. How sensitive is performance to α, similarity windows I1–I3, and μ±σ band (Sec. 4.3, Eq. 12–14)? Provide a robustness study.
+10. Do molecules meet medicinal chemistry constraints (e.g., PAINS filters, Lipinski violations)? If not, could constraints be added to the verifier (Sec. 4.1 Stage 3)?
+
+Rating
+- Overall (10): 7 — Strong conceptual framework and promising empirical gains, but key methodological and evaluation details (sim(c,q), HV, binding surrogates) are insufficiently specified (Sec. 4.3; Sec. 5.1–5.2; Table 1).
+- Novelty (10): 8 — Collaborative co-evolution plus similarity-based DPO is novel relative to single-LLM pipelines and distillation (Sec. 4.1–4.3, Alg. 1; Fig. 1).
+- Technical Quality (10): 6 — Sound high-level design but gaps in similarity definition, objective models, and HV computation weaken rigor (Sec. 4.3; Sec. 5.1–5.2).
+- Clarity (10): 7 — Clear staging and algorithms, yet several metrics and critical settings are undefined or relegated to appendix (Fig. 1; Sec. 4.2–4.3; Table 1).
+- Confidence (5): 4 — Assessment based on provided text and figures; missing implementation specifics for scoring, HV, and alternation schedule limit certainty (Sec. 5.1–5.2; Appendix A.3).
+
+
+Summary
+This paper presents MCCE, a hybrid multi-LLM framework that alternates a frozen API LLM for global exploration with a trainable local LLM for experience-driven exploitation. Breakthrough trajectories are stored, and a DPO-based preference optimization refines the local model using similarity-informed candidate pairs to stabilize training and reduce distribution shift. The approach is validated on five-objective molecular design, reporting improved hypervolume and fitness metrics compared to single-LLM and alternative training paradigms (Sec. 4; Sec. 5.2; Table 1; Figs. 2–3; Appendix A.1–A.4).
+
+Soundness
+- Framework design: The staged co-evolution loop with Pareto selection (Sec. 4.1) is coherent. Using DPO with a fixed reference model (Appendix A.3, Eq. 15) and similarity-based triplets (Sec. 4.3) is a pragmatic way to avoid unstable RL signals.
+- Empirical methodology: The paper claims state-of-the-art hypervolume, but methodological transparency is partial. Details of binding score surrogates and HV computation are lacking (Sec. 5.1–5.2).
+- Internal checks: The authors self-report that SFT reduced uniqueness and RL was unstable (Sec. 4.2), which matches prior experience in discrete generation. The DPO loss curve trend (Appendix A.2–A.3; Fig. 4) supports training stability.
+- Potential confounds: Normalizing scores per-generation (Eq. 10) could distort cross-run comparisons or HV if used inconsistently; metric Top1F/AUC definitions are not provided (Table 1). The mechanism behind “mutual inspiration” improving the frozen API model’s outputs is not empirically dissected (Sec. 5.2.1).
+
+Presentation
+- Organization is generally good: Motivation, method, and experiments flow logically (Secs. 1–4–5).
+- Missing metric definitions: Table 1’s metrics (Top1F/Top10F/Top100F; Top1auc/Top10auc/Top100auc) are not defined; Fig. 3 histograms lack explicit axis units and binning details.
+- Figures: The overview (Fig. 1) and curves (Figs. 2–3) convey trends but are low-resolution; axis labels and legends could be clearer. Some duplication appears in Appendix figures without added insight (Figs. 54–57).
+- Baseline coverage: References to ExLLM and MoLLEO in text (Sec. 4) are not represented in experimental comparisons (Sec. 5.2).
+
+Contribution
+- Conceptual advance: The co-evolution of heterogeneous LLMs with a stable preference-learning mechanism is a meaningful step beyond single-LLM evolutionary operators and distillation. The similarity-aware DPO construction is a practical innovation likely transferable across domains (Sec. 4.3).
+- Empirical value: Extending to five objectives and reporting multi-run statistics demonstrates ambition; if the surrogate scoring is solid, the gains are notable (Table 1, Figs. 2–3).
+- Generality: The authors argue applicability beyond drug design (Sec. 6), though evidence outside chemistry is not shown.
+
+Strengths
+- Clear problem framing and motivation (Secs. 1–2).
+- Well-structured method with four stages and explicit update loop (Sec. 4.1; Fig. 1).
+- Thoughtful selection of DPO and bespoke data synthesis addressing instability (Sec. 4.2–4.3; Appendix A.4).
+- Reported improvements across multiple metrics, including HV, with multi-run statistics (Sec. 5.2; Table 1; Figs. 2–3).
+- Practical training design (fixed πref) and loss monitoring (Appendix A.3; Fig. 4).
+
+Weaknesses
+- Scoring models for biochemical targets missing (Sec. 5.1), undermining external validity.
+- HV computation details absent (Sec. 5.2), including reference point and whether normalized scores were used.
+- Ambiguous similarity computation between molecules and prompts (Sec. 4.3 “Notation”).
+- Baselines limited; no direct comparison to prior LLM evolutionary systems (ExLLM, MoLLEO) or strong MOEA baselines.
+- Metrics (Top1F/Top10F/Top100F; AUC variants) undefined; interpretation unclear (Table 1).
+- Limited analysis of why frozen LLM outputs improve in collaborative settings (Sec. 5.2.1).
+
+Questions
+1. Please specify the exact surrogate models and protocols for DRD2/GSK3β/JNK3 scoring (datasets, performance metrics, calibration) (Sec. 5.1).
+2. How is hypervolume computed (reference point, objective orientation, normalization)? Are HV values comparable across runs/populations (Sec. 5.2)?
+3. Clarify sim(c, q): Is q mapped to parents p1/p2 and is similarity computed with Morgan/Tanimoto to those, or via text embeddings (Sec. 4.3)?
+4. Provide formal definitions for Top1F/Top10F/Top100F and AUC metrics (Table 1).
+5. What is the alternation policy and training frequency f/N in practice (Sec. 4.1–4.2; Appendix A.3)? Show sensitivity analysis.
+6. Add baselines: ExLLM/MoLLEO (5 objectives), NSGA-II/MOEA-D/GFlowNets; report compute/API budgets to ensure fairness (Sec. 5.2).
+7. What ablations demonstrate the necessity of the similarity windows I1–I3 and μ±σ band (Sec. 4.3)?
+8. Analyze “mutual inspiration”: Does the improved API performance stem from prompt engineering changes or population reshaping? Provide an ablation (Sec. 5.2.1).
+
+Rating
+- Overall (10): 7 — Compelling hybrid design with promising results, but omissions in scoring and HV details, similarity definition, and baseline coverage limit confidence (Sec. 4.3; Sec. 5.1–5.2; Table 1).
+- Novelty (10): 8 — Multi-LLM co-evolution with similarity-based DPO is a clear step beyond prior single-model approaches (Sec. 4.1–4.3, Alg. 1; Fig. 1).
+- Technical Quality (10): 6 — Solid core ideas tempered by under-specified evaluation and key methodological details (Sec. 4.3; Sec. 5.1–5.2).
+- Clarity (10): 7 — Generally well written but important metric definitions and computational specifics are missing (Table 1; Figs. 2–3; Appendix A.3–A.4).
+- Confidence (5): 4 — Good grasp of the method; lower certainty due to missing details on surrogates, HV, and similarity computation.
+
+
+Summary
+The authors propose MCCE, a collaborative co-evolution framework where a frozen API LLM performs exploration and a trainable local LLM learns from experience via DPO. A trajectory memory and similarity-aware pair construction stabilize training and mitigate distribution shift. The system targets five-objective molecular optimization, claiming state-of-the-art hypervolume and improved fitness/diversity compared with single-model and alternative training baselines (Sec. 4; Sec. 5.2; Table 1; Figs. 2–3).
+
+Soundness
+- Conceptual soundness: Alternating operators with Pareto selection and experience-driven learning is a plausible strategy for multi-objective discrete optimization (Sec. 4.1). DPO with a fixed reference model is a sound choice to avoid reward sparsity/instability (Sec. 4.2; Appendix A.3).
+- Method detail issues:
+  - The similarity measure is central but underspecified; sim(c, q) over text prompts is not defined algorithmically (Sec. 4.3).
+  - Score normalization (Eq. 10) per population may confound cross-generation comparisons; clarify whether HV uses raw or normalized objectives (Sec. 4.1–4.3; Sec. 5.2).
+  - The operator alternation policy and the precise training cadence are not given in main text (Sec. 4.1–4.2).
+- Empirical evidence: The results show consistent gains (Table 1; Figs. 2–3). However, without binding surrogate details and HV reference specification (Sec. 5.1–5.2), it’s hard to assess generality or compare to prior work.
+
+Presentation
+- Strengths: Clear high-level diagrams (Fig. 1), structured stages (Sec. 4.1), and thorough appendices (A.3–A.4).
+- Weaknesses: Undefined metrics in Table 1 (Top1F/Top10F/Top100F; AUC variants). Figures are low-resolution and occasionally repetitive (Appendix 54–57). Baseline selection is narrow and does not include notable prior LLM-evolution systems or standard MOEA benchmarks.
+
+Contribution
+- Novel hybrid paradigm and practical DPO triplet construction that addresses instability are meaningful. Extending to five objectives increases difficulty and relevance (Sec. 4; Sec. 5.1).
+- Claims of “mutual inspiration” (improvement of frozen LLM outputs) are intriguing but under-explained; a causal analysis of how prompts/pools shift API behavior would strengthen the contribution (Sec. 5.2.1).
+
+Strengths
+- Well-motivated problem and critique of single-LLM pipelines (Secs. 1–2).
+- Clear, modular methodology with explicit update rule (Sec. 4.1–4.3; Eq. 11).
+- Sensible choice of DPO over SFT/RL with documented failure modes (Sec. 4.2).
+- Multi-objective evaluation in a realistic five-target setting with multi-run stats (Sec. 5.1–5.2; Table 1).
+- Training stability evidence via loss analysis (Appendix A.2–A.3).
+
+Weaknesses
+- Ambiguous/ill-defined similarity between molecule and prompt (Sec. 4.3).
+- Missing biochemical scoring model details (Sec. 5.1) and HV specifics (Sec. 5.2).
+- Limited baselines and no direct comparison to ExLLM/MoLLEO or MOEAs (Sec. 5.2).
+- Undefined fitness/AUC metrics in Table 1 and figure axes/labels (Table 1; Figs. 2–3).
+- Lack of ablations on the alternation schedule and on removing similarity constraints to quantify their necessity (Sec. 4.1–4.3).
+
+Questions
+1. How is sim(c, q) implemented? If based on parents, please specify sim(c, p1/p2) aggregation (Sec. 4.3).
+2. What surrogate models power DRD2/GSK3β/JNK3 scoring (training data, metrics, calibration)? (Sec. 5.1)
+3. Provide HV reference point, objective scaling, and whether normalized values (Eq. 10) are used (Sec. 5.2).
+4. Define all metrics in Table 1, including AUC variants; explain aggregation across runs.
+5. Report the operator alternation policy (frequency, criteria) and training cadence f/N with sensitivity (Sec. 4.1–4.2; Appendix A.3).
+6. Include baselines against ExLLM/MoLLEO and MOEAs (NSGA-II/MOEA-D), plus GFlowNets (Sec. 5.2).
+7. Add an ablation on similarity windows I1–I3 and global μ±σ filtering to show their impact (Sec. 4.3).
+8. Explain why “dpo_coevolve:api” improves; is the prompt content or parent selection altered? Provide a study (Table 1; Sec. 5.2.1).
+9. Provide API/token budgets and latency/cost per run to contextualize practicality (Sec. 5.1).
+
+Rating
+- Overall (10): 7 — Strong idea and encouraging results, but key methodological and evaluation details are missing, weakening external validity (Sec. 4.3; Sec. 5.1–5.2; Table 1).
+- Novelty (10): 8 — Collaborative multi-LLM co-evolution plus similarity-based DPO is a notable innovation over single-LLM approaches (Sec. 4.1–4.3).
+- Technical Quality (10): 6 — Core method is solid, but insufficiently specified similarity, scoring, and HV computation reduce rigor (Sec. 4.3; Sec. 5.1–5.2).
+- Clarity (10): 6 — Good structure, yet several metrics/figures lack definitions/resolution; key settings are not in the main text (Table 1; Figs. 2–3; Appendix A.3).
+- Confidence (5): 4 — Reasonable understanding; limited by missing experimental and metric details.
+
+
+Summary
+MCCE is a hybrid optimization framework for multi-objective discrete problems that couples a frozen, closed-source LLM for exploration with a trainable local LLM refined by DPO on “breakthrough” trajectories. A similarity-based data synthesis constructs stable preference pairs to reduce contradictions and distribution shift. The approach is applied to five-objective molecular design (QED, SA, DRD2, GSK3β, JNK3) and claims state-of-the-art hypervolume and improved fitness metrics over single-LLM baselines and alternative training variants (Sec. 4.1–4.3; Sec. 5.1–5.2; Table 1; Figs. 2–3).
+
+Soundness
+- Sound aspects: The alternating operator concept with Pareto selection and periodic learning is well aligned with evolutionary search principles (Sec. 4.1). Choosing DPO with a fixed reference (Appendix A.3) addresses instability seen with SFT/RL (Sec. 4.2).
+- Concerns:
+  - The similarity function is defined against prompts (Sec. 4.3), yet fingerprints are molecule-based; this mismatch needs clarification (parents vs prompt text).
+  - Score normalization per population (Eq. 10) may bias selection and HV if used inconsistently; the HV reference point and objective orientation are unspecified (Sec. 5.2).
+  - The claim that both models improve (Table 1: dpo_coevolve:local vs dpo_coevolve:api) lacks causal analysis; a frozen model cannot “improve” parameters—likely the prompting or parent selection changed (Sec. 5.2.1).
+  - Experimental baselines are limited; the absence of standard MOEAs and prior LLM-evolution frameworks in the main results reduces comparative strength.
+
+Presentation
+- Good method exposition with equations and algorithmic summary (Sec. 4.1–4.3; Alg. 1; Eq. 11–15).
+- Figures are illustrative but sometimes low-res; metric definitions missing (Table 1) and some repetition in Appendix figures (54–57).
+- The prompt example (Appendix A.1) helps transparency, but more examples and details on selection strategies (tournament vs fitness-proportional) would aid clarity (Sec. 4.1).
+
+Contribution
+- The co-evolutionary paradigm and similarity-aware DPO synthesize multiple ideas into a cohesive system and address a genuine need for continual learning in LLM-driven optimization (Sec. 1; Sec. 4.2–4.3).
+- Extending evaluation to five objectives is an important step toward realism.
+- The generalization claim to broader discrete domains is plausible but not empirically demonstrated.
+
+Strengths
+- Clear motivation for multi-LLM collaboration and continual learning (Secs. 1–2).
+- Practical, well-designed DPO training with similarity constraints and a fixed reference model (Sec. 4.2–4.3; Appendix A.3–A.4).
+- Demonstrated improvements on HV and fitness curves across runs (Sec. 5.2; Table 1; Figs. 2–3).
+- Pareto front selection and diversity maintenance integrated into the loop (Sec. 4.1, Stage 3).
+
+Weaknesses
+- Ambiguity in similarity definition and construction of triplets (Sec. 4.3).
+- Omission of biochemical surrogate model details and HV reference point (Sec. 5.1–5.2).
+- Narrow baseline coverage; lack of ExLLM/MoLLEO/GFlowNet/MOEA comparisons (Sec. 5.2).
+- Undefined metrics (Top1F/AUC variants) and figure clarity issues (Table 1; Figs. 2–3).
+- Limited analysis of how collaboration affects the frozen LLM’s outputs, beyond speculative “mutual inspiration” (Sec. 5.2.1).
+
+Questions
+1. Please clarify sim(c, q): Is similarity computed to parents p1/p2, and if so, how aggregated? If not, how is prompt text converted to a molecular representation (Sec. 4.3)?
+2. Provide details for DRD2/GSK3β/JNK3 scoring models (datasets, performance, calibration) and any constraints (PAINS/Lipinski) (Sec. 5.1).
+3. Specify HV reference point and whether normalized scores (Eq. 10) or raw objectives are used; include objective orientation (maximize/minimize) (Sec. 5.2).
+4. Define Top1F/Top10F/Top100F and AUC metrics; explain their computation (Table 1).
+5. Describe the selection strategy (tournament vs fitness-proportional), alternation schedule, and training frequency f/N; include sensitivity analyses (Sec. 4.1–4.2; Appendix A.3).
+6. Add baselines (ExLLM, MoLLEO, NSGA-II/MOEA-D, GFlowNets) in five-objective settings; report compute/API budgets (Sec. 5.2).
+7. Provide ablations for removing similarity windows and global μ±σ filter to quantify impact (Sec. 4.3).
+8. Analyze prompt evolution and parent selection to explain the observed improvements in dpo_coevolve:api (Table 1; Sec. 5.2.1).
+
+Rating
+- Overall (10): 7 — A well-motivated and promising framework with solid method components, but key evaluation and methodological specifics are missing (Sec. 4.3; Sec. 5.1–5.2; Table 1).
+- Novelty (10): 8 — The multi-LLM co-evolution plus similarity-based DPO triplet synthesis is a meaningful advance (Sec. 4.1–4.3; Alg. 1).
+- Technical Quality (10): 6 — Sound design weakened by under-specified similarity computation, surrogates, and HV (Sec. 4.3; Sec. 5.1–5.2).
+- Clarity (10): 7 — Generally clear narrative; metric definitions and figure quality need improvement (Table 1; Figs. 2–3; Appendix A.3–A.4).
+- Confidence (5): 4 — Confident about core ideas; less confident about experimental validity due to missing details.

@@ -1,0 +1,37 @@
+Based on a critical review of the manuscript, several clear internal inconsistencies and reporting errors have been identified that materially affect the trustworthiness and interpretation of the paper's findings.
+
+### Integrity Risk and Inconsistency Report
+
+**1. Contradictory Evidence in TinyImageNet Results (Table 7)**
+
+The central claims of the paper—that regularization increases sharpness while improving performance and that baseline models are the flattest—are directly contradicted by the results presented for the TinyImageNet dataset.
+
+*   **Claim vs. Evidence (Sharpness):** The text repeatedly claims that regularized models converge to sharper minima and that the "Baseline condition yields the flattest minima" (Section 6, para 1). However, Table 7 shows:
+    *   Adding SAM to the Baseline model *decreases* sharpness on both reported metrics (Fisher-Rao Norm: 0.479 → 0.427; SAM Sharpness: 3.202E-04 → 3.080E-04).
+    *   The Baseline model is not the flattest. The "Baseline + SAM" model is flatter on Fisher-Rao Norm, and the "Weight Decay" model is flatter on SAM Sharpness.
+    *   This contradicts the paper's primary narrative. While the authors note in Section 6 that "SAM can sometimes lead to flatter solutions" on TinyImageNet, they describe this as "inconsistent." The data in Table 7, however, shows a consistent flattening effect of SAM for both Baseline and Augmentation conditions, which undermines the authors' summary.
+
+*   **Claim vs. Evidence (Performance):** The paper claims that regularized models improve on safety metrics, including functional consistency (Prediction Disagreement), where lower is better (Section 3).
+    *   In Table 7, the "Augmentation" and "Augmentation + SAM" models show a substantially *worse* (higher) Prediction Disagreement (0.544 and 0.514, respectively) compared to the Baseline (0.385). This contradicts the claim that regularization consistently improves this metric.
+
+*   **Claim vs. Evidence (Best Model):** A specific claim is made that "Augmentation+SAM achieves the best performance across evaluations while also being the sharpest model" (Section 6, under "SAM Does Not Always Flatten").
+    *   This is false for TinyImageNet (Table 7). "Augmentation + SAM" is not the best on Test Accuracy or Prediction Disagreement (where "Weight Decay + SAM" is best or tied for best). Furthermore, it is not the sharpest model; the "Augmentation" model is sharper on both reported metrics.
+
+**2. Major Reporting Error in SAM Hyperparameter Analysis (Table 8)**
+
+There is a significant contradiction between the text and the data presentation in the analysis of SAM's ρ hyperparameter.
+
+*   **Contradictory Bolding:** In Table 8 (Appendix E), the row for ρ=0.0500 has all its performance metrics **bolded**, indicating it is the best-performing setting. However, the numerical values for the ρ=0.2500 row are clearly superior on every metric (e.g., Test Accuracy 0.835 vs. 0.794; Test ECE 0.026 vs. 0.108).
+*   **Text vs. Table Contradiction:** The text accompanying Table 8 correctly states that "when using a ρ value of 0.25, we record the best accuracy, calibration, robustness and functional similarity results." This textual interpretation is correct but directly contradicts the bolding in the table itself. This error is highly confusing and suggests a lack of care in data presentation.
+
+**3. Inconsistent and Undefined "Generalisation Gap" Metric**
+
+The manuscript uses the "Generalisation Gap" metric inconsistently, raising questions about its definition and the validity of reported values.
+
+*   **Conflicting Definitions:** The captions for Figure 4 and Figures 5-9 in the appendix explicitly label the metric as the **absolute value**, `|Generalisation Gap|`.
+*   **Impossible Negative Value:** In direct contradiction, Table 25 (ViT on CIFAR10) reports a **negative** Generalisation Gap of -1.199 for the "Augmentation + SAM" condition. A negative value is impossible if the metric is an absolute value, as defined elsewhere in the paper.
+*   **Lack of Formal Definition:** The metric is never formally defined in the main text or methods, preventing the reader from resolving this inconsistency. This ambiguity undermines the reliability of any conclusions drawn from this metric.
+
+### Summary
+
+The manuscript presents a compelling hypothesis but fails to support it with consistent evidence. The results from the TinyImageNet experiments (Table 7) directly challenge the paper's main conclusions about the relationship between regularization, sharpness, and performance. Furthermore, a significant reporting error in Table 8 and an unexplained inconsistency in the "Generalisation Gap" metric raise serious concerns about the reliability and carefulness of the empirical analysis. These issues must be thoroughly addressed and corrected before the paper's contributions can be considered valid.

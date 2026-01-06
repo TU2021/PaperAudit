@@ -1,0 +1,104 @@
+{
+  "paper": "AgentChangeBench_ A Multi-Dimensional Evaluation Framework for Goal-Shift Robustness in Conversational AI",
+  "runs": [
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "deepreviewer",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "deep_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180
+      },
+      "config_key": "24b66d75b94c155df325f4e5f2603b40312e4469",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/deepreviewer/gpt-5-2025-08-07/paper_origin/deep_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "motivation_strength_alignment": 0.9,
+        "weakness_error_alignment": 0.5,
+        "overall_alignment": 0.55,
+        "explanation": {
+          "strength": "Both reviews identify the same core contribution (AgentChangeBench for goal-shift robustness) and highlight the same key strengths: the relevance of the problem, the value of the new metrics (TSR, TUE, etc.), and the realistic multi-domain/persona setup.",
+          "weakness": "The reviews overlap on two major weaknesses (lack of statistical rigor and inconsistent reporting), but diverge significantly elsewhere; Review A criticizes the paper's structure (appendix-heavy) and positioning, while Review B focuses on specific technical flaws like metric definitions (GSRT), recovery criteria, and judge bias.",
+          "overall": "While both reviews agree on the paper's strengths, they diverge in their diagnosis of weaknesses and overall judgment, with Review A being more negative and focused on high-level rigor, while Review B is more positive but identifies many specific, fixable technical issues."
+        }
+      },
+      "generated_at": "2025-12-27T20:02:52"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "baseline_review.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180
+      },
+      "config_key": "a14d937ebf873b90a820c8cb44da768956431bd4",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/baseline_review.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "motivation_strength_alignment": 0.9,
+        "weakness_error_alignment": 0.6,
+        "overall_alignment": 0.7,
+        "explanation": {
+          "strength": "Both reviews identify the same core strengths: the novelty of evaluating goal-shift robustness, the value of the new multi-dimensional metrics (TSR, TUE, etc.), and the realistic multi-domain/persona setup. Review B provides much more granular, evidence-backed detail for the same points, but the substance and prioritization are nearly identical to Review A.",
+          "weakness": "The reviews align on broad themes of weakness, such as inconsistent reporting, lack of statistical rigor, and incomplete experiments. However, Review B identifies several major, specific technical flaws absent from Review A (e.g., metric definition conflicts, unvalidated weights, judge bias), while Review A raises a scope limitation (explicit vs. implicit shifts) that Review B misses, resulting in only a moderate match.",
+          "overall": "The reviews are highly aligned in their overall judgment, both presenting the work as a promising idea with significant execution flaws that undermine its reliability. While they converge on the paper's core strengths, their critiques of its weaknesses diverge in focus and granularity, with Review B being more technical and internal while Review A is slightly broader."
+        }
+      },
+      "generated_at": "2025-12-27T20:06:48"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "final_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180
+      },
+      "config_key": "565dcfbed8e348ba365acb8ebe44bf867f3cd0c2",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/final_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "motivation_strength_alignment": 0.9,
+        "weakness_error_alignment": 0.75,
+        "overall_alignment": 0.78,
+        "explanation": {
+          "strength": "Both reviews identify the same core strengths: the novel focus on goal-shift robustness, the valuable multi-dimensional metrics (TSR, TUE, etc.), and the realistic multi-domain/persona setup.",
+          "weakness": "Both reviews heavily criticize the paper for inconsistent reporting, missing details, and a lack of statistical rigor, though Review A also raises conceptual concerns about scope/positioning while Review B focuses more on specific technical flaws like metric weight and judge validation.",
+          "overall": "The reviews are highly aligned in their overall judgment, concluding that the paper presents a promising idea but is undermined by significant flaws in execution and presentation, making it not ready for publication without substantial revision."
+        }
+      },
+      "generated_at": "2025-12-27T20:10:11"
+    }
+  ]
+}

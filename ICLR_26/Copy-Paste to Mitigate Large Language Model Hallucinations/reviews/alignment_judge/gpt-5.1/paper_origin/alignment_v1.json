@@ -1,0 +1,97 @@
+{
+  "paper": "Copy-Paste to Mitigate Large Language Model Hallucinations",
+  "judge_model": "gpt-5.1",
+  "review_agent": "deepreviewer",
+  "ai_model": "gpt-5-2025-08-07",
+  "ai_review_file": "deep_review_all.txt",
+  "inputs": {
+    "human_review": "review.txt",
+    "ai_review": "reviews/deepreviewer/gpt-5-2025-08-07/paper_origin/deep_review_all.txt"
+  },
+  "multi_review": {
+    "detected": false,
+    "num_reviews": 1,
+    "summarize_used": false,
+    "summary_note": null
+  },
+  "ai_review_consolidated": null,
+  "alignment": {
+    "motivation_strength_alignment": 0.9,
+    "weakness_error_alignment": 0.8,
+    "overall_alignment": 0.85,
+    "explanation": {
+      "strength": "Both reviews present a very similar picture of the paper’s core motivation and contributions. They agree that (1) the central idea is to use lexical copying from retrieved context as a proxy for contextual faithfulness in RAG, (2) the method is instantiated as a two-stage pipeline using three CopyPaste prompting variants (CP-Order/Link/Refine) to generate high-copy candidates in Stage 1 and DPO with a multi-criteria preference dataset in Stage 2, (3) the approach is highly data-efficient, achieving strong or SoTA results with only ~365 training samples, and (4) there is an interpretability component, the Context-Parameter Copying Capturing probe, which analyzes context vs parametric knowledge usage during CoT. Both also emphasize the practical importance of the method (automated pipeline, detailed recipes, applicability to safety-critical or practical RAG applications) and its strong empirical performance across FaithEval, ConFiQA, PubMedQA, and RAGTruth (especially counterfactual settings). The human review puts a bit more weight on the theoretical/entropy interpretation and explicit user-facing transparency, while the AI review emphasizes pipeline details and reproducibility, but these are complementary emphases on the same core contributions.",
+      "weakness": "There is substantial overlap in identified weaknesses, though the AI review adds more granular presentational and procedural issues. Common concerns include: (1) the link between copying and reduced hallucination is correlational rather than causally established; (2) copying metrics (copy coverage/density) focus on lexical overlap and have limits as proxies for true semantic faithfulness; (3) the interpretability/CoT probe relies on heuristic proxies and primarily visual evidence without strong statistical validation; and (4) limited human evaluation or imperfect alignment between automated metrics and human judgments. The human review additionally stresses the idealized assumption of accurate context and limited exploration of noisy/ambiguous retrieval, while the AI review repeatedly highlights dependence on LLM-as-judge, lack of inter-judge reliability, and several reporting inconsistencies (tables in appendix, code availability statements, PubMedQA usage, outdated GPT‑2 perplexity). These latter issues are largely absent from the human review, which instead mentions more conceptual concerns (formal causal depth, component coupling). Overall, the reviews converge on the main methodological and evaluation weaknesses but diverge somewhat in how much attention they give to documentation/LLM-as-judge and to retrieval robustness, hence a slightly lower alignment than on strengths.",
+      "overall": "Substantively, the two reviews are closely aligned. They agree on what the paper is about (copying as a lever for faithfulness in RAG, implemented via a two-stage CopyPaste/DPO pipeline plus a CoT probe), on its main empirical and practical strengths (large gains, notable data efficiency, broad evaluation, clear recipes), and on core reservations (correlational motivation, limitations of copy-based metrics, heuristic interpretability, limited human validation). The AI review goes deeper into implementation details, presentation issues, and LLM-as-judge concerns, while the human review foregrounds theoretical framing, retrieval assumptions, and broader robustness/generalization. These differences are more in emphasis and granularity than in substantive disagreement. Hence the overall alignment is high: both portray a strong, well-engineered, impactful method whose main caveats relate to the rigor of causal and interpretability claims and to the proxies used for faithfulness."
+    }
+  },
+  "generated_at": "2025-12-27T19:29:50",
+  "runs": [
+    {
+      "config": {
+        "judge_model": "gpt-5.1",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "baseline_review.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180
+      },
+      "config_key": "3b28d70d5731760031a4514ebc98b0afd78edf6d",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/baseline_review.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "motivation_strength_alignment": 0.72,
+        "weakness_error_alignment": 0.48,
+        "overall_alignment": 0.56,
+        "explanation": {
+          "strength": "Both reviews emphasize the same core contributions: using lexical copying to improve contextual faithfulness, a two‑stage CopyPaste framework with CP‑Order/Link/Refine, data‑efficient DPO training on ~365 samples, broad evaluation across multiple RAG benchmarks, and added interpretability analyses. The AI review adds far more procedural detail but remains aligned in the primary motivations and strengths.",
+          "weakness": "Some overlap exists, especially regarding limits of lexical-copy proxies, risks of relying on context, and incomplete theoretical grounding. However, the AI review introduces many additional methodological concerns (missing tables, unclear heuristics, calibration issues, reproducibility gaps) not mentioned in the human review, while the human review highlights issues like ambiguous-context robustness and limited human evaluation that the AI review does not emphasize.",
+          "overall": "The two reviews broadly agree on the paper’s main ideas and positive contributions but show only partial alignment on weaknesses because the AI review raises numerous detailed methodological criticisms absent from the human review. Overall, their judgments are compatible but not tightly aligned."
+        }
+      },
+      "generated_at": "2025-12-27T19:51:22"
+    },
+    {
+      "config": {
+        "judge_model": "gpt-5.1",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "final_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180
+      },
+      "config_key": "4569a6a97a67c8e2b360606eb74d6eb53b892d06",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/final_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "motivation_strength_alignment": 0.82,
+        "weakness_error_alignment": 0.5,
+        "overall_alignment": 0.7,
+        "explanation": {
+          "strength": "Both reviews emphasize the same core contribution: operationalizing contextual faithfulness via lexical copying in a two-stage CopyPasteLLM pipeline (CP-Order/Link/Refine + DPO on ~365 preference pairs) that reduces hallucinations in RAG. They both highlight data efficiency, broad multi-dataset evaluation, and an interpretability/probing component as key strengths, though the AI review adds more detail on metrics, prompts, and reproducibility while the human review stresses practical implications and rebuttal ablations.",
+          "weakness": "Both reviews raise concerns that lexical copy metrics (κ/δ) are imperfect proxies for true semantic faithfulness and note the lack of strong human evaluation to validate these metrics and the alignment process. However, the AI review introduces many additional methodological and presentation critiques (missing tables, heuristic validity of the probe and logits power, LLM-as-judge calibration, baseline fairness, reproducibility and dataset accounting issues) that the human review does not mention, while the human focuses on idealized context assumptions, component coupling (copying vs stamping), and robustness to noisy/ambiguous retrieval that the AI review does not treat as central weaknesses.",
+          "overall": "Substantively, both reviews agree that this is a novel and promising approach that achieves strong empirical gains with a data-efficient pipeline, tempered by concerns about how faithfully copying-based metrics and analyses capture true correctness. The divergence lies mainly in the AI review’s extensive focus on missing quantitative evidence, calibration, and reproducibility details, versus the human review’s emphasis on conceptual assumptions and external robustness, leading to a broadly consistent but not fully overlapping evaluation of the work."
+        }
+      },
+      "generated_at": "2025-12-27T19:54:01"
+    }
+  ]
+}

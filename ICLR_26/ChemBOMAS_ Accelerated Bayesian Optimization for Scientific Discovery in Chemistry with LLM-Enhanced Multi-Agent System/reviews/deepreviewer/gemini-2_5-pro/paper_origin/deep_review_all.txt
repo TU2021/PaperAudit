@@ -1,0 +1,166 @@
+Here are four separate reviews of the paper, each from a different simulated reviewer.
+
+***
+
+### **Review 1**
+
+**Summary**
+This paper introduces ChemBOMAS, a novel multi-agent framework designed to accelerate Bayesian Optimization (BO) for chemical discovery. The system addresses the common BO challenges of data scarcity and vast search spaces through a synergistic two-pronged strategy. The first, a data-driven approach, involves fine-tuning an 8B-parameter LLM on a very small (1%) labeled dataset to generate pseudo-data, which provides a robust initialization for the optimization. The second, a knowledge-driven approach, uses an LLM with Retrieval-Augmented Generation (RAG) to intelligently partition the search space into a hierarchical tree, from which a UCB algorithm selects high-potential subspaces. By performing BO within these refined subspaces with the aid of pseudo-data, ChemBOMAS aims to significantly improve optimization efficiency and effectiveness. The authors validate their method on four chemical benchmarks and a real-world wet-lab experiment, demonstrating state-of-the-art performance.
+
+**Soundness**
+The methodology is sound and logically constructed. The core idea of combining a data-driven warm-start with a knowledge-driven search space reduction is well-motivated and directly targets the primary weaknesses of vanilla BO. The use of an LLM for both tasks is innovative. The experimental design is comprehensive, comparing ChemBOMAS against a strong set of four relevant baselines, including recent LLM-based methods (GOLLuM, BO-ICL) and a space-partitioning method (LA-MCTS). The ablation studies are particularly convincing, clearly demonstrating that the synergy between the data- and knowledge-driven modules is essential for the observed performance gains (Table 4). The inclusion of a wet-lab experiment provides powerful evidence for the method's practical applicability, mitigating concerns about potential knowledge leakage from the benchmark datasets.
+
+**Presentation**
+The paper is exceptionally well-written and organized. The introduction clearly articulates the problem and the proposed solution. Figure 1 provides an outstanding, intuitive overview of the entire ChemBOMAS framework, making the complex interplay between modules easy to understand. The results are presented clearly in figures and tables, with Figure 2 effectively summarizing the superior performance across all benchmarks. The main text flows logically, and the decision to move extensive details (prompts, algorithm pseudocode, additional analyses) to the appendix keeps the core narrative focused and readable without sacrificing reproducibility.
+
+**Contribution**
+The contribution of this work is highly significant. It presents a novel and effective framework that synergistically integrates LLMs into the BO pipeline in a multifaceted way—not just as a surrogate model, but as a knowledge processor for space decomposition and a generator for data augmentation. This represents a conceptual advance over prior work that often uses LLMs for a single purpose. By setting a new state-of-the-art on multiple benchmarks and, most importantly, demonstrating a dramatic improvement over expert-driven methods in a real-world wet-lab experiment (Appendix H), the paper makes a compelling case for its impact on accelerating scientific discovery.
+
+**Strengths**
+1.  **Novel Synergistic Framework:** The combination of LLM-powered knowledge-driven space partitioning and data-driven pseudo-data generation is a powerful and novel concept.
+2.  **Impressive Empirical Performance:** The method consistently outperforms strong, relevant baselines across four different chemical benchmarks in terms of convergence speed and final performance (Figure 2).
+3.  **Comprehensive Evaluation:** The paper includes extensive ablation studies (Table 3, Table 4) that rigorously validate the contribution of each component of the framework.
+4.  **Real-World Validation:** The successful wet-lab experiment (Figure 5) is a standout strength, demonstrating the practical utility and effectiveness of ChemBOMAS beyond simulated benchmarks.
+5.  **Data Efficiency:** The ability to achieve strong performance by fine-tuning the regressor on only 1% of labeled data is a significant practical advantage.
+
+**Weaknesses**
+The paper is very strong, and weaknesses are minor. The limitations section (Section 5) is somewhat brief, though it correctly identifies the key dependencies on LLM accuracy and the need for safety constraints. While the use of GPT-4o is justified by its capabilities, a discussion on adapting the framework to fully open-source models would be beneficial for the community.
+
+**Questions**
+1.  The wet-lab experiment showed remarkable success. Could the authors elaborate on the process of setting up the knowledge-driven module for this previously unreported reaction? How much domain-specific prompt engineering was required?
+2.  The framework is designed for single-objective optimization. Have the authors considered extending ChemBOMAS to multi-objective problems, such as simultaneously optimizing for yield and minimizing cost or impurities?
+3.  The knowledge-driven module partitions the space based on property similarity. How does the system handle categorical variables where physicochemical properties are not readily available or relevant (e.g., different catalyst suppliers)?
+
+**Rating**
+- Overall (10): 9 — The paper presents a novel, well-validated framework with state-of-the-art results and a compelling real-world demonstration (Figure 2, Figure 5).
+- Novelty (10): 9 — The synergistic combination of LLM-driven space partitioning and pseudo-data generation is a highly novel and impactful approach to accelerating BO.
+- Technical Quality (10): 8 — The methodology is technically sound and the experiments are rigorous, though reliance on a proprietary LLM is a minor drawback.
+- Clarity (10): 9 — The paper is exceptionally clear, with excellent figures (Figure 1) and a logical structure that makes a complex system understandable.
+- Confidence (5): 5 — I am highly confident in my assessment based on the detailed experiments and clear presentation.
+
+***
+
+### **Review 2**
+
+**Summary**
+The paper proposes ChemBOMAS, a system that aims to accelerate Bayesian Optimization (BO) in chemistry by using Large Language Models (LLMs) in two ways. First, a "data-driven" module uses a fine-tuned LLM to generate pseudo-labels for unlabeled data points, which are then used to initialize the BO surrogate model. Second, a "knowledge-driven" module uses a separate LLM (GPT-4o) with a Retrieval-Augmented Generation (RAG) system to partition the search space into a tree, which is then searched to identify promising subspaces for BO. The authors claim this dual approach leads to significant acceleration and improved performance, which they test on several benchmarks and a wet-lab experiment.
+
+**Soundness**
+The methodological soundness of this paper has several significant weaknesses.
+1.  **Pseudo-Data Quality:** The data-driven module relies on an LLM regressor fine-tuned on only 1% of the data. The reported R² values are very low, around 0.1-0.2 for the best configuration (Table 1). Using pseudo-data from such a weak and potentially biased model to "warm-start" a GP is questionable. The paper claims this is "sufficient" (Section 4.3.1) but provides no theoretical or strong empirical justification. The ablation in Table 8 even shows that using a *better* regressor (trained on more data) can lead to *worse* BO results, which fundamentally undermines the rationale for this module.
+2.  **Reproducibility and Fairness:** The knowledge-driven module is built on the GPT-4o API, a proprietary, closed-source model. This makes the core of the space partitioning strategy a black box and completely non-reproducible. Furthermore, the RAG system retrieves information from unspecified "literature, professional databases, web search" (Section 3.4). This introduces an unquantified amount of external information and computation, making the comparison to baselines like standard BO or even GOLLuM potentially unfair. The performance gains might simply be due to the massive, un-auditable knowledge base of GPT-4o.
+3.  **Vague Mechanisms:** Key mechanisms are not clearly defined. The pseudo-data "refinement strategy" is relegated to Appendix D and involves a threshold `τ` with no explanation of how it was chosen or its sensitivity. The UCB-based subspace selection states that the "top-5 nodes" are selected (Section 3.4), which is not a standard UCB algorithm and lacks detail on how these 5 paths are managed or how their results are aggregated.
+
+**Presentation**
+While the paper is generally readable, it suffers from a lack of critical detail in the main text. Key methodological components, such as the pseudo-data refinement (Appendix D), the full algorithm (Appendix F), and the prompts (Appendix G), are all in the appendix. This makes it difficult to assess the method's soundness without constantly flipping back and forth. The optimization plots in Figure 2 (Blocks 26-29) are too small and the shaded variance regions often obscure the mean trajectories of competing methods, hindering clear comparison.
+
+**Contribution**
+The claimed contribution is overstated. The ideas of using pseudo-data for warm-starting BO and using tree-based space partitioning are not new. The novelty is the use of LLMs to automate these steps. However, given the reliance on a proprietary black-box LLM (GPT-4o) and the poorly justified pseudo-data generation, the work feels more like an engineering integration effort than a fundamental scientific contribution. The lack of transparency in the knowledge-driven module makes it impossible to discern what principles are being learned or applied, reducing its value as a scientific method.
+
+**Strengths**
+1.  The ambition of the project is commendable, as it attempts to tackle a very difficult and practical problem.
+2.  The ablation study in Table 4, which shows that both modules are necessary, is a good piece of internal validation.
+3.  The inclusion of a wet-lab experiment is a positive step towards demonstrating real-world relevance.
+
+**Weaknesses**
+1.  **Major Reproducibility Issues:** The use of the proprietary GPT-4o model for the core knowledge-driven module is a critical flaw.
+2.  **Poorly Justified Pseudo-Data:** The paper fails to adequately justify using a low-accuracy regressor (R² ≈ 0.1-0.2) for pseudo-data generation, and the results in Table 8 contradict the premise that better pseudo-data leads to better optimization.
+3.  **Vague Methodology:** Critical details of the RAG system, pseudo-data refinement, and UCB tree search are underspecified.
+4.  **Potential for Knowledge Leakage:** Despite the wet-lab test, the use of a massive pre-trained model like GPT-4o on established benchmarks (Suzuki, Buchwald) carries a high risk that the model has seen information about these specific reaction classes, giving it an unfair advantage. The single wet-lab experiment is not sufficient to fully dispel this concern.
+
+**Questions**
+1.  Can you provide a sensitivity analysis for the pseudo-data refinement strategy in Appendix D? Specifically, how does performance change with the similarity threshold `τ`?
+2.  To address reproducibility, have you attempted to replace GPT-4o with a powerful open-source model (e.g., Llama-3-70B, Mixtral) for the knowledge-driven module? How does performance compare?
+3.  The R² of your regressor is very low. Why not use a more established model for chemical property prediction, like a Graph Neural Network, to generate pseudo-data? This would provide a stronger baseline to demonstrate the specific value of the LLM architecture.
+4.  Table 8 shows that a more accurate surrogate model leads to worse BO performance on the Buchwald datasets. This is a critical finding that contradicts your motivation. Can you provide a detailed explanation or hypothesis for this phenomenon?
+
+**Rating**
+- Overall (10): 4 — The paper has significant methodological flaws, particularly concerning reproducibility and the justification for its core components.
+- Novelty (10): 6 — The integration is novel, but the underlying ideas are not, and the use of a black-box LLM obscures the scientific contribution.
+- Technical Quality (10): 3 — The technical quality is low due to the weak justification for the pseudo-data, the non-reproducible knowledge module, and vague algorithmic details.
+- Clarity (10): 6 — The paper is readable, but key details are relegated to the appendix, making a full assessment difficult from the main text.
+- Confidence (5): 5 — I am highly confident in my assessment of the methodological weaknesses.
+
+***
+
+### **Review 3**
+
+**Summary**
+This paper introduces ChemBOMAS, a computational system that uses artificial intelligence to accelerate the process of finding the best conditions for chemical reactions. It works by combining two main ideas: 1) it uses a "data-driven" AI to predict the outcomes of many possible experiments to get a good starting point, even with very little real data, and 2) it uses a "knowledge-driven" AI that reads scientific literature to intelligently break down the huge space of possible experimental conditions into smaller, more promising regions. The system then runs an optimization algorithm (Bayesian Optimization) in these promising regions. The authors show that their system finds better reaction conditions much faster than other methods on several standard chemistry problems and, impressively, in a real-world laboratory experiment.
+
+**Soundness**
+From a practical perspective, the approach is sound. The overall strategy mimics how an experienced chemist might approach a problem: use existing knowledge (literature) to narrow the possibilities and then use initial results to guide the next steps. The most convincing evidence of its soundness is the wet-lab experiment described in Appendix H. Taking a previously unreported reaction with tight constraints and finding a 96% yield condition in just a few rounds (Figure 5), compared to the 15% yield from a human expert's approach, is a powerful demonstration that the system works in practice. The benchmark results (Figure 2) further support this, showing consistent and robust performance.
+
+**Presentation**
+The paper is well-presented and accessible. The introduction clearly explains the problem for a broad audience. Figure 1 is an excellent visual aid that clarifies the overall workflow. The main results are easy to interpret from the graphs in Figure 2. I particularly appreciate that the authors included a detailed section on the wet-lab experiment in the appendix (Appendix H), as this is the most important result for a practicing chemist.
+
+**Contribution**
+The primary contribution is the creation of a practical tool that could genuinely accelerate chemical R&D. While the underlying AI techniques may be complex, the outcome is simple: fewer experiments needed to find optimal conditions. The demonstration that an automated system can outperform not only other algorithms but also a human expert's traditional methods on a novel problem is a significant contribution to the field of automated chemical discovery and self-driving labs. The framework's ability to match or exceed "Expert-Guided" clustering (Table 2) suggests it has successfully captured some aspects of expert chemical intuition.
+
+**Strengths**
+1.  **Demonstrated Practical Value:** The wet-lab experiment (Appendix H, Figure 5) is the paper's greatest strength, proving the system's effectiveness on a real, challenging, and previously unseen problem.
+2.  **Intuitive and Powerful Strategy:** The core idea of combining literature-based knowledge to prune the search space with data-based modeling to warm-start the search is logical and mirrors expert human strategy.
+3.  **Impressive Efficiency Gains:** The reported 2-5x speed-up in convergence (Section 1) and the rapid optimization on the Suzuki benchmark (3 iterations, Figure 2) highlight the system's potential to save significant time and resources in the lab.
+4.  **Robustness:** The low variance in results across multiple runs (shaded areas in Figure 2) and the strong performance even with very little initial data (1%) suggest the method is reliable.
+
+**Weaknesses**
+1.  **Accessibility and Cost:** The system relies on significant computational resources (A800 GPUs) and a paid API (GPT-4o). This may place it out of reach for many academic or smaller industrial labs. A discussion of the practical costs would be valuable.
+2.  **Safety and Feasibility:** As the authors note in the limitations (Section 5), the system does not have built-in safety constraints. It could propose reactions that are unsafe or practically infeasible (e.g., require incompatible solvents). The need for "expert oversight" is mentioned but not detailed. How does this oversight integrate into the workflow?
+3.  **Role of the Expert:** The "Expert-Guided" baseline in Table 2 is a key comparison. More detail is needed on how this expert guidance was obtained and formalized. Similarly, for the wet-lab experiment, how much human effort was needed to set up the system for the new reaction? Is it a "push-button" solution, or does it require an AI expert to operate?
+
+**Questions**
+1.  For the wet-lab experiment, could you provide a rough estimate of the total time and cost (including computation and API calls) required to run the ChemBOMAS optimization, compared to the time a chemist would spend using the control variable method?
+2.  How does the system handle conflicting information from the literature retrieved by the RAG system? Does a human need to curate the knowledge base, or can the LLM resolve these conflicts autonomously?
+3.  The system was validated on a Pd-catalyzed cross-coupling. How confident are you that the knowledge-driven module would perform as well on a completely different class of reactions, for example, photoredox catalysis, where the key influencing parameters might be different?
+4.  Could you elaborate on the practical workflow for a chemist using your system? At what points is human intervention required, especially for ensuring the safety and feasibility of the suggested experiments?
+
+**Rating**
+- Overall (10): 8 — A very strong paper with a highly practical contribution, convincingly demonstrated in a real-world setting, with minor concerns about accessibility and practical implementation.
+- Novelty (10): 7 — The application and successful integration of these AI tools for this chemical task is novel and impactful, even if the individual AI concepts exist elsewhere.
+- Technical Quality (10): 8 — The system is well-built and validated, with the wet-lab experiment being a mark of high technical quality.
+- Clarity (10): 8 — The paper is clearly written, especially for an interdisciplinary audience, though more detail on the practical user workflow would be helpful.
+- Confidence (5): 4 — I am confident in my assessment of the paper's practical application and significance, though less so on the deepest ML technical details.
+
+***
+
+### **Review 4**
+
+**Summary**
+This paper introduces ChemBOMAS, a framework for accelerating Bayesian Optimization (BO) in chemistry. The method has two main components driven by Large Language Models (LLMs). The first is a data-driven module where a LLaMA 3.1 model is fine-tuned as a regressor on 1% of labeled data to generate pseudo-data across the search space, serving as an informative prior for the BO's surrogate model. The second is a knowledge-driven module where GPT-4o and RAG are used to partition the search space by ranking variable importance and clustering candidates, creating a hierarchical search tree. A UCB algorithm selects promising sub-regions from this tree, within which BO is performed. The authors evaluate this combined approach on several chemical optimization benchmarks, showing superior performance over baselines.
+
+**Soundness**
+The technical approach is an interesting synthesis of existing concepts in the BO literature, but its justification and some details are weak.
+1.  **Data-Driven Module:** The use of pseudo-data or "fantasies" to augment BO is a known technique. The novelty here is the LLM-based regressor. However, the regressor's performance is very poor (R² of 0.1-0.2 in Table 1). The authors' claim that this is "sufficient" is not well-supported. More critically, the analysis in Appendix I.2 (Table 8) shows that increasing the regressor's accuracy (by using more fine-tuning data) can *degrade* BO performance. This is a highly counter-intuitive result that challenges the entire premise of the data-driven module. The paper offers a superficial explanation ("diminishing returns") but fails to analyze this properly. It could be that a more accurate but overconfident surrogate hurts the exploration/exploitation trade-off, but this requires a much deeper investigation.
+2.  **Knowledge-Driven Module:** Hierarchical partitioning of the search space for BO is also an established field (e.g., LA-MCTS, which is used as a baseline, and others like Moriconi et al., 2020). Using an LLM to create the partition is a novel twist. The combination of a tree-search policy (UCB on the partition tree) and a BO acquisition function within the leaf nodes is a valid hierarchical BO strategy. The ablation in Table 4 correctly shows that this module is critical.
+3.  **Algorithmic Details:** Several key details are ambiguous. In Section 3.4, the UCB-based subspace selection picks the "top-5 nodes". This is not the standard UCB algorithm. Is this a beam search? How are the visit counts and value estimates updated if five paths are explored simultaneously? The pseudocode in Algorithm 1 is also confusing: the `BO` function runs for `N_fine` steps but only returns the *last* point, and only this one point seems to be used to update the tree. This seems incredibly inefficient, as it discards `N_fine - 1` real experiment results from the tree update. This must be a mistake in the pseudocode or a poorly designed algorithm.
+
+**Presentation**
+The paper is well-structured, and Figure 1 is a very effective summary. However, the description of the BO procedure is lacking in specifics. Section 3.5 mentions UCB or EI as example acquisition functions, but Section 4.2 just says the configuration was "consistent with the baseline methods," which is not specific enough. For a paper on accelerating BO, the details of the core BO loop are paramount and should be stated explicitly in the main text. The confusing pseudocode in Algorithm 1 is a significant presentation flaw.
+
+**Contribution**
+The main contribution is the specific architecture that synergistically combines LLM-driven data augmentation and search space partitioning. While the constituent ideas have precedents, their integration within this "multi-agent" framework is novel. The strong empirical results against well-chosen baselines (Figure 2) and the thorough ablation studies (Table 4) successfully demonstrate that the proposed synergy is effective. The work provides a new, complex, but apparently powerful recipe for applying LLMs to BO.
+
+**Strengths**
+1.  **Novel Integration:** The framework's architecture, combining two distinct LLM-driven acceleration strategies, is the main novelty and strength.
+2.  **Strong Empirical Results:** The method demonstrates a clear performance improvement over several relevant and state-of-the-art baselines on multiple benchmarks.
+3.  **Effective Ablation Studies:** The ablation studies in Table 4 and Section 4.4 are well-executed and provide convincing evidence for the necessity of both the data-driven and knowledge-driven modules.
+4.  **Analysis of Data Impact:** The study on the impact of prior data volume (Appendix I.2), while producing puzzling results, is a thorough and valuable piece of analysis that opens up interesting questions.
+
+**Weaknesses**
+1.  **Contradictory Results on Pseudo-Data:** The finding that a more accurate pseudo-data generator can harm BO performance (Table 8) is a major weakness that is not adequately addressed and undermines the module's design principles.
+2.  **Algorithmic Ambiguity:** Key parts of the algorithm, including the UCB tree search ("top-5 nodes") and the update rule in the main loop (Algorithm 1), are either non-standard and poorly explained or seem incorrect/inefficient.
+3.  **Lack of BO Details:** The specific acquisition function and its parameters used for the final BO step are not clearly stated.
+4.  **Reproducibility:** The reliance on the proprietary GPT-4o API is a notable weakness for a scientific paper.
+
+**Questions**
+1.  Please clarify the UCB-based subspace selection in Section 3.4. How are the "top-5 nodes" handled? Is it a beam search? How are their visit counts and value estimates updated in the parent node?
+2.  The pseudocode in Algorithm 1 suggests that for each of the `N_coarse` iterations, `N_fine` real experiments are run, but only the last one is used to update the tree. Is this correct? If so, why are the other `N_fine - 1` observations discarded for the tree update? If not, please correct the pseudocode.
+3.  Could you offer a more detailed hypothesis for the paradoxical results in Table 8, where better surrogate models lead to worse BO performance? For example, did you analyze the GP's uncertainty estimates when using priors from more vs. less accurate regressors?
+4.  What was the exact acquisition function (e.g., EI, UCB, qEI) and what were its parameter settings (e.g., `xi` for EI, `beta` for UCB) used in the BO step (Section 3.5) for the main experiments in Section 4.3.3?
+
+**Rating**
+- Overall (10): 7 — A strong paper with novel ideas and impressive results, but held back by some significant technical ambiguities and poorly explained counter-intuitive findings.
+- Novelty (10): 8 — The synergistic framework for integrating LLMs into BO is highly novel, even if the sub-components are inspired by existing work.
+- Technical Quality (10): 6 — The technical quality is mixed; the experimental evaluation is strong, but the algorithmic description has significant ambiguities and potential flaws.
+- Clarity (10): 7 — The paper is generally clear, but the lack of specific details on the core BO algorithm and the confusing pseudocode are notable issues.
+- Confidence (5): 5 — I am very confident in my assessment of the technical aspects related to Bayesian Optimization and machine learning methodology.

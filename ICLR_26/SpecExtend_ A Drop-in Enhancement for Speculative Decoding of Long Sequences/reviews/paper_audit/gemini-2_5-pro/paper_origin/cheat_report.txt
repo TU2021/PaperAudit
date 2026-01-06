@@ -1,0 +1,60 @@
+Based on a critical review of the manuscript, several clear internal inconsistencies and factual mismatches have been identified that materially affect the paper's correctness and trustworthiness. These issues require clarification and correction.
+
+### **Integrity and Consistency Risk Report**
+
+**1. Contradiction Between Main Claimed Speedup and Reported Results**
+
+The manuscript's primary performance claim for long summarization is contradicted by its own results table.
+
+*   **Evidence:**
+    *   The **Abstract (Block #1)** and **Introduction (Block #4)** both state that SpecExtend accelerates speculative decoding by "**up to 2.84×** on 16K-token long summarization".
+    *   However, **Table 2 (Block #22)**, which details the results for long summarization, reports multiple speedup values at 16K input length that are *higher* than 2.84×. For example:
+        *   `LC-7B / EAGLE` on `GovReport`: **3.21×**
+        *   `V-7B / EAGLE` on `BookSum`: **3.18×**
+        *   `V-7B / EAGLE` on `PG-19`: **3.09×**
+        *   `V-7B / V-68M` on `PG-19`: **2.87×**
+
+*   **Problem:** The main performance metric highlighted in the abstract and introduction (2.84×) is not the maximum value achieved. This is a direct factual contradiction with the detailed results presented in the experiments section. The paper under-reports its own best results in its headline claims.
+
+**2. Mismatch Between Textual Descriptions and Figure Data**
+
+There are multiple instances where the numerical data described in the text for a figure does not match the data presented in the figure itself.
+
+*   **Issue 2a: Figure 4 Description vs. Plot**
+    *   **Evidence:** The textual description of **Figure 4 in Block #15** provides numerical values for "Avg Accepted Length" that are inconsistent with the data plotted in the **Figure 4a image (Block #20)**.
+        *   For 1K input length, the text claims a value of "3.5", whereas the plot shows values ranging from approximately 3.7 to 3.8 for the three methods.
+        *   For longer inputs (4K, 8K, 16K), the text provides vague ranges (e.g., "2.0–3.0") that obscure the clear performance differences between methods shown in the plot.
+    *   **Problem:** The textual summary of Figure 4a is inaccurate and misrepresents the visual data, suggesting the text and figure were not synchronized.
+
+*   **Issue 2b: Figure 3 Description vs. Plot**
+    *   **Evidence:** The textual table in **Block #13** summarizing the data from **Figure 3 (image in Block #14)** contains several numerical mismatches.
+        *   **Acceptance Rate (Hard Tokens):** The text claims the rate is "~62%" for both StreamingLLM and Cross-model Retrieval. The plot, however, shows a clear difference, with StreamingLLM at 60% and Cross-model Retrieval at approximately 62%.
+        *   **Natural Divergence (Resampled):** The text claims values of "~0.9" vs. "~0.75", while the plot shows values closer to 0.85 vs. 0.75.
+    *   **Problem:** The textual description incorrectly reports the results shown in the corresponding figure, potentially misleading the reader about the method's impact.
+
+**3. Inconsistent Figure Referencing and Labeling**
+
+The manuscript contains conflicting and confusing references and labels related to Figure 5, making the results difficult to follow.
+
+*   **Evidence:**
+    *   The text in **Section 4.1.1 (Block #18)** discusses results for the **PG-19 dataset** and cites "(Figure 5)".
+    *   However, there are two different elements labeled "Figure 5":
+        1.  A **table in Block #22** is explicitly labeled "Figure 5". This table contains data for the **GovReport dataset**, not PG-19.
+        2.  A **bar chart image in Block #24** appears to be the intended Figure 5. This chart also visualizes data for the **GovReport dataset**, matching the table in Block #22.
+*   **Problem:** This creates a three-way inconsistency: the text discusses one dataset (PG-19), but the figure it references (Figure 5) presents data from a different dataset (GovReport). Furthermore, labeling a table as a "Figure" is a significant presentation error that adds to the confusion.
+
+**4. Inconsistent Numerical Claim in Main Results Text**
+
+A specific numerical claim in the results section is not supported by the data in the paper's own tables.
+
+*   **Evidence:**
+    *   **Section 4.1.1 (Block #18)** claims: "For 8K...token inputs from PG-19, SpecExtend accelerates standard speculative decoding with LLM draft models by **2.37×**...". This implies a relative speedup of SpecExtend over the standard method.
+    *   The source data in **Table 2 (Block #22)** for `PG-19`, `V-7B / V-68M` at 8K input shows:
+        *   Standard `Tok/s`: 21.80
+        *   SpecExtend `Tok/s`: 47.64
+    *   The calculated relative speedup is 47.64 / 21.80 = **2.19×**, not 2.37×.
+*   **Problem:** The text makes a quantitative claim that is not supported by a direct calculation from the provided experimental data.
+
+**Conclusion**
+
+The manuscript suffers from multiple high-impact inconsistencies, including a direct contradiction between its main advertised result and the data in its tables, repeated mismatches between textual descriptions and figure content, and confusing figure labeling and referencing. While these issues may stem from a lack of careful proofreading, their density and nature raise concerns about the reliability of the reported results and the overall quality of the manuscript. These problems must be addressed to ensure the paper's scientific validity.

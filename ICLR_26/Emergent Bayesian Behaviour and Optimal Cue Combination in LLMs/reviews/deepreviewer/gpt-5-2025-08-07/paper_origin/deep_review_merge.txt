@@ -1,0 +1,39 @@
+Summary
+The paper proposes BayesBench, a psychophysics-inspired benchmark to assess whether large language models (LLMs) exhibit Bayesian behaviours in magnitude estimation and multimodal cue combination. It introduces four controlled tasks (three visual–text multimodal, one text-only), a family of behavioural observer models (linear, static Bayesian, and sequential/Kalman), cue-combination baselines (equal, linear, and Bayes-optimal with oracle and non-oracle calibration), and a composite evaluation that separates capability from strategy: accuracy via NRMSE, cue-combination efficiency via relative reliability efficiency (RRE), and behavioural adaptation via a novel Bayesian Consistency Score (BCS) that tracks Bayes-consistent shifts across ablations. The paper evaluates nine LLMs alongside a small human reference set. Key findings are that stronger models tend to show greater evidence for Bayesian-like strategies and more Bayes-consistent adaptation, while high accuracy does not guarantee optimal cue fusion (e.g., a strong text model underweights visual uncertainty). One model (Llama‑4 Maverick) achieves the best overall BayesBench score. The work emphasizes the dissociation between capability and strategy and aims to provide a reproducible suite for probing uncertainty handling in LLMs.
+
+Strengths
+- Well-motivated, psychophysics-grounded design:
+  - Carefully controlled synthetic stimuli and ablations (noise, context, steering) enable targeted tests of uncertainty handling and adaptive behaviour.
+  - Tasks span magnitude estimation and multimodal fusion, allowing analysis of both unimodal competence and cross-modal integration.
+- Principled modelling and baselines:
+  - A diverse set of behavioural observer models (linear, static Bayesian, sequential/Kalman) supports hypothesis-driven interpretation of strategies.
+  - Cue-combination baselines include equal and reliability-weighted linear fusions, with oracle and non-oracle calibration to handle biases and covariances.
+- Clear separation of capability and strategy:
+  - The composite metric (NRMSE, RRE, BCS) distinguishes accuracy from behavioural adaptation, enabling discovery of capability–strategy dissociations missed by accuracy alone.
+  - The BCS is a useful diagnostic for detecting Bayes-consistent shifts even when accuracy saturates.
+- Breadth and reproducibility:
+  - Evaluation covers nine diverse LLMs and includes a human reference, strengthening the empirical narrative.
+  - The paper provides generators, prompts, and code, supporting reproducibility and future extensions.
+- Empirical insights:
+  - Demonstrates that high accuracy can coexist with suboptimal cue fusion, highlighting limitations of standard multimodal benchmarks.
+  - Finds that stronger models often show more Bayesian-like evidence and adaptation, suggesting emergent uncertainty-aware behaviours.
+
+Weaknesses
+- Bayesian Consistency Score (BCS) design and uncertainty:
+  - The BCS reduces behaviour to signs of change in a fitted prior weight and imposes a hard cap (e.g., w_prior > 0.9), discarding magnitude information and introducing discontinuities.
+  - Uncertainty in parameter fits is not propagated; without bootstrap intervals or sensitivity analyses (e.g., to the 0.9 threshold or model choice), the stability of BCS-derived conclusions is unclear.
+  - Reliance on static Bayesian fits per condition may make BCS susceptible to fit instability and model misspecification; dependence on static vs sequential observer choice is not explored.
+- Factor-evidence methodology and fairness:
+  - The AIC-based “best-in-cell” factor comparison can favour more flexible model families and assumes i.i.d. residuals; this is especially tenuous for sequential/Kalman variants.
+  - The Bayesian family appears to enjoy extra variants (e.g., SEQUENTIAL, GAIN) without symmetric flexibility on the non-Bayesian side; even with AIC penalties, this can inflate “Bayesian evidence.”
+  - Lack of out-of-sample validation (e.g., PSIS-LOO, k-fold CV) limits confidence in factor-evidence claims under potential misspecification.
+- Cue-combination identifiability:
+  - The benchmark infers fusion efficiency from unimodal variability without explicit cue-conflict (disparity) trials, limiting identifiability of modality weights and the ability to detect non-linear or context-dependent integration strategies.
+  - Claims that a model “surpasses Bayesian reliability-weighted fusion” risk over-interpretation; exceeding a linear-Gaussian baseline may reflect non-linear mappings or calibration effects rather than superior uncertainty estimation.
+- Prompting and protocol confounds:
+  - Steering prompts that reference Bayesian reasoning may inflate apparent “Bayesian behaviour,” especially if such wording appears in conditions used to assess adaptation.
+  - API choices (temperature set to 0.7) introduce sampling variance; though bootstrapping is used, results may be sensitive to seeds and decoding settings.
+  - Discarding malformed responses rather than treating them as errors can bias performance estimates and obscure robustness differences; inability to fully disable reasoning controls for some models further complicates comparability.
+- Presentation and reporting issues:
+  - Appendix figures/tables contain numerical inconsistencies (e.g., “Bayes prob (%)” exceeding 100%), duplicated/truncated rows, and mixed units/axes, which undermine interpretability and confidence in the analysis.
+  - Some claims (e.g., “beyond human” or “outperforming Bayesian fusion”) are stronger than the presented evidence warrants given the limited human baseline, absence of conflict trials, and potential metric/calibration confounds.

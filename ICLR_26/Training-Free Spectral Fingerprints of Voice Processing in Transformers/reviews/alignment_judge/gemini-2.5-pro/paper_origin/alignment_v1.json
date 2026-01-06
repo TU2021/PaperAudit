@@ -1,0 +1,104 @@
+{
+  "paper": "Training-Free Spectral Fingerprints of Voice Processing in Transformers",
+  "runs": [
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "deepreviewer",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "deep_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180
+      },
+      "config_key": "24b66d75b94c155df325f4e5f2603b40312e4469",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/deepreviewer/gpt-5-2025-08-07/paper_origin/deep_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "motivation_strength_alignment": 0.7,
+        "weakness_error_alignment": 0.55,
+        "overall_alignment": 0.6,
+        "explanation": {
+          "strength": "Both reviews identify the same core contributions: a novel, training-free GSP framework for interpretability, its broad multilingual application, statistical rigor, and causal head ablations. However, they directly contradict on the motivation for the Fiedler value, which Review A sees as a weakness while Review B considers it a theoretically grounded strength.",
+          "weakness": "There is strong overlap on critiques of the weak empirical results, underdeveloped causal analysis, and poor figure quality. However, Review B identifies several major technical issues missed by Review A (flawed head aggregation, inconsistent sample sizes), while Review A's primary weakness (poor motivation) is absent from Review B.",
+          "overall": "The reviews agree on the paper's main topics but diverge in focus and judgment; Review A critiques high-level motivation and clarity, while Review B offers a deeper technical critique with specific methodological flaws. This difference in focus, along with a direct contradiction on a core concept, results in only partial substantive alignment."
+        }
+      },
+      "generated_at": "2025-12-27T20:04:24"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "baseline_review.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180
+      },
+      "config_key": "a14d937ebf873b90a820c8cb44da768956431bd4",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/baseline_review.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "motivation_strength_alignment": 0.85,
+        "weakness_error_alignment": 0.9,
+        "overall_alignment": 0.85,
+        "explanation": {
+          "strength": "Both reviews identify the novel graph signal processing framework, its broad application, and the discovery of model-specific fingerprints as core strengths. Review B additionally highlights the tokenizer-stress analysis as a key contribution, a point not mentioned by Review A, but the primary strengths are highly aligned.",
+          "weakness": "There is very high alignment on weaknesses, with both reviews criticizing the weak theoretical justification for the Fiedler value, the over-interpretation of inconsistent empirical results, the under-specified causal ablations, and the preliminary nature of practical applications. Review B adds more detailed points on reproducibility and confounding factors, but the core critiques are nearly identical.",
+          "overall": "The reviews are highly aligned in their overall judgment, agreeing that the paper presents a novel and promising idea but is undermined by significant flaws in its theoretical grounding and empirical execution. While Review B is much more detailed, its core assessment of the paper's value and limitations is substantively the same as Review A's."
+        }
+      },
+      "generated_at": "2025-12-27T20:08:19"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "final_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180
+      },
+      "config_key": "565dcfbed8e348ba365acb8ebe44bf867f3cd0c2",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/final_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "motivation_strength_alignment": 0.75,
+        "weakness_error_alignment": 0.9,
+        "overall_alignment": 0.85,
+        "explanation": {
+          "strength": "Both reviews identify the innovative, training-free graph signal processing framework, its statistical rigor, and its broad application across languages and models as the primary strengths. Review B additionally highlights the tokenizer-stress analysis as a strength, a point not mentioned by Review A.",
+          "weakness": "The reviews show very high alignment, both criticizing the weak theoretical motivation for the method, the over-interpretation of small or inconsistent empirical results, the poorly specified head ablations, and the underdeveloped practical applications. Review B provides a more detailed critique, adding an important weakness about uncontrolled confounds (e.g., tokenization) that Review A does not mention.",
+          "overall": "The reviews are highly aligned in substance and judgment, agreeing that the paper presents a novel idea with flawed execution and unsubstantiated claims. Both focus on the same core strengths (novel framework) and weaknesses (weak theory, weak empiricals), leading to a consistent overall assessment. The main divergence is that Review B is more detailed and identifies a few additional points that are absent in Review A."
+        }
+      },
+      "generated_at": "2025-12-27T20:12:01"
+    }
+  ]
+}

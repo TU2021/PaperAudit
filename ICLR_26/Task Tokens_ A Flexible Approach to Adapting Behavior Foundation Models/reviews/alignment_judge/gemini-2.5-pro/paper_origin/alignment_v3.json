@@ -1,0 +1,129 @@
+{
+  "paper": "Task Tokens_ A Flexible Approach to Adapting Behavior Foundation Models",
+  "runs": [
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "deepreviewer",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "deep_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "55f39c3e353412551a5ae68e81fc4acc489b4edd",
+      "inputs": {
+        "human_review": "review_origin.txt",
+        "ai_review": "reviews/deepreviewer/gpt-5-2025-08-07/paper_origin/deep_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 0.89,
+        "weakness_coverage_recall": 0.22,
+        "ai_extra_major_points_rate": 0.8,
+        "symmetric_coverage_similarity": 0.45,
+        "note": "The AI review showed high alignment on strengths but missed major conceptual weaknesses from the human review, such as limited task complexity, scalability concerns, and the lack of PEFT baselines. Conversely, the AI identified several specific reproducibility and rigor issues (e.g., missing hyperparameters, inconsistent plots, lack of statistical tests) that the human review did not raise."
+      },
+      "generated_at": "2025-12-27T23:49:30"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "baseline_review.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "b3137abdd5dd456ecfb029f7bed4151251d086e2",
+      "inputs": {
+        "human_review": "review_origin.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/baseline_review.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 1.0,
+        "weakness_coverage_recall": 0.4,
+        "ai_extra_major_points_rate": 0.6,
+        "symmetric_coverage_similarity": 0.48,
+        "note": "The AI captures the paper's strengths perfectly but focuses its criticism on methodological rigor (reproducibility, statistical significance, missing metrics) while missing substantive scientific limitations raised by humans, such as the restriction to simple reactive tasks, the 1-to-1 scalability bottleneck, and the fact that the method produces less human-like motion than the state-of-the-art PULSE baseline."
+      },
+      "generated_at": "2025-12-27T23:56:35"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "final_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "0a71ca7d783136ba33fb6b5ec9aad08ece2f0c09",
+      "inputs": {
+        "human_review": "review_origin.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/final_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 1.0,
+        "weakness_coverage_recall": 0.44,
+        "ai_extra_major_points_rate": 0.5,
+        "symmetric_coverage_similarity": 0.52,
+        "note": "The AI captured all strength points but missed several critical conceptual weaknesses raised by humans, specifically the scalability bottleneck (one encoder per task), the limitation to simple reactive tasks, and the missing comparison to standard PEFT baselines like LoRA. Conversely, the AI introduced significant methodological critiques regarding evaluation fairness, statistical rigor in user studies, and missing motion metrics that were not emphasized by the human reviewers."
+      },
+      "generated_at": "2025-12-28T00:07:20"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "deepreviewer",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "deep_review_merge.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "752f27bc09e656c7d041a880d0c174422eea6ca4",
+      "inputs": {
+        "human_review": "review_origin.txt",
+        "ai_review": "reviews/deepreviewer/gpt-5-2025-08-07/paper_origin/deep_review_merge.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 1.0,
+        "weakness_coverage_recall": 0.75,
+        "ai_extra_major_points_rate": 0.67,
+        "symmetric_coverage_similarity": 0.44,
+        "note": "The AI review fully covers the human's mentioned strengths and most weaknesses, such as limited generality and the human-likeness trade-off. However, the AI also raises several major concerns not found in the human review, including missing experimental details (PPO params, rewards) and a lack of statistical rigor in the user study, resulting in only moderate overall similarity."
+      },
+      "generated_at": "2025-12-28T00:19:59"
+    }
+  ]
+}

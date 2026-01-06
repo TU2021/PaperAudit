@@ -1,0 +1,200 @@
+{
+  "generated_at": "2025-12-27T16:21:38.284539Z",
+  "input_dir": "/mnt/parallel_ssd/home/zdhs0006/ACL/data/ICLR_26",
+  "judge_model": "gemini-2.5-pro",
+  "model_tag": "v3",
+  "filters": {
+    "review_agent": null,
+    "ai_model": null,
+    "ai_review_file": null
+  },
+  "metrics": [
+    "strength_coverage_recall",
+    "weakness_coverage_recall",
+    "ai_extra_major_points_rate",
+    "symmetric_coverage_similarity"
+  ],
+  "global": {
+    "count": 200,
+    "files_read": 50,
+    "papers_with_missing_alignment_file": 0,
+    "strength_coverage_recall": {
+      "mean": 0.89215,
+      "std": 0.15000126465128527,
+      "min": 0.29,
+      "max": 1.0
+    },
+    "weakness_coverage_recall": {
+      "mean": 0.4654,
+      "std": 0.1849510053280579,
+      "min": 0.0,
+      "max": 1.0
+    },
+    "ai_extra_major_points_rate": {
+      "mean": 0.45660000000000006,
+      "std": 0.19757942236149875,
+      "min": 0.07,
+      "max": 1.0
+    },
+    "symmetric_coverage_similarity": {
+      "mean": 0.45189999999999997,
+      "std": 0.13210468667388767,
+      "min": 0.13,
+      "max": 0.8
+    }
+  },
+  "per_config": {
+    "config_key:55f39c3e353412551a5ae68e81fc4acc489b4edd": {
+      "count": 50,
+      "config": {
+        "metric": "coverage_v1",
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "deepreviewer",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "deep_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180
+      },
+      "config_key": "55f39c3e353412551a5ae68e81fc4acc489b4edd",
+      "strength_coverage_recall": {
+        "mean": 0.8445999999999999,
+        "std": 0.16548271998080313,
+        "min": 0.5,
+        "max": 1.0
+      },
+      "weakness_coverage_recall": {
+        "mean": 0.4226,
+        "std": 0.19142654583150057,
+        "min": 0.0,
+        "max": 0.78
+      },
+      "ai_extra_major_points_rate": {
+        "mean": 0.4556,
+        "std": 0.2198715766170826,
+        "min": 0.07,
+        "max": 1.0
+      },
+      "symmetric_coverage_similarity": {
+        "mean": 0.4326,
+        "std": 0.14746580371498377,
+        "min": 0.13,
+        "max": 0.76
+      }
+    },
+    "config_key:b3137abdd5dd456ecfb029f7bed4151251d086e2": {
+      "count": 50,
+      "config": {
+        "metric": "coverage_v1",
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "baseline_review.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180
+      },
+      "config_key": "b3137abdd5dd456ecfb029f7bed4151251d086e2",
+      "strength_coverage_recall": {
+        "mean": 0.9428,
+        "std": 0.10984293053153261,
+        "min": 0.57,
+        "max": 1.0
+      },
+      "weakness_coverage_recall": {
+        "mean": 0.5094,
+        "std": 0.16971055791961723,
+        "min": 0.25,
+        "max": 1.0
+      },
+      "ai_extra_major_points_rate": {
+        "mean": 0.429,
+        "std": 0.1745226726397064,
+        "min": 0.14,
+        "max": 1.0
+      },
+      "symmetric_coverage_similarity": {
+        "mean": 0.473,
+        "std": 0.11466455068447907,
+        "min": 0.19,
+        "max": 0.71
+      }
+    },
+    "config_key:0a71ca7d783136ba33fb6b5ec9aad08ece2f0c09": {
+      "count": 50,
+      "config": {
+        "metric": "coverage_v1",
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "final_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180
+      },
+      "config_key": "0a71ca7d783136ba33fb6b5ec9aad08ece2f0c09",
+      "strength_coverage_recall": {
+        "mean": 0.9348000000000001,
+        "std": 0.11744282151979579,
+        "min": 0.5,
+        "max": 1.0
+      },
+      "weakness_coverage_recall": {
+        "mean": 0.5036,
+        "std": 0.18292141727517633,
+        "min": 0.13,
+        "max": 1.0
+      },
+      "ai_extra_major_points_rate": {
+        "mean": 0.4932,
+        "std": 0.17405652377715625,
+        "min": 0.18,
+        "max": 0.8
+      },
+      "symmetric_coverage_similarity": {
+        "mean": 0.4576,
+        "std": 0.12698320634586902,
+        "min": 0.16,
+        "max": 0.71
+      }
+    },
+    "config_key:752f27bc09e656c7d041a880d0c174422eea6ca4": {
+      "count": 50,
+      "config": {
+        "metric": "coverage_v1",
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "deepreviewer",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "deep_review_merge.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180
+      },
+      "config_key": "752f27bc09e656c7d041a880d0c174422eea6ca4",
+      "strength_coverage_recall": {
+        "mean": 0.8464,
+        "std": 0.17093691401048683,
+        "min": 0.29,
+        "max": 1.0
+      },
+      "weakness_coverage_recall": {
+        "mean": 0.426,
+        "std": 0.18192844522963822,
+        "min": 0.0,
+        "max": 0.82
+      },
+      "ai_extra_major_points_rate": {
+        "mean": 0.4486,
+        "std": 0.21733083968353645,
+        "min": 0.1,
+        "max": 1.0
+      },
+      "symmetric_coverage_similarity": {
+        "mean": 0.44439999999999996,
+        "std": 0.13759093468002334,
+        "min": 0.18,
+        "max": 0.8
+      }
+    }
+  }
+}

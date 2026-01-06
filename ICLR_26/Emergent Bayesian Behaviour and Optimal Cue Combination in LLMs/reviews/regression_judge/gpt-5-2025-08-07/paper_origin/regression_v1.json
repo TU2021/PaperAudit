@@ -1,0 +1,126 @@
+{
+  "paper": "Emergent Bayesian Behaviour and Optimal Cue Combination in LLMs",
+  "runs": [
+    {
+      "config": {
+        "judge_model": "gpt-5-2025-08-07",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "baseline_file": "baseline_review.txt",
+        "final_file": "final_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 600,
+        "metric": "regression_v2_minimal",
+        "prompt_hash": "2142c04332"
+      },
+      "config_key": "1a46f14f5902ebb0fc2c14773cec6644d2fa5338",
+      "inputs": {
+        "baseline_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/baseline_review.txt",
+        "final_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/final_review_all.txt"
+      },
+      "regression": {
+        "score_delta": {
+          "baseline_score": 7.0,
+          "final_score": 6.0,
+          "delta": -1.0,
+          "scale_hint": "1-10"
+        },
+        "differences": [
+          {
+            "diff_type": "intensified_critique",
+            "summary": "Composite score/normalization mismatch and misleading Figure 9 plotting",
+            "paperaudit_types": [
+              "METHOD_LOGIC_CONSISTENCY",
+              "RHETORICAL_PRESENTATION_MANIPULATION"
+            ],
+            "why_impacts_score": "Undermines trust in core metric aggregation and visual evidence",
+            "evidence": {
+              "baseline_quote": "BayesBench breakdown bars in Figure 9 are approximate ('~') and do not provide exact numeric values",
+              "final_quote": "Figure 9 'NRMSE (A)' plots raw NRMSE; 'Total' seems to sum components despite S=(A+E+C)/3"
+            }
+          },
+          {
+            "diff_type": "new_critique",
+            "summary": "BCS definition vs reported values (non-integer outputs)",
+            "paperaudit_types": [
+              "METHOD_LOGIC_CONSISTENCY",
+              "RHETORICAL_PRESENTATION_MANIPULATION"
+            ],
+            "why_impacts_score": "Creates ambiguity about metric validity and interpretation",
+            "evidence": {
+              "baseline_quote": "BCS captures only the sign of prior-weight change and applies a hard threshold s_a=0 when w_prior>0.9",
+              "final_quote": "Per-task BCS are non-integers in Table 4 despite integer s_a definition, creating definitional ambiguity"
+            }
+          },
+          {
+            "diff_type": "intensified_critique",
+            "summary": "Reproducibility: discard criteria noted without reporting rates",
+            "paperaudit_types": [
+              "EXPERIMENTAL_DESIGN_PROTOCOL",
+              "EVIDENCE_DATA_INTEGRITY"
+            ],
+            "why_impacts_score": "Missing discard statistics hinder reproducibility and bias assessment",
+            "evidence": {
+              "baseline_quote": "API non-determinism and silent vendor updates are acknowledged but not mitigated via version pinning or multiple runs",
+              "final_quote": "Discard criteria described ('ill-formed responses are discarded') but no discard rates reported; threatens reproducibility"
+            }
+          },
+          {
+            "diff_type": "new_critique",
+            "summary": "Kalman observer notation ambiguity (μ_{t|t} vs μ_{t|t−1})",
+            "paperaudit_types": [
+              "METHOD_LOGIC_CONSISTENCY",
+              "RHETORICAL_PRESENTATION_MANIPULATION"
+            ],
+            "why_impacts_score": "Ambiguity can alter model fits and undermine technical rigor",
+            "evidence": {
+              "baseline_quote": "Sequential effects are probed with a Kalman filter, and examples of model fits are shown",
+              "final_quote": "Notational ambiguity: unclear whether y_t is generated from μ_{t|t} or μ_{t|t−1} (Section 3.2; Eqs. 3–4)"
+            }
+          },
+          {
+            "diff_type": "intensified_critique",
+            "summary": "Appendix Figure 16 duplicate/missing entries",
+            "paperaudit_types": [
+              "EVIDENCE_DATA_INTEGRITY",
+              "RHETORICAL_PRESENTATION_MANIPULATION"
+            ],
+            "why_impacts_score": "Compromises evidence quality and modality comparisons",
+            "evidence": {
+              "baseline_quote": "Some plots conflate or inconsistently label axes/scales, complicating interpretation and comparability",
+              "final_quote": "Appendix Figure 16 includes duplicate/missing entries that make modality comparisons hard to interpret"
+            }
+          },
+          {
+            "diff_type": "new_critique",
+            "summary": "Ambiguity on affine/gain variants across sections",
+            "paperaudit_types": [
+              "CONTEXT_MISALIGNMENT_INCOHERENCE",
+              "RHETORICAL_PRESENTATION_MANIPULATION"
+            ],
+            "why_impacts_score": "Inconsistent model variant descriptions reduce clarity and reproducibility",
+            "evidence": {
+              "baseline_quote": "Log-transform and affine variants are included to capture Weber-like scaling and response miscalibration",
+              "final_quote": "Section 3.2 suggests affine/gain for 'non-linear models', Appendix A.13.2 restricts affine to Bayesian, creating ambiguity"
+            }
+          },
+          {
+            "diff_type": "score_rationale_shift",
+            "summary": "Lower overall score explicitly tied to core reporting and composite mismatch",
+            "paperaudit_types": [
+              "METHOD_LOGIC_CONSISTENCY",
+              "RHETORICAL_PRESENTATION_MANIPULATION"
+            ],
+            "why_impacts_score": "Adds explicit rationale linking reporting flaws to reduced confidence",
+            "evidence": {
+              "baseline_quote": "Overall (10): 7 — ... but metric/reporting inconsistencies and methodological assumptions ... temper technical solidity",
+              "final_quote": "Overall (10): 6 — ... several core reporting inconsistencies ... and a composite score/normalization mismatch with Eq. (5) ... temper confidence"
+            }
+          }
+        ]
+      },
+      "generated_at": "2026-01-05T20:40:30"
+    }
+  ]
+}

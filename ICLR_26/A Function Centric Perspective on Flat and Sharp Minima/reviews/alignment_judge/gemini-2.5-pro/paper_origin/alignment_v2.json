@@ -1,0 +1,129 @@
+{
+  "paper": "A Function Centric Perspective on Flat and Sharp Minima",
+  "runs": [
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "final_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "0a71ca7d783136ba33fb6b5ec9aad08ece2f0c09",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/final_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 1.0,
+        "weakness_coverage_recall": 0.71,
+        "ai_extra_major_points_rate": 0.43,
+        "symmetric_coverage_similarity": 0.53,
+        "note": "The AI review perfectly covers all strengths and most weaknesses from the human review. However, the AI also introduces several major, distinct concerns not mentioned by the human, such as the ambiguous \"generalization gap\" definition and the conflation of corruption vs. adversarial robustness, leading to moderate overall similarity."
+      },
+      "generated_at": "2025-12-27T20:40:40"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "baseline_review.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "b3137abdd5dd456ecfb029f7bed4151251d086e2",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/baseline_review.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 1.0,
+        "weakness_coverage_recall": 0.57,
+        "ai_extra_major_points_rate": 0.15,
+        "symmetric_coverage_similarity": 0.5,
+        "note": "The AI review achieved perfect coverage of the human's strength points but only moderate coverage of weaknesses. It missed key human concerns about the toy experiment setup and specific metric assumption mismatches, while adding new, valid critiques regarding the generalization gap definition."
+      },
+      "generated_at": "2025-12-27T20:45:15"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "deepreviewer",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "deep_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "55f39c3e353412551a5ae68e81fc4acc489b4edd",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/deepreviewer/gpt-5-2025-08-07/paper_origin/deep_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 1.0,
+        "weakness_coverage_recall": 0.44,
+        "ai_extra_major_points_rate": 0.6,
+        "symmetric_coverage_similarity": 0.47,
+        "note": "The AI review perfectly covers all strengths but misses several of the human's conceptual weaknesses, such as the ambiguous definition of \"function complexity\" and issues with the toy experiments. Conversely, the AI identifies multiple major, specific experimental confounds (e.g., metric dependence on hyperparameters, correlation with training loss) that the human reviewer did not mention."
+      },
+      "generated_at": "2025-12-27T20:51:49"
+    },
+    {
+      "config": {
+        "judge_model": "gemini-2.5-pro",
+        "review_agent": "deepreviewer",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "deep_review_merge.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180,
+        "metric": "coverage_v1"
+      },
+      "config_key": "752f27bc09e656c7d041a880d0c174422eea6ca4",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/deepreviewer/gpt-5-2025-08-07/paper_origin/deep_review_merge.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "strength_coverage_recall": 1.0,
+        "weakness_coverage_recall": 0.29,
+        "ai_extra_major_points_rate": 0.33,
+        "symmetric_coverage_similarity": 0.32,
+        "note": "The AI review perfectly covers the paper's strengths but shows very low alignment on weaknesses. The AI misses major human concerns about novelty, conceptual ambiguity, and the interpretation of SAM, while raising several distinct technical points about metric implementation, compute fairness, and incomplete results."
+      },
+      "generated_at": "2025-12-27T21:21:15"
+    }
+  ]
+}

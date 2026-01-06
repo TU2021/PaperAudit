@@ -1,0 +1,97 @@
+{
+  "paper": "Scaling Laws for Uncertainty in Deep Learning",
+  "judge_model": "gpt-5.1",
+  "review_agent": "deepreviewer",
+  "ai_model": "gpt-5-2025-08-07",
+  "ai_review_file": "deep_review_all.txt",
+  "inputs": {
+    "human_review": "review.txt",
+    "ai_review": "reviews/deepreviewer/gpt-5-2025-08-07/paper_origin/deep_review_all.txt"
+  },
+  "multi_review": {
+    "detected": false,
+    "num_reviews": 1,
+    "summarize_used": false,
+    "summary_note": null
+  },
+  "ai_review_consolidated": null,
+  "alignment": {
+    "motivation_strength_alignment": 0.8,
+    "weakness_error_alignment": 0.4,
+    "overall_alignment": 0.55,
+    "explanation": {
+      "strength": "Both reviews agree on the core problem and main contributions. They both describe the paper as an empirical investigation of how different forms of predictive uncertainty (epistemic, aleatoric, total) scale with dataset/model size, framed in the context of Bayesian deep learning and scaling laws. They both recognize: (i) the importance and novelty of studying uncertainty scaling laws; (ii) the breadth of empirical evaluation across architectures, datasets, and uncertainty quantification methods; (iii) the relevance to practical uncertainty estimation in deep learning; and (iv) the presence of some theoretical component linking uncertainty scaling to more classical theory (Review A mentions scaling laws and singular learning theory; Review B details linear-model theory and a connection to singular learning theory / SLT). The AI review adds far more granularity (specific datasets, methods, figures), but the high-level motivations and perceived strengths are well aligned.",
+      "weakness": "The overlap on weaknesses is modest. Review A emphasizes (1) lack of theoretical depth and underdeveloped explanation of why scaling laws hold, especially via singular learning theory; (2) inconsistencies across different uncertainty quantification techniques; (3) limited scope in terms of dataset and model sizes relative to real-world regimes; (4) missing connections to existing PAC-Bayes literature; and (5) lack of systematic analysis/interpretation of experimental results. Review B instead focuses on different issues: (1) lack of statistical validation of the power-law fits (no R², confidence intervals, residual analysis or comparison to alternative functional forms); (2) reliance on entropy-based TU/AU/EU without sensitivity to alternative metrics or calibration; (3) use of single-fold results and relatively narrow N ranges for some experiments; (4) a specific theoretical sign error in one equation and only qualitative extension of linear theory to deep nets; (5) limited model-size/compute scaling; and (6) extrapolation beyond observed N without uncertainty quantification. There is some conceptual intersection: both perceive the theoretical story as incomplete/limited and both note that the empirical analysis could be more systematic/rigorous and broader in scope. However, Review A’s concerns about PAC-Bayes connections and interpretation of differing UQ techniques do not appear in Review B, while Review B’s detailed criticisms about fit diagnostics, metric choices, sign inconsistency, and extrapolation are absent from Review A. Hence the alignment on weaknesses is only partial.",
+      "overall": "In aggregate, the two reviews share a similar high-level judgment: the work tackles an important, underexplored problem, presents broad and valuable empirical evidence on uncertainty scaling laws, includes some theoretical grounding, but has limitations in the depth/rigor of theory and the robustness/systematic nature of the empirical analysis. However, they differ substantially in where they place critical emphasis. Review A gives a more conceptual, literature-framing critique (theoretical depth, PAC-Bayes links, interpretive clarity), while Review B provides a highly technical critique centered on statistical validation of fits, specific theoretical inconsistencies, metric choices, and detailed experimental design issues. The strengths are fairly well aligned; the weaknesses diverge more. Overall, the reviews are moderately aligned in substance and overall message but not closely matched in detailed focus."
+    }
+  },
+  "generated_at": "2025-12-27T19:29:24",
+  "runs": [
+    {
+      "config": {
+        "judge_model": "gpt-5.1",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "baseline_review.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180
+      },
+      "config_key": "3b28d70d5731760031a4514ebc98b0afd78edf6d",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/baseline_review.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "motivation_strength_alignment": 0.7,
+        "weakness_error_alignment": 0.55,
+        "overall_alignment": 0.63,
+        "explanation": {
+          "strength": "Both reviews agree that the paper studies scaling laws of predictive uncertainty (epistemic, aleatoric, total) with dataset and model size, using a broad empirical study across Bayesian and ensemble-style methods, and that this is novel, relevant, and practically important for uncertainty quantification in modern deep learning. The AI review additionally emphasizes detailed aspects such as specific architectures, OOD scaling, optimizer effects, and a more substantial theoretical component, which the human review does not foreground and in fact characterizes as limited, so there is partial but not complete alignment on where the main strengths lie.",
+          "weakness": "There is some overlap: both note limitations in theoretical depth/connection to deep models and scaling theory, and that the empirical exploration of model-size/compute (and dataset regimes) is limited. However, the human review focuses on missing PAC-Bayes connections, limited scope of datasets/models, discrepancies between UQ techniques, and lack of systematic interpretation of results, while the AI review instead stresses statistical fragility of the scaling fits, missing procedural details (especially MCMC), ambiguity in epistemic diagnostics, replication/CI issues, restricted OOD scope/metrics, and over-generalized conclusions; these are related in spirit (rigor and generality) but largely non-overlapping in concrete critiques.",
+          "overall": "Substantively, both reviews see the work as an important, empirically rich exploration of uncertainty scaling with meaningful contributions but with notable caveats about theory and generality, yielding a broadly consistent positive-but-qualified judgment. Alignment is high on the central motivation and empirical contribution, while the detailed strengths and especially the weaknesses diverge in focus and granularity, leading to a moderate-to-high overall alignment rather than near-perfect agreement."
+        }
+      },
+      "generated_at": "2025-12-27T19:51:01"
+    },
+    {
+      "config": {
+        "judge_model": "gpt-5.1",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "final_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180
+      },
+      "config_key": "4569a6a97a67c8e2b360606eb74d6eb53b892d06",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/final_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "motivation_strength_alignment": 0.76,
+        "weakness_error_alignment": 0.52,
+        "overall_alignment": 0.66,
+        "explanation": {
+          "strength": "Both reviews agree on the core motivation: studying scaling laws for epistemic/aleatoric/total uncertainty in deep learning, and they both highlight the breadth of empirical evaluation across architectures, UQ methods, and in-/out-of-distribution settings, as well as practical relevance for safety-critical applications. The AI review adds several strengths not mentioned in the human review (e.g., clarity of uncertainty metrics, optimization ablations, extrapolation example, and explicit theoretical bridge), and it treats the existing theory more positively than the human reviewer, leading to high but not complete alignment.",
+          "weakness": "Both note shortcomings in the theoretical side and in the breadth/generalization of the empirical study (limited model/data regimes, incomplete model-size scaling), and both see the analysis of results as needing more systematic treatment. However, the AI review introduces many additional, more technical concerns (fit diagnostics for scaling laws, missing MCMC/UQ procedural details, replication/fold variability, OOD metrics, over-generalized claims) that the human review does not mention, while the human review uniquely calls out missing PAC-Bayes connections and narrative clarity of the experimental section, so weakness alignment is only moderate.",
+          "overall": "Overall, the reviews converge on a similar substantive judgment: an important, empirically strong study of uncertainty scaling laws with meaningful insights but with notable gaps in theory, generality, and analysis. The AI review is more granular and critical on statistical and procedural rigor and is somewhat more positive about the existing theoretical contribution than the human review, so their focus and conclusions are broadly consistent but not tightly matched in all key details."
+        }
+      },
+      "generated_at": "2025-12-27T19:53:37"
+    }
+  ]
+}

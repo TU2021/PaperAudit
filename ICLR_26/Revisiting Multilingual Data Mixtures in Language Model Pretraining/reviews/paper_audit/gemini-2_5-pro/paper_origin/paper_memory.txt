@@ -1,0 +1,94 @@
+# Global Summary
+This paper investigates the impact of multilingual data mixtures on language model pretraining, challenging several common assumptions. The authors train 1.1B and 3B parameter decoder-only Transformer models on corpora of up to 400 languages and 225 billion tokens. The core findings are: 1) Increasing the amount of English data does not necessarily harm multilingual performance, provided the absolute token count for other languages is sufficient. 2) English serves as an effective pivot language for cross-lingual transfer across different language families, and combining it with a family-specific pivot (e.g., Russian for Slavic languages) yields the best results. 3) Curriculum learning, or staging the introduction of languages during training, does not mitigate negative interference or improve final multilingual performance. 4) The "curse of multilinguality" (performance degradation from adding more languages) is not observed to be significant at this scale; instead, performance issues are attributed to finite model capacity and data distributions that amplify noisy, low-resource data. The study provides practical guidance for designing multilingual pretraining strategies, suggesting a focus on acquiring sufficient high-quality data for all languages rather than on complex data balancing or curriculum schemes.
+
+# Abstract
+The paper investigates the impact of multilingual data mixtures in pretraining large language models (LLMs), specifically addressing the "curse of multilinguality." The authors train 1.1B and 3B parameter LLMs on corpora with 25 to 400 languages. Their findings challenge several common beliefs. First, they show that combining English and multilingual data does not degrade performance for either group if languages have sufficient token counts. Second, English is an effective pivot language across language families, and using a family-specific pivot does not consistently improve performance within that family. Finally, they do not observe a significant curse of multilinguality as the number of languages increases for models at this scale. The authors conclude that well-balanced multilingual data can enhance LLM capabilities without performance trade-offs.
+
+# Introduction
+- The paper addresses the ongoing debate about the optimal composition of multilingual data for pretraining LLMs, particularly the trade-offs between language coverage and performance.
+- It notes that previous studies on this topic were limited by model scale (e.g., 45M or 85M parameters) or the number of languages considered (e.g., 23 languages).
+- The authors systematically study these effects by training 1.1B and 3B parameter models on up to 400 languages and 100B tokens.
+- The paper outlines four key findings it aims to demonstrate:
+    1. More English data does not necessarily hurt multilingual performance if sufficient multilingual tokens are included.
+    2. Language family boundaries are not barriers to transfer; English is an effective pivot across families.
+    3. Curriculum learning fails to mitigate negative interference between languages.
+    4. The "curse of multilinguality" is not primarily caused by the number of languages but by finite model capacity and noisy data distributions.
+
+# Method
+- **Model:** Decoder-only Transformers based on the LLaMA architecture, with 1.1B and 3B parameters. Detailed configurations are in Appendix A.
+- **Pretraining Data:** Two corpora are used: the multilingual C4 (mC4) for experiments with 30 languages, and FineWeb2 for experiments with up to 1,834 languages.
+- **Tokenizer:** The Mistral-Nemo-Base-2407 tokenizer is used, with a vocabulary size of 131,000.
+- **Training Scale:** Models are trained on 100B to 225B tokens.
+- **Evaluation:** Performance is measured using language modeling loss on a held-out validation set and a suite of downstream multilingual benchmarks. Results are aggregated by language.
+
+# Experiments
+The experiments are structured around challenging four common assumptions about multilingual pretraining.
+
+- **Assumption #1: English Hurts Multilinguality**
+    - This experiment varies the proportion of English data (0% to 100%) in a 30-language mix from mC4, using 1.1B and 3B models.
+    - Two settings were tested:
+        1.  **Fixed Total Budget (100B tokens):** Increasing English data reduces multilingual data. Multilingual validation loss is stable up to ~40% English, then degrades. English loss improves as its proportion increases.
+        2.  **Fixed Multilingual Budget (90B tokens):** English data is added on top, increasing the total budget up to 225B tokens. Multilingual performance (loss and benchmarks) remains largely unaffected even when English is 60% of the data.
+    - **Takeaway:** Increasing English data does not harm multilingual capabilities if the absolute quantity of multilingual tokens is sufficient.
+
+- **Assumption #2: "Stay in the family"**
+    - This experiment tests the effectiveness of pivot languages for Slavic and Cyrillic-script languages using a 1.1B model.
+    - Three pivot conditions were compared: English only, Russian only, and a combination of English and Russian.
+    - **Results:** Up to a 50% pivot data allocation, English and Russian perform comparably. At 60% or more, Russian is slightly more effective. A combination of both English and Russian as pivots yields the lowest overall loss for non-pivot languages.
+    - **Takeaway:** English is a broadly effective pivot. In very low-resource settings, typological similarity matters more. A combination of pivots balancing breadth (English) and proximity (Russian) is most beneficial.
+
+- **Assumption #3: Multilingual Curriculum Learning Reduces Negative Interference**
+    - This experiment tests if the order of language introduction improves performance using 3B models.
+    - Four strategies were compared: All-at-once (baseline), English-all, English-Pivots-all, and Pivots-all.
+    - **Results:** All curriculum strategies converge to a similar final validation loss for non-English languages. Introducing languages in stages causes temporary "forgetting" (loss spikes). Better English performance in some curricula is strongly correlated with the total number of English tokens seen, not the curriculum structure.
+    - **Takeaway:** Curriculum learning affects the training trajectory but does not reduce interference or improve final multilingual performance.
+
+- **Assumption #4: The “Curse of Multilinguality”**
+    - This experiment revisits the idea that adding more languages degrades performance. 3B models were trained on 100B tokens from FineWeb-2, with English fixed at 40% and the number of other languages increasing from 25 to 400.
+    - Two data distributions were used: natural distribution and temperature sampling (τ = 3.3).
+    - **Results for English (Table 1):** Performance remains largely stable even when scaling to 400 languages, especially under the natural distribution. For 400 languages, English LM loss is 2.678 (natural) vs. 2.707 (temp. sampling).
+    - **Results for non-English (Figure 5):** Under the natural distribution, performance is stable as languages are added. With temperature sampling, performance degrades (loss for Top-25 languages increases from 1.482 to 1.603 when going from 25 to 400 training languages).
+    - **Takeaway:** The curse is not primarily about the number of languages but is better described as a "curse of capacity" (finite model ability to absorb tokens) and a "curse of data quality" (oversampling noisy, low-resource data).
+
+# Related Work
+- **Pretraining Data Mixture:** Discusses prior work on optimizing data mixtures, including temperature-based sampling and scaling laws for multilingual models.
+- **Curse of Multilinguality & Negative Interference:** Cites the origin of the term (Conneau et al., 2020) and notes that most prior work used smaller models (e.g., 270M parameters) or fewer languages. Mentions other approaches like cross-lingual expert models.
+- **Impact of Pivot Languages:** Reviews work showing the benefits of pivot languages in machine translation and cross-lingual instruction tuning, often with English as the pivot.
+- **Curriculum Learning (CL) for LLMs:** Summarizes studies on CL for machine translation and instruction-tuning, noting its reported benefits in those contexts.
+
+# Discussion
+- The paper concludes that its findings challenge several prevailing assumptions in multilingual pretraining.
+- It reiterates that high proportions of English data are not inherently harmful if multilingual data volume is sufficient.
+- English is confirmed as a strong general-purpose pivot language across families.
+- Curriculum learning offers no demonstrable benefit over a well-mixed approach for pretraining.
+- The "curse of multilinguality" is reframed as an issue of model capacity and data quality/distribution, not simply the number of languages.
+- **Practical Guidance:**
+    1. Curriculum learning is not beneficial for pretraining.
+    2. Focus resources on scaling and cleaning low-resource data.
+    3. Do not arbitrarily limit language coverage, as performance depends on data quality and quantity.
+- **Limitations:**
+    - The models (1.1B, 3B) are much smaller than frontier models.
+    - The study did not explore post-training effects or different sampling strategies due to computational constraints.
+    - The chosen tokenizer may limit performance on some low-resource languages.
+
+# Appendix
+- **A. Language Model Training:**
+    - Provides architectural details for the 1.1B (24 layers, 1536 hidden dim) and 3B (28 layers, 2496 hidden dim) LLaMA-based models.
+    - Training hyperparameters include a learning rate of 8e-4, AdamW optimizer, and a micro-batch size of 5.
+    - Training was done on NVIDIA H100 GPUs. 1.1B models trained on 88 GPUs for ~15h per 100B tokens; 3B models on 256 GPUs for ~18h per 100B tokens.
+    - Defines sampling methods: Natural Sampling and Temperature Sampling (with τ = 3.3).
+- **B. Benchmark Setup:**
+    - Lists 10 multilingual benchmarks used for evaluation, including Belebele, XCOPA, MMMLU, and Exams.
+    - Describes the aggregation method: scores are averaged across tasks for each language to get a language-specific score.
+- **C. Pivot Ablation:**
+    - Contains tables listing the languages used in the experiments (Tables 3 and 4).
+    - Includes figures showing validation loss and benchmark scores for the 3B models in the "English Hurts Multilinguality" experiment (Figures 7 and 8), which mirror the 1.1B model trends.
+    - Figure 9 provides per-language loss details for the pivot language experiment.
+- **D. Cross-Lingual Transfer:**
+    - Describes an experiment training a 3B model on 1,834 languages from FineWeb-2 *without* English data to analyze transfer effects on English.
+    - Finds that English validation loss decreases when more data from high-resource, typologically related languages is included.
+    - Reports strong positive Pearson correlations between English performance and the presence of Slavic (0.85), Germanic (0.80), and Romance (0.78) languages.
+- The appendix also contains extensive tables with detailed token counts for each language in each experimental condition (Tables 8, 10, 11, 12, 13, 14) and per-benchmark scores (Table 9).
+
+# References
+This section lists the cited works in the manuscript.

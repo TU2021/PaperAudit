@@ -1,0 +1,53 @@
+### Summary
+
+This paper presents **SD-MAD**, a **few-shot multi-anomaly detection** framework designed for medical images. The challenge of detecting multiple anomaly categories in medical images is tackled by leveraging **vision-language models (VLMs)**. The authors argue that existing few-shot anomaly detection models treat anomalies as a one-class problem, failing to distinguish between different types of anomalies. To address this, SD-MAD incorporates **radiological sign descriptions**, which are aligned with anomaly categories to distinguish between them. The framework is evaluated on medical datasets and demonstrates strong performance improvements over existing methods like **CLIP** and **MedCLIP**.
+
+---
+
+### Strengths
+
+1. **Innovative Approach**:
+
+   * The introduction of **radiological sign descriptions** in aligning vision-language models with anomaly categories is a novel idea that bridges the gap between **clinical expertise** and **deep learning**.
+   * The framework moves beyond one-class classification by addressing the issue of **multi-anomaly detection**, making it more relevant for real-world medical imaging tasks.
+
+2. **Strong Empirical Validation**:
+
+   * The paper demonstrates the **effectiveness of SD-MAD** across multiple medical imaging datasets (ChestX-ray8, OCT-17, FastMRI+), with solid results showing its advantage over baseline methods.
+   * The **experimental results** on both **multi-label and few-shot learning** tasks provide convincing evidence that SD-MAD improves detection accuracy for multiple anomalies.
+
+3. **Clear Evaluation Metrics**:
+
+   * The paper introduces new **multi-anomaly detection metrics** and applies them rigorously across various datasets, making it easier to assess the performance of SD-MAD in comparison to existing methods.
+
+4. **Clinical Relevance**:
+
+   * The approach addresses an important real-world problem where detecting multiple types of anomalies in medical images can lead to better diagnostic outcomes. This makes the method highly relevant for clinical applications.
+
+---
+
+### Weaknesses
+
+1. **Limited Baseline Comparisons**:
+
+   * The paper only compares SD-MAD with **CLIP** and **MedCLIP**, which are primarily one-class methods. It would be more informative to include comparisons with other relevant baselines like **AnomalyCLIP** to further demonstrate the advantages of SD-MAD.
+
+2. **Dependency on Textual Sign Descriptions**:
+
+   * While using **textual sign prompts** is innovative, it heavily relies on **high-quality medical descriptions**, which could introduce noise or inaccuracies. If the textual descriptions are not well aligned with the **visual characteristics of anomalies**, the model¡¯s performance may degrade. A more detailed discussion on how to ensure the quality of these descriptions would be helpful.
+
+3. **Insufficient Discussion on Open-Set Detection**:
+
+   * The method appears to assume that all anomaly categories are known during training, which limits its ability to handle **novel or unseen anomalies** during inference. This is a major concern in real-world clinical scenarios where new anomaly types may arise. An analysis of how the model would behave when faced with novel anomalies is lacking.
+
+4. **Lack of Statistical Measures**:
+
+   * The experiments lack **statistical measures** (e.g., mean ¡À std over multiple trials), which are crucial in **few-shot learning** settings to assess the robustness of the model¡¯s performance.
+
+5. **Incomplete Coverage of Dataset Analysis**:
+
+   * The paper does not provide sufficient details on the **co-occurrence of anomalies** in the datasets. Given that the paper focuses on **multi-anomaly detection**, knowing how often multiple anomalies appear together in real-world medical images is critical to support the claim that this is a true multi-anomaly detection task.
+
+6. **Absence of Pixel-Level Evaluation**:
+
+   * The lack of **pixel-level AUROC** in the main results section limits the ability to fully evaluate the model¡¯s performance at a more granular level. While the paper provides these results in the appendix, their absence from the main body of the paper could weaken the overall evaluation.

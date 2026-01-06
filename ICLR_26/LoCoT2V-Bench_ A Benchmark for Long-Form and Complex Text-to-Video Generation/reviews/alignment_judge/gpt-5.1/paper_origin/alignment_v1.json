@@ -1,0 +1,130 @@
+{
+  "paper": "LoCoT2V-Bench_ A Benchmark for Long-Form and Complex Text-to-Video Generation",
+  "judge_model": "gpt-5.1",
+  "review_agent": "deepreviewer",
+  "ai_model": "gpt-5-2025-08-07",
+  "ai_review_file": "deep_review_all.txt",
+  "inputs": {
+    "human_review": "review.txt",
+    "ai_review": "reviews/deepreviewer/gpt-5-2025-08-07/paper_origin/deep_review_all.txt"
+  },
+  "multi_review": {
+    "detected": false,
+    "num_reviews": 1,
+    "summarize_used": false,
+    "summary_note": null
+  },
+  "ai_review_consolidated": null,
+  "alignment": {
+    "motivation_strength_alignment": 0.92,
+    "weakness_error_alignment": 0.9,
+    "overall_alignment": 0.92,
+    "explanation": {
+      "strength": "Both reviews clearly converge on the core motivation and contributions: a new benchmark (LoCoT2V-Bench) specifically targeting long-form, complex text-to-video generation, using longer (30–60s), multi-scene, multi-event prompts derived from real-world videos. They both emphasize the multi-dimensional evaluation framework, including static quality, text–video alignment, temporal aspects, event-level alignment, narrative coherence, and high-level/emotional or thematic attributes assessed via the new HERD metric. Both also highlight that experiments on nine open-source models show that current systems do reasonably well on low-level visual/temporal quality but fail on fine-grained temporal consistency, event alignment, and higher-level narrative/thematic coherence. The AI review goes into more metric-level detail (Hungarian matching, transition smoothness, etc.), but the emphasis and framing of the main strengths and the benchmark’s role in advancing evaluation of long-form T2V are highly aligned with the human review.",
+      "weakness": "The two reviews identify very similar high-level weaknesses, although the AI review provides a more granular breakdown. Both flag: (1) Dataset scale as limited/moderate (240 prompts) and thus somewhat constraining robustness and generality of conclusions. (2) Heavy reliance on LLM/MLLM components throughout the pipeline, especially for HERD and other higher-level metrics, raising concerns about evaluator bias, error propagation, and sensitivity to model choice/version. (3) Lack of human validation/grounding for the new subjective metrics (HERD, narrative flow, emotional response, content clarity), and absence of explicit comparison with human judgments. Beyond that, Review A points to issues with event-level temporal consistency in complex multi-subject or occluded scenarios, whereas Review B discusses more broadly missing implementation details (hyperparameters, encoders, aggregation/normalization, event segmentation) and limited statistical analysis (few methods in correlation studies, unclear length normalization). These are related in spirit—both question reliability and robustness of the evaluation—but they focus on different aspects of that concern. Review A also notes the absence of closed-source baselines, which the AI review does not mention. Overall, there is strong overlap on the biggest conceptual weaknesses (LLM dependence, small scale, lack of human validation), with some additional, non-overlapping technical details from Review B.",
+      "overall": "In substance and judgment, the reviews are strongly aligned. They agree on what the paper is trying to achieve (a holistic long-form T2V benchmark), what is novel and valuable (complex real-world prompts, event-level/narrative metrics including HERD, comprehensive evaluation of nine models), and where current models succeed (frame-level quality) versus fail (long-range coherence, event alignment, narrative/thematic expression). They also converge on core concerns: limited dataset size, heavy dependence on LLM-based evaluation, and missing human validation, with associated questions about robustness and reliability. The AI review adds more detailed critiques about missing hyperparameters, normalization/aggregation choices, and limited correlation analyses, while the human review adds narrower points about event localization/subject disambiguation in complex scenes and the absence of proprietary baselines. These differences are complementary refinements, not contradictions. Thus, despite some additional detail and breadth in Review B, the overall alignment of perspective, emphasis, and evaluative stance is high."
+    }
+  },
+  "generated_at": "2025-12-27T19:29:50",
+  "runs": [
+    {
+      "config": {
+        "judge_model": "gpt-5.1",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "baseline_review.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180
+      },
+      "config_key": "3b28d70d5731760031a4514ebc98b0afd78edf6d",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/baseline_review.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "motivation_strength_alignment": 0.78,
+        "weakness_error_alignment": 0.7,
+        "overall_alignment": 0.74,
+        "explanation": {
+          "strength": "Both reviews strongly agree on the key motivation—addressing the gap in benchmarks for long-form, complex text‑to‑video generation—and emphasize similar strengths: comprehensive multi-dimensional evaluation, novel metrics such as HERD and event-level alignment, and insightful experiments across multiple open‑source models. Review B provides far more granular technical detail, but these do not contradict Review A’s identified strengths.",
+          "weakness": "Both reviews share core concerns: heavy reliance on MLLMs for metrics and pipeline steps, lack of human validation, dataset size limitations, and issues around reliability or cascading error in evaluation metrics. Review B adds additional reproducibility/parameter-specification concerns and clarity inconsistencies that Review A does not mention, but the main weakness themes overlap well.",
+          "overall": "The two reviews are well aligned in their substantive assessment: they identify the same central contributions and share major reservations about metric reliability, scale, and dependence on automated systems. Differences lie mainly in Review B’s more exhaustive enumeration of technical issues, but the core judgments and focus are consistent."
+        }
+      },
+      "generated_at": "2025-12-27T19:51:14"
+    },
+    {
+      "config": {
+        "judge_model": "gpt-5.1",
+        "review_agent": "paper_audit",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "final_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180
+      },
+      "config_key": "4569a6a97a67c8e2b360606eb74d6eb53b892d06",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/paper_audit/gpt-5-2025-08-07/paper_origin/final_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "motivation_strength_alignment": 0.88,
+        "weakness_error_alignment": 0.55,
+        "overall_alignment": 0.72,
+        "explanation": {
+          "strength": "Both reviews agree that the core contribution is a long-form, complex text-to-video benchmark with multi-dimensional evaluation, including event-level alignment and high-level narrative/emotional metrics such as HERD, and they both highlight the breadth of the experiments on nine models as a key asset. The AI review adds finer-grained praise for specific metric designs (transition smoothness, intra/inter-event consistency, polarity-aware HERD, analytical studies, ethics/release plans) that the human review does not mention explicitly, but these expand rather than contradict the human reviewer’s high-level strengths.",
+          "weakness": "Both reviews identify the small dataset size and heavy reliance on MLLMs for evaluation (including HERD) without human validation as major limitations, and they share concerns about error propagation in the evaluation pipeline. The AI review, however, raises many additional issues—missing hyperparameter details, normalization/orientation ambiguities, terminology/figure inconsistencies, and incomplete reproducibility—that the human review does not touch, while the human review uniquely notes limited model scope (no closed-source baselines) and specific concerns about event localization/subject occlusion that the AI review does not highlight.",
+          "overall": "In substance, both reviews portray the work as a timely and impactful benchmark that fills a gap in long-form T2V evaluation while being notably constrained by dataset scale and the reliability/validation of its LLM-based metrics, so their overall judgment and focus are broadly consistent. Divergences arise mainly because the AI review offers a more exhaustive audit of implementation clarity and reproducibility, and it does not frame model coverage as a weakness, leading to only partial but still substantial alignment on the limitation side."
+        }
+      },
+      "generated_at": "2025-12-27T19:54:01"
+    },
+    {
+      "config": {
+        "judge_model": "gpt-5.1",
+        "review_agent": "deepreviewer",
+        "ai_model": "gpt-5-2025-08-07",
+        "ai_review_file": "deep_review_all.txt",
+        "temperature": 0.0,
+        "max_tokens": 20000,
+        "timeout_s": 180
+      },
+      "config_key": "c4c3f92bb6e001153f8f3d5bbdd1185ecb61a980",
+      "inputs": {
+        "human_review": "review.txt",
+        "ai_review": "reviews/deepreviewer/gpt-5-2025-08-07/paper_origin/deep_review_all.txt"
+      },
+      "multi_review": {
+        "detected": false,
+        "num_reviews": 1,
+        "summarize_used": false
+      },
+      "ai_review_consolidated": null,
+      "alignment": {
+        "motivation_strength_alignment": 0.86,
+        "weakness_error_alignment": 0.72,
+        "overall_alignment": 0.8,
+        "explanation": {
+          "strength": "Both reviews emphasize the benchmark’s core motivation of evaluating long-form, complex T2V generation, highlight the real‑video–grounded prompts, and stress the multi-dimensional evaluation suite including event-level alignment, temporal coherence, and HERD, as well as the finding that models excel at basic visual quality but fail on narrative/thematic coherence. Review B adds more granular praise (e.g., transition smoothness, detailed metric formulations, ethical/reproducibility statements), but these elaborate rather than contradict Review A’s broader strengths. A minor divergence is that Review B frames the nine-model evaluation breadth as a strength, while Review A treats the model scope more cautiously.",
+          "weakness": "The reviews align on several central weaknesses: the modest benchmark size, heavy reliance on LLM/MLLM components (especially for HERD and related metrics), and the lack of human validation for subjective dimensions, all of which raise concerns about reliability. Review A uniquely criticizes assumptions about accurate event localization and handling of occluded/multi-subject scenarios, whereas Review B instead focuses on under-specified hyperparameters, aggregation/normalization choices, limited correlation analysis, and unclear handling of video length, and it does not share Review A’s concern about excluding closed-source baselines. Overall, they share core concerns but each surfaces additional, non-overlapping issues.",
+          "overall": "Substantively, both reviews see the work as a timely, valuable benchmark with novel high-level and event-level metrics that expose current models’ weaknesses in long-range coherence, while flagging reliability and validation gaps in the evaluation pipeline. Review B offers a more exhaustive reproducibility and implementation critique, and it is more positive about baseline coverage, but these differences mostly refine rather than overturn Review A’s judgment. As a result, their overall focus and evaluative stance are largely consistent, with some divergence in secondary methodological and scope-related details."
+        }
+      },
+      "generated_at": "2025-12-27T19:56:42"
+    }
+  ]
+}
