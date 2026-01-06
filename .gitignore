@@ -1,0 +1,10 @@
+*.pth
+*.pt
+*.ckpt
+*.csv
+*.npy
+data/
+cache/
+__pycache__/
+*.pyc
+*.log
