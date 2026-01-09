@@ -2,7 +2,13 @@
 
 A comprehensive Large Language Model (LLM)-based system for academic paper error detection and review, providing end-to-end solutions from data preprocessing, error detection, paper review to model training.
 
-**[中文](README_cn.md)**
+<p align="center">
+  <a href="https://github.com/TU2021/PaperAudit"><strong>💻 Code</strong></a> •
+  <a href="https://huggingface.co/datasets/mayiwen/PaperAudit_Dataset"><strong>📄 Paper</strong></a> •
+  <a href="https://huggingface.co/datasets/mayiwen/PaperAudit_Dataset"><strong>📊 Dataset</strong></a> •
+  <a href="https://huggingface.co/mayiwen/PaperAudit_Models"><strong>🤖 Models</strong></a> •
+  <a href="README_cn.md"><strong>🇨🇳 中文</strong></a>
+</p>
 
 ## Project Overview
 

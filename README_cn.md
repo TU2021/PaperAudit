@@ -2,6 +2,14 @@
 
 一个基于大语言模型（LLM）的学术论文错误检测与审查系统，提供从数据预处理、错误检测、论文审查到模型训练的全流程解决方案。
 
+<p align="center">
+  <a href="https://github.com/TU2021/PaperAudit"><strong>💻 代码</strong></a> •
+  <a href="https://huggingface.co/datasets/mayiwen/PaperAudit_Dataset"><strong>📄 论文</strong></a> •
+  <a href="https://huggingface.co/datasets/mayiwen/PaperAudit_Dataset"><strong>📊 数据集</strong></a> •
+  <a href="https://huggingface.co/mayiwen/PaperAudit_Models"><strong>🤖 模型</strong></a> •
+  <a href="README.md"><strong>🇬🇧 English</strong></a>
+</p>
+
 ## 项目概述
 
 PaperAudit 是一个综合性的学术论文质量评估系统，主要功能包括：
