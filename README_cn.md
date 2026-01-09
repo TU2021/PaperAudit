@@ -40,7 +40,7 @@ PaperAudit/
 从 OpenReview 下载论文并生成用于训练的错误检测数据。
 
 <p align="center">
-  <img src="figs/1_benchmark.pdf" alt="Benchmark 构造" width="800"/>
+  <img src="figs/1_benchmark.png" alt="Benchmark 构造" width="800"/>
 </p>
 
 **主要功能：**
@@ -60,7 +60,7 @@ PaperAudit/
 基于多智能体系统（MAS）的论文错误检测，能够识别事实错误、逻辑不一致、引用错误等问题。
 
 <p align="center">
-  <img src="figs/2a_detect_workflow.pdf" alt="错误检测工作流程" width="800"/>
+  <img src="figs/2a_detect_workflow.png" alt="错误检测工作流程" width="800"/>
 </p>
 
 **主要功能：**
@@ -78,7 +78,7 @@ PaperAudit/
 提供多阶段、多视角的自动化论文审查，包括基线审查、作弊检测、动机评估等。
 
 <p align="center">
-  <img src="figs/2b_review_workflow.pdf" alt="论文审查工作流程" width="800"/>
+  <img src="figs/2b_review_workflow.png" alt="论文审查工作流程" width="800"/>
 </p>
 
 **主要功能：**
