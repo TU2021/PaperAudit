@@ -39,6 +39,10 @@ PaperAudit/
 
 Download papers from OpenReview and generate error detection data for training.
 
+<p align="center">
+  <img src="figs/1_benchmark.pdf" alt="Benchmark Construction" width="800"/>
+</p>
+
 **Main Features:**
 - Download paper PDFs, reviews, and metadata from OpenReview API
 - Parse PDFs into structured JSON using LlamaParse and LLM
@@ -55,6 +59,10 @@ Download papers from OpenReview and generate error detection data for training.
 
 Multi-Agent System (MAS) based paper error detection that can identify factual errors, logical inconsistencies, citation errors, and more.
 
+<p align="center">
+  <img src="figs/2a_detect_workflow.pdf" alt="Error Detection Workflow" width="800"/>
+</p>
+
 **Main Features:**
 - Multi-agent collaborative detection (Planner, Retriever, Specialist)
 - Support for multiple detection modes (basic, enhanced, full)
@@ -68,6 +76,10 @@ Multi-Agent System (MAS) based paper error detection that can identify factual e
 ### 3. review - Paper Review System
 
 Provides multi-stage, multi-perspective automated paper review, including baseline review, cheating detection, motivation evaluation, etc.
+
+<p align="center">
+  <img src="figs/2b_review_workflow.pdf" alt="Paper Review Workflow" width="800"/>
+</p>
 
 **Main Features:**
 - **AuditAgent**: Multi-stage review (baseline review → cheating detection → motivation evaluation → final assessment)
