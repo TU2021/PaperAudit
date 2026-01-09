@@ -18,7 +18,10 @@ SYNTH_MODELS=(
 # 2. DETECT MODELS List
 # =======================
 DETECT_MODELS=(
-    "gpt-5-2025-08-07"
+    ##### S1 Models #####
+    "S1-Base-Ultra"
+    ##### LLM #####
+    # "gpt-5-2025-08-07"
     # "o4-mini"
     # "gemini-2.5-pro"
     # "claude-sonnet-4-5-20250929"
@@ -43,7 +46,7 @@ EVAL_MODES=(
 # =======================
 # 4. Common Parameters (modify as needed)
 # =======================
-ROOT_DIR="/path/to/papers"
+ROOT_DIR="/data/home/zdhs0006/ACL/data/NeurIPS_25"
 JOBS=10                # Number of concurrent evaluation tasks
 OVERWRITE=""   # Set to "" to disable overwrite
 EVAL_MODEL="gpt-5.1"

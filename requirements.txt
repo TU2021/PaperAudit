@@ -46,8 +46,8 @@ trl>=0.9.6  # Transformer Reinforcement Learning
 # Utilities
 tqdm>=4.67.1  # Progress bars
 requests>=2.32.5  # HTTP library
-arxiv>=0.0.0  # ArXiv API client
-openreview>=1.0.0  # OpenReview API client
+arxiv<2.3.0  # ArXiv API client (versions >=2.3.0 require Python 3.11+)
+openreview-py>=1.0.0  # OpenReview API client
 
 # Async and concurrency
 aiofiles>=24.1.0  # Async file operations

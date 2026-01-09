@@ -299,7 +299,7 @@ def build_memory_messages(blocks: List[Dict[str, Any]], enable_mm: bool) -> List
     ]
 
 
-def build_paper_memory(blocks: List[Dict[str, Any]], dbgdir: Path, model: str, enable_mm: bool) -> Tuple[Optional[Dict[str, Any]], Dict[str, Any]]:
+def build_paper_memory(blocks: List[Dict[str, Any]], dbgdir: Path, model: str, enable_mm: bool, temperature: float = TEMP_MEMORY) -> Tuple[Optional[Dict[str, Any]], Dict[str, Any]]:
     """
     产出自然语言记忆：
     memory_obj = {
@@ -316,7 +316,7 @@ def build_paper_memory(blocks: List[Dict[str, Any]], dbgdir: Path, model: str, e
         tag="memory_build",
         dbgdir=dbgdir,
         expect_key=None,
-        temperature=TEMP_MEMORY,
+        temperature=temperature,
         api_key=OPENAI_API_KEY,
     )
     meta = {"memory_parse_ok": False, "error": None, "mode": "natural_language"}
@@ -402,7 +402,7 @@ def build_planner_messages_multimodal(
     ]
 
 
-def planner_build_tasks_mm(blocks: List[Dict[str, Any]], outline_obj: Dict[str, Any], dbgdir: Path, model: str, enable_mm: bool) -> Tuple[List[Task], Dict[str, Any]]:
+def planner_build_tasks_mm(blocks: List[Dict[str, Any]], outline_obj: Dict[str, Any], dbgdir: Path, model: str, enable_mm: bool, temperature: float = TEMP_PLANNER) -> Tuple[List[Task], Dict[str, Any]]:
     def _messages(_):
         return build_planner_messages_multimodal(blocks, outline_obj, enable_mm=enable_mm)
     raw = call_llm_chat_with_empty_retries(
@@ -412,7 +412,7 @@ def planner_build_tasks_mm(blocks: List[Dict[str, Any]], outline_obj: Dict[str, 
         tag="planner",
         dbgdir=dbgdir,
         expect_key="tasks",
-        temperature=TEMP_PLANNER,
+        temperature=temperature,
         api_key=OPENAI_API_KEY,
     )
     tasks: List[Task] = []
@@ -494,6 +494,7 @@ def retriever_extract_and_questions(
     paper_only: bool,
     memory_slice: Optional[str],
     enable_mm: bool = True,
+    temperature: float = TEMP_RETRIEVER,
 ) -> Tuple[List[Evidence], List[Dict[str, str]], Dict[str, Any]]:
     """
     执行 Retriever：
@@ -514,7 +515,7 @@ def retriever_extract_and_questions(
         tag=f"task_{task.task_id}.retriever",
         dbgdir=dbgdir,
         expect_key="paper_evidence",
-        temperature=TEMP_RETRIEVER,
+        temperature=temperature,
         api_key=OPENAI_API_KEY,
     )
 
@@ -685,6 +686,7 @@ def specialist_review(
     prior_findings: Optional[List[Finding]] = None,
     use_retriever: bool = True,
     enable_mm: bool = True,
+    temperature: float = TEMP_SPECIALIST,
 ) -> Tuple[List[Finding], Dict[str, Any]]:
     messages = _build_specialist_messages_multimodal(
         task=task,
@@ -703,7 +705,7 @@ def specialist_review(
         tag=f"task_{task.task_id}.specialist_{task.risk_dimension}",
         dbgdir=dbgdir,
         expect_key="findings",
-        temperature=TEMP_SPECIALIST,
+        temperature=temperature,
         api_key=OPENAI_API_KEY,
     )
 
@@ -761,7 +763,7 @@ def build_global_user_parts(blocks: List[Dict[str, Any]], global_max_findings:in
     ))
     return parts
 
-def global_cross_section_review(blocks: List[Dict[str, Any]], dbgdir: Path, model: str, global_max_findings:int, enable_mm: bool) -> Tuple[List[Finding], Dict[str, Any]]:
+def global_cross_section_review(blocks: List[Dict[str, Any]], dbgdir: Path, model: str, global_max_findings:int, enable_mm: bool, temperature: float = TEMP_GLOBAL_REVIEW) -> Tuple[List[Finding], Dict[str, Any]]:
     def _messages(_):
         return [
             {"role": "system", "content": PromptTemplates.global_system()},
@@ -775,7 +777,7 @@ def global_cross_section_review(blocks: List[Dict[str, Any]], dbgdir: Path, mode
         tag="global_review",
         dbgdir=dbgdir,
         expect_key="findings",
-        temperature=TEMP_GLOBAL_REVIEW,
+        temperature=temperature,
         api_key=OPENAI_API_KEY,
     )
     findings: List[Finding] = []
@@ -836,7 +838,8 @@ def section_level_review(
     dbgdir: Path,
     model: str,
     memory_slice: Optional[str],
-    enable_mm: bool = True
+    enable_mm: bool = True,
+    temperature: float = TEMP_SECTION_REVIEW,
 ) -> Tuple[List[Finding], Dict[str, Any]]:
     def _messages(_):
         return [
@@ -850,7 +853,7 @@ def section_level_review(
         tag=f"section_review.{re.sub(r'[^A-Za-z0-9._-]+','_', section_title or 'Unknown')}",
         dbgdir=dbgdir,
         expect_key="findings",
-        temperature=TEMP_SECTION_REVIEW,
+        temperature=temperature,
         api_key=OPENAI_API_KEY,
     )
 
@@ -902,7 +905,7 @@ def build_merger_user(all_findings: List[Finding]) -> str:
     payload = {"candidates": [finding_to_dict(f) for f in all_findings]}
     return "INPUT(JSON):\n" + json.dumps(payload, ensure_ascii=False)
 
-def merge_and_adjudicate(all_findings: List[Finding], dbgdir: Path, model: str) -> List[Finding]:
+def merge_and_adjudicate(all_findings: List[Finding], dbgdir: Path, model: str, temperature: float = TEMP_MERGER) -> List[Finding]:
     save_json([asdict(f) for f in all_findings], dbgdir / "merge.input_findings.json")
     if not all_findings:
         save_json([], dbgdir / "merge.output_findings.json")
@@ -918,7 +921,7 @@ def merge_and_adjudicate(all_findings: List[Finding], dbgdir: Path, model: str) 
         max_tokens=50000,
         tag="merge",
         dbgdir=dbgdir,
-        temperature=TEMP_MERGER,
+        temperature=temperature,
         expect_key="findings",
         retries=EMPTY_RETRY_TIMES,
         api_key=OPENAI_API_KEY,

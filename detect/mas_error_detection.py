@@ -26,6 +26,7 @@ Usage Examples:
         --detect_model o4-mini \\
         --synth_model gpt-5-2025-08-07 \\
         --enable-global-review \\
+        --enable-mm \\
         --jobs 10
 
     # Standard detection mode
@@ -36,6 +37,7 @@ Usage Examples:
         --synth_model gpt-5-2025-08-07 \\
         --enable-memory-build \\
         --enable-section-review \\
+        --enable-mm \\
         --jobs 10
 
     # Deep detection mode
@@ -51,6 +53,7 @@ Usage Examples:
         --enable-retriever \\
         --enable-memory-injection \\
         --enable-merge \\
+        --enable-mm \\
         --jobs 10
 
     # Single file detection
@@ -59,7 +62,8 @@ Usage Examples:
         --detect_model o4-mini \\
         --detect_mode standard \\
         --enable-per-task \\
-        --enable-global-review 
+        --enable-global-review \\
+        --enable-mm \\
 
 Key Arguments:
     
@@ -324,11 +328,12 @@ def run_single(
                 blocks=cap_blocks_by_budget(blocks, max_ctx_chars),
                 dbgdir=debug_dir,
                 model=detect_model, 
-                enable_mm=enable_mm
+                enable_mm=enable_mm,
+                temperature=temp_memory
             )
             memory_meta.update(mmeta)
         except Exception as ex:
-            memory_meta["error"] = f"{type(ex).__name__}: {ex}"
+            memory_meta["error"] = True
             step_failures.append("memory_build_crash")
     save_json(memory_meta, debug_dir / "memory.meta.json")
 
@@ -336,7 +341,7 @@ def run_single(
     if enable_global_review:
         try:
             global_findings, gmeta = global_cross_section_review(
-                blocks=blocks, dbgdir=debug_dir, model=detect_model, global_max_findings=global_max_findings, enable_mm=enable_mm
+                blocks=blocks, dbgdir=debug_dir, model=detect_model, global_max_findings=global_max_findings, enable_mm=enable_mm, temperature=temp_global_review
             )
             global_meta.update(gmeta)
             add_findings_with_log(all_findings, global_findings, phase="global")
@@ -379,7 +384,8 @@ def run_single(
                     dbgdir=sdir,
                     model=detect_model,
                     memory_slice=mem_txt_sr, 
-                    enable_mm=enable_mm
+                    enable_mm=enable_mm,
+                    temperature=temp_section_review
                 )
                 section_meta_overall["sections"].append({"title": stitle, **sec_meta})
                 # Record findings for corresponding section
@@ -407,7 +413,7 @@ def run_single(
         # 3) Planner (open-ended planning; with empty output retry)
         try:
             tasks, plan_meta = planner_build_tasks_mm(
-                blocks=blocks, outline_obj=outline_obj, dbgdir=debug_dir, model=detect_model, enable_mm=enable_mm
+                blocks=blocks, outline_obj=outline_obj, dbgdir=debug_dir, model=detect_model, enable_mm=enable_mm, temperature=temp_planner
             )
         except Exception:
             step_failures.append("planner_no_tasks")
@@ -455,7 +461,8 @@ def run_single(
                         model=detect_model,
                         paper_only=(not enable_web_search),
                         memory_slice=mem_txt, 
-                        enable_mm=enable_mm
+                        enable_mm=enable_mm,
+                        temperature=temp_retriever
                     )
                     # 4.2 Web Search (only when enabled and queries exist)
                     if enable_web_search and web_queries:
@@ -488,7 +495,8 @@ def run_single(
                     memory_slice=mem_txt,
                     prior_findings=priors_for_section,
                     use_retriever=use_retriever,
-                    enable_mm=enable_mm
+                    enable_mm=enable_mm,
+                    temperature=temp_specialist
                 )
 
                 per_task_summary.append({
@@ -512,7 +520,7 @@ def run_single(
 
     # 5) Merge and adjudicate (controlled by enable_merge)
     if enable_merge:
-        merged = merge_and_adjudicate(all_findings, debug_dir, model=detect_model)
+        merged = merge_and_adjudicate(all_findings, debug_dir, model=detect_model, temperature=temp_merger)
     else:
         # Skip merge, directly keep all findings (in current order)
         merged = list(all_findings)
@@ -880,7 +888,7 @@ def main():
     parser.add_argument("--memory_max_chars", type=int, default=20000,
                         help="Max characters of memory injected per task (natural-language slice)")
 
-    parser.add_argument("--enable-mm", action="store_true", default=True,
+    parser.add_argument("--enable-mm", action="store_true", default=False,
                     help="Enable multimodal input (images). Default: True")
 
     # —— Context and retry settings —— #

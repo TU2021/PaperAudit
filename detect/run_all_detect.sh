@@ -5,20 +5,23 @@
 # =======================
 SYNTH_MODELS=(
     "gpt-5-2025-08-07"
-    # "o4-mini"
-    # "gemini-2.5-pro"
-    # "claude-sonnet-4-5-20250929"
-    # "grok-4"
-    # "qwen3-vl-235b-a22b-instruct"
-    # "doubao-seed-1-6-251015"
-    # "glm-4.6"
+    "o4-mini"
+    "gemini-2.5-pro"
+    "claude-sonnet-4-5-20250929"
+    "grok-4"
+    "qwen3-vl-235b-a22b-instruct"
+    "doubao-seed-1-6-251015"
+    "glm-4.6"
 )
 
 # =======================
 # 2. DETECT MODELS List
 # =======================
 DETECT_MODELS=(
-    "gpt-5-2025-08-07"
+    ##### S1 Models #####
+    "S1-Base-Ultra"
+    ##### LLM #####
+    # "gpt-5-2025-08-07"
     # "o4-mini"
     # "gemini-2.5-pro"
     # "claude-sonnet-4-5-20250929"
@@ -44,10 +47,11 @@ DETECT_MODES=(
 # =======================
 # 4. Common Parameters (modify as needed)
 # =======================
-ROOT_DIR="/path/to/papers"
-JOBS=10                # Thread pool size
+ROOT_DIR="/data/home/zdhs0006/ACL/data/NeurIPS_25"
+JOBS=5                # Thread pool size
 OVERWRITE=""   # Set to "" to disable overwrite
 OVERWRITE_ZERO="--overwrite_zero"   # Set to "" to disable overwrite_zero
+ENABLE_MM=""   # Set to "" to disable multimodal (default: enabled)
 
 # =======================
 # 5. Triple loop execution (synth × detect × mode)
@@ -83,7 +87,7 @@ for synth in "${SYNTH_MODELS[@]}"; do
             esac
 
             # Add common flags
-            CMD="$CMD $OVERWRITE $OVERWRITE_ZERO"
+            CMD="$CMD $OVERWRITE $OVERWRITE_ZERO $ENABLE_MM"
 
             # Execute command
             eval $CMD
