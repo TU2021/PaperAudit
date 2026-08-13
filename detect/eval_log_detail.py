@@ -120,7 +120,9 @@ def extract_gt_items(synth_obj: Dict[str, Any]) -> List[Dict[str, Any]]:
     src_list: List[Dict[str, Any]] = []
 
     # (1) apply_results (only applied=True)
-    apply_results = synth_obj.get("apply_results", None)
+    # Added audit_log to correct the path to apply_results
+    audit_log = synth_obj.get("audit_log", {})
+    apply_results = audit_log.get("apply_results", [])
     if isinstance(apply_results, list):
         for g in apply_results:
             if isinstance(g, dict) and g.get("applied") is True:
@@ -183,10 +185,10 @@ def extract_matched_flags(eval_obj: Dict[str, Any], gt_len: int) -> List[bool]:
         gi = m.get("gt_index", None)
         idx: Optional[int] = None
         if isinstance(gi, int):
-            if 0 <= gi < gt_len:
-                idx = gi
-            elif 1 <= gi <= gt_len:
-                idx = gi - 1
+            # Corrected Indexing Logic of Matched Flags
+            adjusted_idx = gi - 1
+            if 0 <= adjusted_idx < gt_len:
+                idx = adjusted_idx
 
         if idx is None:
             if next_seq < gt_len:
@@ -300,10 +302,6 @@ def compute_breakdown_over_dataset_macro(
 
         # sanity alignment: if mismatch, trim to common length to avoid artificial false negatives
         matches = eval_obj.get("matches", [])
-        if isinstance(matches, list) and n_gt > 0 and len(matches) > 0 and len(matches) != n_gt:
-            aligned = min(n_gt, len(matches))
-            gt_items = gt_items[:aligned]
-            n_gt = aligned
 
         paper_with_eval += 1
 
