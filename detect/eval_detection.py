@@ -258,9 +258,8 @@ def validate_match_obj(obj: dict, gt_len: int) -> Tuple[bool, str]:
             return False, f"match[{i}] missing keys"
         if not isinstance(m["gt_index"], int):
             return False, f"match[{i}].gt_index must be int"
-        # Compatible with 1-based (Prompt) and historical 0-based: accept i or i+1
-        if not (m["gt_index"] == i or m["gt_index"] == i + 1):
-            return False, f"match[{i}].gt_index must equal {i} (0-based) or {i+1} (1-based)"
+        if m["gt_index"] != i + 1:
+            return False, f"match[{i}].gt_index must equal {i + 1} (1-based)"
         if not isinstance(m["matched"], bool):
             return False, f"match[{i}].matched must be bool"
         if not isinstance(m["matched_pred_indices"], list) or not all(isinstance(x, int) for x in m["matched_pred_indices"]):

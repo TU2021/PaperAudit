@@ -102,7 +102,7 @@ def find_synth_files(root_dir: Path, synth_model: str) -> List[Path]:
 
 
 # ======================
-# GT extraction (IMPORTANT FIXED)
+# GT extraction
 # ======================
 def extract_gt_items(synth_obj: Dict[str, Any]) -> List[Dict[str, Any]]:
     """
@@ -110,31 +110,31 @@ def extract_gt_items(synth_obj: Dict[str, Any]) -> List[Dict[str, Any]]:
       corruption_type, difficulty, location, needs_cross_section
 
     Priority:
-      1) synth_obj["apply_results"] with applied == True  (authoritative)
-      2) synth_obj["ground_truth"]
-      3) synth_obj["audit_log"]["edits"]
+      1) synth_obj["audit_log"]["apply_results"] with applied == True
+         (authoritative for the current synthesis format)
+      2) synth_obj["apply_results"] with applied == True (legacy format)
+      3) synth_obj["ground_truth"]
+      4) synth_obj["audit_log"]["edits"]
 
     Filtering:
       - keep only items with non-empty corruption_type, difficulty, location.
     """
-    src_list: List[Dict[str, Any]] = []
+    audit = synth_obj.get("audit_log")
+    audit = audit if isinstance(audit, dict) else {}
+    nested_apply_results = audit.get("apply_results")
+    legacy_apply_results = synth_obj.get("apply_results")
 
-    # (1) apply_results (only applied=True)
-    # Added audit_log to correct the path to apply_results
-    audit_log = synth_obj.get("audit_log", {})
-    apply_results = audit_log.get("apply_results", [])
-    if isinstance(apply_results, list):
-        for g in apply_results:
-            if isinstance(g, dict) and g.get("applied") is True:
-                src_list.append(g)
-
-    # fallback only if apply_results not available (or empty)
-    if not src_list:
-        items = synth_obj.get("ground_truth", None)
+    # An apply-results list is authoritative even when it is empty: falling back
+    # to proposed edits would incorrectly score edits that were never applied.
+    if isinstance(nested_apply_results, list):
+        src_list = [g for g in nested_apply_results if isinstance(g, dict) and g.get("applied") is True]
+    elif isinstance(legacy_apply_results, list):
+        src_list = [g for g in legacy_apply_results if isinstance(g, dict) and g.get("applied") is True]
+    else:
+        items = synth_obj.get("ground_truth")
         if isinstance(items, list):
             src_list = [g for g in items if isinstance(g, dict)]
         else:
-            audit = synth_obj.get("audit_log", {})
             edits = audit.get("edits", [])
             src_list = [g for g in edits if isinstance(g, dict)] if isinstance(edits, list) else []
 
@@ -168,35 +168,21 @@ def extract_gt_items(synth_obj: Dict[str, Any]) -> List[Dict[str, Any]]:
 # ======================
 def extract_matched_flags(eval_obj: Dict[str, Any], gt_len: int) -> List[bool]:
     """
-    Turn eval_obj["matches"] into a list[bool] aligned to GT index.
-    Supports gt_index being 0-based or 1-based; if absent, fallback to sequential.
+    Turn eval_obj["matches"] into a list[bool] aligned to GT order.
+
+    The evaluator requires one match for each GT in order.  Position is therefore
+    the unambiguous alignment key; this avoids interpreting the documented
+    1-based ``gt_index`` as an overlapping 0-based value.
     """
     matches = eval_obj.get("matches", [])
     flags = [False] * gt_len
     if not isinstance(matches, list) or gt_len <= 0:
         return flags
 
-    next_seq = 0
-    for m in matches:
+    for idx, m in enumerate(matches[:gt_len]):
         if not isinstance(m, dict):
             continue
-        matched = bool(m.get("matched", False))
-
-        gi = m.get("gt_index", None)
-        idx: Optional[int] = None
-        if isinstance(gi, int):
-            # Corrected Indexing Logic of Matched Flags
-            adjusted_idx = gi - 1
-            if 0 <= adjusted_idx < gt_len:
-                idx = adjusted_idx
-
-        if idx is None:
-            if next_seq < gt_len:
-                idx = next_seq
-                next_seq += 1
-
-        if idx is not None and 0 <= idx < gt_len:
-            flags[idx] = bool(flags[idx] or matched)
+        flags[idx] = bool(m.get("matched", False))
 
     return flags
 
@@ -254,6 +240,7 @@ def compute_breakdown_over_dataset_macro(
 
     paper_total = len(synth_files)
     paper_with_eval = 0
+    paper_skipped_misaligned = 0
 
     # macro overall across papers (kept for reference)
     overall_sum_rate = 0.0
@@ -300,8 +287,16 @@ def compute_breakdown_over_dataset_macro(
         except Exception:
             continue
 
-        # sanity alignment: if mismatch, trim to common length to avoid artificial false negatives
+        # Existing evaluation records must use exactly the applied GT set.  A
+        # truncated alignment can silently associate matches with the wrong error.
         matches = eval_obj.get("matches", [])
+        if not isinstance(matches, list) or len(matches) != n_gt:
+            paper_skipped_misaligned += 1
+            eprint(
+                f"[WARN] skipping misaligned evaluation: {eval_path} "
+                f"(matches={len(matches) if isinstance(matches, list) else 'invalid'}, gt={n_gt})"
+            )
+            continue
 
         paper_with_eval += 1
 
@@ -359,6 +354,7 @@ def compute_breakdown_over_dataset_macro(
 
         "paper_total": paper_total,
         "paper_with_eval": paper_with_eval,
+        "paper_skipped_misaligned": paper_skipped_misaligned,
 
         # pooled supports
         "gt_total": gt_total,
