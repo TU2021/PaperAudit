@@ -24,6 +24,7 @@ entries as a new text block to the section.
 from __future__ import annotations
 from typing import List, Dict, Tuple
 import re
+import unicodedata
 
 
 def _collect_reference_blocks(blocks: List[Dict]) -> List[Dict]:
@@ -48,7 +49,14 @@ def _build_references_text(ref_blocks: List[Dict]) -> str:
             t = b.get("text") or ""
             if t.strip():
                 parts.append(t.strip())
-    return "\n".join(parts)
+    # Keep neighbouring PDF blocks distinct: matching below treats blank lines as
+    # reference-entry boundaries, and a single newline can merge two entries.
+    return "\n\n".join(parts)
+
+
+def _normalize_for_matching(text: str) -> str:
+    normalized = unicodedata.normalize("NFKD", text or "")
+    return "".join(ch for ch in normalized if not unicodedata.combining(ch)).casefold()
 
 
 def _extract_citation_keys_from_section_blocks(
@@ -71,9 +79,15 @@ def _extract_citation_keys_from_section_blocks(
     numeric_keys: List[str] = []
 
     # ---------- 1) LeCun et al., 1998 ----------
-    pattern_et_al = re.compile(r"\b([A-Z][A-Za-z\-]+)\s+et al\.,\s*(\d{4})")
+    # Keep an optional year suffix (e.g., 2024a) and accept Unicode surnames.
+    surname_token = r"([^\W\d_][\w'’.-]*)"
+    year_token = r"((?:19|20)\d{2}[a-z]?)"
+    pattern_et_al = re.compile(
+        rf"\b{surname_token}\s+et\s+al\.?\s*,?\s*{year_token}",
+        re.IGNORECASE,
+    )
     for m in pattern_et_al.finditer(full_text):
-        surname = m.group(1).strip().lower()
+        surname = _normalize_for_matching(m.group(1).strip())
         year = m.group(2).strip()
         key = (surname, year)
         if key not in author_year_keys:
@@ -82,11 +96,12 @@ def _extract_citation_keys_from_section_blocks(
     # ---------- 2) Rajabi & Kosecka, 2024 / Rajabi and Kosecka, 2024 ----------
     # Note: Only use the first surname as key (e.g., Rajabi), second surname is only for pattern matching.
     pattern_and = re.compile(
-        r"\b([A-Z][A-Za-z\-]+)\s*(?:&|and)\s*[A-Z][A-Za-z\-]+\s*,\s*(\d{4})"
+        rf"\b{surname_token}\s*(?:&|and)\s*{surname_token}\s*,?\s*{year_token}",
+        re.IGNORECASE,
     )
     for m in pattern_and.finditer(full_text):
-        surname = m.group(1).strip().lower()
-        year = m.group(2).strip()
+        surname = _normalize_for_matching(m.group(1).strip())
+        year = m.group(3).strip()
         key = (surname, year)
         if key not in author_year_keys:
             author_year_keys.append(key)
@@ -113,7 +128,8 @@ def _match_reference_entries(
     if not ref_text.strip():
         return []
 
-    # Split by blank lines into individual entries
+    # Split by blank lines into individual entries. _build_references_text keeps
+    # source blocks separated by blank lines as well.
     paragraphs = re.split(r"\n\s*\n", ref_text.strip())
     used_entries: List[str] = []
     seen = set()
@@ -122,7 +138,16 @@ def _match_reference_entries(
     for surname, year in author_year_keys:
         for para in paragraphs:
             para_norm = para.replace("\n", " ")
-            if surname in para_norm.lower() and year in para_norm:
+            normalized_entry = _normalize_for_matching(para_norm)
+            first_author = re.compile(
+                rf"^\s*(?:\[\d+\]\s*)?{re.escape(surname)}(?:\s*,|\s+)",
+                re.IGNORECASE,
+            )
+            exact_year = re.compile(
+                rf"(?<!\d){re.escape(year.casefold())}(?![a-z0-9])",
+                re.IGNORECASE,
+            )
+            if first_author.search(normalized_entry) and exact_year.search(normalized_entry):
                 key = ("ay", surname, year, para.strip())
                 if key not in seen:
                     seen.add(key)
@@ -131,7 +156,10 @@ def _match_reference_entries(
 
     # Then process numeric
     for num in numeric_keys:
-        pattern_start = re.compile(rf"^\s*\[{re.escape(num)}\]", re.MULTILINE)
+        pattern_start = re.compile(
+            rf"^\s*(?:\[{re.escape(num)}\]|{re.escape(num)}[.)])(?:\s|$)",
+            re.MULTILINE,
+        )
         for para in paragraphs:
             if pattern_start.search(para):
                 key = ("num", num, para.strip())

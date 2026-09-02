@@ -178,16 +178,25 @@ def slice_json_for_task_with_outline(blocks: List[Dict[str, Any]], section_name:
                 if name in (a or "").strip().lower():
                     return True
             return False
+        matched_blocks: List[Dict[str, Any]] = []
+        added_indices = set()
         for item in outline_items:
-            if match(item):
-                start = max(0, int(item.get("start_index", 0)))
-                end = int(item.get("end_index", start))
-                rng_blocks = [
-                    b for b in blocks
-                    if isinstance(b.get("content_index"), int)
-                    and start <= b["content_index"] <= end
-                ]
-                return cap_blocks_by_budget(rng_blocks, max_chars)
+            if not match(item):
+                continue
+            start = max(0, int(item.get("start_index", 0)))
+            end = int(item.get("end_index", start))
+            for block in blocks:
+                content_index = block.get("content_index")
+                if (
+                    isinstance(content_index, int)
+                    and start <= content_index <= end
+                    and content_index not in added_indices
+                ):
+                    matched_blocks.append(block)
+                    added_indices.add(content_index)
+        if matched_blocks:
+            matched_blocks.sort(key=lambda block: block["content_index"])
+            return cap_blocks_by_budget(matched_blocks, max_chars)
     return cap_blocks_by_budget(blocks, max_chars)
 
 def _guess_mime_from_b64(data_b64: str) -> str:
