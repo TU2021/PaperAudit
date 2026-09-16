@@ -13,6 +13,43 @@ from mas_reference_helper import (
 
 
 class ReferenceHelperTest(unittest.TestCase):
+    def test_single_author_and_narrative_citations(self):
+        keys, _ = _extract_citation_keys_from_section_blocks([{
+            "type": "text", "text": "Malladi et al. (2023); Dayi & Chen (2024); (Olson, 1965); (Meta, 2024)",
+        }])
+        self.assertEqual(keys, [("malladi", "2023"), ("dayi", "2024"), ("olson", "1965"), ("meta", "2024")])
+
+    def test_natural_order_names_and_organization(self):
+        entries = ["Nicholas Carlini and David Wagner. Title. 2024.",
+                   "J. R. Smith & Jane Doe. Another title. 2023.",
+                   "Meta. Llama 3.2. 2024."]
+        self.assertEqual(_match_reference_entries("\n\n".join(entries),
+                         [("carlini", "2024"), ("smith", "2023"), ("meta", "2024")], []), entries)
+
+    def test_never_falls_back_to_coauthor(self):
+        for entry, key in [
+            ("Guo, Y., Liu, J. Unrelated paper. 2023.", ("liu", "2023")),
+            ("John Smith and David Wagner. Unrelated paper. 2024.", ("wagner", "2024")),
+            ("John Smith. Understanding Wagner. 2024.", ("wagner", "2024")),
+        ]:
+            with self.subTest(entry=entry):
+                self.assertEqual(_match_reference_entries(entry, [key], []), [])
+
+    def test_wrapped_author_list_is_not_a_new_entry(self):
+        entry = "Guo, Y.,\nLiu, J., and Smith, A. A complete paper. 2023."
+        self.assertEqual(_match_reference_entries(entry, [("guo", "2023")], []), [entry])
+        self.assertEqual(_match_reference_entries(entry, [("liu", "2023")], []), [])
+
+    def test_adjacent_entries_split_without_blank_line(self):
+        first = "Guo, Y. First paper. 2023."
+        second = "Liu, J. Second paper. 2024."
+        self.assertEqual(_match_reference_entries(first + "\n" + second,
+                         [("guo", "2023"), ("liu", "2024")], []), [first, second])
+
+    def test_author_year_and_numeric_match_deduplicated(self):
+        entry = "[1] Meta. Llama 3.2. 2024."
+        self.assertEqual(_match_reference_entries(entry, [("meta", "2024")], ["1"]), [entry])
+
     def test_keeps_author_year_suffixes_and_unicode_surnames(self):
         blocks = [{
             "type": "text",
